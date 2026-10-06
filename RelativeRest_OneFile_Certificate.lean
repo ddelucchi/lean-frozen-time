@@ -1933,6 +1933,45 @@ Einstein–Maxwell current is formalized.
 
 /-! ### Boundary-compensated Iyer-Wald sign algebra -/
 
+/-- Common-character-removed relative constraint residual when the gravity and Maxwell
+constraint contributions agree at the fixed point. -/
+def relativeConstraintResidual (ell s : ℝ) : ℝ :=
+  Real.exp (-s) * (ell - Real.exp (2 * s) * ell)
+
+/-- Reciprocal relative scaling forces the constraint residual to be the same odd sinh carrier. -/
+theorem relativeConstraintResidual_eq_sinh (ell s : ℝ) :
+    relativeConstraintResidual ell s = -2 * Real.sinh s * ell := by
+  unfold relativeConstraintResidual
+  have hexp : Real.exp (-s) * Real.exp (2 * s) = Real.exp s := by
+    rw [← Real.exp_add]
+    congr 1
+    ring
+  calc
+    Real.exp (-s) * (ell - Real.exp (2 * s) * ell)
+        = ell * (Real.exp (-s) - Real.exp (-s) * Real.exp (2 * s)) := by ring
+    _ = ell * (Real.exp (-s) - Real.exp s) := by rw [hexp]
+    _ = -2 * Real.sinh s * ell := by
+      rw [Real.sinh_eq]
+      ring
+
+/-- Its fixed-point normal derivative is forced to be exactly `-2 ell`. -/
+theorem relativeConstraintResidual_hasDerivAt_zero (ell : ℝ) :
+    HasDerivAt (relativeConstraintResidual ell) (-2 * ell) 0 := by
+  have hfun :
+      relativeConstraintResidual ell =
+        fun s : ℝ => (-2 * ell) * Real.sinh s := by
+    funext s
+    rw [relativeConstraintResidual_eq_sinh]
+    ring
+  rw [hfun]
+  simpa using (Real.hasDerivAt_sinh 0).const_mul (-2 * ell)
+
+/-- Therefore the relative constraint variation appearing in the Iyer-Wald identity
+is not an independent coefficient. -/
+theorem relativeConstraintResidual_deriv_zero (ell : ℝ) :
+    deriv (relativeConstraintResidual ell) 0 = -2 * ell :=
+  (relativeConstraintResidual_hasDerivAt_zero ell).deriv
+
 /-- Antisymmetry plus the off-shell Iyer-Wald identity forces the boundary-compensated
 current to equal the constraint response. -/
 theorem iyerWald_boundary_compensation
@@ -1952,6 +1991,35 @@ theorem iyerWald_bulk_response
     (hC : deltaC = -2 * ell) :
     omegaXY + dB = -2 * ell := by
   rw [iyerWald_boundary_compensation omegaYX omegaXY dB deltaC hanti hIW, hC]
+
+
+/-- Stronger form: when the Iyer-Wald constraint variation is the derivative of the
+reciprocally scaled constraint residual, the bulk response `-2ℓ` follows automatically. -/
+theorem iyerWald_bulk_response_from_relative_scaling
+    (omegaYX omegaXY dB ell : ℝ)
+    (hanti : omegaXY = -omegaYX)
+    (hIW :
+      omegaYX =
+        dB - deriv (relativeConstraintResidual ell) 0) :
+    omegaXY + dB = -2 * ell := by
+  have hC := relativeConstraintResidual_deriv_zero ell
+  exact iyerWald_bulk_response
+    omegaYX omegaXY dB
+    (deriv (relativeConstraintResidual ell) 0) ell
+    hanti hIW hC
+
+/-- Consequently the characteristic half-contraction normalization is forced directly
+from reciprocal sector scaling plus the off-shell Iyer-Wald identity. -/
+theorem characteristic_half_contraction_from_relative_scaling
+    (omegaYX omegaXY dB ell : ℝ)
+    (hanti : omegaXY = -omegaYX)
+    (hIW :
+      omegaYX =
+        dB - deriv (relativeConstraintResidual ell) 0) :
+    -(1 / 2 : ℝ) * (omegaXY + dB) = ell := by
+  rw [iyerWald_bulk_response_from_relative_scaling
+    omegaYX omegaXY dB ell hanti hIW]
+  ring
 
 /-- The manuscript's characteristic covector sign is then forced algebraically. -/
 theorem characteristic_half_contraction
@@ -3686,6 +3754,11 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check relativeConstraintResidual_eq_sinh
+#check relativeConstraintResidual_hasDerivAt_zero
+#check relativeConstraintResidual_deriv_zero
+#check iyerWald_bulk_response_from_relative_scaling
+#check characteristic_half_contraction_from_relative_scaling
 #check optical_covector_norm_from_carrier
 #check kerrPrincipal_field_magnitude
 #check kerrPrincipalChi_formula
@@ -3921,6 +3994,7 @@ end RelativeRest
 transcript: they expose every axiom used by representative end-to-end theorems. -/
 #print axioms RelativeRest.scalar_backbone
 #print axioms RelativeRest.scalar_backbone_from_einstein_maxwell
+#print axioms RelativeRest.characteristic_half_contraction_from_relative_scaling
 #print axioms RelativeRest.defect_from_on_shell_equation
 #print axioms RelativeRest.scaledResidual_first_jet_eq_minus_two_ricci_from_EM
 #print axioms RelativeRest.boost_balance_exists_unique_of_nonnull
