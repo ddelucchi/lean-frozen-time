@@ -20,13 +20,20 @@ This file is intentionally adversarial about assumptions.
   and source-free Maxwell equations in the regular Boyer–Lindquist chart.  It also derives the
   metric-normalized Carter observer and its carrier-selected rest condition, including the
   higher-jet `r=0` stratum.
-* What is not yet reconstructed from first principles is the remaining manifold-level
-  differential-geometric infrastructure: variation of the Einstein–Maxwell action as genuine
-  tensor/differential-form fields, the full Christoffel/Riemann/Ricci computation proving the
-  Kerr–Newman metric satisfies the Einstein equation, the covariant Iyer–Wald identity itself
-  on phase space, and smooth Synge-world-function endpoint existence through caustics.  Once
-  those geometric inputs are available, their algebraic, quotient, transport, clock, optical,
-  and Kerr consequences are already forced by the theorems below.
+* The action side is now pushed back to explicit Einstein-Hilbert/Maxwell density pieces
+  and a reciprocal Lagrangian object.  Every linear covariant descendant is proved to inherit
+  the same characters, so the odd presymplectic sector and the `-2` constraint jet are no
+  longer independent scaling inputs.  A single Lagrangian-level Iyer-Wald operator identity
+  then uniquely fixes the compensated current and connects it to the explicit Maxwell stress,
+  characteristic covector, one-dimensional quotient, and normalized principal clock line.
+* What is not yet reconstructed from first principles is concentrated in the remaining
+  manifold-level differential-geometric infrastructure: the genuine tensor/differential-form
+  variation theorem for the Einstein-Maxwell Lagrangian (including construction of its
+  symplectic potential/Noether charge and proof of the operator-level Iyer-Wald identity),
+  the remaining stationary `(t,phi)` Kerr-Newman Ricci block, and global smooth
+  Synge-world-function endpoint existence across caustics.  Once those geometric inputs are
+  available, their algebraic, quotient, transport, clock, optical, and Kerr consequences are
+  already forced by the theorems below.
 
 Consequently this file is a kernel-oriented logical certificate of the manuscript's forced
 algebraic and quotient structure while keeping the remaining geometric boundary visible.
@@ -4063,8 +4070,11 @@ theorem LagrangianIyerWaldOperators.omegaXY_unique
     (hW : ∀ X : L, W X + D.dB X = D.constraint X) :
     W = D.omegaXY := by
   ext X
-  apply add_right_cancel (b := D.dB X)
-  exact (hW X).trans (D.compensated_eq_constraint X).symm
+  have hEq :
+      W X + D.dB X =
+        D.omegaXY X + D.dB X :=
+    (hW X).trans (D.compensated_eq_constraint X).symm
+  exact add_right_cancel hEq
 
 /-- Existence and uniqueness form: the reversed presymplectic current is the unique
 linear current whose boundary compensation equals the Lagrangian constraint operator. -/
@@ -13393,6 +13403,17 @@ theorem scalar_backbone_from_einstein_maxwell
 #check relativeActionValue_diagonal
 #check relativeActionDefect_hasDerivAt_zero
 #check relativeAction_fixed_point_jet
+#check einsteinMaxwellLagrangianDensity_decomposition
+#check reciprocalLagrangian
+#check reciprocalLagrangian_exchange
+#check reciprocalLagrangianNormalJet
+#check linearDescendant_reciprocal
+#check linearDescendant_normalJet
+#check linearDescendant_normalJet_of_opposite
+#check linearDescendant_reciprocal_hasDerivAt_zero
+#check scaledEinsteinMaxwellSectorValue_factorization
+#check relativeActionValue_eq_reciprocalLagrangian
+#check relativeActionDefect_eq_reciprocalLagrangian
 #check relativeSymplecticMinus_apply
 #check relativeSymplecticMinus_apply_eq_half_derivative
 #check relativeLiouvilleCovector_apply
@@ -13446,6 +13467,13 @@ theorem scalar_backbone_from_einstein_maxwell
 #check principalCarrierCharacteristic_globalUnit_maps_local
 #check principalCarrierCharacteristic_normalizationBridge
 #check principalCarrierCharacteristic_clock_chain
+#check PrincipalLagrangianCharacteristicInput
+#check PrincipalLagrangianCharacteristicInput.relativeNormalJet
+#check PrincipalLagrangianCharacteristicInput.iwCharacteristicCurrent
+#check principalLagrangianCharacteristic_iwCurrent_eq_stress
+#check principalLagrangianCharacteristic_iwCurrent_eq_characteristicCurrent
+#check principalLagrangianCharacteristic_iwCurrent_nonzero
+#check principalLagrangianCharacteristic_clock_chain
 #check SyngeEndpointJetData.linearizedPlus
 #check SyngeEndpointJetData.dThetaPlus_unique
 #check SyngeEndpointJetData.dThetaMinus_unique
@@ -13795,6 +13823,14 @@ theorem scalar_backbone_from_einstein_maxwell
 #check rainich_square_nilpotent_at_zero
 #check fullJetStabilizer_eq_singleton_of_finite_break
 #check mem_fullJetStabilizer_iff
+#check LagrangianIyerWaldOperators.omegaXY
+#check LagrangianIyerWaldOperators.compensated_eq_constraint
+#check LagrangianIyerWaldOperators.omegaXY_unique
+#check LagrangianIyerWaldOperators.omegaXY_existsUnique
+#check LagrangianIyerWaldOperators.constraint_normalJet_of_opposite
+#check LagrangianIyerWaldOperators.compensated_relative_normal
+#check lagrangianIyerWald_compensated_eq_carrierBulkResponse
+#check lagrangianIyerWald_half_compensated_eq_stressResponse
 #check iyerWald_boundary_compensation
 #check iyerWald_bulk_response
 #check characteristic_half_contraction
@@ -13947,6 +13983,12 @@ end RelativeRest
 transcript: they expose every axiom used by representative end-to-end theorems. -/
 #print axioms RelativeRest.scalar_backbone
 #print axioms RelativeRest.relativeAction_fixed_point_jet
+#print axioms RelativeRest.einsteinMaxwellLagrangianDensity_decomposition
+#print axioms RelativeRest.linearDescendant_reciprocal
+#print axioms RelativeRest.linearDescendant_normalJet_of_opposite
+#print axioms RelativeRest.linearDescendant_reciprocal_hasDerivAt_zero
+#print axioms RelativeRest.relativeSymplecticMinus_from_lagrangian_normalJet
+#print axioms RelativeRest.relativeConstraintResidual_deriv_from_lagrangian
 #print axioms RelativeRest.conformal_factor_forced_from_common_scale
 #print axioms RelativeRest.carrier_chi_common_scale
 #print axioms RelativeRest.normalizedCarrierEndomorphism_common_scale
@@ -13978,6 +14020,11 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.scalar_backbone_from_einstein_maxwell
 #print axioms RelativeRest.rescaled_solution_preserving_iff
 #print axioms RelativeRest.characteristic_half_contraction_from_relative_scaling
+#print axioms RelativeRest.LagrangianIyerWaldOperators.compensated_eq_constraint
+#print axioms RelativeRest.LagrangianIyerWaldOperators.omegaXY_existsUnique
+#print axioms RelativeRest.LagrangianIyerWaldOperators.compensated_relative_normal
+#print axioms RelativeRest.lagrangianIyerWald_compensated_eq_carrierBulkResponse
+#print axioms RelativeRest.lagrangianIyerWald_half_compensated_eq_stressResponse
 #print axioms RelativeRest.iyerWald_compensated_eq_carrierBulkResponse
 #print axioms RelativeRest.iyerWald_half_compensated_eq_stressResponse
 #print axioms RelativeRest.relativeSymplecticMinus_eq_half_derivative
@@ -14019,6 +14066,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalStressResponse_pos
 #print axioms RelativeRest.principalCarrierCharacteristic_quotient_finrank_one
 #print axioms RelativeRest.principalCarrierCharacteristic_clock_chain
+#print axioms RelativeRest.principalLagrangianCharacteristic_iwCurrent_eq_characteristicCurrent
+#print axioms RelativeRest.principalLagrangianCharacteristic_iwCurrent_nonzero
+#print axioms RelativeRest.principalLagrangianCharacteristic_clock_chain
 #print axioms RelativeRest.principalField_forced_core_chain
 #print axioms RelativeRest.principalFieldCurrent_Lambda_unique
 #print axioms RelativeRest.principalFieldCurrent_quotient_finrank_one
