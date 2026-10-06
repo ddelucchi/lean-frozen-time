@@ -1816,6 +1816,47 @@ def principalTO (v : Fin 4 → ℝ) : ℝ := v 0
 def principalPhysicalU (ω : ℝ) : Fin 4 → ℝ :=
   ω • principalUhat
 
+
+/-- The forced local chronometric covector advances at rate `ω` along physical proper time. -/
+@[simp] theorem principalTO_physicalU (ω : ℝ) :
+    principalTO (principalPhysicalU ω) = ω := by
+  simp [principalTO, principalPhysicalU, principalUhat,
+    principalBasis]
+
+/-- Equivalently, the local clock linear map evaluates to `ω` on the physical unit tangent. -/
+@[simp] theorem principalTOLinear_physicalU (ω : ℝ) :
+    principalTOLinear (principalPhysicalU ω) = ω := by
+  simpa [principalTOLinear_apply] using principalTO_physicalU ω
+
+/-- If `χ=ω²`, the vector `u_*=ω û_*` is unit timelike for the background metric
+`g=χ⁻¹ ĝ`. -/
+theorem principalPhysicalU_background_unit
+    (χ ω : ℝ)
+    (hχ : χ ≠ 0)
+    (hχrate : χ = ω^2) :
+    χ⁻¹ * principalMinkowskiSq (principalPhysicalU ω) = -1 := by
+  have hnorm :
+      principalMinkowskiSq (principalPhysicalU ω) = -ω^2 := by
+    simp [principalPhysicalU, principalMinkowskiSq,
+      principalUhat, principalBasis]
+    ring
+  rw [hnorm, hχrate]
+  field_simp [hχ]
+  ring
+
+/-- Thus along the selected physical unit trajectory the local clock differential is
+literally `dΘ = ω dτ`; on the normalized chronometric trajectory it is `dΘ=dτ̂`. -/
+theorem principal_clock_proper_time_bridge
+    (χ ω : ℝ)
+    (hχ : χ ≠ 0)
+    (hχrate : χ = ω^2) :
+    principalTO (principalPhysicalU ω) = ω ∧
+    principalTO principalUhat = 1 ∧
+    χ⁻¹ * principalMinkowskiSq (principalPhysicalU ω) = -1 := by
+  exact ⟨principalTO_physicalU ω,
+    principalTO_unit,
+    principalPhysicalU_background_unit χ ω hχ hχrate⟩
+
 /-- Carrier endomorphism `J=χS=ω²S` in the normalized principal frame. -/
 def principalJetFromRate (ω : ℝ) (v : Fin 4 → ℝ) : Fin 4 → ℝ :=
   fun i => ω^2 * principalJetInvolution v i
@@ -8748,6 +8789,10 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check principalTO_physicalU
+#check principalTOLinear_physicalU
+#check principalPhysicalU_background_unit
+#check principal_clock_proper_time_bridge
 #check kerrMaxwell_bianchi_t
 #check kerrMaxwell_bianchi_phi
 #check kerrMaxwell_equations_scalar_certificate
@@ -9305,6 +9350,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.carrierBulkResponse_eq_minus_two_stressResponse
 #print axioms RelativeRest.halfCarrierBulkCurrent_eq_stressResponse
 #print axioms RelativeRest.principalLocalClockRatio_forced
+#print axioms RelativeRest.principal_clock_proper_time_bridge
 #print axioms RelativeRest.principalPointResponse_ratio_forced
 #print axioms RelativeRest.principalBridgeSpatialCoeff_ratio_forced
 #print axioms RelativeRest.principalClockRate_three_way
