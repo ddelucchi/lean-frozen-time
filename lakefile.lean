@@ -13,6 +13,7 @@ lean_lib RelativeRest_DeepPass3
 lean_lib RelativeRest_DeepPass4
 lean_lib RelativeRest_DeepPass5
 lean_lib RelativeRest_DeepPass6
+lean_lib RelativeRest_DeepPass7
 
 @[default_target]
-lean_lib RelativeRest_DeepPass7
+lean_lib RelativeRest_DeepPass8
