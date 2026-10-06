@@ -2432,17 +2432,6 @@ theorem quotient_clock_covector_forced
   exact quotient_clock_covector_unique Λ λ (quotientClockCovector Λ)
     hλ (quotientClockCovector_pullback Λ)
 
-/-- Exact algebraic form of the manuscript's contact-transverse duality:
-the one-dimensional relative normal line is canonically the dual of the stress-visible
-characteristic quotient. -/
-noncomputable def clockQuotientDualEquiv
-    (Λ : K →ₗ[ℝ] ℝ) (hΛ : Λ ≠ 0) :
-    ℝ ≃ₗ[ℝ] ((K ⧸ LinearMap.ker Λ) →ₗ[ℝ] ℝ) :=
-  normalizedCovectorDualEquiv
-    (quotientClockCovector Λ)
-    (quotientClockCovector_nonzero Λ hΛ)
-    (clockQuotient_finrank_one Λ hΛ)
-
 end LinearDescent
 
 /-! ### Bilinear/presymplectic descent through a characteristic quotient -/
@@ -2751,6 +2740,25 @@ noncomputable def normalizedCovectorDualEquiv
     (covectorScaleMap_bijective α hα hfin)
 
 end OneDimensional
+
+/-! ### Contact-transverse duality for the characteristic quotient -/
+
+section ClockQuotientDuality
+
+variable {K : Type*} [AddCommGroup K] [Module ℝ K]
+
+/-- Exact algebraic form of the manuscript's contact-transverse duality:
+the one-dimensional relative normal line is canonically the dual of the stress-visible
+characteristic quotient. -/
+noncomputable def clockQuotientDualEquiv
+    (Λ : K →ₗ[ℝ] ℝ) (hΛ : Λ ≠ 0) :
+    ℝ ≃ₗ[ℝ] ((K ⧸ LinearMap.ker Λ) →ₗ[ℝ] ℝ) :=
+  normalizedCovectorDualEquiv
+    (quotientClockCovector Λ)
+    (quotientClockCovector_nonzero Λ hΛ)
+    (clockQuotient_finrank_one Λ hΛ)
+
+end ClockQuotientDuality
 
 /-! ### Exact affine primitive of the descended clock covector -/
 
