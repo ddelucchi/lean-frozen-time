@@ -1177,14 +1177,6 @@ theorem principalStressFromF_neg
     principalStressFromF_eq_principalStress,
     principalFieldEnergyDensity_neg]
 
-/-- Consequently the fixed-point carrier jet is also orientation-independent. -/
-theorem principalJetFromF_neg
-    (E B : ℝ) (i j : Fin 4) :
-    principalJetFromF (-E) (-B) i j =
-      principalJetFromF E B i j := by
-  unfold principalJetFromF
-  rw [principalStressFromF_neg]
-
 /-- Direct principal-frame Rainich square identity. -/
 theorem principalStress_sq (u : ℝ) (i j : Fin 4) :
     (∑ k : Fin 4, principalStress u i k * principalStress u k j) =
@@ -1269,6 +1261,16 @@ theorem principalStressFromF_rainich
 `J=-16π T^{EM}`. -/
 def principalJetFromF (E B : ℝ) (i j : Fin 4) : ℝ :=
   -16 * Real.pi * principalStressFromF E B i j
+
+
+/-- Consequently the fixed-point carrier jet is orientation-independent under
+the overall Maxwell-field sign reversal induced by coframe orientation. -/
+theorem principalJetFromF_neg
+    (E B : ℝ) (i j : Fin 4) :
+    principalJetFromF (-E) (-B) i j =
+      principalJetFromF E B i j := by
+  unfold principalJetFromF
+  rw [principalStressFromF_neg]
 
 /-- The explicit field-derived jet is the sign-reversed canonical carrier of magnitude `χ`. -/
 theorem principalJetFromF_eq_neg_principalStress
