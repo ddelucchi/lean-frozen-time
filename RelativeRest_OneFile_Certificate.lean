@@ -3068,6 +3068,69 @@ theorem principalDiffeomorphismNoether_decomposition
   unfold principalMetricNoetherBoundaryExpansion
   ring
 
+/-- Divergence expansion of a candidate local bulk Noether current
+`C^a{}_b ξ^b`: one term differentiates the coefficient and the other differentiates
+the arbitrary local gauge vector. -/
+def principalCandidateNoetherCurrentDivergence
+    (C : Fin 4 → Fin 4 → ℝ)
+    (nablaC : Fin 4 → Fin 4 → Fin 4 → ℝ)
+    (xi : Fin 4 → ℝ)
+    (nablaXi : Fin 4 → Fin 4 → ℝ) : ℝ :=
+  (∑ b : Fin 4, (∑ a : Fin 4, nablaC a a b) * xi b) +
+    ∑ a : Fin 4, ∑ b : Fin 4, C a b * nablaXi a b
+
+/-- Matrix unit used to vary one derivative component of the local
+diffeomorphism parameter independently. -/
+def principalMatrixUnit (a b : Fin 4) : Fin 4 → Fin 4 → ℝ :=
+  fun i j => if i = a ∧ j = b then 1 else 0
+
+/-- The coefficient of a local bulk Noether current is not a choice.  If its
+divergence reproduces the Einstein-Maxwell Euler pairing for every local value of
+`ξ` and every independent first derivative `∇ξ`, then comparison of the
+`∇_a ξ_b` coefficients forces `C^{ab}=2E_g^{ab}` component by component. -/
+theorem principalNoetherBulkCoeff_eq_twoEuler_of_local_identity
+    (E C : Fin 4 → Fin 4 → ℝ)
+    (nablaC : Fin 4 → Fin 4 → Fin 4 → ℝ)
+    (EA : Fin 4 → ℝ)
+    (F : Fin 4 → Fin 4 → ℝ)
+    (hlocal : ∀ (xi : Fin 4 → ℝ) (nablaXi : Fin 4 → Fin 4 → ℝ),
+      principalCandidateNoetherCurrentDivergence
+          C nablaC xi nablaXi =
+        principalMetricDiffeomorphismEulerPairing E nablaXi +
+          principalMaxwellDiffeomorphismEulerPairing EA F xi) :
+    ∀ a b : Fin 4, C a b = 2 * E a b := by
+  intro a b
+  have h := hlocal (fun _ => 0) (principalMatrixUnit a b)
+  unfold principalCandidateNoetherCurrentDivergence
+    principalMetricDiffeomorphismEulerPairing
+    principalMaxwellDiffeomorphismEulerPairing
+    principalMatrixUnit at h
+  simp at h
+  linarith
+
+/-- Once the bulk coefficient is forced to `2E_g`, the value-only part of the same
+local identity forces the generalized Einstein-Maxwell Bianchi relation. -/
+theorem principalNoetherBulkDivergence_forced_of_local_identity
+    (E C : Fin 4 → Fin 4 → ℝ)
+    (nablaC : Fin 4 → Fin 4 → Fin 4 → ℝ)
+    (EA : Fin 4 → ℝ)
+    (F : Fin 4 → Fin 4 → ℝ)
+    (hlocal : ∀ (xi : Fin 4 → ℝ) (nablaXi : Fin 4 → Fin 4 → ℝ),
+      principalCandidateNoetherCurrentDivergence
+          C nablaC xi nablaXi =
+        principalMetricDiffeomorphismEulerPairing E nablaXi +
+          principalMaxwellDiffeomorphismEulerPairing EA F xi) :
+    ∀ b : Fin 4,
+      (∑ a : Fin 4, nablaC a a b) =
+        principalMaxwellEulerForce EA F b := by
+  intro b
+  have h := hlocal (principalBasis b) (fun _ _ => 0)
+  unfold principalCandidateNoetherCurrentDivergence
+    principalMetricDiffeomorphismEulerPairing
+    principalMaxwellDiffeomorphismEulerPairing at h
+  simp [principalBasis] at h
+  exact h
+
 /-- Conversely, if diffeomorphism covariance makes the Euler variation a pure
 boundary for every local vector `ξ`, the generalized Einstein-Maxwell Bianchi
 identity is forced componentwise.  No Bianchi residual can be added freely. -/
@@ -19068,6 +19131,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalCanonicalNoether_forced_core_chain
 #print axioms RelativeRest.principalCanonicalCompleted_forced_core_chain
 #print axioms RelativeRest.principalDiffeomorphismNoether_decomposition
+#print axioms RelativeRest.principalNoetherBulkCoeff_eq_twoEuler_of_local_identity
+#print axioms RelativeRest.principalNoetherBulkDivergence_forced_of_local_identity
 #print axioms RelativeRest.principalGeneralizedBianchi_forced_by_diffeomorphism_invariance
 #print axioms RelativeRest.LagrangianFirstVariationCartanData.toNoetherOperators_constraint
 #print axioms RelativeRest.LagrangianVariationNoetherOperators.deltaConstraint_forced
