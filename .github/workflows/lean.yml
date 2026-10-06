@@ -2,6 +2,12 @@ name: Lean verification
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - formalization/deep-forced-pass-2
+    paths-ignore:
+      - 'ci/**'
+      - 'lake-manifest.json'
 
 permissions:
   contents: write
@@ -58,6 +64,7 @@ jobs:
             fi
             echo
             echo "lake build status: $BUILD_STATUS"
+            exit "$BUILD_STATUS"
           } 2>&1 | tee ci/last-build.log
 
           BUILD_STATUS=${PIPESTATUS[0]}
