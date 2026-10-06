@@ -216,6 +216,28 @@ def carrierOdd (η s : ℝ) : ℝ := -2 * Real.sinh s * η
 @[simp] theorem carrierEven_zero (η : ℝ) : carrierEven η 0 = 2 * η := by
   simp [carrierEven]
 
+/-- The exchange-even carrier has vanishing first normal derivative at the fixed point. -/
+theorem carrierEven_hasDerivAt_zero (η : ℝ) :
+    HasDerivAt (carrierEven η) 0 0 := by
+  unfold carrierEven
+  have h := (Real.hasDerivAt_cosh 0).const_mul 2
+  have h' := h.mul_const η
+  simpa [mul_assoc, mul_left_comm, mul_comm] using h'
+
+/-- The exchange-odd carrier's first jet is exactly minus the even carrier value. -/
+theorem carrierOdd_hasDerivAt_zero (η : ℝ) :
+    HasDerivAt (carrierOdd η) (- carrierEven η 0) 0 := by
+  unfold carrierOdd
+  have h := (Real.hasDerivAt_sinh 0).const_mul (-2)
+  have h' := h.mul_const η
+  simpa [carrierEven, mul_assoc, mul_left_comm, mul_comm] using h'
+
+/-- Thus the fixed point kills the odd value but not its normal generator. -/
+theorem carrier_fixed_point_value_jet (η : ℝ) :
+    carrierOdd η 0 = 0 ∧
+    HasDerivAt (carrierOdd η) (- carrierEven η 0) 0 := by
+  exact ⟨carrierOdd_zero η, carrierOdd_hasDerivAt_zero η⟩
+
 /-- The odd/even scalar ratio is exactly `tanh s` whenever the curvature component is nonzero. -/
 theorem carrier_ratio
     (η s : ℝ) (hη : η ≠ 0) :
@@ -476,6 +498,13 @@ theorem unit_involution_fixes_conformal_constant
   have hC2 : C^2 = 1 := by nlinarith
   nlinarith [sq_nonneg (C - 1), sq_nonneg (C + 1)]
 
+/-- Scalar certificate for representative independence:
+if `χ ↦ Ω⁻²χ` and `g ↦ Ω²g`, their normalized product is unchanged. -/
+theorem conformal_representative_product_invariant
+    (χ Ω : ℝ) (hΩ : Ω ≠ 0) :
+    (χ / Ω^2) * Ω^2 = χ := by
+  field_simp [hΩ]
+
 /-! ## 8. Relative rapidity identity -/
 
 /-- Action-character ratio and optical null-frequency ratio are the same exponential. -/
@@ -679,6 +708,29 @@ def normalizedClockMap
     (α : L₁ →ₗ[ℝ] ℝ) (u₂ : L₂) (x : L₁) :
     normalizedClockMap α u₂ x = (α x) • u₂ := rfl
 
+/-- A normalized target covector is preserved exactly by the canonical clock-line map. -/
+theorem normalizedClockMap_preserves_covector
+    (α : L₁ →ₗ[ℝ] ℝ) (β : L₂ →ₗ[ℝ] ℝ) (u₂ : L₂)
+    (hβu : β u₂ = 1) (x : L₁) :
+    β (normalizedClockMap α u₂ x) = α x := by
+  simp [normalizedClockMap, hβu]
+
+/-- If the target line is reconstructed by its normalized covector, covector preservation alone
+forces the canonical map. -/
+theorem normalizedClockMap_unique_of_covector
+    (α : L₁ →ₗ[ℝ] ℝ) (β : L₂ →ₗ[ℝ] ℝ) (u₂ : L₂)
+    (hβu : β u₂ = 1)
+    (hspan₂ : ∀ y : L₂, y = (β y) • u₂)
+    (I : L₁ →ₗ[ℝ] L₂)
+    (hpres : β.comp I = α) :
+    I = normalizedClockMap α u₂ := by
+  ext x
+  rw [hspan₂ (I x)]
+  have hx := LinearMap.congr_fun hpres x
+  change β (I x) = α x at hx
+  rw [hx]
+  rfl
+
 end OneDimensional
 
 /-! ## 11. Pointwise local clock algebra -/
@@ -710,6 +762,29 @@ def localLift (D : LocalClockData (V:=V)) : V →ₗ[ℝ] V where
 @[simp] theorem localLift_unit (D : LocalClockData (V:=V)) :
     localLift D D.uhat = D.uhat := by
   simp [localLift, D.normalized]
+
+/-- The lift preserves the clock coefficient exactly. -/
+@[simp] theorem localLift_preserves_lambda
+    (D : LocalClockData (V:=V)) (v : V) :
+    D.lambda (localLift D v) = D.lambda v := by
+  simp [localLift, D.normalized]
+
+/-- The local lift is a projection onto the selected clock line. -/
+@[simp] theorem localLift_idempotent
+    (D : LocalClockData (V:=V)) (v : V) :
+    localLift D (localLift D v) = localLift D v := by
+  simp [localLift, D.normalized]
+
+/-- The invisible directions are exactly the vectors killed by the local lift. -/
+theorem localLift_eq_zero_iff
+    (D : LocalClockData (V:=V)) (v : V) :
+    localLift D v = 0 ↔ D.lambda v = 0 := by
+  constructor
+  · intro h
+    have h' := congrArg D.lambda h
+    simpa [localLift, D.normalized] using h'
+  · intro h
+    simp [localLift, h]
 
 end LocalClock
 
@@ -860,15 +935,54 @@ def dKappaVec : R2 := (0,1)
     clockOmega dThetaVec dKappaVec = -1 := by
   norm_num [clockOmega, dThetaVec, dKappaVec]
 
+/-- The clock-cover two-form is skew. -/
+theorem clockOmega_skew (v w : R2) :
+    clockOmega v w = - clockOmega w v := by
+  rcases v with ⟨v₁, v₂⟩
+  rcases w with ⟨w₁, w₂⟩
+  simp [clockOmega]
+  ring
+
+@[simp] theorem clockOmega_self (v : R2) : clockOmega v v = 0 := by
+  rcases v with ⟨v₁, v₂⟩
+  simp [clockOmega]
+
+/-- The finite-dimensional clock-cover form is nondegenerate. -/
+theorem clockOmega_left_nondegenerate
+    (v : R2) (h : ∀ w : R2, clockOmega v w = 0) :
+    v = 0 := by
+  rcases v with ⟨x, y⟩
+  have hy : y = 0 := by
+    simpa [clockOmega, dThetaVec] using h dThetaVec
+  have hx : x = 0 := by
+    have h' := h dKappaVec
+    simp [clockOmega, dKappaVec] at h'
+    linarith
+  ext <;> simp [hx, hy]
+
 /-! ## 16. Relational evolution: chain-rule form -/
 
-/-- Abstract algebraic statement: once the flow derivative is `X F`, translating the parameter by
-`θ-T` differentiates with the same generator.  The analytic flow theorem is supplied as a
-hypothesis so the downstream conclusion is explicit rather than hidden. -/
+/-- Relational translation by a clock reading does not alter the flow derivative. -/
+theorem relational_translation_hasDerivAt
+    (O : ℝ → ℝ) (T θ d : ℝ)
+    (h : HasDerivAt O d (θ - T)) :
+    HasDerivAt (fun ϑ => O (ϑ - T)) d θ := by
+  exact HasDerivAt.comp_sub_const θ T h
+
+/-- Derivative form of the relational translation identity. -/
+theorem relational_translation_deriv
+    (O : ℝ → ℝ) (T θ d : ℝ)
+    (h : HasDerivAt O d (θ - T)) :
+    deriv (fun ϑ => O (ϑ - T)) θ = d :=
+  (relational_translation_hasDerivAt O T θ d h).deriv
+
+/-- If the untranslated flow differentiates to `XF`, then the relational observable
+differentiates to the same generator evaluated at the shifted parameter. -/
 theorem relational_evolution_from_flow_derivative
-    (O XF : ℝ → ℝ)
-    (h : ∀ θ, deriv O θ = XF θ) :
-    ∀ θ, deriv O θ = XF θ := h
+    (O XF : ℝ → ℝ) (T θ : ℝ)
+    (hO : HasDerivAt O (XF (θ - T)) (θ - T)) :
+    deriv (fun ϑ => O (ϑ - T)) θ = XF (θ - T) :=
+  relational_translation_deriv O T θ (XF (θ - T)) hO
 
 /-! ## 17. Kerr–Newman scalar specialization -/
 
@@ -1003,6 +1117,14 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check carrier_fixed_point_value_jet
+#check conformal_representative_product_invariant
+#check normalizedClockMap_preserves_covector
+#check normalizedClockMap_unique_of_covector
+#check localLift_idempotent
+#check localLift_eq_zero_iff
+#check clockOmega_left_nondegenerate
+#check relational_evolution_from_flow_derivative
 
 end RelativeRest
 
