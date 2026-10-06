@@ -1667,6 +1667,50 @@ theorem conformal_factor_forced
     unit_involution_fixes_conformal_constant (f 1) χ hC hχ hunit'
   rw [hlin, hCeq, one_mul]
 
+
+/-! ### Chronometric normalization under the forced conformal metric -/
+
+/-- Vector rescaling needed to keep a g-unit timelike vector unit after `ĝ=χg`. -/
+def conformalUnitFactor (χ : ℝ) : ℝ :=
+  (Real.sqrt χ)⁻¹
+
+/-- On the positive carrier sector, the metric and vector rescalings cancel exactly. -/
+theorem conformalUnitFactor_metric_cancel
+    (χ : ℝ) (hχ : 0 < χ) :
+    χ * (conformalUnitFactor χ)^2 = 1 := by
+  have hs : (Real.sqrt χ)^2 = χ := Real.sq_sqrt (le_of_lt hχ)
+  have hs0 : Real.sqrt χ ≠ 0 := ne_of_gt (Real.sqrt_pos.2 hχ)
+  unfold conformalUnitFactor
+  field_simp [hs0]
+  nlinarith
+
+/-- Therefore a unit timelike vector for `g` remains unit timelike after the forced
+chronometric rescaling. -/
+theorem conformal_unit_timelike_normalization
+    (χ normg : ℝ)
+    (hχ : 0 < χ)
+    (hu : normg = -1) :
+    χ * (conformalUnitFactor χ)^2 * normg = -1 := by
+  rw [hu, conformalUnitFactor_metric_cancel χ hχ]
+  ring
+
+/-- Lowering the normalized vector with `ĝ=χg` contributes exactly one factor
+of `sqrt χ`. -/
+theorem conformal_dual_scale
+    (χ : ℝ) (hχ : 0 < χ) :
+    χ * conformalUnitFactor χ = Real.sqrt χ := by
+  have hs0 : Real.sqrt χ ≠ 0 := ne_of_gt (Real.sqrt_pos.2 hχ)
+  have hs : (Real.sqrt χ)^2 = χ := Real.sq_sqrt (le_of_lt hχ)
+  unfold conformalUnitFactor
+  field_simp [hs0]
+  nlinarith
+
+/-- With `ω=sqrt χ`, the local chronometric covector coefficient is exactly `ω`. -/
+theorem conformal_dual_scale_eq_clock_rate
+    (χ ω : ℝ) (hχ : 0 < χ) (hω : ω = Real.sqrt χ) :
+    χ * conformalUnitFactor χ = ω := by
+  rw [conformal_dual_scale χ hχ, hω]
+
 /-! ### Conformal null-Hamiltonian transport -/
 
 /-- Product-rule algebra for a conformally rescaled Hamiltonian `Ĥ=cH`: on the null cone
@@ -3832,6 +3876,10 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check conformalUnitFactor_metric_cancel
+#check conformal_unit_timelike_normalization
+#check conformal_dual_scale
+#check conformal_dual_scale_eq_clock_rate
 #check principalJet_local_decomposition
 #check principalSpatialRemainder_time_zero
 #check principalRestrictedResponse_unit
