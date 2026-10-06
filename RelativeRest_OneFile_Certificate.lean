@@ -4732,6 +4732,67 @@ theorem clock_section_reeb_existsUnique :
 def clockDilationTangent (c : ℝ) (v : R2) : R2 :=
   (v.1, c * v.2)
 
+
+/-- Every tangent vector at positive scale is the dilation of a unique explicit vector
+at the unit-scale section. -/
+def clockUndilateTangent (κ : ℝ) (v : R2) : R2 :=
+  (v.1, v.2 / κ)
+
+theorem clockDilation_undilate
+    (κ : ℝ) (hκ : κ ≠ 0) (v : R2) :
+    clockDilationTangent κ (clockUndilateTangent κ v) = v := by
+  rcases v with ⟨vΘ, vκ⟩
+  ext <;>
+    simp [clockDilationTangent, clockUndilateTangent, hκ]
+
+/-- One-homogeneity and the already-normalized unit section force the clock-cover
+one-form uniquely to be `κ dΘ`; there is no residual homogeneous choice. -/
+theorem clockLiouville_unique_of_homogeneity
+    (vartheta : ℝ → R2 → ℝ)
+    (hhom :
+      ∀ c κ : ℝ, ∀ v : R2,
+        0 < c →
+        vartheta (c * κ) (clockDilationTangent c v) =
+          c * vartheta κ v)
+    (hunit :
+      ∀ v : R2, vartheta 1 v = clockDTheta v)
+    (κ : ℝ) (hκ : 0 < κ) (v : R2) :
+    vartheta κ v = clockLiouville κ v := by
+  let v0 := clockUndilateTangent κ v
+  have hdil :
+      clockDilationTangent κ v0 = v :=
+    clockDilation_undilate κ (ne_of_gt hκ) v
+  have hh := hhom κ 1 v0 hκ
+  rw [mul_one, hdil, hunit] at hh
+  rw [hh]
+  rcases v with ⟨vΘ, vκ⟩
+  simp [v0, clockUndilateTangent, clockDTheta, clockLiouville]
+
+/-- Therefore any two one-homogeneous clock-cover one-forms agreeing with the normalized
+clock on `κ=1` coincide throughout the positive cover. -/
+theorem clockCoverOneForm_unique
+    (vartheta₁ vartheta₂ : ℝ → R2 → ℝ)
+    (hhom₁ :
+      ∀ c κ : ℝ, ∀ v : R2,
+        0 < c →
+        vartheta₁ (c * κ) (clockDilationTangent c v) =
+          c * vartheta₁ κ v)
+    (hhom₂ :
+      ∀ c κ : ℝ, ∀ v : R2,
+        0 < c →
+        vartheta₂ (c * κ) (clockDilationTangent c v) =
+          c * vartheta₂ κ v)
+    (hunit₁ :
+      ∀ v : R2, vartheta₁ 1 v = clockDTheta v)
+    (hunit₂ :
+      ∀ v : R2, vartheta₂ 1 v = clockDTheta v)
+    (κ : ℝ) (hκ : 0 < κ) (v : R2) :
+    vartheta₁ κ v = vartheta₂ κ v := by
+  rw [clockLiouville_unique_of_homogeneity
+        vartheta₁ hhom₁ hunit₁ κ hκ v,
+      clockLiouville_unique_of_homogeneity
+        vartheta₂ hhom₂ hunit₂ κ hκ v]
+
 /-- The exact clock-cover symplectic form is homogeneous of degree one under common scale. -/
 theorem clockOmega_dilation_homogeneous
     (c : ℝ) (v w : R2) :
@@ -6053,6 +6114,9 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check clockDilation_undilate
+#check clockLiouville_unique_of_homogeneity
+#check clockCoverOneForm_unique
 #check principalClockRate_sq
 #check principalClockRate_eq_invariant_fourth_root
 #check principalClockRate_eq_energy_density
@@ -6485,6 +6549,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalFieldBridge_Lambda_unique
 #print axioms RelativeRest.reeb_direction_unique
 #print axioms RelativeRest.clock_section_reeb_existsUnique
+#print axioms RelativeRest.clockLiouville_unique_of_homogeneity
 #print axioms RelativeRest.clockQuotientDualEquiv
 #print axioms RelativeRest.quotientBilinearForm_unique
 #print axioms RelativeRest.presymplecticReductionForm_left_nondegenerate
