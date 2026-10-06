@@ -1272,14 +1272,26 @@ variable {V P KSpace : Type*}
   [AddCommGroup KSpace] [Module ℝ KSpace]
 
 /-- Minimal algebraic interface exported by a future first-principles Einstein-Maxwell/Iyer-Wald
-formalization. -/
+formalization.  Nonvanishing of the descended clock covector is not postulated: a strictly
+positive physical response witness forces it. -/
 structure BridgeData where
   beta : P →ₗ[ℝ] KSpace
   Lambda : KSpace →ₗ[ℝ] ℝ
   ell : P →ₗ[ℝ] ℝ
   beta_surj : Function.Surjective beta
   factorization : Lambda.comp beta = ell
-  Lambda_nonzero : Lambda ≠ 0
+  positiveWitness : P
+  response_positive : 0 < ell positiveWitness
+
+/-- The physical positive-response witness forces the integrated response covector to be nonzero. -/
+theorem bridge_ell_nonzero (D : BridgeData (P:=P) (KSpace:=KSpace)) :
+    D.ell ≠ 0 :=
+  covector_nonzero_of_positive D.ell D.positiveWitness D.response_positive
+
+/-- Factorization then forces the descended characteristic covector itself to be nonzero. -/
+theorem bridge_Lambda_nonzero (D : BridgeData (P:=P) (KSpace:=KSpace)) :
+    D.Lambda ≠ 0 :=
+  descended_covector_nonzero D.beta D.Lambda D.ell D.factorization (bridge_ell_nonzero D)
 
 /-- Once the Iyer-Wald bridge is supplied, the characteristic covector is mathematically unique. -/
 theorem bridge_Lambda_unique (D : BridgeData (P:=P) (KSpace:=KSpace))
@@ -1294,7 +1306,7 @@ noncomputable def bridgeQuotientEquivRange (D : BridgeData (P:=P) (KSpace:=KSpac
 /-- The range of the characteristic clock covector is all of `ℝ`. -/
 theorem bridge_range_full (D : BridgeData (P:=P) (KSpace:=KSpace)) :
     LinearMap.range D.Lambda = ⊤ :=
-  range_eq_top_of_nonzero D.Lambda D.Lambda_nonzero
+  range_eq_top_of_nonzero D.Lambda (bridge_Lambda_nonzero D)
 
 end GeometricInterface
 
@@ -1335,6 +1347,8 @@ theorem scalar_backbone
 #check homogeneous_conformal_factor
 #check covector_pullback_injective
 #check descended_covector_unique
+#check bridge_ell_nonzero
+#check bridge_Lambda_nonzero
 #check bridge_Lambda_unique
 #check null_pair_orthogonal
 #check mino_clock_identity
