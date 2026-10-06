@@ -8994,6 +8994,123 @@ theorem kerrEinsteinTargetRicci_trace_zero
     kerrRicciFrameCovCoeff, principalMetricSign]
   ring
 
+/-! ### Exact finite closure criterion for the remaining Kerr curvature calculation -/
+
+/-- After stationary-reflection parity closes the eight odd components, these are exactly
+the eight even ordered Ricci component obligations that remain. -/
+def kerrEvenRicciObligations
+    (Q r M a θ : ℝ) : Prop :=
+  kerrRicciCovFromMetric r M a Q θ 0 0 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 0 0 ∧
+  kerrRicciCovFromMetric r M a Q θ 0 3 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 0 3 ∧
+  kerrRicciCovFromMetric r M a Q θ 1 1 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 1 1 ∧
+  kerrRicciCovFromMetric r M a Q θ 1 2 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 1 2 ∧
+  kerrRicciCovFromMetric r M a Q θ 2 1 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 2 1 ∧
+  kerrRicciCovFromMetric r M a Q θ 2 2 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 2 2 ∧
+  kerrRicciCovFromMetric r M a Q θ 3 0 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 3 0 ∧
+  kerrRicciCovFromMetric r M a Q θ 3 3 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 3 3
+
+/-- The full sixteen-component Ricci equation is equivalent to those eight even obligations;
+the other eight components are the already-proved odd-parity sector. -/
+theorem kerrFullRicciEquation_iff_even_obligations
+    (Q r M a θ : ℝ) :
+    (∀ i j : Fin 4,
+      kerrRicciCovFromMetric r M a Q θ i j =
+        kerrEinsteinTargetRicciCoordinate Q r M a θ i j) ↔
+      kerrEvenRicciObligations Q r M a θ := by
+  constructor
+  · intro h
+    exact ⟨h 0 0, h 0 3, h 1 1, h 1 2,
+      h 2 1, h 2 2, h 3 0, h 3 3⟩
+  · intro h
+    rcases h with ⟨h00,h03,h11,h12,h21,h22,h30,h33⟩
+    intro i j
+    fin_cases i <;> fin_cases j
+    · exact h00
+    · apply kerrRicciCovFromMetric_eq_target_of_odd_stationary
+      norm_num [kerrStationarySign]
+    · apply kerrRicciCovFromMetric_eq_target_of_odd_stationary
+      norm_num [kerrStationarySign]
+    · exact h03
+    · apply kerrRicciCovFromMetric_eq_target_of_odd_stationary
+      norm_num [kerrStationarySign]
+    · exact h11
+    · exact h12
+    · apply kerrRicciCovFromMetric_eq_target_of_odd_stationary
+      norm_num [kerrStationarySign]
+    · apply kerrRicciCovFromMetric_eq_target_of_odd_stationary
+      norm_num [kerrStationarySign]
+    · exact h21
+    · exact h22
+    · apply kerrRicciCovFromMetric_eq_target_of_odd_stationary
+      norm_num [kerrStationarySign]
+    · exact h30
+    · apply kerrRicciCovFromMetric_eq_target_of_odd_stationary
+      norm_num [kerrStationarySign]
+    · apply kerrRicciCovFromMetric_eq_target_of_odd_stationary
+      norm_num [kerrStationarySign]
+    · exact h33
+
+/-- Once the finite even Ricci obligations are discharged, scalar curvature zero and the
+full metric-derived Einstein tensor follow automatically from the already-forced
+trace-free Einstein-Maxwell target. -/
+theorem kerrEinsteinEquation_from_evenRicciObligations
+    (Q r M a θ : ℝ)
+    (hsig : 0 < Sigma r a θ)
+    (hdel : 0 < Delta r M a Q)
+    (hsin : Real.sin θ ≠ 0)
+    (hEven : kerrEvenRicciObligations Q r M a θ) :
+    kerrScalarCurvatureFromMetric r M a Q θ = 0 ∧
+    (∀ i j : Fin 4,
+      kerrEinsteinCovFromMetric r M a Q θ i j =
+        kerrEinsteinTargetRicciCov Q r M a θ i j) := by
+  have hRicCoord :
+      ∀ i j : Fin 4,
+        kerrRicciCovFromMetric r M a Q θ i j =
+          kerrEinsteinTargetRicciCoordinate Q r M a θ i j :=
+    (kerrFullRicciEquation_iff_even_obligations
+      Q r M a θ).2 hEven
+  have hTarget :
+      ∀ i j : Fin 4,
+        kerrEinsteinTargetRicciCov Q r M a θ i j =
+          kerrEinsteinTargetRicciCoordinate Q r M a θ i j := by
+    intro i j
+    exact kerrEinsteinTargetRicciCov_eq_coordinate
+      Q r M a θ hsig hdel i j
+  have hRicCov :
+      ∀ i j : Fin 4,
+        kerrRicciCovFromMetric r M a Q θ i j =
+          kerrEinsteinTargetRicciCov Q r M a θ i j := by
+    intro i j
+    rw [hTarget i j]
+    exact hRicCoord i j
+  have hScalarEq :
+      kerrScalarCurvatureFromMetric r M a Q θ =
+        kerrEinsteinTargetRicciTrace Q r M a θ := by
+    unfold kerrScalarCurvatureFromMetric kerrEinsteinTargetRicciTrace
+    apply Finset.sum_congr rfl
+    intro i hi
+    apply Finset.sum_congr rfl
+    intro j hj
+    rw [hRicCov i j]
+  have hScalar : kerrScalarCurvatureFromMetric r M a Q θ = 0 := by
+    rw [hScalarEq]
+    exact kerrEinsteinTargetRicci_trace_zero
+      Q r M a θ hsig hdel hsin
+  refine ⟨hScalar, ?_⟩
+  intro i j
+  unfold kerrEinsteinCovFromMetric
+  rw [hScalar]
+  simp
+  exact hRicCov i j
+
 /-- Mixed Ricci eigenvalue obtained by raising the first Carter-frame index. -/
 def kerrRicciFrameMixedCoeff
     (Q r a θ : ℝ) (A : Fin 4) : ℝ :=
@@ -10809,6 +10926,9 @@ theorem scalar_backbone_from_einstein_maxwell
 #check kerrEinsteinTarget_frame_equation
 #check kerrEinsteinTargetRicciTrace_eq_frame_sum
 #check kerrEinsteinTargetRicci_trace_zero
+#check kerrEvenRicciObligations
+#check kerrFullRicciEquation_iff_even_obligations
+#check kerrEinsteinEquation_from_evenRicciObligations
 #check kerrEinsteinTargetRicci_frame_norm
 #check kerrEinsteinTargetRicci_frame_norm_formula
 #check kerrCoframe0_norm
@@ -11493,6 +11613,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrRicci_stationary_meridional_eq_target
 #print axioms RelativeRest.kerrCoframe_orthonormal
 #print axioms RelativeRest.kerrEinsteinTargetRicci_trace_zero
+#print axioms RelativeRest.kerrFullRicciEquation_iff_even_obligations
+#print axioms RelativeRest.kerrEinsteinEquation_from_evenRicciObligations
 #print axioms RelativeRest.kerrEinsteinTargetRicciCov_eq_coordinate
 #print axioms RelativeRest.kerrEinsteinTargetRicci_frame_norm_formula
 #print axioms RelativeRest.kerrEinsteinTarget_frame_equation
