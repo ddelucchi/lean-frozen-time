@@ -293,6 +293,40 @@ theorem maxwell_invariant_square (E B : ℝ) :
   unfold maxwellI maxwellJ
   ring
 
+/-- Principal non-null Maxwell carrier magnitude. -/
+def principalChi (E B : ℝ) : ℝ := 2 * (E^2 + B^2)
+
+@[simp] theorem principalChi_nonneg (E B : ℝ) : 0 ≤ principalChi E B := by
+  unfold principalChi
+  positivity
+
+/-- The carrier is strictly positive whenever the principal Maxwell field is nonzero. -/
+theorem principalChi_pos
+    (E B : ℝ) (h : E ≠ 0 ∨ B ≠ 0) :
+    0 < principalChi E B := by
+  unfold principalChi
+  rcases h with hE | hB
+  · nlinarith [sq_pos_of_ne_zero hE, sq_nonneg B]
+  · nlinarith [sq_nonneg E, sq_pos_of_ne_zero hB]
+
+/-- The two Maxwell invariants square exactly to the square of the principal carrier. -/
+theorem maxwell_invariants_eq_principalChi_sq (E B : ℝ) :
+    (maxwellI E B)^2 + (maxwellJ E B)^2 = (principalChi E B)^2 := by
+  rw [maxwell_invariant_square]
+  unfold principalChi
+  ring
+
+/-- Once the clock satisfies `ω²=χ`, its fourth power is exactly the invariant Maxwell magnitude. -/
+theorem maxwell_clock_fourth_power
+    (E B ω : ℝ)
+    (hω : ω^2 = principalChi E B) :
+    ω^4 = (maxwellI E B)^2 + (maxwellJ E B)^2 := by
+  calc
+    ω^4 = (ω^2)^2 := by ring
+    _ = (principalChi E B)^2 := by rw [hω]
+    _ = (maxwellI E B)^2 + (maxwellJ E B)^2 :=
+      (maxwell_invariants_eq_principalChi_sq E B).symm
+
 /-- A canonical principal-frame mixed Maxwell stress endomorphism, with overall scale `u`. -/
 def principalStress (u : ℝ) : Fin 4 → Fin 4 → ℝ := fun i j =>
   if i = j then
@@ -885,6 +919,27 @@ end OneDimensional
 
 /-! ## 11. Pointwise local clock algebra -/
 
+/-- Scalar algebra behind the symmetric-carrier decomposition
+`Jv = ω T_O(v) u_* + w`: self-adjointness fixes the coefficient. -/
+theorem carrier_decomposition_coefficient
+    (a g χ ω TOv : ℝ)
+    (hself : -a = χ * g)
+    (hTO : TOv = -ω * g)
+    (hχ : χ = ω^2) :
+    a = ω * TOv := by
+  rw [hTO, hχ] at hself ⊢
+  nlinarith
+
+/-- A nonzero pointwise response scale makes the local ratio coefficient unique and equal
+to the chronometric covector value. -/
+theorem local_response_ratio_forces_clock
+    (c TOv λ : ℝ) (hc : c ≠ 0)
+    (hresponse : c * TOv = λ * c) :
+    λ = TOv := by
+  apply mul_right_cancel₀ hc
+  simpa [mul_comm] using hresponse.symm
+
+
 section LocalClock
 
 variable {V : Type*} [AddCommGroup V] [Module ℝ V]
@@ -962,6 +1017,20 @@ theorem energy_density_clock_rate
   rw [hω, Real.sq_sqrt hχ, hε]
   have hpi : Real.pi ≠ 0 := ne_of_gt Real.pi_pos
   field_simp [hpi]
+
+/-- Positivity upgrades `ω²=16π ε` to the manuscript's normalized rate
+`ω=4√(π ε)`. -/
+theorem energy_density_clock_rate_value
+    (ε ω : ℝ)
+    (hε : 0 ≤ ε) (hω : 0 ≤ ω)
+    (hsq : ω^2 = 16 * Real.pi * ε) :
+    ω = 4 * Real.sqrt (Real.pi * ε) := by
+  have hpie : 0 ≤ Real.pi * ε :=
+    mul_nonneg (le_of_lt Real.pi_pos) hε
+  have hsqrt : (Real.sqrt (Real.pi * ε))^2 = Real.pi * ε :=
+    Real.sq_sqrt hpie
+  have hrhs : 0 ≤ 4 * Real.sqrt (Real.pi * ε) := by positivity
+  nlinarith
 
 /-- The local optical covector has background norm `-ω²=-sqrt K` once the unit timelike norm
 and `K=ω⁴` are supplied. -/
@@ -1361,6 +1430,12 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check principalChi_pos
+#check maxwell_invariants_eq_principalChi_sq
+#check maxwell_clock_fourth_power
+#check carrier_decomposition_coefficient
+#check local_response_ratio_forces_clock
+#check energy_density_clock_rate_value
 #check normalized_unit_unique
 #check covector_nonzero_of_positive
 #check descended_covector_nonzero
