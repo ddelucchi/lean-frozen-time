@@ -14158,7 +14158,7 @@ structure PrincipalActionSectorVariationCharacteristicInput where
 
 /-- The common/even action direction is automatically on shell. -/
 theorem PrincipalActionSectorVariationCharacteristicInput.constraint_CA
-    (D : PrincipalFixedPointJetVariationCharacteristicInput (P:=P)) :
+    (D : PrincipalActionSectorVariationCharacteristicInput (P:=P)) :
     D.variation.constraint CA = 0 := by
   rw [D.constraintFromActionLinearization]
   exact actionConstraintResponseLinear_CA _
@@ -14773,7 +14773,7 @@ theorem centralPaper_forced_closure_certificate
     (Bform : W →ₗ[ℝ] W →ₗ[ℝ] ℝ)
     (S : SyngeEndpointJetData Bform)
     (hsym : ∀ x y, bil Bform x y = bil Bform y x)
-    (D : PrincipalActionSectorVariationCharacteristicInput (P:=P))
+    (D : PrincipalFixedPointJetVariationCharacteristicInput (P:=P))
     (u s Q r M a θ dt dlam : ℝ)
     (hQ : Q ≠ 0)
     (hsig : 0 < Sigma r a θ)
