@@ -7898,6 +7898,114 @@ theorem kerrCoframe_orthonormal
       h03, h30, h01, h10, h02, h20,
       h31, h13, h32, h23, h12, h21]
 
+
+/-! ### Einstein-equation Ricci target selected by the Maxwell field and Carter coframe -/
+
+/-- Electrovac Ricci eigenvalue scale forced by the principal Maxwell field. -/
+def kerrRicciScale (Q r a θ : ℝ) : ℝ :=
+  Q^2 / (Sigma r a θ)^2
+
+/-- Covariant Ricci coefficients in the orthonormal Carter frame:
+diag(q,-q,q,q). -/
+def kerrRicciFrameCovCoeff
+    (Q r a θ : ℝ) (A : Fin 4) : ℝ :=
+  if A = 0 then kerrRicciScale Q r a θ
+  else if A = 1 then -kerrRicciScale Q r a θ
+  else kerrRicciScale Q r a θ
+
+/-- Coordinate covariant tensor forced by the Einstein-Maxwell equation once expressed in
+the metric-selected Carter coframe. -/
+def kerrEinsteinTargetRicciCov
+    (Q r M a θ : ℝ) (i j : Fin 4) : ℝ :=
+  ∑ A : Fin 4,
+    kerrRicciFrameCovCoeff Q r a θ A *
+      kerrCoframe r M a Q θ A i *
+      kerrCoframe r M a Q θ A j
+
+/-- Coordinate trace of the field-forced Ricci target. -/
+def kerrEinsteinTargetRicciTrace
+    (Q r M a θ : ℝ) : ℝ :=
+  ∑ i : Fin 4, ∑ j : Fin 4,
+    kerrMetricInv r M a Q θ i j *
+      kerrEinsteinTargetRicciCov Q r M a θ i j
+
+/-- Generic rank-one trace contraction used to reduce coordinate traces to coframe norms. -/
+theorem kerr_rankOne_trace
+    (r M a Q θ c : ℝ)
+    (α : Fin 4 → ℝ) :
+    (∑ i : Fin 4, ∑ j : Fin 4,
+      kerrMetricInv r M a Q θ i j *
+        (c * α i * α j)) =
+      c * kerrCovectorInner r M a Q θ α α := by
+  unfold kerrCovectorInner
+  rw [Finset.mul_sum]
+  apply Finset.sum_congr rfl
+  intro i hi
+  rw [Finset.mul_sum]
+  apply Finset.sum_congr rfl
+  intro j hj
+  ring
+
+/-- The Einstein-Maxwell Ricci target is trace-free in the actual Kerr metric. -/
+theorem kerrEinsteinTargetRicci_trace_zero
+    (Q r M a θ : ℝ)
+    (hsig : 0 < Sigma r a θ)
+    (hdel : 0 < Delta r M a Q)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrEinsteinTargetRicciTrace Q r M a θ = 0 := by
+  unfold kerrEinsteinTargetRicciTrace
+  simp_rw [kerrEinsteinTargetRicciCov]
+  simp_rw [Finset.mul_sum]
+  rw [Finset.sum_comm]
+  simp_rw [← Finset.mul_sum]
+  rw [Finset.sum_comm]
+  simp_rw [← Finset.mul_sum]
+  have horth := kerrCoframe_orthonormal
+    r M a Q θ hsig hdel hsin
+  simp_rw [show ∀ A : Fin 4,
+      (∑ i : Fin 4, ∑ j : Fin 4,
+        kerrMetricInv r M a Q θ i j *
+          (kerrRicciFrameCovCoeff Q r a θ A *
+            kerrCoframe r M a Q θ A i *
+            kerrCoframe r M a Q θ A j)) =
+        kerrRicciFrameCovCoeff Q r a θ A *
+          kerrCovectorInner r M a Q θ
+            (kerrCoframe r M a Q θ A)
+            (kerrCoframe r M a Q θ A) by
+      intro A
+      exact kerr_rankOne_trace r M a Q θ
+        (kerrRicciFrameCovCoeff Q r a θ A)
+        (kerrCoframe r M a Q θ A)]
+  simp_rw [horth]
+  simp [kerrRicciFrameCovCoeff, principalMetricSign]
+  ring
+
+/-- The frame invariant squared Ricci norm of the target is four times q squared. -/
+def kerrEinsteinTargetRicciFrameNormSq
+    (Q r a θ : ℝ) : ℝ :=
+  ∑ A : Fin 4,
+    (kerrRicciFrameCovCoeff Q r a θ A)^2
+
+theorem kerrEinsteinTargetRicci_frame_norm
+    (Q r a θ : ℝ) :
+    kerrEinsteinTargetRicciFrameNormSq Q r a θ =
+      4 * (kerrRicciScale Q r a θ)^2 := by
+  unfold kerrEinsteinTargetRicciFrameNormSq
+  simp [kerrRicciFrameCovCoeff]
+  ring
+
+/-- Hence the field-forced target carries exactly the manuscript invariant
+4 Q^4 / Sigma^4. -/
+theorem kerrEinsteinTargetRicci_frame_norm_formula
+    (Q r a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0) :
+    kerrEinsteinTargetRicciFrameNormSq Q r a θ =
+      4 * Q^4 / (Sigma r a θ)^4 := by
+  rw [kerrEinsteinTargetRicci_frame_norm]
+  unfold kerrRicciScale
+  field_simp [hsig]
+  ring
+
 /-- Coordinate Maxwell two-form reconstructed from the four derivatives of the
 Boyer-Lindquist potential. -/
 def kerrCoordinateField
@@ -9557,6 +9665,9 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check kerrEinsteinTargetRicci_trace_zero
+#check kerrEinsteinTargetRicci_frame_norm
+#check kerrEinsteinTargetRicci_frame_norm_formula
 #check kerrCoframe0_norm
 #check kerrCoframe1_norm
 #check kerrCoframe2_norm
@@ -10206,6 +10317,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerr_stationary_inverse_block
 #print axioms RelativeRest.kerrMetric_inverse_certificate
 #print axioms RelativeRest.kerrCoframe_orthonormal
+#print axioms RelativeRest.kerrEinsteinTargetRicci_trace_zero
+#print axioms RelativeRest.kerrEinsteinTargetRicci_frame_norm_formula
 #print axioms RelativeRest.kerrVolumeDensity_eq_sqrt_neg_det
 #print axioms RelativeRest.kerr_metric_det
 #print axioms RelativeRest.kerrMaxwell_divergence_t
