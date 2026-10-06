@@ -3124,8 +3124,9 @@ theorem kerrPrincipal_field_magnitude
     (Q r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
     (kerrPrincipalE Q r a θ)^2 + (kerrPrincipalB Q r a θ)^2 =
       Q^2 / (Sigma r a θ)^2 := by
-  unfold kerrPrincipalE kerrPrincipalB Sigma
+  unfold kerrPrincipalE kerrPrincipalB
   field_simp [hsig]
+  unfold Sigma
   ring
 
 /-- Hence the general principal Maxwell carrier `2(E²+B²)` becomes the manuscript's
