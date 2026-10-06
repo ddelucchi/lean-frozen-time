@@ -15193,19 +15193,161 @@ theorem principalRelativeActionOrbitVariation_forced_core_chain
   rcases h with ⟨hrest,_hJ,hCA,hDA,_hG,_hM,hcur,hL,hdim,hnorm⟩
   exact ⟨hrest,hCA,hDA,D.constraint_operator_forced,hcur,hL,hdim,hnorm⟩
 
+/-! ### Metric-Euler relative orbit: single action-derivative bridge to the clock -/
+
+/-- Strongest finite-dimensional action/covariant-phase-space interface in the file.
+The only bridge datum is the restriction of the covariant constraint descendant to
+the physical relative action orbit. Its coefficient is the hypersurface response
+constructed directly from derivatives of the displayed Einstein-Maxwell metric
+Euler-Lagrange coefficient. Frozen value, normal jet, sector signs and the full
+constraint operator are all consequences. -/
+structure PrincipalMetricEulerRelativeOrbitVariationCharacteristicInput where
+  carrier : PrincipalCarrierCharacteristicInput (P:=P)
+  variation : LagrangianVariationNoetherOperators
+    (L:=R2) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ))
+  relativeMetricEulerCharacter :
+    ∀ s : ℝ, ∀ v : Fin 4 → ℝ,
+      relativeConstraintOrbitEval variation.constraint v s =
+        relativeConstraintResidual (carrier.metricEulerJetResponse v) s
+
+/-- The entire two-sector covariant constraint map is reconstructed from that one
+relative action character. -/
+theorem PrincipalMetricEulerRelativeOrbitVariationCharacteristicInput.constraint_operator_forced
+    (D : PrincipalMetricEulerRelativeOrbitVariationCharacteristicInput (P:=P)) :
+    D.variation.constraint =
+      actionConstraintResponseLinear D.carrier.metricEulerJetResponse := by
+  exact (actionConstraintOperator_eq_iff_relative_orbit
+    D.variation.constraint D.carrier.metricEulerJetResponse).2
+      D.relativeMetricEulerCharacter
+
+/-- The action-Euler named response is only a downstream synonym of the literal
+metric-Euler derivative response. -/
+def PrincipalMetricEulerRelativeOrbitVariationCharacteristicInput.toRelativeActionOrbitInput
+    (D : PrincipalMetricEulerRelativeOrbitVariationCharacteristicInput (P:=P)) :
+    PrincipalRelativeActionOrbitVariationCharacteristicInput (P:=P) where
+  carrier := D.carrier
+  variation := D.variation
+  relativeActionCharacter := by
+    intro s v
+    have h := D.relativeMetricEulerCharacter s v
+    rw [D.carrier.metricEulerJetResponse_eq_actionEulerResponse] at h
+    exact h
+
+theorem PrincipalMetricEulerRelativeOrbitVariationCharacteristicInput.frozenCommon
+    (D : PrincipalMetricEulerRelativeOrbitVariationCharacteristicInput (P:=P)) :
+    D.variation.constraint CA = 0 := by
+  rw [D.constraint_operator_forced]
+  exact actionConstraintResponseLinear_CA _
+
+theorem PrincipalMetricEulerRelativeOrbitVariationCharacteristicInput.survivingNormal
+    (D : PrincipalMetricEulerRelativeOrbitVariationCharacteristicInput (P:=P)) :
+    D.variation.constraint DA =
+      (-2 : ℝ) • D.carrier.metricEulerJetResponse := by
+  rw [D.constraint_operator_forced]
+  exact actionConstraintResponseLinear_DA _
+
+def PrincipalMetricEulerRelativeOrbitVariationCharacteristicInput.characteristicCurrent
+    (D : PrincipalMetricEulerRelativeOrbitVariationCharacteristicInput (P:=P)) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
+  D.toRelativeActionOrbitInput.characteristicCurrent
+
+theorem principalMetricEulerRelativeOrbitVariation_current_eq_metricEulerResponse
+    (D : PrincipalMetricEulerRelativeOrbitVariationCharacteristicInput (P:=P)) :
+    D.characteristicCurrent = D.carrier.metricEulerJetResponse := by
+  rw [PrincipalMetricEulerRelativeOrbitVariationCharacteristicInput.characteristicCurrent,
+    principalRelativeActionOrbitVariation_current_eq_actionEulerResponse,
+    ← D.carrier.metricEulerJetResponse_eq_actionEulerResponse]
+
+theorem principalMetricEulerRelativeOrbitVariation_current_eq_characteristicCurrent
+    (D : PrincipalMetricEulerRelativeOrbitVariationCharacteristicInput (P:=P)) :
+    D.characteristicCurrent =
+      D.carrier.toCharacteristicCurrentData.current :=
+  principalFixedPointJetVariation_current_eq_characteristicCurrent
+    D.toRelativeActionOrbitInput.toFixedPointJetInput
+
+theorem principalMetricEulerRelativeOrbitVariation_clock_chain
+    (D : PrincipalMetricEulerRelativeOrbitVariationCharacteristicInput (P:=P)) :
+    D.characteristicCurrent =
+        D.carrier.toCharacteristicCurrentData.current ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    (quotientClockCovector principalTOLinear).comp
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda) =
+      D.carrier.toCharacteristicCurrentData.clockCovector ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat :=
+  principalRelativeActionOrbitVariation_clock_chain
+    D.toRelativeActionOrbitInput
+
+/-- Strongest current action-to-clock closure. A single equality along the physical
+relative action orbit, with coefficient reconstructed from the metric Euler derivative
+of the displayed Einstein-Maxwell action, forces the frozen value, surviving jet,
+entire constraint operator, derived Iyer-Wald current, characteristic quotient and
+normalized principal clock. -/
+theorem principalMetricEulerRelativeOrbitVariation_forced_core_chain
+    (D : PrincipalMetricEulerRelativeOrbitVariationCharacteristicInput (P:=P))
+    (u s : ℝ) :
+    ((8 * Real.pi * principalFieldEnergyDensity D.carrier.E D.carrier.B =
+        8 * Real.pi *
+          maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+          principalFieldEnergyDensity D.carrier.E D.carrier.B) ↔ s = 0) ∧
+    (∀ i j : Fin 4,
+      principalActionEulerJetLinear D.carrier.E D.carrier.B
+          (principalBasis j) i =
+        (16 * Real.pi / principalMetricSign i) *
+          deriv (principalScaledMetricEulerCoeffFromAction
+            D.carrier.E D.carrier.B i j) 0) ∧
+    D.variation.constraint CA = 0 ∧
+    D.variation.constraint DA =
+      (-2 : ℝ) • D.carrier.metricEulerJetResponse ∧
+    D.variation.constraint =
+      actionConstraintResponseLinear D.carrier.metricEulerJetResponse ∧
+    D.characteristicCurrent = D.carrier.metricEulerJetResponse ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat := by
+  have h := principalFixedPointJetVariation_forced_core_chain
+    D.toRelativeActionOrbitInput.toFixedPointJetInput u s
+  rcases h with ⟨hrest,_hJ,_hCA,_hDA,_hG,_hM,_hcur,hL,hdim,hnorm⟩
+  refine ⟨hrest, ?_, D.frozenCommon, D.survivingNormal,
+    D.constraint_operator_forced,
+    principalMetricEulerRelativeOrbitVariation_current_eq_metricEulerResponse D,
+    hL,hdim,hnorm⟩
+  intro i j
+  exact principalActionEulerJetLinear_basis D.carrier.E D.carrier.B i j
+
 /-! ### Central manuscript closure certificate -/
 
 /-- A single closure theorem assembling the manuscript's central forced chain.
 The only inputs beyond the explicit regular-sector hypotheses are the actual
-first-variation/Cartan/Noether package encoded in `D.variation` and the smooth
-regular Synge endpoint jet `S`; Iyer-Wald, sector signs, carrier normalization,
-clock quotient, Kerr curvature, Carter rest, and Mino scaling are all conclusions. -/
+first-variation/Cartan/Noether package encoded in `D.variation`, one equality identifying
+its constraint descendant along the relative action orbit with the response reconstructed
+from the Einstein-Maxwell metric Euler derivative, and the smooth regular Synge endpoint
+jet `S`. The frozen value, surviving jet, full constraint operator, Iyer-Wald identity,
+sector signs, carrier normalization, clock quotient, Kerr curvature, Carter rest, and
+Mino scaling are all conclusions. -/
 theorem centralPaper_forced_closure_certificate
     {W : Type*} [AddCommGroup W] [Module ℝ W]
     (Bform : W →ₗ[ℝ] W →ₗ[ℝ] ℝ)
     (S : SyngeEndpointJetData Bform)
     (hsym : ∀ x y, bil Bform x y = bil Bform y x)
-    (D : PrincipalMetricEulerJetVariationCharacteristicInput (P:=P))
+    (D : PrincipalMetricEulerRelativeOrbitVariationCharacteristicInput (P:=P))
     (u s Q r M a θ dt dlam : ℝ)
     (hQ : Q ≠ 0)
     (hsig : 0 < Sigma r a θ)
@@ -15273,12 +15415,20 @@ theorem centralPaper_forced_closure_certificate
       (carterObserver r M a Q θ) = -1 ∧
     kerrClockRateFromPrincipalEM Q r a θ * dt =
       Real.sqrt 2 * |Q| * dlam := by
-  have hfp := principalFixedPointJetVariation_forced_core_chain D u s
+  have hfp := principalMetricEulerRelativeOrbitVariation_forced_core_chain
+    D u s
   rcases hfp with
-    ⟨hrest, _hJ, hCA, hDA, _hG, _hM, hcurEuler,
+    ⟨hrest, _hJ, hCA, hDAmetric, _hop, hcurMetric,
       hLambda, hdim, hnorm⟩
+  have hDA : D.variation.constraint DA =
+      (-2 : ℝ) • D.carrier.actionEulerResponse := by
+    rw [← D.carrier.metricEulerJetResponse_eq_actionEulerResponse]
+    exact hDAmetric
+  have hcurEuler : D.characteristicCurrent =
+      D.carrier.actionEulerResponse := by
+    rw [hcurMetric, D.carrier.metricEulerJetResponse_eq_actionEulerResponse]
   have hcurChar :=
-    principalFixedPointJetVariation_current_eq_characteristicCurrent D
+    principalMetricEulerRelativeOrbitVariation_current_eq_characteristicCurrent D
   have hrainich : ∀ i j : Fin 4,
       (∑ k : Fin 4,
         principalJetFromF D.carrier.E D.carrier.B i k *
