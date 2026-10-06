@@ -7673,6 +7673,231 @@ def kerrCoframe3
   (Real.sin θ / Real.sqrt (Sigma r a θ)) •
     stationaryCovectorLift (kerrAxialOneFormCoeffs r a)
 
+
+/-! ### Carter coframe orthonormality from the certified inverse metric -/
+
+/-- Inverse-metric pairing of coordinate covectors. -/
+def kerrCovectorInner
+    (r M a Q θ : ℝ)
+    (α β : Fin 4 → ℝ) : ℝ :=
+  ∑ i : Fin 4, ∑ j : Fin 4,
+    kerrMetricInv r M a Q θ i j * α i * β j
+
+/-- The temporal Carter coframe leg has norm minus one. -/
+theorem kerrCoframe0_norm
+    (r M a Q θ : ℝ)
+    (hsig : 0 < Sigma r a θ)
+    (hdel : 0 < Delta r M a Q)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrCovectorInner r M a Q θ
+      (kerrCoframe0 r M a Q θ)
+      (kerrCoframe0 r M a Q θ) = -1 := by
+  have hsig0 : Sigma r a θ ≠ 0 := ne_of_gt hsig
+  have hdel0 : Delta r M a Q ≠ 0 := ne_of_gt hdel
+  have hSD : 0 < Sigma r a θ * Delta r M a Q := mul_pos hsig hdel
+  have hsqrt0 :
+      Real.sqrt (Sigma r a θ * Delta r M a Q) ≠ 0 :=
+    ne_of_gt (Real.sqrt_pos.2 hSD)
+  have hsqrt2 :
+      (Real.sqrt (Sigma r a θ * Delta r M a Q))^2 =
+        Sigma r a θ * Delta r M a Q :=
+    Real.sq_sqrt (le_of_lt hSD)
+  unfold kerrCovectorInner kerrCoframe0 stationaryCovectorLift
+  simp [kerrMetricInv, kerrTemporalOneFormCoeffs]
+  have htrig :
+      (Real.sin θ)^2 = 1 - (Real.cos θ)^2 := by
+    nlinarith [Real.sin_sq_add_cos_sq θ]
+  rw [htrig]
+  field_simp [hsig0, hdel0, hsqrt0]
+  unfold Sigma
+  nlinarith
+
+/-- The radial Carter coframe leg has norm plus one. -/
+theorem kerrCoframe1_norm
+    (r M a Q θ : ℝ)
+    (hsig : 0 < Sigma r a θ)
+    (hdel : 0 < Delta r M a Q) :
+    kerrCovectorInner r M a Q θ
+      (kerrCoframe1 r M a Q θ)
+      (kerrCoframe1 r M a Q θ) = 1 := by
+  have hsig0 : Sigma r a θ ≠ 0 := ne_of_gt hsig
+  have hdel0 : Delta r M a Q ≠ 0 := ne_of_gt hdel
+  have hSD : 0 < Sigma r a θ * Delta r M a Q := mul_pos hsig hdel
+  have hsqrt2 :
+      (Real.sqrt (Sigma r a θ * Delta r M a Q))^2 =
+        Sigma r a θ * Delta r M a Q :=
+    Real.sq_sqrt (le_of_lt hSD)
+  unfold kerrCovectorInner kerrCoframe1
+  simp [kerrMetricInv, principalBasis]
+  field_simp [hsig0, hdel0]
+  nlinarith
+
+/-- The polar Carter coframe leg has norm plus one. -/
+theorem kerrCoframe2_norm
+    (r M a Q θ : ℝ)
+    (hsig : 0 < Sigma r a θ) :
+    kerrCovectorInner r M a Q θ
+      (kerrCoframe2 r a θ)
+      (kerrCoframe2 r a θ) = 1 := by
+  have hsig0 : Sigma r a θ ≠ 0 := ne_of_gt hsig
+  have hsqrt2 :
+      (Real.sqrt (Sigma r a θ))^2 =
+        Sigma r a θ :=
+    Real.sq_sqrt (le_of_lt hsig)
+  unfold kerrCovectorInner kerrCoframe2
+  simp [kerrMetricInv, principalBasis]
+  field_simp [hsig0]
+  nlinarith
+
+/-- The azimuthal Carter coframe leg has norm plus one. -/
+theorem kerrCoframe3_norm
+    (r M a Q θ : ℝ)
+    (hsig : 0 < Sigma r a θ)
+    (hdel : 0 < Delta r M a Q)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrCovectorInner r M a Q θ
+      (kerrCoframe3 r a θ)
+      (kerrCoframe3 r a θ) = 1 := by
+  have hsig0 : Sigma r a θ ≠ 0 := ne_of_gt hsig
+  have hdel0 : Delta r M a Q ≠ 0 := ne_of_gt hdel
+  have hsqrt0 : Real.sqrt (Sigma r a θ) ≠ 0 :=
+    ne_of_gt (Real.sqrt_pos.2 hsig)
+  have hsqrt2 :
+      (Real.sqrt (Sigma r a θ))^2 =
+        Sigma r a θ :=
+    Real.sq_sqrt (le_of_lt hsig)
+  unfold kerrCovectorInner kerrCoframe3 stationaryCovectorLift
+  simp [kerrMetricInv, kerrAxialOneFormCoeffs]
+  have htrig :
+      (Real.sin θ)^2 = 1 - (Real.cos θ)^2 := by
+    nlinarith [Real.sin_sq_add_cos_sq θ]
+  rw [htrig]
+  field_simp [hsig0, hdel0, hsin, hsqrt0]
+  unfold Sigma
+  nlinarith
+
+/-- Temporal and azimuthal stationary coframe legs are orthogonal. -/
+theorem kerrCoframe0_orthogonal_3
+    (r M a Q θ : ℝ)
+    (hsig : 0 < Sigma r a θ)
+    (hdel : 0 < Delta r M a Q)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrCovectorInner r M a Q θ
+      (kerrCoframe0 r M a Q θ)
+      (kerrCoframe3 r a θ) = 0 := by
+  have hsig0 : Sigma r a θ ≠ 0 := ne_of_gt hsig
+  have hdel0 : Delta r M a Q ≠ 0 := ne_of_gt hdel
+  have hS0 : Real.sqrt (Sigma r a θ) ≠ 0 :=
+    ne_of_gt (Real.sqrt_pos.2 hsig)
+  have hSD : 0 < Sigma r a θ * Delta r M a Q := mul_pos hsig hdel
+  have hSD0 :
+      Real.sqrt (Sigma r a θ * Delta r M a Q) ≠ 0 :=
+    ne_of_gt (Real.sqrt_pos.2 hSD)
+  unfold kerrCovectorInner kerrCoframe0 kerrCoframe3
+    stationaryCovectorLift
+  simp [kerrMetricInv, kerrTemporalOneFormCoeffs,
+    kerrAxialOneFormCoeffs]
+  have htrig :
+      (Real.sin θ)^2 = 1 - (Real.cos θ)^2 := by
+    nlinarith [Real.sin_sq_add_cos_sq θ]
+  rw [htrig]
+  field_simp [hsig0, hdel0, hsin, hS0, hSD0]
+  unfold Sigma
+  ring
+
+/-- Radial and polar legs are orthogonal to each other and to the stationary block
+because the Boyer-Lindquist inverse metric is block diagonal. -/
+theorem kerrCoframe_nonstationary_orthogonality
+    (r M a Q θ : ℝ) :
+    kerrCovectorInner r M a Q θ
+      (kerrCoframe1 r M a Q θ)
+      (kerrCoframe2 r a θ) = 0 ∧
+    kerrCovectorInner r M a Q θ
+      (kerrCoframe0 r M a Q θ)
+      (kerrCoframe1 r M a Q θ) = 0 ∧
+    kerrCovectorInner r M a Q θ
+      (kerrCoframe0 r M a Q θ)
+      (kerrCoframe2 r a θ) = 0 ∧
+    kerrCovectorInner r M a Q θ
+      (kerrCoframe3 r a θ)
+      (kerrCoframe1 r M a Q θ) = 0 ∧
+    kerrCovectorInner r M a Q θ
+      (kerrCoframe3 r a θ)
+      (kerrCoframe2 r a θ) = 0 := by
+  unfold kerrCovectorInner kerrCoframe0 kerrCoframe1
+    kerrCoframe2 kerrCoframe3 stationaryCovectorLift
+  simp [kerrMetricInv, principalBasis]
+
+/-- Bundle the four Carter legs into one indexed coframe. -/
+def kerrCoframe
+    (r M a Q θ : ℝ) (A : Fin 4) : Fin 4 → ℝ :=
+  if A = 0 then kerrCoframe0 r M a Q θ
+  else if A = 1 then kerrCoframe1 r M a Q θ
+  else if A = 2 then kerrCoframe2 r a θ
+  else kerrCoframe3 r a θ
+
+/-- The Carter coframe is genuinely orthonormal for the certified inverse metric. -/
+theorem kerrCoframe_orthonormal
+    (r M a Q θ : ℝ)
+    (hsig : 0 < Sigma r a θ)
+    (hdel : 0 < Delta r M a Q)
+    (hsin : Real.sin θ ≠ 0)
+    (A B : Fin 4) :
+    kerrCovectorInner r M a Q θ
+      (kerrCoframe r M a Q θ A)
+      (kerrCoframe r M a Q θ B) =
+      (if A = B then principalMetricSign A else 0) := by
+  rcases kerrCoframe_nonstationary_orthogonality
+    r M a Q θ with
+    ⟨h12, h01, h02, h31, h32⟩
+  have h03 :=
+    kerrCoframe0_orthogonal_3 r M a Q θ
+      hsig hdel hsin
+  have h10 :
+      kerrCovectorInner r M a Q θ
+        (kerrCoframe1 r M a Q θ)
+        (kerrCoframe0 r M a Q θ) = 0 := by
+    unfold kerrCovectorInner at h01 ⊢
+    simpa [mul_comm] using h01
+  have h20 :
+      kerrCovectorInner r M a Q θ
+        (kerrCoframe2 r a θ)
+        (kerrCoframe0 r M a Q θ) = 0 := by
+    unfold kerrCovectorInner at h02 ⊢
+    simpa [mul_comm] using h02
+  have h13 :
+      kerrCovectorInner r M a Q θ
+        (kerrCoframe1 r M a Q θ)
+        (kerrCoframe3 r a θ) = 0 := by
+    unfold kerrCovectorInner at h31 ⊢
+    simpa [mul_comm] using h31
+  have h23 :
+      kerrCovectorInner r M a Q θ
+        (kerrCoframe2 r a θ)
+        (kerrCoframe3 r a θ) = 0 := by
+    unfold kerrCovectorInner at h32 ⊢
+    simpa [mul_comm] using h32
+  have h30 :
+      kerrCovectorInner r M a Q θ
+        (kerrCoframe3 r a θ)
+        (kerrCoframe0 r M a Q θ) = 0 := by
+    unfold kerrCovectorInner at h03 ⊢
+    simpa [mul_comm] using h03
+  have h21 :
+      kerrCovectorInner r M a Q θ
+        (kerrCoframe2 r a θ)
+        (kerrCoframe1 r M a Q θ) = 0 := by
+    unfold kerrCovectorInner at h12 ⊢
+    simpa [mul_comm] using h12
+  fin_cases A <;> fin_cases B <;>
+    simp [kerrCoframe, principalMetricSign,
+      kerrCoframe0_norm r M a Q θ hsig hdel hsin,
+      kerrCoframe1_norm r M a Q θ hsig hdel,
+      kerrCoframe2_norm r M a Q θ hsig,
+      kerrCoframe3_norm r M a Q θ hsig hdel hsin,
+      h03, h30, h01, h10, h02, h20,
+      h31, h13, h32, h23, h12, h21]
+
 /-- Coordinate Maxwell two-form reconstructed from the four derivatives of the
 Boyer-Lindquist potential. -/
 def kerrCoordinateField
@@ -9332,6 +9557,13 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check kerrCoframe0_norm
+#check kerrCoframe1_norm
+#check kerrCoframe2_norm
+#check kerrCoframe3_norm
+#check kerrCoframe0_orthogonal_3
+#check kerrCoframe_nonstationary_orthogonality
+#check kerrCoframe_orthonormal
 #check relativeAction_defect_ratio
 #check action_carrier_optical_ratio_identity
 #check relativeActionValue_exchange
@@ -9973,6 +10205,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrPotential_field_factorization
 #print axioms RelativeRest.kerr_stationary_inverse_block
 #print axioms RelativeRest.kerrMetric_inverse_certificate
+#print axioms RelativeRest.kerrCoframe_orthonormal
 #print axioms RelativeRest.kerrVolumeDensity_eq_sqrt_neg_det
 #print axioms RelativeRest.kerr_metric_det
 #print axioms RelativeRest.kerrMaxwell_divergence_t
