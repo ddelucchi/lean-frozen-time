@@ -1,6 +1,8 @@
 name: Lean verification
 
 on:
+  push:
+    branches: [formalize-forced-chain]
   pull_request:
   workflow_dispatch:
 
