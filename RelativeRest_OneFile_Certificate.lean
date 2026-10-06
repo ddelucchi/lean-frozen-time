@@ -340,6 +340,16 @@ theorem defect_hasDerivAt_zero (T : ℝ) :
   have h' := h.mul_const T
   simpa [mul_assoc, mul_left_comm, mul_comm] using h'
 
+/-- The actual scaled Einstein-Maxwell residual has that same nonzero normal derivative on shell. -/
+theorem scaledResidual_hasDerivAt_zero
+    (G T : ℝ) (hEinstein : G = 8 * Real.pi * T) :
+    HasDerivAt (scaledResidual G T) (-16 * Real.pi * T) 0 := by
+  have hfun : scaledResidual G T = defect T := by
+    funext s
+    exact scaledResidual_onShell_eq_defect G T s hEinstein
+  rw [hfun]
+  exact defect_hasDerivAt_zero T
+
 /-- Every even normal derivative of the odd on-shell defect vanishes at the fixed point. -/
 theorem defect_even_iteratedDeriv_zero (T : ℝ) (n : ℕ) :
     iteratedDeriv (2 * n) (defect T) 0 = 0 := by
@@ -367,6 +377,17 @@ theorem defect_full_jet_parity (T : ℝ) (n : ℕ) :
     iteratedDeriv (2 * n + 1) (defect T) 0 = -16 * Real.pi * T :=
   ⟨defect_even_iteratedDeriv_zero T n, defect_odd_iteratedDeriv_carrier T n⟩
 
+/-- The all-orders parity statement belongs to the on-shell field-equation residual itself. -/
+theorem scaledResidual_full_jet_parity
+    (G T : ℝ) (hEinstein : G = 8 * Real.pi * T) (n : ℕ) :
+    iteratedDeriv (2 * n) (scaledResidual G T) 0 = 0 ∧
+    iteratedDeriv (2 * n + 1) (scaledResidual G T) 0 = -16 * Real.pi * T := by
+  have hfun : scaledResidual G T = defect T := by
+    funext s
+    exact scaledResidual_onShell_eq_defect G T s hEinstein
+  rw [hfun]
+  exact defect_full_jet_parity T n
+
 /-- If the Einstein-Maxwell trace equation gives `Ric = 8πT`, then the fixed-point jet is `-2 Ric`. -/
 theorem jet_eq_minus_two_ricci
     (T Ric : ℝ) (hRic : Ric = 8 * Real.pi * T) :
@@ -386,6 +407,19 @@ theorem defect_odd_iteratedDeriv_ne_zero
     iteratedDeriv (2 * n + 1) (defect T) 0 ≠ 0 := by
   rw [defect_odd_iteratedDeriv_eq_minus_two_ricci T Ric hRic n]
   exact mul_ne_zero (by norm_num) hRic0
+
+/-- Every odd jet of the actual on-shell residual is the same curvature carrier `-2 Ric`. -/
+theorem scaledResidual_odd_iteratedDeriv_eq_minus_two_ricci
+    (G T Ric : ℝ)
+    (hEinstein : G = 8 * Real.pi * T)
+    (hRic : Ric = 8 * Real.pi * T)
+    (n : ℕ) :
+    iteratedDeriv (2 * n + 1) (scaledResidual G T) 0 = -2 * Ric := by
+  have hfun : scaledResidual G T = defect T := by
+    funext s
+    exact scaledResidual_onShell_eq_defect G T s hEinstein
+  rw [hfun]
+  exact defect_odd_iteratedDeriv_eq_minus_two_ricci T Ric hRic n
 
 /-- On nonvacuum electrovac, the scaled field-equation residual has the unique zero `s=0`. -/
 theorem scaledResidual_zero_iff_fixed_point
@@ -1877,6 +1911,9 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check scaledResidual_hasDerivAt_zero
+#check scaledResidual_full_jet_parity
+#check scaledResidual_odd_iteratedDeriv_eq_minus_two_ricci
 #check scaledResidual_onShell_eq_sinh
 #check scaledResidual_onShell_eq_defect
 #check scaledResidual_zero_iff_fixed_point
