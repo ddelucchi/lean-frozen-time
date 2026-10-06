@@ -3697,6 +3697,51 @@ theorem kerrCarrier_balanced_observer_unboosted
   rw [kerrCarrier_balance_rapidity_zero r a θ hsig hr]
   ext <;> norm_num [opticalObserver, TO]
 
+
+/-- Radial derivative of the first carrier-gradient coefficient. -/
+theorem kerrRadialGradient_hasDerivAt
+    (r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    HasDerivAt (fun x : ℝ => kerrRadialGradient x a θ)
+      ((-4 * Sigma r a θ + 8 * r^2) / (Sigma r a θ)^2) r := by
+  have hn : HasDerivAt (fun x : ℝ => -4 * x) (-4) r :=
+    (hasDerivAt_id r).const_mul (-4)
+  have hd := Sigma_hasDerivAt_r r a θ
+  have hraw := hn.fun_div hd hsig
+  unfold kerrRadialGradient
+  convert hraw using 1
+  field_simp [hsig]
+  ring
+
+/-- At the first-gradient degeneracy `r=0`, the second radial jet is `-4/Σ`. -/
+theorem kerrRadialGradient_second_at_zero
+    (a θ : ℝ) (hsig : Sigma 0 a θ ≠ 0) :
+    HasDerivAt (fun x : ℝ => kerrRadialGradient x a θ)
+      (-4 / Sigma 0 a θ) 0 := by
+  have h := kerrRadialGradient_hasDerivAt 0 a θ hsig
+  convert h using 1
+  field_simp [hsig]
+  ring
+
+/-- That second radial jet is nonzero everywhere on the regular `r=0` stratum. -/
+theorem kerrRadialGradient_second_at_zero_ne
+    (a θ : ℝ) (hsig : Sigma 0 a θ ≠ 0) :
+    -4 / Sigma 0 a θ ≠ 0 := by
+  exact div_ne_zero (by norm_num) hsig
+
+/-- Hence every regular Kerr-Newman point is resolved by a finite radial carrier jet:
+the first jet when `r ≠ 0`, and the second jet when `r=0`. -/
+theorem kerr_regular_first_or_second_radial_jet_resolves
+    (r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    kerrRadialGradient r a θ ≠ 0 ∨
+      (r = 0 ∧ -4 / Sigma 0 a θ ≠ 0) := by
+  by_cases hr : r = 0
+  · right
+    subst r
+    exact ⟨rfl, kerrRadialGradient_second_at_zero_ne a θ hsig⟩
+  · left
+    unfold kerrRadialGradient
+    exact (kerrRadialLogGradient_ne_zero_iff r a θ hsig).2 hr
+
 /-- Kerr-Newman `Δ`. -/
 def Delta (r M a Q : ℝ) : ℝ := r^2 - 2*M*r + a^2 + Q^2
 
@@ -4136,6 +4181,10 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check kerrRadialGradient_hasDerivAt
+#check kerrRadialGradient_second_at_zero
+#check kerrRadialGradient_second_at_zero_ne
+#check kerr_regular_first_or_second_radial_jet_resolves
 #check kerrRadialGradient
 #check kerrGradientQMinus_ne_zero
 #check kerrCarrier_balance_rapidity_zero
@@ -4424,3 +4473,4 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrNewman_mino_clock_forced
 #print axioms RelativeRest.kerrNewman_mino_clock_from_principal_EM
 #print axioms RelativeRest.kerr_relative_rest_carter_certificate
+#print axioms RelativeRest.kerr_regular_first_or_second_radial_jet_resolves
