@@ -282,6 +282,65 @@ theorem character_exchange (u s : ℝ) :
   · rw [XiMUS_factorization, XiGUS_factorization]
     simp
 
+
+/-- Lower-index Maxwell stress scales by `(λ/ρ)²` under constant
+`(g,A) ↦ (ρ²g, λA)`.  This definition records only that forced scalar weight. -/
+def maxwellStressScaleFactor (ρ λ : ℝ) : ℝ :=
+  (λ / ρ)^2
+
+/-- The relative parametrization gives `λ/ρ=e^s` exactly. -/
+theorem lambdaUS_div_rhoUS (u s : ℝ) :
+    lambdaUS u s / rhoUS u s = Real.exp s := by
+  unfold lambdaUS rhoUS
+  have hr : Real.exp ((u - s) / 2) ≠ 0 :=
+    ne_of_gt (Real.exp_pos _)
+  rw [div_eq_iff hr, ← Real.exp_add]
+  congr 1
+  ring
+
+/-- Hence the Maxwell stress weight is precisely `e^{2s}`, independent of the common scale. -/
+theorem maxwellStressScaleFactor_US (u s : ℝ) :
+    maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) =
+      Real.exp (2 * s) := by
+  rw [maxwellStressScaleFactor, lambdaUS_div_rhoUS]
+  rw [pow_two, ← Real.exp_add]
+  congr 1
+  ring
+
+/-- The common scale therefore cancels from the rescaled Einstein-Maxwell component equation. -/
+theorem rescaled_field_equation_weight
+    (u s G T : ℝ) :
+    G = 8 * Real.pi *
+        maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) * T ↔
+      G = 8 * Real.pi * Real.exp (2 * s) * T := by
+  rw [maxwellStressScaleFactor_US]
+
+/-- On a nonzero electrovac component, the original and rescaled field equations are
+simultaneously satisfied exactly at the relative fixed point `s=0`. -/
+theorem rescaled_solution_preserving_iff
+    (u s T : ℝ) (hT : T ≠ 0) :
+    (8 * Real.pi * T =
+      8 * Real.pi *
+        maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) * T) ↔
+      s = 0 := by
+  rw [maxwellStressScaleFactor_US]
+  have hc : 8 * Real.pi * T ≠ 0 :=
+    mul_ne_zero
+      (mul_ne_zero (by norm_num) (ne_of_gt Real.pi_pos)) hT
+  constructor
+  · intro h
+    have heq :
+        8 * Real.pi * T =
+          Real.exp (2 * s) * (8 * Real.pi * T) := by
+      calc
+        8 * Real.pi * T
+            = 8 * Real.pi * Real.exp (2 * s) * T := h
+        _ = Real.exp (2 * s) * (8 * Real.pi * T) := by ring
+    exact solution_preserving_fixed_point
+      (8 * Real.pi * T) s hc heq
+  · rintro rfl
+    simp
+
 /-- Equality of the two sector characters occurs at exactly one relative point. -/
 theorem character_rest_iff_zero (u s : ℝ) :
     XiGUS u s = XiMUS u s ↔ s = 0 := by
@@ -4181,6 +4240,10 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check lambdaUS_div_rhoUS
+#check maxwellStressScaleFactor_US
+#check rescaled_field_equation_weight
+#check rescaled_solution_preserving_iff
 #check kerrRadialGradient_hasDerivAt
 #check kerrRadialGradient_second_at_zero
 #check kerrRadialGradient_second_at_zero_ne
@@ -4456,6 +4519,7 @@ end RelativeRest
 transcript: they expose every axiom used by representative end-to-end theorems. -/
 #print axioms RelativeRest.scalar_backbone
 #print axioms RelativeRest.scalar_backbone_from_einstein_maxwell
+#print axioms RelativeRest.rescaled_solution_preserving_iff
 #print axioms RelativeRest.characteristic_half_contraction_from_relative_scaling
 #print axioms RelativeRest.principalLocalClockRatio_forced
 #print axioms RelativeRest.defect_from_on_shell_equation
