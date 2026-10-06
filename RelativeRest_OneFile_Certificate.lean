@@ -5603,6 +5603,159 @@ theorem kerrResolving_balanced_observer_unboosted
 /-- Kerr-Newman `Δ`. -/
 def Delta (r M a Q : ℝ) : ℝ := r^2 - 2*M*r + a^2 + Q^2
 
+
+/-! ### Full coordinate-to-Carter-coframe Maxwell specialization -/
+
+/-- Embed a stationary `(dt,dφ)` covector into Boyer-Lindquist
+`(dt,dr,dθ,dφ)` components. -/
+def stationaryCovectorLift (α : R2) : Fin 4 → ℝ :=
+  fun i =>
+    if i = 0 then α.1
+    else if i = 3 then α.2
+    else 0
+
+/-- Coordinate wedge of two covectors. -/
+def covectorWedge4
+    (α β : Fin 4 → ℝ) (i j : Fin 4) : ℝ :=
+  α i * β j - α j * β i
+
+theorem covectorWedge4_smul_smul
+    (c d : ℝ) (α β : Fin 4 → ℝ) (i j : Fin 4) :
+    covectorWedge4 (c • α) (d • β) i j =
+      (c * d) * covectorWedge4 α β i j := by
+  simp [covectorWedge4]
+  ring
+
+/-- Carter orthonormal temporal coframe leg in Boyer-Lindquist components. -/
+def kerrCoframe0
+    (r M a Q θ : ℝ) : Fin 4 → ℝ :=
+  (Delta r M a Q /
+      Real.sqrt (Sigma r a θ * Delta r M a Q)) •
+    stationaryCovectorLift (kerrTemporalOneFormCoeffs a θ)
+
+/-- Carter orthonormal radial coframe leg. -/
+def kerrCoframe1
+    (r M a Q θ : ℝ) : Fin 4 → ℝ :=
+  (Real.sqrt (Sigma r a θ * Delta r M a Q) /
+      Delta r M a Q) • principalBasis 1
+
+/-- Carter orthonormal polar coframe leg. -/
+def kerrCoframe2
+    (r a θ : ℝ) : Fin 4 → ℝ :=
+  Real.sqrt (Sigma r a θ) • principalBasis 2
+
+/-- Carter orthonormal azimuthal coframe leg. -/
+def kerrCoframe3
+    (r a θ : ℝ) : Fin 4 → ℝ :=
+  (Real.sin θ / Real.sqrt (Sigma r a θ)) •
+    stationaryCovectorLift (kerrAxialOneFormCoeffs r a)
+
+/-- Coordinate Maxwell two-form reconstructed from the four derivatives of the
+Boyer-Lindquist potential. -/
+def kerrCoordinateField
+    (Q r a θ : ℝ) (i j : Fin 4) : ℝ :=
+  kerrPrincipalE Q r a θ *
+      covectorWedge4
+        (principalBasis 1)
+        (stationaryCovectorLift
+          (kerrTemporalOneFormCoeffs a θ)) i j
+    + (-kerrPrincipalB Q r a θ * Real.sin θ) *
+      covectorWedge4
+        (principalBasis 2)
+        (stationaryCovectorLift
+          (kerrAxialOneFormCoeffs r a)) i j
+
+/-- The coordinate field has exactly the four nonzero derivative components obtained
+from `F=dA`. -/
+theorem kerrCoordinateField_components
+    (Q r a θ : ℝ) :
+    kerrCoordinateField Q r a θ 1 0 =
+        kerrPrincipalE Q r a θ ∧
+    kerrCoordinateField Q r a θ 1 3 =
+        -a * (Real.sin θ)^2 *
+          kerrPrincipalE Q r a θ ∧
+    kerrCoordinateField Q r a θ 2 0 =
+        -a * Real.sin θ *
+          kerrPrincipalB Q r a θ ∧
+    kerrCoordinateField Q r a θ 2 3 =
+        (r^2 + a^2) * Real.sin θ *
+          kerrPrincipalB Q r a θ := by
+  constructor
+  · simp [kerrCoordinateField, covectorWedge4,
+      principalBasis, stationaryCovectorLift,
+      kerrTemporalOneFormCoeffs, kerrAxialOneFormCoeffs]
+  · constructor
+    · simp [kerrCoordinateField, covectorWedge4,
+        principalBasis, stationaryCovectorLift,
+        kerrTemporalOneFormCoeffs, kerrAxialOneFormCoeffs]
+      ring
+    · constructor
+      · simp [kerrCoordinateField, covectorWedge4,
+          principalBasis, stationaryCovectorLift,
+          kerrTemporalOneFormCoeffs, kerrAxialOneFormCoeffs]
+        ring
+      · simp [kerrCoordinateField, covectorWedge4,
+          principalBasis, stationaryCovectorLift,
+          kerrTemporalOneFormCoeffs, kerrAxialOneFormCoeffs]
+        ring
+
+/-- Maxwell field written in the Carter orthonormal coframe.  The overall minus sign is
+the orientation induced by `dr∧(dt-a sin²θ dφ)=-e⁰∧e¹`. -/
+def kerrFieldInCarterCoframe
+    (Q r M a θ : ℝ) (i j : Fin 4) : ℝ :=
+  -kerrPrincipalE Q r a θ *
+      covectorWedge4
+        (kerrCoframe0 r M a Q θ)
+        (kerrCoframe1 r M a Q θ) i j
+    - kerrPrincipalB Q r a θ *
+      covectorWedge4
+        (kerrCoframe2 r a θ)
+        (kerrCoframe3 r a θ) i j
+
+/-- On the regular exterior, the potential-derived coordinate field is exactly the
+principal Carter-coframe field `-E e⁰∧e¹-B e²∧e³`. -/
+theorem kerrCoordinateField_eq_CarterCoframe
+    (Q r M a θ : ℝ)
+    (hsig : 0 < Sigma r a θ)
+    (hdel : 0 < Delta r M a Q) :
+    kerrCoordinateField Q r a θ =
+      kerrFieldInCarterCoframe Q r M a θ := by
+  have hS0 : Real.sqrt (Sigma r a θ) ≠ 0 :=
+    ne_of_gt (Real.sqrt_pos.2 hsig)
+  have hSDpos :
+      0 < Sigma r a θ * Delta r M a Q :=
+    mul_pos hsig hdel
+  have hSD0 :
+      Real.sqrt (Sigma r a θ * Delta r M a Q) ≠ 0 :=
+    ne_of_gt (Real.sqrt_pos.2 hSDpos)
+  have hD0 : Delta r M a Q ≠ 0 := ne_of_gt hdel
+  funext i j
+  fin_cases i <;> fin_cases j <;>
+    simp [kerrCoordinateField, kerrFieldInCarterCoframe,
+      kerrCoframe0, kerrCoframe1, kerrCoframe2, kerrCoframe3,
+      covectorWedge4, principalBasis, stationaryCovectorLift,
+      kerrTemporalOneFormCoeffs, kerrAxialOneFormCoeffs,
+      hS0, hSD0, hD0] <;>
+    field_simp [hS0, hSD0, hD0] <;>
+    ring
+
+/-- The Kerr-Newman electromagnetic principal scalars used by the Rainich chain are thus
+derived from the explicit potential and the metric-selected Carter coframe. -/
+theorem kerrPotential_to_CarterPrincipalField
+    (Q r M a θ : ℝ)
+    (hsig : 0 < Sigma r a θ)
+    (hdel : 0 < Delta r M a Q) :
+    kerrCoordinateField Q r a θ =
+      kerrFieldInCarterCoframe Q r M a θ ∧
+    kerrCoordinateField Q r a θ 1 0 =
+      kerrPrincipalE Q r a θ ∧
+    kerrCoordinateField Q r a θ 2 0 =
+      -a * Real.sin θ * kerrPrincipalB Q r a θ := by
+  exact ⟨kerrCoordinateField_eq_CarterCoframe
+      Q r M a θ hsig hdel,
+    (kerrCoordinateField_components Q r a θ).1,
+    (kerrCoordinateField_components Q r a θ).2.2.1⟩
+
 /-- Once the explicit curvature calculation supplies `K=4Q⁴/Σ⁴`, the carrier magnitude follows
 algebraically. -/
 theorem kerrNewman_chi_from_K
@@ -6347,6 +6500,10 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check covectorWedge4_smul_smul
+#check kerrCoordinateField_components
+#check kerrCoordinateField_eq_CarterCoframe
+#check kerrPotential_to_CarterPrincipalField
 #check carterTemporalCoframe_on_observer
 #check carterAxialOneForm_on_observer
 #check kerrMaxwell_Carter_principal_structure
@@ -6806,6 +6963,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrNewman_mino_clock_from_principal_EM
 #print axioms RelativeRest.kerrMinoClockFromPrincipalEM
 #print axioms RelativeRest.kerrPotential_field_factorization
+#print axioms RelativeRest.kerrCoordinateField_eq_CarterCoframe
+#print axioms RelativeRest.kerrPotential_to_CarterPrincipalField
 #print axioms RelativeRest.kerrPotential_metric_principal_alignment
 #print axioms RelativeRest.kerr_relative_rest_carter_certificate
 #print axioms RelativeRest.carterObserver_unit_timelike
