@@ -251,6 +251,16 @@ theorem character_defect_is_tanh (u s : ℝ) :
   rw [character_ratio_eq_exp_two]
   exact delta_exp_two s
 
+/-- The common character is exchange-even while the relative ratio is exchange-inverted. -/
+theorem character_exchange (u s : ℝ) :
+    XiGUS u (-s) = XiMUS u s ∧
+    XiMUS u (-s) = XiGUS u s := by
+  constructor
+  · rw [XiGUS_factorization, XiMUS_factorization]
+    simp
+  · rw [XiMUS_factorization, XiGUS_factorization]
+    simp
+
 /-- Equality of the two sector characters occurs at exactly one relative point. -/
 theorem character_rest_iff_zero (u s : ℝ) :
     XiGUS u s = XiMUS u s ↔ s = 0 := by
@@ -314,6 +324,34 @@ theorem scaledResidual_onShell_eq_sinh
 /-- Scalar model of the on-shell odd normal defect. -/
 def defect (T s : ℝ) : ℝ := -16 * Real.pi * Real.sinh s * T
 
+
+/-- The odd defect formula is forced directly from the on-shell Einstein-Maxwell equation
+and the relative Maxwell character; it is not an independent ansatz. -/
+theorem defect_from_on_shell_equation
+    (G T s : ℝ)
+    (hEinstein : G = 8 * Real.pi * T) :
+    Real.exp (-s) * (G - 8 * Real.pi * Real.exp (2 * s) * T) =
+      defect T s := by
+  rw [hEinstein]
+  unfold defect
+  rw [Real.sinh_eq]
+  have he : Real.exp (-s) * Real.exp (2 * s) = Real.exp s := by
+    rw [← Real.exp_add]
+    congr 1
+    ring
+  rw [he]
+  ring
+
+/-- Conversely, the factorized residual and the hyperbolic odd carrier are exactly the same
+on-shell object for every relative coordinate. -/
+theorem defect_factorization_identity
+    (T s : ℝ) :
+    Real.exp (-s) *
+        (8 * Real.pi * T - 8 * Real.pi * Real.exp (2 * s) * T) =
+      -16 * Real.pi * Real.sinh s * T := by
+  simpa [defect] using
+    defect_from_on_shell_equation (8 * Real.pi * T) T s rfl
+
 /-- The paper's defect is exactly the on-shell scaled field-equation residual. -/
 theorem scaledResidual_onShell_eq_defect
     (G T s : ℝ) (hEinstein : G = 8 * Real.pi * T) :
@@ -339,6 +377,14 @@ theorem defect_hasDerivAt_zero (T : ℝ) :
   have h := (Real.hasDerivAt_sinh 0).const_mul (-16 * Real.pi)
   have h' := h.mul_const T
   simpa [mul_assoc, mul_left_comm, mul_comm] using h'
+
+
+/-- On the nonvacuum sector the surviving first jet is genuinely nonzero. -/
+theorem defect_first_jet_ne_zero
+    (T : ℝ) (hT : T ≠ 0) :
+    -16 * Real.pi * T ≠ 0 := by
+  exact mul_ne_zero
+    (mul_ne_zero (by norm_num) (ne_of_gt Real.pi_pos)) hT
 
 /-- The actual scaled Einstein-Maxwell residual has that same nonzero normal derivative on shell. -/
 theorem scaledResidual_hasDerivAt_zero
@@ -2725,6 +2771,10 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check defect_from_on_shell_equation
+#check defect_factorization_identity
+#check defect_first_jet_ne_zero
+#check character_exchange
 #check principalChi_eq_zero_iff
 #check rainich_square_nilpotent_at_zero
 #check fullJetStabilizer_eq_singleton_of_finite_break
