@@ -2422,9 +2422,9 @@ theorem quotientBilinearForm_unique
           B₂ (Submodule.Quotient.mk x) (Submodule.Quotient.mk y)) :
     B₁ = B₂ := by
   ext x y
-  refine Submodule.Quotient.induction_on x ?_
+  refine Submodule.Quotient.induction_on _ x ?_
   intro vx
-  refine Submodule.Quotient.induction_on y ?_
+  refine Submodule.Quotient.induction_on _ y ?_
   intro vy
   exact h vx vy
 
