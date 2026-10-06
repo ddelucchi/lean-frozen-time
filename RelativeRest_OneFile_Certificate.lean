@@ -1330,6 +1330,63 @@ def principalRicciFromFTraceSq (E B : ℝ) : ℝ :=
     principalRicciFromF E B i k *
       principalRicciFromF E B k i
 
+/-- Independent Einstein-equation reconstruction of the mixed Ricci tensor from the
+explicit Maxwell stress, using the trace-free four-dimensional reduction
+`R^a_b = 8π T^a_b`. -/
+def principalRicciFromEinsteinF
+    (E B : ℝ) (i j : Fin 4) : ℝ :=
+  8 * Real.pi * principalStressFromF E B i j
+
+/-- The fixed-point-jet and Einstein-equation reconstructions of Ricci coincide exactly. -/
+theorem principalRicciFromF_eq_Einstein
+    (E B : ℝ) (i j : Fin 4) :
+    principalRicciFromF E B i j =
+      principalRicciFromEinsteinF E B i j := by
+  unfold principalRicciFromF principalRicciFromEinsteinF principalJetFromF
+  ring
+
+/-- Scalar curvature of the Einstein-reconstructed principal Ricci endomorphism. -/
+def principalRicciFromEinsteinTrace
+    (E B : ℝ) : ℝ :=
+  ∑ i : Fin 4, principalRicciFromEinsteinF E B i i
+
+/-- The explicit Maxwell field forces vanishing scalar curvature. -/
+theorem principalRicciFromEinstein_trace_zero
+    (E B : ℝ) :
+    principalRicciFromEinsteinTrace E B = 0 := by
+  unfold principalRicciFromEinsteinTrace principalRicciFromEinsteinF
+  simp_rw [principalStressFromF_eq_principalStress]
+  simp [principalStress, principalFieldEnergyDensity]
+  ring
+
+/-- Mixed Einstein tensor reconstructed from the Einstein-derived Ricci tensor. -/
+def principalEinsteinTensorFromF
+    (E B : ℝ) (i j : Fin 4) : ℝ :=
+  principalRicciFromEinsteinF E B i j -
+    (1 / 2 : ℝ) *
+      (if i = j then 1 else 0) *
+      principalRicciFromEinsteinTrace E B
+
+/-- The explicit principal field satisfies the algebraic Einstein equation identically:
+`G^a_b = 8π T^a_b`. -/
+theorem principalEinsteinTensorFromF_eq_stress
+    (E B : ℝ) (i j : Fin 4) :
+    principalEinsteinTensorFromF E B i j =
+      8 * Real.pi * principalStressFromF E B i j := by
+  rw [principalEinsteinTensorFromF,
+    principalRicciFromEinstein_trace_zero]
+  simp [principalRicciFromEinsteinF]
+
+/-- Consequently the fixed-point jet-curvature identity is derived from the explicit
+Einstein-Maxwell field equation rather than inserted into the Ricci definition. -/
+theorem principalJetFromF_eq_minus_two_EinsteinRicci
+    (E B : ℝ) (i j : Fin 4) :
+    principalJetFromF E B i j =
+      -2 * principalRicciFromEinsteinF E B i j := by
+  rw [← principalRicciFromF_eq_Einstein]
+  unfold principalRicciFromF
+  ring
+
 /-- The field-derived Ricci norm is exactly `χ²`. -/
 theorem principalRicciFromF_trace_sq (E B : ℝ) :
     principalRicciFromFTraceSq E B =
@@ -8128,6 +8185,10 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check principalRicciFromF_eq_Einstein
+#check principalRicciFromEinstein_trace_zero
+#check principalEinsteinTensorFromF_eq_stress
+#check principalJetFromF_eq_minus_two_EinsteinRicci
 #check relativeConstraintVariation_eq_residual_deriv
 #check iyerWald_boundary_compensation_linear
 #check iyerWald_bulk_response_linear
@@ -8675,6 +8736,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalMaxwell_timelike_eigen_from_chi
 #print axioms RelativeRest.principalStressFromF_eq_principalStress
 #print axioms RelativeRest.principalJetFromF_rainich
+#print axioms RelativeRest.principalEinsteinTensorFromF_eq_stress
+#print axioms RelativeRest.principalJetFromF_eq_minus_two_EinsteinRicci
 #print axioms RelativeRest.principalField_chiS_invariants
 #print axioms RelativeRest.principalNullPair_normalized
 #print axioms RelativeRest.normalized_null_rescaling_is_boost
