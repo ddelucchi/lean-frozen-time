@@ -6959,6 +6959,128 @@ theorem kerrResolving_balanced_observer_unboosted
 /-- Kerr-Newman `Δ`. -/
 def Delta (r M a Q : ℝ) : ℝ := r^2 - 2*M*r + a^2 + Q^2
 
+/-! ### Boyer-Lindquist metric inverse and densitized Maxwell field -/
+
+/-- Covariant stationary metric coefficients obtained by expanding the two square-form
+stationary one-forms. -/
+def kerrGtt (r M a Q θ : ℝ) : ℝ :=
+  (-Delta r M a Q + a^2 * (Real.sin θ)^2) /
+    Sigma r a θ
+
+def kerrGtPhi (r M a Q θ : ℝ) : ℝ :=
+  a * (Real.sin θ)^2 *
+    (Delta r M a Q - (r^2 + a^2)) /
+    Sigma r a θ
+
+def kerrGPhiPhi (r M a Q θ : ℝ) : ℝ :=
+  (Real.sin θ)^2 *
+    ((r^2 + a^2)^2 -
+      a^2 * Delta r M a Q * (Real.sin θ)^2) /
+    Sigma r a θ
+
+def kerrGrr (r M a Q θ : ℝ) : ℝ :=
+  Sigma r a θ / Delta r M a Q
+
+def kerrGthetaTheta (r a θ : ℝ) : ℝ :=
+  Sigma r a θ
+
+/-- Contravariant stationary block and radial/polar inverse coefficients. -/
+def kerrInvGtt (r M a Q θ : ℝ) : ℝ :=
+  -((r^2 + a^2)^2 -
+      a^2 * Delta r M a Q * (Real.sin θ)^2) /
+    (Sigma r a θ * Delta r M a Q)
+
+def kerrInvGtPhi (r M a Q θ : ℝ) : ℝ :=
+  a * (Delta r M a Q - (r^2 + a^2)) /
+    (Sigma r a θ * Delta r M a Q)
+
+def kerrInvGPhiPhi (r M a Q θ : ℝ) : ℝ :=
+  (Delta r M a Q - a^2 * (Real.sin θ)^2) /
+    (Sigma r a θ * Delta r M a Q *
+      (Real.sin θ)^2)
+
+def kerrInvGrr (r M a Q θ : ℝ) : ℝ :=
+  Delta r M a Q / Sigma r a θ
+
+def kerrInvGthetaTheta (r a θ : ℝ) : ℝ :=
+  1 / Sigma r a θ
+
+/-- The stationary covariant block has determinant `-Δ sin²θ`. -/
+theorem kerr_stationary_block_det
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0) :
+    kerrGtt r M a Q θ * kerrGPhiPhi r M a Q θ -
+      (kerrGtPhi r M a Q θ)^2 =
+      -Delta r M a Q * (Real.sin θ)^2 := by
+  unfold kerrGtt kerrGPhiPhi kerrGtPhi
+  have htrig :
+      (Real.sin θ)^2 = 1 - (Real.cos θ)^2 := by
+    nlinarith [Real.sin_sq_add_cos_sq θ]
+  rw [htrig]
+  field_simp [hsig]
+  unfold Sigma
+  ring
+
+/-- Multiplying by the radial and polar blocks gives the full metric determinant
+`det g=-Σ² sin²θ`. -/
+theorem kerr_metric_det
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    (kerrGtt r M a Q θ * kerrGPhiPhi r M a Q θ -
+        (kerrGtPhi r M a Q θ)^2) *
+      kerrGrr r M a Q θ *
+      kerrGthetaTheta r a θ =
+      -(Sigma r a θ)^2 * (Real.sin θ)^2 := by
+  rw [kerr_stationary_block_det r M a Q θ hsig]
+  unfold kerrGrr kerrGthetaTheta
+  field_simp [hdel]
+  ring
+
+/-- The displayed contravariant stationary coefficients invert the covariant block. -/
+theorem kerr_stationary_inverse_block
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrGtt r M a Q θ * kerrInvGtt r M a Q θ +
+        kerrGtPhi r M a Q θ * kerrInvGtPhi r M a Q θ = 1 ∧
+    kerrGtt r M a Q θ * kerrInvGtPhi r M a Q θ +
+        kerrGtPhi r M a Q θ * kerrInvGPhiPhi r M a Q θ = 0 ∧
+    kerrGtPhi r M a Q θ * kerrInvGtt r M a Q θ +
+        kerrGPhiPhi r M a Q θ * kerrInvGtPhi r M a Q θ = 0 ∧
+    kerrGtPhi r M a Q θ * kerrInvGtPhi r M a Q θ +
+        kerrGPhiPhi r M a Q θ * kerrInvGPhiPhi r M a Q θ = 1 := by
+  have htrig :
+      (Real.sin θ)^2 = 1 - (Real.cos θ)^2 := by
+    nlinarith [Real.sin_sq_add_cos_sq θ]
+  constructor
+  · unfold kerrGtt kerrInvGtt kerrGtPhi kerrInvGtPhi
+    rw [htrig]
+    field_simp [hsig, hdel]
+    unfold Sigma
+    ring
+  · constructor
+    · unfold kerrGtt kerrInvGtPhi kerrGtPhi kerrInvGPhiPhi
+      rw [htrig]
+      field_simp [hsig, hdel, hsin]
+      unfold Sigma
+      ring
+    · constructor
+      · unfold kerrGtPhi kerrInvGtt kerrGPhiPhi kerrInvGtPhi
+        rw [htrig]
+        field_simp [hsig, hdel]
+        unfold Sigma
+        ring
+      · unfold kerrGtPhi kerrInvGtPhi kerrGPhiPhi kerrInvGPhiPhi
+        rw [htrig]
+        field_simp [hsig, hdel, hsin]
+        unfold Sigma
+        ring
+
+/-- Positive-chart Boyer-Lindquist volume density `sqrt(-g)=Σ sinθ`. -/
+def kerrVolumeDensity (r a θ : ℝ) : ℝ :=
+  Sigma r a θ * Real.sin θ
 
 /-! ### Full coordinate-to-Carter-coframe Maxwell specialization -/
 
@@ -8387,6 +8509,9 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check kerr_stationary_block_det
+#check kerr_metric_det
+#check kerr_stationary_inverse_block
 #check kerrPrincipalE_hasDerivAt_r
 #check kerrPrincipalE_hasDerivAt_theta
 #check kerrPrincipalB_hasDerivAt_r
@@ -8980,6 +9105,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrNewman_mino_clock_from_principal_EM
 #print axioms RelativeRest.kerrMinoClockFromPrincipalEM
 #print axioms RelativeRest.kerrPotential_field_factorization
+#print axioms RelativeRest.kerr_stationary_inverse_block
+#print axioms RelativeRest.kerr_metric_det
 #print axioms RelativeRest.kerrMaxwell_divergence_t
 #print axioms RelativeRest.kerrMaxwell_divergence_phi
 #print axioms RelativeRest.kerrCoordinateField_eq_CarterCoframe
