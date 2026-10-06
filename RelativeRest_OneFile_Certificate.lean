@@ -8299,7 +8299,7 @@ theorem paperStructural_forced_certificate
         T (flow b y) = T y + b) →
       relationalObservable flow F T θ (flow t x) =
         relationalObservable flow F T θ x) := by
-  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · intro d
     exact primitive_relative_weights_reciprocal_iff_four d
   · intro d
