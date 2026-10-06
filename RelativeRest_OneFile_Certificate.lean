@@ -979,6 +979,119 @@ theorem relational_evolution_deriv
     deriv (fun ϑ : ℝ => F (ϑ - T)) θ = v :=
   (relational_evolution_translation F T θ v hF).deriv
 
+
+/-! ## 17B. Deepening pass: local response, positivity, and invariant Kerr-Newman clock -/
+
+section RankOneResponse
+
+variable {V W : Type*}
+  [AddCommGroup V] [Module ℝ V]
+  [AddCommGroup W] [Module ℝ W] [NoZeroSMulDivisors ℝ W]
+
+/-- A nonzero response carrier makes the scalar coefficient covector unique. This is the exact
+linear-algebra content of the manuscript's pointwise Iyer-Wald normalization. -/
+theorem covector_unique_from_rank_one_response
+    (η : W) (hη : η ≠ 0)
+    (α β : V →ₗ[ℝ] ℝ)
+    (h : ∀ v : V, (α v) • η = (β v) • η) :
+    α = β := by
+  ext v
+  have hz : (α v - β v) • η = 0 := by
+    rw [sub_smul, h v, sub_self]
+  exact sub_eq_zero.mp ((smul_eq_zero.mp hz).resolve_right hη)
+
+/-- If the distinguished unit response equals the nonzero carrier itself, its scalar coefficient
+is forced to be one. -/
+theorem covector_normalized_from_unit_response
+    (η : W) (hη : η ≠ 0)
+    (resp : V → W) (α : V →ₗ[ℝ] ℝ) (u : V)
+    (hfac : ∀ v : V, resp v = (α v) • η)
+    (hu : resp u = η) :
+    α u = 1 := by
+  have heq : (α u) • η = (1 : ℝ) • η := by
+    rw [← hfac u, hu, one_smul]
+  have hz : (α u - 1) • η = 0 := by
+    rw [sub_smul, heq, sub_self]
+  exact sub_eq_zero.mp ((smul_eq_zero.mp hz).resolve_right hη)
+
+/-- Two scalar factorizations of the same nonzero rank-one response are identical. -/
+theorem rank_one_response_factorization_unique
+    (η : W) (hη : η ≠ 0)
+    (resp : V → W) (α β : V →ₗ[ℝ] ℝ)
+    (hα : ∀ v : V, resp v = (α v) • η)
+    (hβ : ∀ v : V, resp v = (β v) • η) :
+    α = β := by
+  apply covector_unique_from_rank_one_response η hη
+  intro v
+  exact (hα v).symm.trans (hβ v)
+
+end RankOneResponse
+
+/-- Arbitrary-frame Maxwell energy density is nonnegative. -/
+theorem emEnergy_nonneg (e1 e2 e3 b1 b2 b3 : ℝ) :
+    0 ≤ emEnergy e1 e2 e3 b1 b2 b3 := by
+  unfold emEnergy
+  positivity
+
+/-- It is strictly positive whenever the six-component field is nonzero. -/
+theorem emEnergy_pos_of_sum_squares_ne_zero
+    (e1 e2 e3 b1 b2 b3 : ℝ)
+    (hnz : e1^2 + e2^2 + e3^2 + b1^2 + b2^2 + b3^2 ≠ 0) :
+    0 < emEnergy e1 e2 e3 b1 b2 b3 := by
+  unfold emEnergy
+  have hnonneg :
+      0 ≤ e1^2 + e2^2 + e3^2 + b1^2 + b2^2 + b3^2 := by positivity
+  have hpos :
+      0 < e1^2 + e2^2 + e3^2 + b1^2 + b2^2 + b3^2 :=
+    lt_of_le_of_ne hnonneg (Ne.symm hnz)
+  linarith
+
+/-- The arbitrary-frame mixed Maxwell stress is trace-free. -/
+theorem emMixed_trace_zero
+    (e1 e2 e3 b1 b2 b3 : ℝ) :
+    (∑ i : Fin 4, emMixed e1 e2 e3 b1 b2 b3 i i) = 0 := by
+  rw [Fin.sum_univ_four]
+  simp [emMixed, emEnergy, emPoynting1, emPoynting2, emPoynting3]
+  ring
+
+/-- From the Kerr-Newman carrier magnitude, the positive intrinsic clock rate is forced. -/
+theorem kerrNewman_clock_rate_from_chi
+    (Q sig χ ω : ℝ)
+    (hQ : Q ≠ 0) (hsig : 0 < sig)
+    (hχ : χ = 2 * Q^2 / sig^2)
+    (hω : ω = Real.sqrt χ) :
+    ω = Real.sqrt 2 * |Q| / sig := by
+  have hsig0 : sig ≠ 0 := ne_of_gt hsig
+  have hχnonneg : 0 ≤ χ := by
+    rw [hχ]
+    positivity
+  have hωnonneg : 0 ≤ ω := by rw [hω]; positivity
+  have hrhsnonneg : 0 ≤ Real.sqrt 2 * |Q| / sig := by positivity
+  have hω2 : ω^2 = χ := by
+    rw [hω, Real.sq_sqrt hχnonneg]
+  have hsqrt2 : (Real.sqrt 2)^2 = 2 := by norm_num
+  have habsQ : |Q|^2 = Q^2 := sq_abs Q
+  have hrhs2 : (Real.sqrt 2 * |Q| / sig)^2 = χ := by
+    rw [hχ]
+    field_simp [hsig0]
+    rw [hsqrt2, habsQ]
+  nlinarith
+
+/-- The Mino relation is therefore a corollary of the invariant clock rate rather than a separate
+Kerr-Newman clock hypothesis. -/
+theorem kerrNewman_mino_from_invariant_clock
+    (Q sig χ ω dt dlam dth : ℝ)
+    (hQ : Q ≠ 0) (hsig : 0 < sig)
+    (hχ : χ = 2 * Q^2 / sig^2)
+    (hω : ω = Real.sqrt χ)
+    (hclock : dth = ω * dt)
+    (hmino : dlam = dt / sig) :
+    dth = Real.sqrt 2 * |Q| * dlam := by
+  have hrate :=
+    kerrNewman_clock_rate_from_chi Q sig χ ω hQ hsig hχ hω
+  rw [hclock, hrate, hmino]
+  field_simp [ne_of_gt hsig]
+
 /-! ## 18. Explicit hypothesis interfaces for the still-unformalized geometric layers
 
 These are *not axioms*. They are structures passed explicitly to theorems.  The final first-principles
