@@ -1361,6 +1361,58 @@ theorem nonzero_covector_surjective
     (Λ : K →ₗ[ℝ] ℝ) (hΛ : Λ ≠ 0) : Function.Surjective Λ := by
   exact LinearMap.surjective hΛ
 
+/-- The clock covector on the quotient is constructed canonically by quotienting out
+exactly the directions it annihilates. -/
+noncomputable def quotientClockCovector
+    (Λ : K →ₗ[ℝ] ℝ) :
+    (K ⧸ LinearMap.ker Λ) →ₗ[ℝ] ℝ :=
+  (LinearMap.ker Λ).liftQ Λ le_rfl
+
+/-- Its pullback along the quotient projection is exactly the original characteristic covector. -/
+theorem quotientClockCovector_pullback
+    (Λ : K →ₗ[ℝ] ℝ) :
+    (quotientClockCovector Λ).comp (LinearMap.ker Λ).mkQ = Λ := by
+  simpa [quotientClockCovector] using
+    (Submodule.liftQ_mkQ (LinearMap.ker Λ) Λ le_rfl)
+
+/-- Quotienting by the full kernel leaves no further invisible clock direction. -/
+theorem quotientClockCovector_ker_eq_bot
+    (Λ : K →ₗ[ℝ] ℝ) :
+    LinearMap.ker (quotientClockCovector Λ) = ⊥ := by
+  simpa [quotientClockCovector] using
+    (Submodule.ker_liftQ_eq_bot'
+      (LinearMap.ker Λ) Λ rfl)
+
+/-- Hence the descended clock covector is injective. -/
+theorem quotientClockCovector_injective
+    (Λ : K →ₗ[ℝ] ℝ) :
+    Function.Injective (quotientClockCovector Λ) := by
+  rw [← LinearMap.ker_eq_bot]
+  exact quotientClockCovector_ker_eq_bot Λ
+
+/-- If the original response is nonzero, the quotient clock covector is also nonzero. -/
+theorem quotientClockCovector_nonzero
+    (Λ : K →ₗ[ℝ] ℝ) (hΛ : Λ ≠ 0) :
+    quotientClockCovector Λ ≠ 0 := by
+  intro hzero
+  apply hΛ
+  rw [← quotientClockCovector_pullback Λ, hzero]
+  simp
+
+/-- For a nonzero response, the quotient clock covector is surjective onto the real line. -/
+theorem quotientClockCovector_surjective
+    (Λ : K →ₗ[ℝ] ℝ) (hΛ : Λ ≠ 0) :
+    Function.Surjective (quotientClockCovector Λ) :=
+  LinearMap.surjective (quotientClockCovector_nonzero Λ hΛ)
+
+/-- The quotient clock covector is therefore itself the canonical linear equivalence with ℝ. -/
+noncomputable def quotientClockCovectorEquivReal
+    (Λ : K →ₗ[ℝ] ℝ) (hΛ : Λ ≠ 0) :
+    (K ⧸ LinearMap.ker Λ) ≃ₗ[ℝ] ℝ :=
+  LinearEquiv.ofBijective (quotientClockCovector Λ)
+    ⟨quotientClockCovector_injective Λ,
+      quotientClockCovector_surjective Λ hΛ⟩
+
 /-- The quotient by the kernel of a nonzero real covector is canonically equivalent to its range. -/
 noncomputable def clockQuotientEquivRange (Λ : K →ₗ[ℝ] ℝ) :
     (K ⧸ LinearMap.ker Λ) ≃ₗ[ℝ] LinearMap.range Λ :=
@@ -1400,6 +1452,15 @@ theorem quotient_clock_covector_unique
     (LinearMap.ker Λ).mkQ
     (Submodule.mkQ_surjective (LinearMap.ker Λ))
     Λ λ₁ λ₂ h₁ h₂
+
+/-- In particular, every clock one-form with the required pullback is the canonical quotient lift. -/
+theorem quotient_clock_covector_forced
+    (Λ : K →ₗ[ℝ] ℝ)
+    (λ : (K ⧸ LinearMap.ker Λ) →ₗ[ℝ] ℝ)
+    (hλ : λ.comp (LinearMap.ker Λ).mkQ = Λ) :
+    λ = quotientClockCovector Λ := by
+  exact quotient_clock_covector_unique Λ λ (quotientClockCovector Λ)
+    hλ (quotientClockCovector_pullback Λ)
 
 end LinearDescent
 
@@ -2213,6 +2274,14 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check quotientClockCovector
+#check quotientClockCovector_pullback
+#check quotientClockCovector_ker_eq_bot
+#check quotientClockCovector_injective
+#check quotientClockCovector_nonzero
+#check quotientClockCovector_surjective
+#check quotientClockCovectorEquivReal
+#check quotient_clock_covector_forced
 #check normalized_unit_existsUnique
 #check normalizedClockMap_bijective
 #check normalizedClockEquiv
