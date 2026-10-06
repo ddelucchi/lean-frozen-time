@@ -1644,14 +1644,14 @@ variable {V P KSpace : Type*}
   [AddCommGroup KSpace] [Module ℝ KSpace]
 
 /-- Minimal algebraic interface exported by a future first-principles Einstein-Maxwell/Iyer-Wald
-formalization.  Nonvanishing of the descended clock covector is not postulated: a strictly
-positive physical response witness forces it. -/
+formalization.  The characteristic space is not an arbitrary target with an assumed surjection:
+it is definitionally the image of `beta`, exactly as in the manuscript.  Nonvanishing of the
+descended clock covector is likewise derived from a positive physical-response witness. -/
 structure BridgeData where
   beta : P →ₗ[ℝ] KSpace
-  Lambda : KSpace →ₗ[ℝ] ℝ
+  Lambda : LinearMap.range beta →ₗ[ℝ] ℝ
   ell : P →ₗ[ℝ] ℝ
-  beta_surj : Function.Surjective beta
-  factorization : Lambda.comp beta = ell
+  factorization : Lambda.comp beta.rangeRestrict = ell
   positiveWitness : P
   response_positive : 0 < ell positiveWitness
 
@@ -1660,25 +1660,40 @@ theorem bridge_ell_nonzero (D : BridgeData (P:=P) (KSpace:=KSpace)) :
     D.ell ≠ 0 :=
   covector_nonzero_of_positive D.ell D.positiveWitness D.response_positive
 
-/-- Factorization then forces the descended characteristic covector itself to be nonzero. -/
+/-- Factorization through the actual characteristic image forces the descended covector nonzero. -/
 theorem bridge_Lambda_nonzero (D : BridgeData (P:=P) (KSpace:=KSpace)) :
     D.Lambda ≠ 0 :=
-  descended_covector_nonzero D.beta D.Lambda D.ell D.factorization (bridge_ell_nonzero D)
+  descended_covector_nonzero D.beta.rangeRestrict D.Lambda D.ell
+    D.factorization (bridge_ell_nonzero D)
 
-/-- Once the Iyer-Wald bridge is supplied, the characteristic covector is mathematically unique. -/
+/-- On `im beta`, the Iyer-Wald characteristic covector is mathematically unique without
+any independent surjectivity premise. -/
 theorem bridge_Lambda_unique (D : BridgeData (P:=P) (KSpace:=KSpace))
-    (Λ' : KSpace →ₗ[ℝ] ℝ) (hΛ' : Λ'.comp D.beta = D.ell) : Λ' = D.Lambda := by
-  exact descended_covector_unique D.beta D.beta_surj D.ell Λ' D.Lambda hΛ' D.factorization
+    (Λ' : LinearMap.range D.beta →ₗ[ℝ] ℝ)
+    (hΛ' : Λ'.comp D.beta.rangeRestrict = D.ell) :
+    Λ' = D.Lambda := by
+  exact characteristic_range_covector_unique D.beta D.ell Λ' D.Lambda hΛ' D.factorization
 
 /-- The characteristic quotient is canonically equivalent to the range of the unique covector. -/
 noncomputable def bridgeQuotientEquivRange (D : BridgeData (P:=P) (KSpace:=KSpace)) :
-    (KSpace ⧸ LinearMap.ker D.Lambda) ≃ₗ[ℝ] LinearMap.range D.Lambda :=
+    ((LinearMap.range D.beta) ⧸ LinearMap.ker D.Lambda) ≃ₗ[ℝ]
+      LinearMap.range D.Lambda :=
   LinearMap.quotKerEquivRange D.Lambda
+
+/-- The characteristic quotient is in fact canonically equivalent to the real line. -/
+noncomputable def bridgeQuotientEquivReal (D : BridgeData (P:=P) (KSpace:=KSpace)) :
+    ((LinearMap.range D.beta) ⧸ LinearMap.ker D.Lambda) ≃ₗ[ℝ] ℝ :=
+  clockQuotientEquivReal D.Lambda (bridge_Lambda_nonzero D)
 
 /-- The range of the characteristic clock covector is all of `ℝ`. -/
 theorem bridge_range_full (D : BridgeData (P:=P) (KSpace:=KSpace)) :
     LinearMap.range D.Lambda = ⊤ :=
   range_eq_top_of_nonzero D.Lambda (bridge_Lambda_nonzero D)
+
+/-- Consequently the stress-visible characteristic quotient is forced to have finrank one. -/
+theorem bridge_quotient_finrank_one (D : BridgeData (P:=P) (KSpace:=KSpace)) :
+    Module.finrank ℝ ((LinearMap.range D.beta) ⧸ LinearMap.ker D.Lambda) = 1 :=
+  clockQuotient_finrank_one D.Lambda (bridge_Lambda_nonzero D)
 
 end GeometricInterface
 
@@ -1723,6 +1738,8 @@ theorem scalar_backbone
 #check bridge_ell_nonzero
 #check bridge_Lambda_nonzero
 #check bridge_Lambda_unique
+#check bridgeQuotientEquivReal
+#check bridge_quotient_finrank_one
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
