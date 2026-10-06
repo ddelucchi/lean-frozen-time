@@ -326,6 +326,59 @@ theorem normalized_involution
   rw [hs, one_smul]
   simp
 
+/-- The canonical ± eigenspace projectors of an involution. -/
+def involutionProjPlus
+    {V : Type*} [AddCommGroup V] [Module ℝ V]
+    (S : V →ₗ[ℝ] V) (v : V) : V :=
+  (1 / 2 : ℝ) • (v + S v)
+
+def involutionProjMinus
+    {V : Type*} [AddCommGroup V] [Module ℝ V]
+    (S : V →ₗ[ℝ] V) (v : V) : V :=
+  (1 / 2 : ℝ) • (v - S v)
+
+/-- The two Rainich projectors reconstruct every vector. -/
+theorem involution_projectors_sum
+    {V : Type*} [AddCommGroup V] [Module ℝ V]
+    (S : V →ₗ[ℝ] V) (v : V) :
+    involutionProjPlus S v + involutionProjMinus S v = v := by
+  simp [involutionProjPlus, involutionProjMinus]
+  module
+
+/-- The + projector lands in the +1 eigenspace. -/
+theorem involutionProjPlus_eigen
+    {V : Type*} [AddCommGroup V] [Module ℝ V]
+    (S : V →ₗ[ℝ] V)
+    (hS : ∀ v : V, S (S v) = v)
+    (v : V) :
+    S (involutionProjPlus S v) = involutionProjPlus S v := by
+  simp [involutionProjPlus, map_add, map_smul, hS]
+  module
+
+/-- The - projector lands in the -1 eigenspace. -/
+theorem involutionProjMinus_eigen
+    {V : Type*} [AddCommGroup V] [Module ℝ V]
+    (S : V →ₗ[ℝ] V)
+    (hS : ∀ v : V, S (S v) = v)
+    (v : V) :
+    S (involutionProjMinus S v) = - involutionProjMinus S v := by
+  simp [involutionProjMinus, map_sub, map_smul, hS]
+  module
+
+/-- Both canonical projectors are idempotent. -/
+theorem involution_projectors_idempotent
+    {V : Type*} [AddCommGroup V] [Module ℝ V]
+    (S : V →ₗ[ℝ] V)
+    (hS : ∀ v : V, S (S v) = v)
+    (v : V) :
+    involutionProjPlus S (involutionProjPlus S v) = involutionProjPlus S v ∧
+    involutionProjMinus S (involutionProjMinus S v) = involutionProjMinus S v := by
+  constructor
+  · simp [involutionProjPlus, map_add, map_smul, hS]
+    module
+  · simp [involutionProjMinus, map_sub, map_smul, hS]
+    module
+
 /-! ## 6. Unique residual boost balance -/
 
 /-- Scalar boost defect. -/
@@ -1180,6 +1233,10 @@ theorem scalar_backbone
 #check defect_hasDerivAt_zero
 #check principalStress_sq
 #check normalized_involution
+#check involution_projectors_sum
+#check involutionProjPlus_eigen
+#check involutionProjMinus_eigen
+#check involution_projectors_idempotent
 #check boost_balance_unique
 #check boostDefect_strictAnti
 #check sigmaStar_balance
