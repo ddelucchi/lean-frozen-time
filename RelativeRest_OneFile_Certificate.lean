@@ -1289,6 +1289,36 @@ theorem descended_covector_unique
   apply covector_pullback_injective β hβ
   exact h₁.trans h₂.symm
 
+
+/-- If the physical response vanishes on every parameter invisible to the characteristic map,
+then the characteristic covector is not merely unique: it exists canonically on `im β`. -/
+noncomputable def characteristicCovectorOfKernel
+    (β : P →ₗ[ℝ] K) (ℓ : P →ₗ[ℝ] ℝ)
+    (hker : LinearMap.ker β ≤ LinearMap.ker ℓ) :
+    LinearMap.range β →ₗ[ℝ] ℝ :=
+  ((LinearMap.ker β).liftQ ℓ hker).comp
+    (LinearMap.quotKerEquivRange β).symm.toLinearMap
+
+/-- The canonical covector constructed from kernel-invisibility pulls back to the original
+physical response exactly. -/
+theorem characteristicCovectorOfKernel_factorization
+    (β : P →ₗ[ℝ] K) (ℓ : P →ₗ[ℝ] ℝ)
+    (hker : LinearMap.ker β ≤ LinearMap.ker ℓ) :
+    (characteristicCovectorOfKernel β ℓ hker).comp β.rangeRestrict = ℓ := by
+  ext p
+  simp [characteristicCovectorOfKernel]
+
+/-- Kernel-invisibility therefore forces a unique covector on the actual characteristic image. -/
+theorem characteristicCovectorOfKernel_unique
+    (β : P →ₗ[ℝ] K) (ℓ : P →ₗ[ℝ] ℝ)
+    (hker : LinearMap.ker β ≤ LinearMap.ker ℓ)
+    (Λ : LinearMap.range β →ₗ[ℝ] ℝ)
+    (hΛ : Λ.comp β.rangeRestrict = ℓ) :
+    Λ = characteristicCovectorOfKernel β ℓ hker := by
+  exact characteristic_range_covector_unique β ℓ Λ
+    (characteristicCovectorOfKernel β ℓ hker)
+    hΛ (characteristicCovectorOfKernel_factorization β ℓ hker)
+
 /-- If `ℓ=Λ∘β`, then parameters invisible to `β` are invisible to `ℓ`. -/
 theorem kernel_inclusion_of_factorization
     (β : P →ₗ[ℝ] K) (Λ : K →ₗ[ℝ] ℝ) (ℓ : P →ₗ[ℝ] ℝ)
@@ -2040,6 +2070,53 @@ theorem bridge_quotient_finrank_one (D : BridgeData (P:=P) (KSpace:=KSpace)) :
     Module.finrank ℝ ((LinearMap.range D.beta) ⧸ LinearMap.ker D.Lambda) = 1 :=
   clockQuotient_finrank_one D.Lambda (bridge_Lambda_nonzero D)
 
+/-- Stronger bridge interface: the descendant covector is no longer data.
+Only the physically meaningful kernel-invisibility condition and a positivity witness are supplied. -/
+structure ForcedBridgeData where
+  beta : P →ₗ[ℝ] KSpace
+  ell : P →ₗ[ℝ] ℝ
+  kernel_invisible : LinearMap.ker beta ≤ LinearMap.ker ell
+  positiveWitness : P
+  response_positive : 0 < ell positiveWitness
+
+/-- The characteristic clock covector is canonically constructed from the response. -/
+noncomputable def ForcedBridgeData.Lambda
+    (D : ForcedBridgeData (P:=P) (KSpace:=KSpace)) :
+    LinearMap.range D.beta →ₗ[ℝ] ℝ :=
+  characteristicCovectorOfKernel D.beta D.ell D.kernel_invisible
+
+/-- No factorization hypothesis is needed: it is a theorem of the canonical construction. -/
+theorem forcedBridge_factorization
+    (D : ForcedBridgeData (P:=P) (KSpace:=KSpace)) :
+    D.Lambda.comp D.beta.rangeRestrict = D.ell :=
+  characteristicCovectorOfKernel_factorization
+    D.beta D.ell D.kernel_invisible
+
+/-- Positivity forces the canonically constructed characteristic covector to be nonzero. -/
+theorem forcedBridge_Lambda_nonzero
+    (D : ForcedBridgeData (P:=P) (KSpace:=KSpace)) :
+    D.Lambda ≠ 0 := by
+  exact descended_covector_nonzero
+    D.beta.rangeRestrict D.Lambda D.ell
+    (forcedBridge_factorization D)
+    (covector_nonzero_of_positive D.ell D.positiveWitness D.response_positive)
+
+/-- Any other covector reproducing the same physical response equals the canonical one. -/
+theorem forcedBridge_Lambda_unique
+    (D : ForcedBridgeData (P:=P) (KSpace:=KSpace))
+    (Λ' : LinearMap.range D.beta →ₗ[ℝ] ℝ)
+    (hΛ' : Λ'.comp D.beta.rangeRestrict = D.ell) :
+    Λ' = D.Lambda := by
+  exact characteristicCovectorOfKernel_unique
+    D.beta D.ell D.kernel_invisible Λ' hΛ'
+
+/-- The resulting stress-visible quotient is forced to be one-dimensional. -/
+theorem forcedBridge_quotient_finrank_one
+    (D : ForcedBridgeData (P:=P) (KSpace:=KSpace)) :
+    Module.finrank ℝ
+      ((LinearMap.range D.beta) ⧸ LinearMap.ker D.Lambda) = 1 := by
+  exact clockQuotient_finrank_one D.Lambda (forcedBridge_Lambda_nonzero D)
+
 end GeometricInterface
 
 /-! ## 19. End-to-end dependency record -/
@@ -2090,6 +2167,14 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check characteristicCovectorOfKernel
+#check characteristicCovectorOfKernel_factorization
+#check characteristicCovectorOfKernel_unique
+#check ForcedBridgeData.Lambda
+#check forcedBridge_factorization
+#check forcedBridge_Lambda_nonzero
+#check forcedBridge_Lambda_unique
+#check forcedBridge_quotient_finrank_one
 #check involution_eigenspaces_orthogonal
 #check actionOpticalMap_injective
 #check actionOpticalMap_surjective
