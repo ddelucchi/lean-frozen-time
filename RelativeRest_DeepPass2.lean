@@ -88,7 +88,7 @@ structure IyerWaldResponseData where
   omegaY : K →ₗ[ℝ] ℝ
   beta_surj : Function.Surjective beta
   bridge : ∀ p : P, omegaY (beta p) = -2 * ell p
-  ell_nonzero : ell ≠ 0
+  ell_positive : ∃ p : P, 0 < ell p
 
 def lambdaFromOmega (D : IyerWaldResponseData (P:=P) (K:=K)) : K →ₗ[ℝ] ℝ :=
   (-1 / 2 : ℝ) • D.omegaY
