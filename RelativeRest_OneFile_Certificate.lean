@@ -1183,37 +1183,6 @@ def principalScaledResidualFromF
     principalScaledResidualFromF E B i j 0 = 0 := by
   simp [principalScaledResidualFromF]
 
-/-- The first normal derivative of the explicit residual is exactly the fixed-point jet
-`J[F]=-16πT[F]`. -/
-theorem principalScaledResidualFromF_hasDerivAt_zero
-    (E B : ℝ) (i j : Fin 4) :
-    HasDerivAt
-      (principalScaledResidualFromF E B i j)
-      (principalJetFromF E B i j) 0 := by
-  have hexp :
-      HasDerivAt (fun s : ℝ => Real.exp (2 * s)) 2 0 := by
-    have hlin : HasDerivAt (fun s : ℝ => 2 * s) 2 0 :=
-      (hasDerivAt_id 0).const_mul 2
-    simpa using (Real.hasDerivAt_exp 0).comp 0 hlin
-  have hscaled :=
-    hexp.const_mul
-      (8 * Real.pi * principalStressFromF E B i j)
-  have hconst :
-      HasDerivAt
-        (fun _ : ℝ =>
-          8 * Real.pi * principalStressFromF E B i j)
-        0 0 :=
-    hasDerivAt_const 0 _
-  unfold principalScaledResidualFromF principalJetFromF
-  convert hconst.sub hscaled using 1 <;> ring
-
-/-- Derivative form of the explicit fixed-point jet identity. -/
-theorem principalScaledResidualFromF_deriv_zero
-    (E B : ℝ) (i j : Fin 4) :
-    deriv (principalScaledResidualFromF E B i j) 0 =
-      principalJetFromF E B i j :=
-  (principalScaledResidualFromF_hasDerivAt_zero E B i j).deriv
-
 /-- On the nonzero Maxwell sector the timelike Einstein-Maxwell component preserves the
 field equation under relative scaling if and only if `s=0`. -/
 theorem principalField_solution_preserving_iff
@@ -1362,6 +1331,38 @@ theorem principalStressFromF_rainich
 `J=-16π T^{EM}`. -/
 def principalJetFromF (E B : ℝ) (i j : Fin 4) : ℝ :=
   -16 * Real.pi * principalStressFromF E B i j
+
+
+/-- The first normal derivative of the explicit residual is exactly the fixed-point jet
+`J[F]=-16πT[F]`. -/
+theorem principalScaledResidualFromF_hasDerivAt_zero
+    (E B : ℝ) (i j : Fin 4) :
+    HasDerivAt
+      (principalScaledResidualFromF E B i j)
+      (principalJetFromF E B i j) 0 := by
+  have hexp :
+      HasDerivAt (fun s : ℝ => Real.exp (2 * s)) 2 0 := by
+    have hlin : HasDerivAt (fun s : ℝ => 2 * s) 2 0 :=
+      (hasDerivAt_id 0).const_mul 2
+    simpa using (Real.hasDerivAt_exp 0).comp 0 hlin
+  have hscaled :=
+    hexp.const_mul
+      (8 * Real.pi * principalStressFromF E B i j)
+  have hconst :
+      HasDerivAt
+        (fun _ : ℝ =>
+          8 * Real.pi * principalStressFromF E B i j)
+        0 0 :=
+    hasDerivAt_const 0 _
+  unfold principalScaledResidualFromF principalJetFromF
+  convert hconst.sub hscaled using 1 <;> ring
+
+/-- Derivative form of the explicit fixed-point jet identity. -/
+theorem principalScaledResidualFromF_deriv_zero
+    (E B : ℝ) (i j : Fin 4) :
+    deriv (principalScaledResidualFromF E B i j) 0 =
+      principalJetFromF E B i j :=
+  (principalScaledResidualFromF_hasDerivAt_zero E B i j).deriv
 
 
 /-- Consequently the fixed-point carrier jet is orientation-independent under
