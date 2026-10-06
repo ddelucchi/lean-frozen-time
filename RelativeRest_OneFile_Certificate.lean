@@ -14225,6 +14225,177 @@ theorem principalActionSectorVariation_forced_core_chain
     principalActionSectorVariation_current_eq_characteristicCurrent D,
     hL, hdim, hnorm⟩
 
+/-! ### Action-Euler sector operator: metric action jet to covariant clock with no stress input -/
+
+/-- Strongest finite-dimensional action-linked covariant-phase-space interface.
+The complete two-sector constraint operator is the vector-valued lift of the
+`(x_G-x_M)` residual, but its coefficient is `actionEulerResponse`, which is already
+reconstructed from the derivative of the Einstein-Maxwell metric Euler-Lagrange
+coefficient. Thus no stress-current normalization, sector sign, or total-on-shell
+constraint is independently supplied at this layer. -/
+structure PrincipalActionEulerSectorVariationCharacteristicInput where
+  carrier : PrincipalCarrierCharacteristicInput (P:=P)
+  variation : LagrangianVariationNoetherOperators
+    (L:=R2) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ))
+  constraintFromActionEuler :
+    variation.constraint =
+      actionConstraintResponseLinear carrier.actionEulerResponse
+
+@[simp] theorem PrincipalActionEulerSectorVariationCharacteristicInput.constraint_CA
+    (D : PrincipalActionEulerSectorVariationCharacteristicInput (P:=P)) :
+    D.variation.constraint CA = 0 := by
+  rw [D.constraintFromActionEuler]
+  exact actionConstraintResponseLinear_CA _
+
+@[simp] theorem PrincipalActionEulerSectorVariationCharacteristicInput.constraint_gravity
+    (D : PrincipalActionEulerSectorVariationCharacteristicInput (P:=P)) :
+    D.variation.constraint actionGravitySector =
+      D.carrier.actionEulerResponse := by
+  rw [D.constraintFromActionEuler]
+  exact actionConstraintResponseLinear_gravity _
+
+@[simp] theorem PrincipalActionEulerSectorVariationCharacteristicInput.constraint_maxwell
+    (D : PrincipalActionEulerSectorVariationCharacteristicInput (P:=P)) :
+    D.variation.constraint actionMaxwellSector =
+      -D.carrier.actionEulerResponse := by
+  rw [D.constraintFromActionEuler]
+  exact actionConstraintResponseLinear_maxwell _
+
+@[simp] theorem PrincipalActionEulerSectorVariationCharacteristicInput.constraint_DA
+    (D : PrincipalActionEulerSectorVariationCharacteristicInput (P:=P)) :
+    D.variation.constraint DA =
+      (-2 : ℝ) • D.carrier.actionEulerResponse := by
+  rw [D.constraintFromActionEuler]
+  exact actionConstraintResponseLinear_DA _
+
+/-- The action-Euler sector operator is automatically the stress-sector operator,
+but this equality is a theorem downstream of the metric action Euler jet. -/
+theorem PrincipalActionEulerSectorVariationCharacteristicInput.constraint_eq_stressSector
+    (D : PrincipalActionEulerSectorVariationCharacteristicInput (P:=P)) :
+    D.variation.constraint =
+      actionConstraintResponseLinear
+        (stressResponse LinearMap.id D.carrier.T D.carrier.iε) := by
+  rw [D.constraintFromActionEuler, D.carrier.actionEulerResponse_eq_stress]
+
+def PrincipalActionEulerSectorVariationCharacteristicInput.characteristicCurrent
+    (D : PrincipalActionEulerSectorVariationCharacteristicInput (P:=P)) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
+  (-1 / 2 : ℝ) •
+    (D.variation.omegaXY DA + D.variation.dB DA)
+
+/-- The compensated first-variation current is exactly the response reconstructed
+from the metric action Euler jet. -/
+theorem principalActionEulerSectorVariation_current_eq_actionEulerResponse
+    (D : PrincipalActionEulerSectorVariationCharacteristicInput (P:=P)) :
+    D.characteristicCurrent = D.carrier.actionEulerResponse := by
+  unfold PrincipalActionEulerSectorVariationCharacteristicInput.characteristicCurrent
+  rw [D.variation.compensated_eq_constraint, D.constraint_DA]
+  module
+
+/-- Hence the same current equals the explicit Maxwell stress response as a derived
+consequence rather than an input. -/
+theorem principalActionEulerSectorVariation_current_eq_stress
+    (D : PrincipalActionEulerSectorVariationCharacteristicInput (P:=P)) :
+    D.characteristicCurrent =
+      stressResponse LinearMap.id D.carrier.T D.carrier.iε := by
+  rw [principalActionEulerSectorVariation_current_eq_actionEulerResponse D,
+    D.carrier.actionEulerResponse_eq_stress]
+
+/-- And therefore it is exactly the characteristic current already used to force the
+one-dimensional quotient. -/
+theorem principalActionEulerSectorVariation_current_eq_characteristicCurrent
+    (D : PrincipalActionEulerSectorVariationCharacteristicInput (P:=P)) :
+    D.characteristicCurrent =
+      D.carrier.toCharacteristicCurrentData.current := by
+  rw [principalActionEulerSectorVariation_current_eq_stress D,
+    principalCarrierCharacteristic_current D.carrier]
+
+/-- No second linear two-sector constraint operator can have the same gravity/Maxwell
+action-Euler values. -/
+theorem PrincipalActionEulerSectorVariationCharacteristicInput.constraint_unique
+    (D : PrincipalActionEulerSectorVariationCharacteristicInput (P:=P))
+    (C' : R2 →ₗ[ℝ] ((Fin 4 → ℝ) →ₗ[ℝ] ℝ))
+    (hG : C' actionGravitySector = D.carrier.actionEulerResponse)
+    (hM : C' actionMaxwellSector = -D.carrier.actionEulerResponse) :
+    C' = D.variation.constraint := by
+  rw [D.constraintFromActionEuler]
+  ext x
+  rcases x with ⟨xG,xM⟩
+  have hx : (xG,xM) =
+      xG • actionGravitySector + xM • actionMaxwellSector := by
+    ext <;> simp [actionGravitySector, actionMaxwellSector]
+  rw [hx, map_add, map_smul, map_smul, hG, hM]
+  simp [actionConstraintResponseLinear, actionGravitySector, actionMaxwellSector]
+  module
+
+/-- Full clock chain sourced at the metric action Euler jet and the actual
+Lagrangian first-variation/Noether identities. -/
+theorem principalActionEulerSectorVariation_clock_chain
+    (D : PrincipalActionEulerSectorVariationCharacteristicInput (P:=P)) :
+    D.characteristicCurrent =
+        D.carrier.toCharacteristicCurrentData.current ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    (quotientClockCovector principalTOLinear).comp
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda) =
+      D.carrier.toCharacteristicCurrentData.clockCovector ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat := by
+  rcases principalCarrierCharacteristic_clock_chain D.carrier with
+    ⟨hL, hdim, hpull, hnorm⟩
+  exact ⟨principalActionEulerSectorVariation_current_eq_characteristicCurrent D,
+    hL, hdim, hpull, hnorm⟩
+
+/-- Current strongest action-to-clock certificate. The metric Euler derivative of
+the displayed Einstein-Maxwell action uniquely fixes `J`; `J` fixes the action-Euler
+response; one two-sector operator identity fixes the entire relative constraint jet;
+first variation and Noether identities derive Iyer-Wald; and positivity plus quotient
+descent fix the normalized clock line. -/
+theorem principalActionEulerSectorVariation_forced_core_chain
+    (D : PrincipalActionEulerSectorVariationCharacteristicInput (P:=P))
+    (u s : ℝ) :
+    ((8 * Real.pi * principalFieldEnergyDensity D.carrier.E D.carrier.B =
+        8 * Real.pi *
+          maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+          principalFieldEnergyDensity D.carrier.E D.carrier.B) ↔ s = 0) ∧
+    (∀ i j : Fin 4,
+      D.carrier.J (principalBasis j) i =
+        (16 * Real.pi / principalMetricSign i) *
+          deriv (principalScaledMetricEulerCoeffFromAction
+            D.carrier.E D.carrier.B i j) 0) ∧
+    D.variation.constraint CA = 0 ∧
+    D.variation.constraint DA =
+      (-2 : ℝ) • D.carrier.actionEulerResponse ∧
+    D.characteristicCurrent = D.carrier.actionEulerResponse ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat := by
+  rcases principalCarrierCharacteristic_clock_chain D.carrier with
+    ⟨hL, hdim, _hpull, hnorm⟩
+  refine ⟨principalField_solution_preserving_iff
+      u s D.carrier.E D.carrier.B D.carrier.field_nonzero, ?_,
+    D.constraint_CA, D.constraint_DA,
+    principalActionEulerSectorVariation_current_eq_actionEulerResponse D,
+    hL, hdim, hnorm⟩
+  intro i j
+  exact D.carrier.J_basis_eq_actionEulerJet i j
+
 /-! ### On-shell Lagrangian first variation: total field equation to clock line -/
 
 /-- Strongest non-manifold covariant-phase-space interface: the total Einstein-Maxwell
