@@ -5054,6 +5054,74 @@ theorem NullEndpointPairData.equal_norm_forced
 
 end OpticalClosure
 
+/-! ### Exact two-dimensional optical metric reconstruction -/
+
+/-- In the `(dT,dR)` basis, the inverse optical metric has common magnitude `q=N_opt⁻²`. -/
+def opticalInverseMetric2 (q : ℝ) (x y : R2) : ℝ :=
+  q * (-x.1 * y.1 + x.2 * y.2)
+
+/-- The corresponding covariant optical metric is forced to carry reciprocal magnitude
+`q⁻¹=N_opt²`. -/
+def opticalMetric2 (q : ℝ) (x y : R2) : ℝ :=
+  q⁻¹ * (-x.1 * y.1 + x.2 * y.2)
+
+/-- Matrix coefficient of the inverse optical metric. -/
+def opticalInverseMetric2Matrix (q : ℝ) (i j : Fin 2) : ℝ :=
+  if i = j then if i = 0 then -q else q else 0
+
+/-- Matrix coefficient of the covariant optical metric. -/
+def opticalMetric2Matrix (q : ℝ) (i j : Fin 2) : ℝ :=
+  if i = j then if i = 0 then -q⁻¹ else q⁻¹ else 0
+
+/-- The reconstructed covariant and contravariant optical metrics are exact matrix inverses
+whenever the common endpoint norm is nonzero. -/
+theorem opticalMetric2_inverse
+    (q : ℝ) (hq : q ≠ 0) (i j : Fin 2) :
+    (∑ k : Fin 2,
+      opticalMetric2Matrix q i k *
+        opticalInverseMetric2Matrix q k j) =
+      (if i = j then 1 else 0) := by
+  fin_cases i <;> fin_cases j <;>
+    simp [opticalMetric2Matrix, opticalInverseMetric2Matrix, hq]
+
+/-- The clock and radial basis covectors have equal-and-opposite inverse norms `-q,+q`. -/
+theorem opticalInverseMetric2_basis_norms (q : ℝ) :
+    opticalInverseMetric2 q TO TO = -q ∧
+    opticalInverseMetric2 q RO RO = q ∧
+    opticalInverseMetric2 q TO RO = 0 := by
+  constructor
+  · simp [opticalInverseMetric2, TO]
+  · constructor <;> simp [opticalInverseMetric2, TO, RO]
+
+/-- Thus if `q=N_opt⁻²`, the covariant metric is literally
+`N_opt²(-dT²+dR²)`. -/
+theorem opticalMetric2_lapse_form
+    (N q : ℝ)
+    (hN : N ≠ 0)
+    (hq : q = N⁻²) :
+    ∀ x y : R2,
+      opticalMetric2 q x y =
+        N^2 * (-x.1 * y.1 + x.2 * y.2) := by
+  intro x y
+  rw [hq]
+  unfold opticalMetric2
+  have hN2 : N^2 ≠ 0 := pow_ne_zero 2 hN
+  have hinv : (N⁻²)⁻¹ = N^2 := by
+    simp [inv_pow, hN]
+  rw [hinv]
+
+/-- Equivalently the inverse form is
+`N_opt⁻²(-dT²+dR²)`. -/
+theorem opticalInverseMetric2_lapse_form
+    (N q : ℝ)
+    (hq : q = N⁻²) :
+    ∀ x y : R2,
+      opticalInverseMetric2 q x y =
+        N⁻² * (-x.1 * y.1 + x.2 * y.2) := by
+  intro x y
+  rw [hq]
+  rfl
+
 /-- Synchronization correction is uniquely the difference between an exact radar differential and
 local chronometric covector. -/
 theorem synchronization_correction_unique
@@ -7161,6 +7229,10 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check opticalMetric2_inverse
+#check opticalInverseMetric2_basis_norms
+#check opticalMetric2_lapse_form
+#check opticalInverseMetric2_lapse_form
 #check endpointCovector_reconstruction
 #check NullEndpointPairData.endpoint_eikonals_null
 #check NullEndpointPairData.reconstruction
@@ -7623,6 +7695,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.implicit_endpoint_covector_null
 #print axioms RelativeRest.NullEndpointPairData.endpoint_eikonals_null
 #print axioms RelativeRest.NullEndpointPairData.optical_closure
+#print axioms RelativeRest.opticalMetric2_inverse
+#print axioms RelativeRest.opticalMetric2_lapse_form
 #print axioms RelativeRest.clockAccumulation_hasDerivAt
 #print axioms RelativeRest.clockTransport_spatial
 #print axioms RelativeRest.clockTransport_mixed_logK
