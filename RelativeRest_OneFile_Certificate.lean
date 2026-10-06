@@ -1449,9 +1449,143 @@ theorem principalEnergyDensity_recovers_chi (χ : ℝ) :
   unfold principalEnergyDensity
   field_simp [ne_of_gt Real.pi_pos]
 
+/-- Minkowski bilinear form in the principal orthonormal frame. -/
+def principalMinkowskiBilinear
+    (v w : Fin 4 → ℝ) : ℝ :=
+  -v 0 * w 0 + v 1 * w 1 + v 2 * w 2 + v 3 * w 3
+
 /-- Minkowski quadratic form in the principal orthonormal frame. -/
 def principalMinkowskiSq (v : Fin 4 → ℝ) : ℝ :=
   -(v 0)^2 + (v 1)^2 + (v 2)^2 + (v 3)^2
+
+theorem principalMinkowskiSq_eq_bilinear
+    (v : Fin 4 → ℝ) :
+    principalMinkowskiSq v =
+      principalMinkowskiBilinear v v := by
+  unfold principalMinkowskiSq principalMinkowskiBilinear
+  ring
+
+theorem principalMinkowskiBilinear_smul
+    (a b : ℝ) (v w : Fin 4 → ℝ) :
+    principalMinkowskiBilinear (a • v) (b • w) =
+      (a * b) * principalMinkowskiBilinear v w := by
+  simp [principalMinkowskiBilinear]
+  ring
+
+/-- Canonical inverse square-root normalization for the principal null dyad. -/
+def principalInvSqrtTwo : ℝ :=
+  (Real.sqrt 2)⁻¹
+
+theorem principalInvSqrtTwo_sq :
+    principalInvSqrtTwo^2 = (1 / 2 : ℝ) := by
+  have hs0 : Real.sqrt 2 ≠ 0 :=
+    ne_of_gt (Real.sqrt_pos.2 (by norm_num))
+  have hs2 : (Real.sqrt 2)^2 = 2 := by norm_num
+  unfold principalInvSqrtTwo
+  field_simp [hs0]
+  nlinarith
+
+/-- Canonically normalized future principal null directions of the Lorentzian Rainich plane. -/
+def principalNullK : Fin 4 → ℝ :=
+  principalInvSqrtTwo •
+    (principalBasis 0 + principalBasis 1)
+
+def principalNullL : Fin 4 → ℝ :=
+  principalInvSqrtTwo •
+    (principalBasis 0 - principalBasis 1)
+
+/-- The canonical principal null pair is null and cross-normalized by `g(k,l)=-1`. -/
+theorem principalNullPair_normalized :
+    principalMinkowskiBilinear principalNullK principalNullK = 0 ∧
+    principalMinkowskiBilinear principalNullL principalNullL = 0 ∧
+    principalMinkowskiBilinear principalNullK principalNullL = -1 := by
+  have hc := principalInvSqrtTwo_sq
+  constructor
+  · simp [principalNullK, principalMinkowskiBilinear,
+      principalBasis]
+    ring
+  · constructor
+    · simp [principalNullL, principalMinkowskiBilinear,
+        principalBasis]
+      ring
+    · simp [principalNullK, principalNullL,
+        principalMinkowskiBilinear, principalBasis]
+      nlinarith
+
+/-- The normalized timelike principal unit is recovered from the null midpoint. -/
+theorem principalUhat_from_null_pair :
+    principalInvSqrtTwo •
+      (principalNullK + principalNullL) =
+      principalUhat := by
+  have hc := principalInvSqrtTwo_sq
+  funext i
+  fin_cases i <;>
+    simp [principalNullK, principalNullL, principalUhat,
+      principalBasis, smul_add, smul_sub, smul_smul] <;>
+    nlinarith
+
+/-- The normalized spacelike principal unit is recovered from the null half-difference. -/
+theorem principalEhat_from_null_pair :
+    principalInvSqrtTwo •
+      (principalNullK - principalNullL) =
+      principalBasis 1 := by
+  have hc := principalInvSqrtTwo_sq
+  funext i
+  fin_cases i <;>
+    simp [principalNullK, principalNullL,
+      principalBasis, smul_add, smul_sub, smul_smul] <;>
+    nlinarith
+
+/-- Residual principal null boost. -/
+def principalBoostedNullK (σ : ℝ) : Fin 4 → ℝ :=
+  Real.exp (-σ) • principalNullK
+
+def principalBoostedNullL (σ : ℝ) : Fin 4 → ℝ :=
+  Real.exp σ • principalNullL
+
+/-- Every residual boost preserves nullness and the normalization `g(k,l)=-1`. -/
+theorem principalBoostedNullPair_normalized (σ : ℝ) :
+    principalMinkowskiBilinear
+        (principalBoostedNullK σ)
+        (principalBoostedNullK σ) = 0 ∧
+    principalMinkowskiBilinear
+        (principalBoostedNullL σ)
+        (principalBoostedNullL σ) = 0 ∧
+    principalMinkowskiBilinear
+        (principalBoostedNullK σ)
+        (principalBoostedNullL σ) = -1 := by
+  rcases principalNullPair_normalized with ⟨hk, hl, hkl⟩
+  constructor
+  · rw [principalBoostedNullK,
+      principalMinkowskiBilinear_smul, hk]
+    ring
+  · constructor
+    · rw [principalBoostedNullL,
+        principalMinkowskiBilinear_smul, hl]
+      ring
+    · rw [principalBoostedNullK, principalBoostedNullL,
+        principalMinkowskiBilinear_smul, hkl]
+      rw [← Real.exp_add]
+      simp
+      ring
+
+/-- Conversely, every positive rescaling of the normalized null pair that preserves
+`g(k,l)=-1` is exactly one residual boost. -/
+theorem normalized_null_rescaling_is_boost
+    (a b : ℝ)
+    (ha : 0 < a) (hb : 0 < b)
+    (hab : a * b = 1) :
+    ∃! σ : ℝ,
+      a = Real.exp (-σ) ∧ b = Real.exp σ := by
+  refine ⟨Real.log b, ?_, ?_⟩
+  · constructor
+    · have hb0 : b ≠ 0 := ne_of_gt hb
+      rw [Real.exp_neg, Real.exp_log hb]
+      rw [inv_eq_iff_eq_inv₀ hb0]
+      exact hab.symm
+    · exact (Real.exp_log hb).symm
+  · intro σ hσ
+    exact Real.exp_injective (hσ.2.trans (Real.exp_log hb))
 
 /-- The fixed-point jet is minus the principal Maxwell stress endomorphism, so its
 Lorentzian principal plane carries the positive carrier eigenvalue. -/
@@ -7498,6 +7632,11 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check principalNullPair_normalized
+#check principalUhat_from_null_pair
+#check principalEhat_from_null_pair
+#check principalBoostedNullPair_normalized
+#check normalized_null_rescaling_is_boost
 #check principalJetFromF_trace_sq
 #check principalJetFromF_chi_from_trace
 #check principalRicciFromF_trace_sq
@@ -8010,6 +8149,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalStressFromF_eq_principalStress
 #print axioms RelativeRest.principalJetFromF_rainich
 #print axioms RelativeRest.principalField_chiS_invariants
+#print axioms RelativeRest.principalNullPair_normalized
+#print axioms RelativeRest.normalized_null_rescaling_is_boost
 #print axioms RelativeRest.principalJetFromF_neg
 #print axioms RelativeRest.principalNormalizedJetFromFApply_eq_involution
 #print axioms RelativeRest.principalMaxwell_form_invariant_magnitude
