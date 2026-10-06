@@ -1625,6 +1625,7 @@ theorem principalMaxwellMetricVariationCoeff_eq_neg_half_stress
     field_simp [ne_of_gt Real.pi_pos] <;>
     ring
 
+
 /-- Einstein-Hilbert metric-variation coefficient in mixed-index form after
 lowering the first index with the principal metric. -/
 def principalEinsteinHilbertMetricVariationCoeff
