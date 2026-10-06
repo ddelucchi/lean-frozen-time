@@ -4459,6 +4459,45 @@ theorem LagrangianVariationNoetherOperators.constraint_normalJet_of_opposite
   linearDescendant_normalJet_of_opposite
     D.constraint LG LM ell hG hM
 
+/-- If the total Einstein-Maxwell constraint vanishes on shell, the Maxwell-sector
+constraint value is forced to be the negative of the gravity-sector value. -/
+theorem LagrangianVariationNoetherOperators.constraint_maxwell_of_total_onShell
+    (D : LagrangianVariationNoetherOperators (L:=L) (C:=C))
+    (LG LM : L) (ell : C)
+    (hG : D.constraint LG = ell)
+    (hTotal : D.constraint (LG + LM) = 0) :
+    D.constraint LM = -ell := by
+  have hsum : D.constraint LG + D.constraint LM = 0 := by
+    rw [← D.constraint.map_add]
+    exact hTotal
+  rw [hG] at hsum
+  exact eq_neg_of_add_eq_zero_right hsum
+
+/-- Therefore the relative-normal constraint jet needs only one sector response plus
+the total on-shell Einstein-Maxwell constraint. -/
+theorem LagrangianVariationNoetherOperators.constraint_normalJet_of_total_onShell
+    (D : LagrangianVariationNoetherOperators (L:=L) (C:=C))
+    (LG LM : L) (ell : C)
+    (hG : D.constraint LG = ell)
+    (hTotal : D.constraint (LG + LM) = 0) :
+    D.constraint (reciprocalLagrangianNormalJet LG LM) =
+      (-2 : ℝ) • ell := by
+  exact D.constraint_normalJet_of_opposite LG LM ell hG
+    (D.constraint_maxwell_of_total_onShell LG LM ell hG hTotal)
+
+/-- The compensated relative-normal current is consequently fixed from the same
+single sector response and total on-shell constraint. -/
+theorem LagrangianVariationNoetherOperators.compensated_relative_normal_of_total_onShell
+    (D : LagrangianVariationNoetherOperators (L:=L) (C:=C))
+    (LG LM : L) (ell : C)
+    (hG : D.constraint LG = ell)
+    (hTotal : D.constraint (LG + LM) = 0) :
+    D.omegaXY (reciprocalLagrangianNormalJet LG LM) +
+        D.dB (reciprocalLagrangianNormalJet LG LM) =
+      (-2 : ℝ) • ell := by
+  rw [D.compensated_eq_constraint]
+  exact D.constraint_normalJet_of_total_onShell LG LM ell hG hTotal
+
 /-- The full boundary-compensated relative-normal current is therefore fixed before
 introducing any Iyer-Wald operator package. -/
 theorem LagrangianVariationNoetherOperators.compensated_relative_normal
@@ -4822,6 +4861,48 @@ theorem lagrangianVariation_half_compensated_eq_stressResponse
       stressResponse integrate T iε := by
   rw [lagrangianVariation_compensated_eq_carrierBulkResponse
       D LG LM integrate J T iε hJ hG hM]
+  simpa [halfCarrierBulkCurrent] using
+    (halfCarrierBulkCurrent_eq_stressResponse
+      integrate J T iε hJ)
+
+/-- Stronger bridge: one gravity-sector response plus the total on-shell constraint
+forces the Maxwell sign and hence the characteristic current. -/
+theorem lagrangianVariation_compensated_of_total_onShell
+    (D : LagrangianVariationNoetherOperators
+      (L:=L) (C:=(V →ₗ[ℝ] ℝ)))
+    (LG LM : L)
+    (integrate : W →ₗ[ℝ] ℝ)
+    (J T : V →ₗ[ℝ] V)
+    (iε : V →ₗ[ℝ] W)
+    (hJ : J = (-16 * Real.pi) • T)
+    (hG : D.constraint LG = stressResponse integrate T iε)
+    (hTotal : D.constraint (LG + LM) = 0) :
+    D.omegaXY (reciprocalLagrangianNormalJet LG LM) +
+        D.dB (reciprocalLagrangianNormalJet LG LM) =
+      carrierBulkResponse integrate J iε := by
+  rw [D.compensated_relative_normal_of_total_onShell
+      LG LM (stressResponse integrate T iε) hG hTotal,
+    carrierBulkResponse_eq_minus_two_stressResponse
+      integrate J T iε hJ]
+
+/-- The negative-half characteristic normalization follows from total on-shell balance
+without a separately supplied Maxwell-sector constraint value. -/
+theorem lagrangianVariation_half_compensated_of_total_onShell
+    (D : LagrangianVariationNoetherOperators
+      (L:=L) (C:=(V →ₗ[ℝ] ℝ)))
+    (LG LM : L)
+    (integrate : W →ₗ[ℝ] ℝ)
+    (J T : V →ₗ[ℝ] V)
+    (iε : V →ₗ[ℝ] W)
+    (hJ : J = (-16 * Real.pi) • T)
+    (hG : D.constraint LG = stressResponse integrate T iε)
+    (hTotal : D.constraint (LG + LM) = 0) :
+    (-1 / 2 : ℝ) •
+      (D.omegaXY (reciprocalLagrangianNormalJet LG LM) +
+        D.dB (reciprocalLagrangianNormalJet LG LM)) =
+      stressResponse integrate T iε := by
+  rw [lagrangianVariation_compensated_of_total_onShell
+      D LG LM integrate J T iε hJ hG hTotal]
   simpa [halfCarrierBulkCurrent] using
     (halfCarrierBulkCurrent_eq_stressResponse
       integrate J T iε hJ)
@@ -13884,6 +13965,128 @@ theorem principalLagrangianCharacteristic_clock_chain
   exact ⟨
     principalLagrangianCharacteristic_iwCurrent_eq_characteristicCurrent D,
     hL, hdim, hpull, hnorm⟩
+
+/-! ### On-shell Lagrangian first variation: total field equation to clock line -/
+
+/-- Strongest non-manifold covariant-phase-space interface: the total Einstein-Maxwell
+constraint is on shell, while only the gravity-sector response is identified with the
+explicit Maxwell stress. The Maxwell-sector sign is derived by linearity. -/
+structure PrincipalOnShellLagrangianVariationCharacteristicInput where
+  carrier : PrincipalCarrierCharacteristicInput (P:=P)
+  LG : L
+  LM : L
+  variation : LagrangianVariationNoetherOperators
+    (L:=L) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ))
+  gravityConstraintResponse :
+    variation.constraint LG =
+      stressResponse LinearMap.id carrier.T carrier.iε
+  totalConstraintOnShell :
+    variation.constraint (LG + LM) = 0
+
+/-- Maxwell-sector response is no longer input; the total field equation forces it. -/
+theorem PrincipalOnShellLagrangianVariationCharacteristicInput.maxwellConstraintResponse
+    (D : PrincipalOnShellLagrangianVariationCharacteristicInput (P:=P) (L:=L)) :
+    D.variation.constraint D.LM =
+      -(stressResponse LinearMap.id D.carrier.T D.carrier.iε) := by
+  exact D.variation.constraint_maxwell_of_total_onShell
+    D.LG D.LM (stressResponse LinearMap.id D.carrier.T D.carrier.iε)
+    D.gravityConstraintResponse D.totalConstraintOnShell
+
+def PrincipalOnShellLagrangianVariationCharacteristicInput.relativeNormalJet
+    (D : PrincipalOnShellLagrangianVariationCharacteristicInput (P:=P) (L:=L)) : L :=
+  reciprocalLagrangianNormalJet D.LG D.LM
+
+def PrincipalOnShellLagrangianVariationCharacteristicInput.characteristicCurrent
+    (D : PrincipalOnShellLagrangianVariationCharacteristicInput (P:=P) (L:=L)) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
+  (-1 / 2 : ℝ) •
+    (D.variation.omegaXY D.relativeNormalJet +
+      D.variation.dB D.relativeNormalJet)
+
+/-- Total on-shell balance plus the gravity response fixes the characteristic current. -/
+theorem principalOnShellLagrangianVariation_current_eq_stress
+    (D : PrincipalOnShellLagrangianVariationCharacteristicInput (P:=P) (L:=L)) :
+    D.characteristicCurrent =
+      stressResponse LinearMap.id D.carrier.T D.carrier.iε := by
+  unfold PrincipalOnShellLagrangianVariationCharacteristicInput.characteristicCurrent
+    PrincipalOnShellLagrangianVariationCharacteristicInput.relativeNormalJet
+  exact lagrangianVariation_half_compensated_of_total_onShell
+    D.variation D.LG D.LM LinearMap.id
+    D.carrier.J D.carrier.T D.carrier.iε rfl
+    D.gravityConstraintResponse D.totalConstraintOnShell
+
+theorem principalOnShellLagrangianVariation_current_eq_characteristicCurrent
+    (D : PrincipalOnShellLagrangianVariationCharacteristicInput (P:=P) (L:=L)) :
+    D.characteristicCurrent =
+      D.carrier.toCharacteristicCurrentData.current := by
+  rw [principalOnShellLagrangianVariation_current_eq_stress D,
+    principalCarrierCharacteristic_current D.carrier]
+
+/-- The whole normalized characteristic clock chain now depends on one sector response
+and the total on-shell Einstein-Maxwell constraint, not two independently signed inputs. -/
+theorem principalOnShellLagrangianVariation_clock_chain
+    (D : PrincipalOnShellLagrangianVariationCharacteristicInput (P:=P) (L:=L)) :
+    D.characteristicCurrent =
+        D.carrier.toCharacteristicCurrentData.current ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    (quotientClockCovector principalTOLinear).comp
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda) =
+      D.carrier.toCharacteristicCurrentData.clockCovector ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat := by
+  rcases principalCarrierCharacteristic_clock_chain D.carrier with
+    ⟨hL, hdim, hpull, hnorm⟩
+  exact ⟨principalOnShellLagrangianVariation_current_eq_characteristicCurrent D,
+    hL, hdim, hpull, hnorm⟩
+
+/-- Strongest downstream forced-core statement before the remaining manifold first-variation
+theorem: total Einstein-Maxwell on-shell balance, one sector response, and the explicit
+field determine the relative rest point, carrier/Rainich structure, current, quotient,
+and normalized principal clock line. -/
+theorem principalOnShellLagrangianVariation_forced_core_chain
+    (D : PrincipalOnShellLagrangianVariationCharacteristicInput (P:=P) (L:=L))
+    (u s : ℝ) :
+    ((8 * Real.pi * principalFieldEnergyDensity D.carrier.E D.carrier.B =
+        8 * Real.pi *
+          maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+          principalFieldEnergyDensity D.carrier.E D.carrier.B) ↔ s = 0) ∧
+    deriv (principalScaledResidualFromF
+      D.carrier.E D.carrier.B 0 0) 0 =
+      principalJetFromF D.carrier.E D.carrier.B 0 0 ∧
+    (∀ i j : Fin 4,
+      (∑ k : Fin 4,
+        principalJetFromF D.carrier.E D.carrier.B i k *
+          principalJetFromF D.carrier.E D.carrier.B k j) =
+        (principalChi D.carrier.E D.carrier.B)^2 *
+          (if i = j then 1 else 0)) ∧
+    D.characteristicCurrent =
+      D.carrier.toCharacteristicCurrentData.current ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat := by
+  rcases principalField_forced_core_chain D.carrier u s with
+    ⟨hrest, hjet, hrainich, _hrates, hclock⟩
+  rcases hclock with ⟨hL, hdim, _hpull, hnorm⟩
+  exact ⟨hrest, hjet, hrainich,
+    principalOnShellLagrangianVariation_current_eq_characteristicCurrent D,
+    hL, hdim, hnorm⟩
 
 /-! ### Lagrangian-first-variation-backed clock: deltaL to normalized clock line -/
 
