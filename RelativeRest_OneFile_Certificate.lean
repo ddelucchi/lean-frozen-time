@@ -738,15 +738,11 @@ def dKappaVec : R2 := (0,1)
     clockOmega dThetaVec dKappaVec = -1 := by
   norm_num [clockOmega, dThetaVec, dKappaVec]
 
-/-! ## 16. Relational evolution: chain-rule form -/
+/-! ## 16. Relational evolution
 
-/-- Abstract algebraic statement: once the flow derivative is `X F`, translating the parameter by
-`θ-T` differentiates with the same generator.  The analytic flow theorem is supplied as a
-hypothesis so the downstream conclusion is explicit rather than hidden. -/
-theorem relational_evolution_from_flow_derivative
-    (O XF : ℝ → ℝ)
-    (h : ∀ θ, deriv O θ = XF θ) :
-    ∀ θ, deriv O θ = XF θ := h
+The original tautological interface theorem has been removed.  The actual translated-flow
+derivative is proved in `RelativeRest_DeepPass3.lean`.
+-/
 
 /-! ## 17. Kerr–Newman scalar specialization -/
 
@@ -1092,46 +1088,13 @@ theorem kerrNewman_mino_from_invariant_clock
   rw [hclock, hrate, hmino]
   field_simp [ne_of_gt hsig]
 
-/-! ## 18. Explicit hypothesis interfaces for the still-unformalized geometric layers
+/-! ## 18. Covariant-phase-space bridge
 
-These are *not axioms*. They are structures passed explicitly to theorems.  The final first-principles
-project must construct them from the Einstein–Maxwell fields.  Keeping them explicit prevents
-accidentally claiming a theorem stronger than what this single file proves.
+The original `BridgeData` compatibility interface has been removed.  In
+`RelativeRest_DeepPass2.lean`, the characteristic covector is instead *defined* from the
+symplectic response and its factorization, nonvanishing, quotient line, and unit representative
+are derived from the response equation plus an explicit positive-response witness.
 -/
-
-section GeometricInterface
-
-variable {V P KSpace : Type*}
-  [AddCommGroup V] [Module ℝ V]
-  [AddCommGroup P] [Module ℝ P]
-  [AddCommGroup KSpace] [Module ℝ KSpace]
-
-/-- Minimal algebraic interface exported by a future first-principles Einstein-Maxwell/Iyer-Wald
-formalization. -/
-structure BridgeData where
-  beta : P →ₗ[ℝ] KSpace
-  Lambda : KSpace →ₗ[ℝ] ℝ
-  ell : P →ₗ[ℝ] ℝ
-  beta_surj : Function.Surjective beta
-  factorization : Lambda.comp beta = ell
-  Lambda_nonzero : Lambda ≠ 0
-
-/-- Once the Iyer-Wald bridge is supplied, the characteristic covector is mathematically unique. -/
-theorem bridge_Lambda_unique (D : BridgeData (P:=P) (KSpace:=KSpace))
-    (Λ' : KSpace →ₗ[ℝ] ℝ) (hΛ' : Λ'.comp D.beta = D.ell) : Λ' = D.Lambda := by
-  exact descended_covector_unique D.beta D.beta_surj D.ell Λ' D.Lambda hΛ' D.factorization
-
-/-- The characteristic quotient is canonically equivalent to the range of the unique covector. -/
-noncomputable def bridgeQuotientEquivRange (D : BridgeData (P:=P) (KSpace:=KSpace)) :
-    (KSpace ⧸ LinearMap.ker D.Lambda) ≃ₗ[ℝ] LinearMap.range D.Lambda :=
-  LinearMap.quotKerEquivRange D.Lambda
-
-/-- The range of the characteristic clock covector is all of `ℝ`. -/
-theorem bridge_range_full (D : BridgeData (P:=P) (KSpace:=KSpace)) :
-    LinearMap.range D.Lambda = ⊤ :=
-  range_eq_top_of_nonzero D.Lambda D.Lambda_nonzero
-
-end GeometricInterface
 
 /-! ## 19. End-to-end dependency record -/
 
@@ -1161,7 +1124,6 @@ theorem scalar_backbone
 #check homogeneous_conformal_factor
 #check covector_pullback_injective
 #check descended_covector_unique
-#check bridge_Lambda_unique
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
@@ -1171,5 +1133,4 @@ end RelativeRest
 -- The following commands are intentionally left as audit hooks for a real Lean build:
 -- #print axioms RelativeRest.scalar_backbone
 -- #print axioms RelativeRest.boost_balance_unique
--- #print axioms RelativeRest.bridge_Lambda_unique
 -- #print axioms RelativeRest.mino_clock_identity
