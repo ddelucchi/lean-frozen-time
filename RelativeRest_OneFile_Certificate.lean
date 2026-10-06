@@ -1016,11 +1016,77 @@ theorem maxwell_clock_fourth_power
     _ = (maxwellI E B)^2 + (maxwellJ E B)^2 :=
       (maxwell_invariants_eq_principalChi_sq E B).symm
 
+/-! ### Explicit principal Maxwell two-form and stress tensor -/
+
+/-- Diagonal Minkowski sign in the principal orthonormal frame, signature `(-,+,+,+)`. -/
+def principalMetricSign (i : Fin 4) : ℝ :=
+  if i = 0 then -1 else 1
+
+/-- Covariant components of `F = E e⁰∧e¹ + B e²∧e³`. -/
+def principalMaxwellF (E B : ℝ) (i j : Fin 4) : ℝ :=
+  if i = 0 ∧ j = 1 then E
+  else if i = 1 ∧ j = 0 then -E
+  else if i = 2 ∧ j = 3 then B
+  else if i = 3 ∧ j = 2 then -B
+  else 0
+
+/-- The explicit principal two-form is antisymmetric. -/
+theorem principalMaxwellF_skew (E B : ℝ) (i j : Fin 4) :
+    principalMaxwellF E B i j = - principalMaxwellF E B j i := by
+  fin_cases i <;> fin_cases j <;> simp [principalMaxwellF]
+
+/-- Direct contraction `F_ab F^ab` in the principal orthonormal frame. -/
+def principalMaxwellFsq (E B : ℝ) : ℝ :=
+  ∑ i : Fin 4, ∑ j : Fin 4,
+    principalMetricSign i * principalMetricSign j *
+      principalMaxwellF E B i j * principalMaxwellF E B i j
+
+/-- The explicit contraction reproduces the invariant `2(B²-E²)`. -/
+theorem principalMaxwellFsq_eq_maxwellI (E B : ℝ) :
+    principalMaxwellFsq E B = maxwellI E B := by
+  simp [principalMaxwellFsq, principalMetricSign, principalMaxwellF, maxwellI]
+  ring
+
+/-- Mixed Maxwell stress computed directly from the explicit two-form:
+`T^a_b=(4π)⁻¹(F^{ac}F_{bc}-(1/4)δ^a_b F²)`. -/
+def principalStressFromF (E B : ℝ) (i j : Fin 4) : ℝ :=
+  (1 / (4 * Real.pi)) *
+    (principalMetricSign i *
+        (∑ c : Fin 4,
+          principalMaxwellF E B i c *
+            principalMetricSign c *
+            principalMaxwellF E B j c)
+      - (1 / 4 : ℝ) * (if i = j then 1 else 0) * maxwellI E B)
+
+/-- Principal electromagnetic energy density from the explicit field. -/
+def principalFieldEnergyDensity (E B : ℝ) : ℝ :=
+  (E^2 + B^2) / (8 * Real.pi)
+
 /-- A canonical principal-frame mixed Maxwell stress endomorphism, with overall scale `u`. -/
 def principalStress (u : ℝ) : Fin 4 → Fin 4 → ℝ := fun i j =>
   if i = j then
     if i = 0 ∨ i = 1 then -u else u
   else 0
+
+/-- Computing the Maxwell stress from `F` forces the canonical diagonal principal form. -/
+theorem principalStressFromF_eq_principalStress
+    (E B : ℝ) (i j : Fin 4) :
+    principalStressFromF E B i j =
+      principalStress (principalFieldEnergyDensity E B) i j := by
+  fin_cases i <;> fin_cases j <;>
+    simp [principalStressFromF, principalStress, principalFieldEnergyDensity,
+      principalMetricSign, principalMaxwellF, maxwellI] <;>
+    field_simp [ne_of_gt Real.pi_pos] <;>
+    ring
+
+/-- The stress eigenvalue scale is exactly `χ/(16π)` because `χ=2(E²+B²)`. -/
+theorem principalFieldEnergyDensity_eq_chi
+    (E B : ℝ) :
+    principalFieldEnergyDensity E B =
+      principalChi E B / (16 * Real.pi) := by
+  unfold principalFieldEnergyDensity principalChi
+  field_simp [ne_of_gt Real.pi_pos]
+  ring
 
 /-- Direct principal-frame Rainich square identity. -/
 theorem principalStress_sq (u : ℝ) (i j : Fin 4) :
@@ -4447,6 +4513,10 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check principalMaxwellF_skew
+#check principalMaxwellFsq_eq_maxwellI
+#check principalStressFromF_eq_principalStress
+#check principalFieldEnergyDensity_eq_chi
 #check principalStress_time_eigen
 #check principalStress_space_eigen
 #check principalMaxwell_timelike_eigen_from_chi
@@ -4750,6 +4820,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.characteristic_half_contraction_from_relative_scaling
 #print axioms RelativeRest.principalLocalClockRatio_forced
 #print axioms RelativeRest.principalMaxwell_timelike_eigen_from_chi
+#print axioms RelativeRest.principalStressFromF_eq_principalStress
 #print axioms RelativeRest.defect_from_on_shell_equation
 #print axioms RelativeRest.scaledResidual_first_jet_eq_minus_two_ricci_from_EM
 #print axioms RelativeRest.boost_balance_exists_unique_of_nonnull
