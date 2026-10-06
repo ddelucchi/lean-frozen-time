@@ -64,11 +64,14 @@ theorem knCarterDirection_norm
     knTRPhiNorm r M a Q theta
       (knA r a) 0 a =
       - Sigma r a theta * Delta r M a Q := by
-  have htrig := Real.sin_sq_add_cos_sq theta
+  have hsine :
+      (Real.sin theta)^2 = 1 - (Real.cos theta)^2 := by
+    nlinarith [Real.sin_sq_add_cos_sq theta]
   unfold knTRPhiNorm knGtt knGtPhi knGrr knGPhiPhi
+  rw [hsine]
   field_simp [hsig, hdel]
   unfold knA Sigma
-  nlinarith [htrig]
+  ring
 
 /-- The unnormalized radial principal direction E=(0,Delta,0) has norm +Sigma Delta. -/
 theorem knRadialDirection_norm
