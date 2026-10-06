@@ -8705,6 +8705,42 @@ def kerrEinsteinTargetRicciCoordinate
       Sigma r a θ
   else 0
 
+/-- The explicit Einstein-Maxwell Ricci target has the same stationary-reflection parity
+as any covariant rank-two tensor built from the Kerr-Newman geometry. -/
+theorem kerrEinsteinTargetRicciCoordinate_stationary_parity
+    (Q r M a θ : ℝ)
+    (i j : Fin 4) :
+    kerrStationarySign i * kerrStationarySign j *
+        kerrEinsteinTargetRicciCoordinate Q r M a θ i j =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ i j := by
+  fin_cases i <;> fin_cases j <;>
+    simp [kerrStationarySign, kerrEinsteinTargetRicciCoordinate] <;> ring
+
+/-- Every odd stationary-parity component of the field-forced Ricci target vanishes. -/
+theorem kerrEinsteinTargetRicciCoordinate_zero_of_odd_stationary
+    (Q r M a θ : ℝ)
+    (i j : Fin 4)
+    (hodd : kerrStationarySign i * kerrStationarySign j = -1) :
+    kerrEinsteinTargetRicciCoordinate Q r M a θ i j = 0 := by
+  have hp :=
+    kerrEinsteinTargetRicciCoordinate_stationary_parity
+      Q r M a θ i j
+  rw [hodd] at hp
+  linarith
+
+/-- Hence the full odd-parity sector of the metric Ricci tensor already satisfies the
+Einstein-Maxwell Ricci equation, without evaluating any second derivatives. -/
+theorem kerrRicciCovFromMetric_eq_target_of_odd_stationary
+    (Q r M a θ : ℝ)
+    (i j : Fin 4)
+    (hodd : kerrStationarySign i * kerrStationarySign j = -1) :
+    kerrRicciCovFromMetric r M a Q θ i j =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ i j := by
+  rw [kerrRicciCovFromMetric_zero_of_odd_stationary
+        r M a Q θ i j hodd,
+      kerrEinsteinTargetRicciCoordinate_zero_of_odd_stationary
+        Q r M a θ i j hodd]
+
 /-- Those eight components already satisfy the Einstein-Maxwell Ricci target exactly. -/
 theorem kerrRicci_stationary_meridional_eq_target
     (Q r M a θ : ℝ) :
@@ -10614,6 +10650,9 @@ theorem scalar_backbone_from_einstein_maxwell
 #check scalar_backbone
 #check kerrRicci_stationary_meridional_zero
 #check kerrRicci_stationary_meridional_eq_target
+#check kerrEinsteinTargetRicciCoordinate_stationary_parity
+#check kerrEinsteinTargetRicciCoordinate_zero_of_odd_stationary
+#check kerrRicciCovFromMetric_eq_target_of_odd_stationary
 #check kerrChristoffelPartial_zero_of_odd_stationary
 #check kerrRicciCovFromMetric_stationary_parity
 #check kerrRicciCovFromMetric_zero_of_odd_stationary
@@ -11333,6 +11372,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrChristoffelPartial_zero_of_odd_stationary
 #print axioms RelativeRest.kerrRicciCovFromMetric_stationary_parity
 #print axioms RelativeRest.kerrRicciCovFromMetric_zero_of_odd_stationary
+#print axioms RelativeRest.kerrEinsteinTargetRicciCoordinate_stationary_parity
+#print axioms RelativeRest.kerrRicciCovFromMetric_eq_target_of_odd_stationary
 #print axioms RelativeRest.kerrRicci_stationary_meridional_zero
 #print axioms RelativeRest.kerrRicci_stationary_meridional_eq_target
 #print axioms RelativeRest.kerrCoframe_orthonormal
