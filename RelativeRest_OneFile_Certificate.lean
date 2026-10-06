@@ -3854,6 +3854,129 @@ theorem logarithmic_rate_coefficient (ω dlogK dω : ℝ)
   field_simp [hω] at h ⊢
   linarith
 
+
+/-! ### Adapted-frame derivation of the chronometric transport two-form -/
+
+/-- Covariant components of the normalized timelike covector in an adapted orthonormal frame. -/
+def principalUFlat (i : Fin 4) : ℝ :=
+  if i = 0 then -1 else 0
+
+/-- Pointwise component expansion of
+`dT_O = -d(ω u^♭)`, with `du_ab` standing for `∇_a u_b`. -/
+def clockTransportTwoForm
+    (ω : ℝ) (dω : Fin 4 → ℝ)
+    (du : Fin 4 → Fin 4 → ℝ)
+    (i j : Fin 4) : ℝ :=
+  -(dω i * principalUFlat j + ω * du i j
+    - dω j * principalUFlat i - ω * du j i)
+
+/-- The transport tensor is antisymmetric by construction. -/
+theorem clockTransportTwoForm_skew
+    (ω : ℝ) (dω : Fin 4 → ℝ)
+    (du : Fin 4 → Fin 4 → ℝ)
+    (i j : Fin 4) :
+    clockTransportTwoForm ω dω du i j =
+      - clockTransportTwoForm ω dω du j i := by
+  unfold clockTransportTwoForm
+  ring
+
+/-- Spatial vorticity components in the adapted frame. -/
+def principalVorticity
+    (du : Fin 4 → Fin 4 → ℝ)
+    (i j : Fin 3) : ℝ :=
+  (du i.succ j.succ - du j.succ i.succ) / 2
+
+/-- Proper acceleration components in the adapted frame. -/
+def principalAcceleration
+    (du : Fin 4 → Fin 4 → ℝ)
+    (i : Fin 3) : ℝ :=
+  du 0 i.succ
+
+/-- Unit normalization `u^b∇_a u_b=0` means the derivative of the time covector
+component vanishes in spatial directions in the adapted frame. -/
+def adaptedUnitNormalization
+    (du : Fin 4 → Fin 4 → ℝ) : Prop :=
+  ∀ i : Fin 3, du i.succ 0 = 0
+
+/-- The purely spatial transport curvature is forced to be `-2ω varpi`. -/
+theorem clockTransport_spatial
+    (ω : ℝ) (dω : Fin 4 → ℝ)
+    (du : Fin 4 → Fin 4 → ℝ)
+    (i j : Fin 3) :
+    clockTransportTwoForm ω dω du i.succ j.succ =
+      -2 * ω * principalVorticity du i j := by
+  unfold clockTransportTwoForm principalUFlat principalVorticity
+  have hi : (i.succ : Fin 4) ≠ 0 := Fin.succ_ne_zero i
+  have hj : (j.succ : Fin 4) ≠ 0 := Fin.succ_ne_zero j
+  simp [hi, hj]
+  ring
+
+/-- The mixed time-space component is forced by acceleration and the spatial rate gradient. -/
+theorem clockTransport_mixed
+    (ω : ℝ) (dω : Fin 4 → ℝ)
+    (du : Fin 4 → Fin 4 → ℝ)
+    (hunit : adaptedUnitNormalization du)
+    (i : Fin 3) :
+    clockTransportTwoForm ω dω du 0 i.succ =
+      -ω * principalAcceleration du i - dω i.succ := by
+  unfold clockTransportTwoForm principalUFlat principalAcceleration
+  have hi : (i.succ : Fin 4) ≠ 0 := Fin.succ_ne_zero i
+  have hnorm := hunit i
+  simp [hi, hnorm]
+  ring
+
+/-- Using `K=ω⁴`, the mixed component is exactly the manuscript's
+`-ω(a_i + 1/4 D_i log K)`. -/
+theorem clockTransport_mixed_logK
+    (ω : ℝ) (dω dlogK : Fin 4 → ℝ)
+    (du : Fin 4 → Fin 4 → ℝ)
+    (hω : ω ≠ 0)
+    (hunit : adaptedUnitNormalization du)
+    (hlog :
+      ∀ i : Fin 3,
+        dlogK i.succ = 4 * dω i.succ / ω)
+    (i : Fin 3) :
+    clockTransportTwoForm ω dω du 0 i.succ =
+      -ω * (principalAcceleration du i +
+        dlogK i.succ / 4) := by
+  rw [clockTransport_mixed ω dω du hunit i]
+  have hrate :=
+    logarithmic_rate_coefficient
+      ω (dlogK i.succ) (dω i.succ) hω (hlog i)
+  rw [hrate]
+  ring
+
+/-- The spatial Frobenius component `T_O ∧ dT_O` is proportional to
+`ω² varpi`; therefore no independent obstruction exists. -/
+def principalFrobeniusSpatialComponent
+    (ω : ℝ) (dω : Fin 4 → ℝ)
+    (du : Fin 4 → Fin 4 → ℝ)
+    (i j : Fin 3) : ℝ :=
+  ω * clockTransportTwoForm ω dω du i.succ j.succ
+
+theorem principalFrobeniusSpatialComponent_eq
+    (ω : ℝ) (dω : Fin 4 → ℝ)
+    (du : Fin 4 → Fin 4 → ℝ)
+    (i j : Fin 3) :
+    principalFrobeniusSpatialComponent ω dω du i j =
+      -2 * ω^2 * principalVorticity du i j := by
+  rw [principalFrobeniusSpatialComponent, clockTransport_spatial]
+  ring
+
+/-- On the positive/nonzero-rate sector, a spatial Frobenius component vanishes exactly
+when the corresponding vorticity component vanishes. -/
+theorem principalFrobeniusSpatialComponent_zero_iff
+    (ω : ℝ) (dω : Fin 4 → ℝ)
+    (du : Fin 4 → Fin 4 → ℝ)
+    (i j : Fin 3)
+    (hω : ω ≠ 0) :
+    principalFrobeniusSpatialComponent ω dω du i j = 0 ↔
+      principalVorticity du i j = 0 := by
+  rw [principalFrobeniusSpatialComponent_eq]
+  have hcoef : -2 * ω^2 ≠ 0 :=
+    mul_ne_zero (by norm_num) (pow_ne_zero 2 hω)
+  exact mul_eq_zero_iff_left hcoef
+
 /-- If the spatial and mixed pieces of a two-form are independently zero, the manuscript's
 transport conditions reduce to vorticity zero and acceleration-gradient balance. -/
 theorem transport_zero_iff
@@ -5794,6 +5917,12 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check clockTransportTwoForm_skew
+#check clockTransport_spatial
+#check clockTransport_mixed
+#check clockTransport_mixed_logK
+#check principalFrobeniusSpatialComponent_eq
+#check principalFrobeniusSpatialComponent_zero_iff
 #check endpointClock_hasDerivAt
 #check endpointClock_deriv
 #check radarClockTime_hasDerivAt
@@ -6181,6 +6310,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.relationalObservable_deriv
 #print axioms RelativeRest.implicit_endpoint_covector_null
 #print axioms RelativeRest.clockAccumulation_hasDerivAt
+#print axioms RelativeRest.clockTransport_spatial
+#print axioms RelativeRest.clockTransport_mixed_logK
+#print axioms RelativeRest.principalFrobeniusSpatialComponent_zero_iff
 #print axioms RelativeRest.radarClockRadius_unit_radial_jet
 #print axioms RelativeRest.radarClockTime_unit_clock_jet
 #print axioms RelativeRest.primitive_relative_weights_reciprocal_iff_four
