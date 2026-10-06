@@ -3084,6 +3084,22 @@ diffeomorphism parameter independently. -/
 def principalMatrixUnit (a b : Fin 4) : Fin 4 → Fin 4 → ℝ :=
   fun i j => if i = a ∧ j = b then 1 else 0
 
+/-- Already the derivative-of-gauge-parameter part is sufficient:
+if a candidate bulk coefficient has the same pairing with every independent
+`∇_a ξ_b` as the metric Euler variation, then it is exactly `2E_g^{ab}`. -/
+theorem principalNoetherBulkCoeff_eq_twoEuler_of_derivative_pairing
+    (E C : Fin 4 → Fin 4 → ℝ)
+    (hder : ∀ nablaXi : Fin 4 → Fin 4 → ℝ,
+      (∑ a : Fin 4, ∑ b : Fin 4, C a b * nablaXi a b) =
+        principalMetricDiffeomorphismEulerPairing E nablaXi) :
+    ∀ a b : Fin 4, C a b = 2 * E a b := by
+  intro a b
+  have h := hder (principalMatrixUnit a b)
+  unfold principalMetricDiffeomorphismEulerPairing
+    principalMatrixUnit at h
+  simp at h
+  linarith
+
 /-- The coefficient of a local bulk Noether current is not a choice.  If its
 divergence reproduces the Einstein-Maxwell Euler pairing for every local value of
 `ξ` and every independent first derivative `∇ξ`, then comparison of the
@@ -19131,6 +19147,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalCanonicalNoether_forced_core_chain
 #print axioms RelativeRest.principalCanonicalCompleted_forced_core_chain
 #print axioms RelativeRest.principalDiffeomorphismNoether_decomposition
+#print axioms RelativeRest.principalNoetherBulkCoeff_eq_twoEuler_of_derivative_pairing
 #print axioms RelativeRest.principalNoetherBulkCoeff_eq_twoEuler_of_local_identity
 #print axioms RelativeRest.principalNoetherBulkDivergence_forced_of_local_identity
 #print axioms RelativeRest.principalGeneralizedBianchi_forced_by_diffeomorphism_invariance
