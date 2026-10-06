@@ -7387,9 +7387,49 @@ theorem kerrMetric_inverse_certificate
     field_simp [hsig, hdel] <;>
     ring
 
+/-- Scalar determinant of the Boyer-Lindquist metric. -/
+def kerrMetricDetScalar (r a θ : ℝ) : ℝ :=
+  -(Sigma r a θ)^2 * (Real.sin θ)^2
+
+/-- The block determinant calculation is exactly the named metric determinant. -/
+theorem kerr_metric_det_eq_scalar
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    (kerrGtt r M a Q θ * kerrGPhiPhi r M a Q θ -
+        (kerrGtPhi r M a Q θ)^2) *
+      kerrGrr r M a Q θ *
+      kerrGthetaTheta r a θ =
+      kerrMetricDetScalar r a θ := by
+  rw [kerr_metric_det r M a Q θ hsig hdel]
+  rfl
+
 /-- Positive-chart Boyer-Lindquist volume density `sqrt(-g)=Σ sinθ`. -/
 def kerrVolumeDensity (r a θ : ℝ) : ℝ :=
   Sigma r a θ * Real.sin θ
+
+/-- Its square is exactly minus the metric determinant. -/
+theorem kerrVolumeDensity_sq
+    (r a θ : ℝ) :
+    (kerrVolumeDensity r a θ)^2 =
+      - kerrMetricDetScalar r a θ := by
+  unfold kerrVolumeDensity kerrMetricDetScalar
+  ring
+
+/-- On the regular positive angular chart, the named density is literally
+`sqrt(-det g)`. -/
+theorem kerrVolumeDensity_eq_sqrt_neg_det
+    (r a θ : ℝ)
+    (hsig : 0 < Sigma r a θ)
+    (hsin : 0 < Real.sin θ) :
+    kerrVolumeDensity r a θ =
+      Real.sqrt (-kerrMetricDetScalar r a θ) := by
+  have hvol : 0 ≤ kerrVolumeDensity r a θ := by
+    unfold kerrVolumeDensity
+    positivity
+  rw [← kerrVolumeDensity_sq,
+    Real.sqrt_sq_eq_abs,
+    abs_of_nonneg hvol]
 
 /-! ### Full coordinate-to-Carter-coframe Maxwell specialization -/
 
@@ -8966,6 +9006,9 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check kerr_metric_det_eq_scalar
+#check kerrVolumeDensity_sq
+#check kerrVolumeDensity_eq_sqrt_neg_det
 #check kerrMetricCov_symmetric
 #check kerrMetricInv_symmetric
 #check kerrMetric_inverse_certificate
@@ -9587,6 +9630,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrPotential_field_factorization
 #print axioms RelativeRest.kerr_stationary_inverse_block
 #print axioms RelativeRest.kerrMetric_inverse_certificate
+#print axioms RelativeRest.kerrVolumeDensity_eq_sqrt_neg_det
 #print axioms RelativeRest.kerr_metric_det
 #print axioms RelativeRest.kerrMaxwell_divergence_t
 #print axioms RelativeRest.kerrMaxwell_divergence_phi
