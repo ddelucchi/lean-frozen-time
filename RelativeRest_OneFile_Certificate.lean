@@ -812,8 +812,11 @@ theorem solution_preserving_fixed_point_module
     (T : V) (s : ℝ) (hT : T ≠ 0)
     (h : T = Real.exp (2 * s) • T) : s = 0 := by
   have hz : (1 - Real.exp (2 * s)) • T = 0 := by
-    rw [sub_smul, one_smul, h]
-    simp
+    calc
+      (1 - Real.exp (2 * s)) • T =
+          (1 : ℝ) • T - Real.exp (2 * s) • T := by rw [sub_smul]
+      _ = T - Real.exp (2 * s) • T := by rw [one_smul]
+      _ = 0 := sub_eq_zero.mpr h
   have hscalar : (1 : ℝ) - Real.exp (2 * s) = 0 := by
     exact (smul_eq_zero.mp hz).resolve_right hT
   have hexp : Real.exp (2 * s) = 1 := by linarith
@@ -830,6 +833,7 @@ theorem sigmaStar_is_root
     rw [show 2 * ((1 / 2 : ℝ) * Real.log |qm / qp|) = Real.log |qm / qp| by ring]
     exact Real.exp_log habs
   have hexpn : Real.exp (-2 * sigmaStar qm qp) = (|qm / qp|)⁻¹ := by
+    rw [show -2 * sigmaStar qm qp = -(2 * sigmaStar qm qp) by ring]
     rw [Real.exp_neg, hexp]
   unfold boostDefect
   rw [hexp, hexpn]
@@ -922,6 +926,7 @@ theorem emMixed_rainich_square
       emMixed e1 e2 e3 b1 b2 b3 k j) =
       (if i = j then emRainichScalar e1 e2 e3 b1 b2 b3 else 0) := by
   fin_cases i <;> fin_cases j <;>
+    rw [Fin.sum_univ_four] <;>
     simp [emMixed, emEnergy, emPoynting1, emPoynting2, emPoynting3,
       emRainichScalar] <;> ring
 
