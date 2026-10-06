@@ -4129,6 +4129,107 @@ theorem relativeConstraintResidual_deriv_zero (ell : ℝ) :
     deriv (relativeConstraintResidual ell) 0 = -2 * ell :=
   (relativeConstraintResidual_hasDerivAt_zero ell).deriv
 
+/-! ### First-variation derivation of the Iyer-Wald operator identity -/
+
+section FirstVariationNoetherDerivation
+
+variable {L C : Type*}
+  [AddCommGroup L] [Module ℝ L]
+  [AddCommGroup C] [Module ℝ C]
+
+/-- Primitive linear descendants used before invoking the Iyer-Wald identity.
+They encode only: variation of the Noether-current definition, contraction of
+the Lagrangian first-variation formula together with Cartan's identity, and
+variation of the Noether-current decomposition into constraint plus exact charge. -/
+structure FirstVariationNoetherOperators where
+  deltaThetaGauge : L →ₗ[ℝ] C
+  lieTheta : L →ₗ[ℝ] C
+  contractDeltaL : L →ₗ[ℝ] C
+  contractEuler : L →ₗ[ℝ] C
+  dContractTheta : L →ₗ[ℝ] C
+  deltaNoether : L →ₗ[ℝ] C
+  deltaConstraint : L →ₗ[ℝ] C
+  dDeltaCharge : L →ₗ[ℝ] C
+  noether_current_variation :
+    deltaNoether = deltaThetaGauge - contractDeltaL
+  first_variation_cartan :
+    contractDeltaL = contractEuler + lieTheta - dContractTheta
+  noether_decomposition_variation :
+    deltaNoether = deltaConstraint + dDeltaCharge
+
+/-- Presymplectic current in the ordered pair (ordinary variation, gauge variation). -/
+def FirstVariationNoetherOperators.omegaYX
+    (D : FirstVariationNoetherOperators (L:=L) (C:=C)) :
+    L →ₗ[ℝ] C :=
+  D.deltaThetaGauge - D.lieTheta
+
+/-- Boundary operator δQ_ξ - ι_ξ θ. -/
+def FirstVariationNoetherOperators.dB
+    (D : FirstVariationNoetherOperators (L:=L) (C:=C)) :
+    L →ₗ[ℝ] C :=
+  D.dDeltaCharge - D.dContractTheta
+
+/-- Constraint operator in the sign convention used by the manuscript's
+`omegaYX = dB - constraint` identity. -/
+def FirstVariationNoetherOperators.constraint
+    (D : FirstVariationNoetherOperators (L:=L) (C:=C)) :
+    L →ₗ[ℝ] C :=
+  -(D.deltaConstraint + D.contractEuler)
+
+/-- The off-shell Iyer-Wald operator identity is not an input at this level.
+It follows algebraically from the first-variation, Cartan, and Noether-decomposition
+identities above. -/
+theorem FirstVariationNoetherOperators.iyerWald_operator_identity
+    (D : FirstVariationNoetherOperators (L:=L) (C:=C)) :
+    D.omegaYX = D.dB - D.constraint := by
+  ext X
+  have hJ := LinearMap.congr_fun D.noether_current_variation X
+  have hFV := LinearMap.congr_fun D.first_variation_cartan X
+  have hN := LinearMap.congr_fun D.noether_decomposition_variation X
+  simp only [FirstVariationNoetherOperators.omegaYX,
+    FirstVariationNoetherOperators.dB,
+    FirstVariationNoetherOperators.constraint,
+    LinearMap.sub_apply, LinearMap.add_apply, LinearMap.neg_apply]
+  module
+
+/-- Pointwise form of the derived off-shell identity. -/
+theorem FirstVariationNoetherOperators.iyerWald_identity_apply
+    (D : FirstVariationNoetherOperators (L:=L) (C:=C))
+    (X : L) :
+    D.omegaYX X = D.dB X - D.constraint X := by
+  exact LinearMap.congr_fun D.iyerWald_operator_identity X
+
+/-- The boundary-compensated reversed current is already fixed by the
+first-variation data, before introducing any independent Iyer-Wald premise. -/
+def FirstVariationNoetherOperators.omegaXY
+    (D : FirstVariationNoetherOperators (L:=L) (C:=C)) :
+    L →ₗ[ℝ] C :=
+  -D.omegaYX
+
+theorem FirstVariationNoetherOperators.compensated_eq_constraint
+    (D : FirstVariationNoetherOperators (L:=L) (C:=C))
+    (X : L) :
+    D.omegaXY X + D.dB X = D.constraint X := by
+  unfold FirstVariationNoetherOperators.omegaXY
+  rw [D.iyerWald_identity_apply]
+  module
+
+/-- Uniqueness is therefore a theorem of the first-variation layer: no second
+linear compensated current can satisfy the same derived Noether identity. -/
+theorem FirstVariationNoetherOperators.omegaXY_existsUnique
+    (D : FirstVariationNoetherOperators (L:=L) (C:=C)) :
+    ∃! W : L →ₗ[ℝ] C,
+      ∀ X : L, W X + D.dB X = D.constraint X := by
+  refine ⟨D.omegaXY, D.compensated_eq_constraint, ?_⟩
+  intro W hW
+  ext X
+  have hEq :
+      W X + D.dB X = D.omegaXY X + D.dB X :=
+    (hW X).trans (D.compensated_eq_constraint X).symm
+  exact add_right_cancel hEq
+
+end FirstVariationNoetherDerivation
+
 /-! ### Lagrangian-level Iyer-Wald operator identity -/
 
 section LagrangianIyerWaldOperator
@@ -4225,6 +4326,34 @@ theorem LagrangianIyerWaldOperators.compensated_relative_normal
   exact D.constraint_normalJet_of_opposite LG LM ell hG hM
 
 end LagrangianIyerWaldOperator
+
+/-- Forgetful constructor: the older Iyer-Wald operator package is now derived from
+the stronger first-variation/Noether package rather than assumed independently. -/
+def FirstVariationNoetherOperators.toLagrangianIyerWaldOperators
+    {L C : Type*}
+    [AddCommGroup L] [Module ℝ L]
+    [AddCommGroup C] [Module ℝ C]
+    (D : FirstVariationNoetherOperators (L:=L) (C:=C)) :
+    LagrangianIyerWaldOperators (L:=L) (C:=C) where
+  omegaYX := D.omegaYX
+  dB := D.dB
+  constraint := D.constraint
+  iw_operator_identity := D.iyerWald_operator_identity
+
+/-- The current obtained after forgetting to the Iyer-Wald package is definitionally
+the same current already forced at first-variation level. -/
+@[simp] theorem FirstVariationNoetherOperators.toIyerWald_omegaXY
+    {L C : Type*}
+    [AddCommGroup L] [Module ℝ L]
+    [AddCommGroup C] [Module ℝ C]
+    (D : FirstVariationNoetherOperators (L:=L) (C:=C)) :
+    D.toLagrangianIyerWaldOperators.omegaXY = D.omegaXY := by
+  ext X
+  simp [FirstVariationNoetherOperators.toLagrangianIyerWaldOperators,
+    LagrangianIyerWaldOperators.omegaXY,
+    FirstVariationNoetherOperators.omegaXY]
+
+
 
 /-! ### Lagrangian operator identity to Maxwell carrier current -/
 
