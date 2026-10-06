@@ -2251,18 +2251,6 @@ theorem principalEinsteinMaxwell_local_first_variation
   rw [principalEinsteinHilbertMetricVariationCoeff_from_ricci]
   ring
 
-/-- With the Einstein equation written using the Ricci-reconstructed Einstein
-tensor, metric stationarity is no longer stated for an arbitrary candidate tensor. -/
-theorem principalEinsteinMaxwellMetricVariationCoeff_from_ricci_eq_zero_iff
-    (RicCov : Fin 4 → Fin 4 → ℝ)
-    (E B : ℝ) (i j : Fin 4) :
-    principalEinsteinMaxwellMetricVariationCoeff
-        (principalEinsteinMixedFromRicci RicCov) E B i j = 0 ↔
-      principalEinsteinMixedFromRicci RicCov i j =
-        8 * Real.pi * principalStressFromF E B i j :=
-  principalEinsteinMaxwellMetricVariationCoeff_eq_zero_iff
-    (principalEinsteinMixedFromRicci RicCov) E B i j
-
 /-- On an Einstein-Maxwell solution, the complete local first variation has no
 bulk part: it is exactly the sum of the Einstein-Hilbert and Maxwell symplectic
 potential divergences. -/
@@ -2343,6 +2331,18 @@ theorem principalEinsteinMaxwellMetricVariationCoeff_eq_zero_iff
   · intro h
     rw [h]
     ring
+
+/-- With the Einstein equation written using the Ricci-reconstructed Einstein
+tensor, metric stationarity is no longer stated for an arbitrary candidate tensor. -/
+theorem principalEinsteinMaxwellMetricVariationCoeff_from_ricci_eq_zero_iff
+    (RicCov : Fin 4 → Fin 4 → ℝ)
+    (E B : ℝ) (i j : Fin 4) :
+    principalEinsteinMaxwellMetricVariationCoeff
+        (principalEinsteinMixedFromRicci RicCov) E B i j = 0 ↔
+      principalEinsteinMixedFromRicci RicCov i j =
+        8 * Real.pi * principalStressFromF E B i j :=
+  principalEinsteinMaxwellMetricVariationCoeff_eq_zero_iff
+    (principalEinsteinMixedFromRicci RicCov) E B i j
 
 /-- Principal electromagnetic energy density from the explicit field. -/
 def principalFieldEnergyDensity (E B : ℝ) : ℝ :=
