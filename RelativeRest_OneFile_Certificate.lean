@@ -1125,6 +1125,10 @@ theorem relativeActionDefect_eq_reciprocalLagrangian
 
 abbrev R2 := ℝ × ℝ
 
+/-- Gravity and Maxwell coordinate basis vectors of the normalized two-sector action space. -/
+def actionGravitySector : R2 := (1, 0)
+def actionMaxwellSector : R2 := (0, 1)
+
 /-- Linearized solution residual on the two action-sector coefficients.
 At a solution this is the scalar model of
 `R^{lin}_Φ(x_G E_G+x_M E_M)=(x_G-x_M)R`. -/
@@ -1190,10 +1194,6 @@ theorem actionConstraintResponseLinear_apply_eq_residualLinear
 
 /-- Action-space boost generator in the `(E_G,E_M)` basis. -/
 def YA (v : R2) : R2 := (-v.1, v.2)
-
-/-- Gravity and Maxwell coordinate basis vectors of the normalized two-sector action space. -/
-def actionGravitySector : R2 := (1, 0)
-def actionMaxwellSector : R2 := (0, 1)
 
 /-- Exchange-even action direction. -/
 def CA : R2 := (1, 1)
