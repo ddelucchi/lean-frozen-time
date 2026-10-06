@@ -6502,6 +6502,97 @@ theorem kerrMaxwell_divergence_phi
   ring
 
 
+/-- Homogeneous Maxwell/Bianchi equation in the `(r,θ,t)` sector:
+`∂_r F_{θt}-∂_θ F_{rt}=0`. -/
+theorem kerrMaxwell_bianchi_t
+    (Q r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    deriv
+        (fun x : ℝ =>
+          -a * Real.sin θ * kerrPrincipalB Q x a θ) r -
+      deriv
+        (fun x : ℝ =>
+          kerrPrincipalE Q r a x) θ = 0 := by
+  have hr :=
+    (kerrPrincipalB_hasDerivAt_r Q r a θ hsig).const_mul
+      (-a * Real.sin θ)
+  have hth :=
+    kerrPrincipalE_hasDerivAt_theta Q r a θ hsig
+  rw [hr.deriv, hth.deriv]
+  field_simp [hsig]
+  unfold Sigma
+  ring
+
+/-- Homogeneous Maxwell/Bianchi equation in the `(r,θ,φ)` sector:
+`∂_r F_{θφ}-∂_θ F_{rφ}=0`. -/
+theorem kerrMaxwell_bianchi_phi
+    (Q r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    deriv
+        (fun x : ℝ =>
+          (x^2 + a^2) * Real.sin θ *
+            kerrPrincipalB Q x a θ) r -
+      deriv
+        (fun x : ℝ =>
+          -a * (Real.sin x)^2 *
+            kerrPrincipalE Q r a x) θ = 0 := by
+  have hcR :
+      HasDerivAt
+        (fun x : ℝ => (x^2 + a^2) * Real.sin θ)
+        (2 * r * Real.sin θ) r := by
+    convert (((hasDerivAt_id r).pow 2).add_const (a^2)).mul_const
+      (Real.sin θ) using 1 <;> ring
+  have hBr :=
+    kerrPrincipalB_hasDerivAt_r Q r a θ hsig
+  have hr := hcR.mul hBr
+
+  have hs2 := (Real.hasDerivAt_sin θ).pow 2
+  have hcθ :
+      HasDerivAt
+        (fun x : ℝ => -a * (Real.sin x)^2)
+        (-2 * a * Real.sin θ * Real.cos θ) θ := by
+    convert hs2.const_mul (-a) using 1 <;> ring
+  have hEθ :=
+    kerrPrincipalE_hasDerivAt_theta Q r a θ hsig
+  have hth := hcθ.mul hEθ
+
+  rw [hr.deriv, hth.deriv]
+  unfold kerrPrincipalE kerrPrincipalB
+  have htrig :
+      (Real.sin θ)^2 = 1 - (Real.cos θ)^2 := by
+    nlinarith [Real.sin_sq_add_cos_sq θ]
+  rw [htrig]
+  field_simp [hsig]
+  unfold Sigma
+  ring
+
+/-- The stationary-axisymmetric potential-derived field therefore satisfies the full
+Maxwell system in the regular chart: both nontrivial Bianchi identities and both
+nontrivial source-free divergence equations vanish. -/
+theorem kerrMaxwell_equations_scalar_certificate
+    (Q r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    deriv
+        (fun x : ℝ =>
+          -a * Real.sin θ * kerrPrincipalB Q x a θ) r -
+      deriv
+        (fun x : ℝ =>
+          kerrPrincipalE Q r a x) θ = 0 ∧
+    deriv
+        (fun x : ℝ =>
+          (x^2 + a^2) * Real.sin θ *
+            kerrPrincipalB Q x a θ) r -
+      deriv
+        (fun x : ℝ =>
+          -a * (Real.sin x)^2 *
+            kerrPrincipalE Q r a x) θ = 0 ∧
+    deriv (fun x : ℝ => kerrDensitizedFrt Q x a θ) r +
+      deriv (fun x : ℝ => kerrDensitizedFthetaT Q r a x) θ = 0 ∧
+    deriv (fun x : ℝ => kerrDensitizedFrPhi Q x a θ) r +
+      deriv (fun x : ℝ => kerrDensitizedFthetaPhi Q r a x) θ = 0 := by
+  exact ⟨kerrMaxwell_bianchi_t Q r a θ hsig,
+    kerrMaxwell_bianchi_phi Q r a θ hsig,
+    kerrMaxwell_divergence_t Q r a θ hsig,
+    kerrMaxwell_divergence_phi Q r a θ hsig⟩
+
+
 /-- The radial derivative of `A_t` is exactly the principal electric coefficient. -/
 theorem kerrPotentialT_hasDerivAt_r
     (Q r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
@@ -8657,6 +8748,9 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check kerrMaxwell_bianchi_t
+#check kerrMaxwell_bianchi_phi
+#check kerrMaxwell_equations_scalar_certificate
 #check kerrRaisedField_components
 #check kerrDensitizedField_from_metric
 #check kerrMaxwell_source_free_certificate
@@ -9261,6 +9355,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrMaxwell_divergence_t
 #print axioms RelativeRest.kerrMaxwell_divergence_phi
 #print axioms RelativeRest.kerrMaxwell_source_free_certificate
+#print axioms RelativeRest.kerrMaxwell_equations_scalar_certificate
 #print axioms RelativeRest.kerrCoordinateField_eq_CarterCoframe
 #print axioms RelativeRest.kerrPotential_to_CarterPrincipalField
 #print axioms RelativeRest.kerrPotential_metric_principal_alignment
