@@ -2437,105 +2437,11 @@ variable {V P KSpace : Type*}
   [AddCommGroup P] [Module ℝ P]
   [AddCommGroup KSpace] [Module ℝ KSpace]
 
-/-- Minimal algebraic interface exported by a future first-principles Einstein-Maxwell/Iyer-Wald
-formalization.  The characteristic space is not an arbitrary target with an assumed surjection:
-it is definitionally the image of `beta`, exactly as in the manuscript.  Nonvanishing of the
-descended clock covector is likewise derived from a positive physical-response witness. -/
-structure BridgeData where
-  beta : P →ₗ[ℝ] KSpace
-  Lambda : LinearMap.range beta →ₗ[ℝ] ℝ
-  ell : P →ₗ[ℝ] ℝ
-  factorization : Lambda.comp beta.rangeRestrict = ell
-  positiveWitness : P
-  response_positive : 0 < ell positiveWitness
-
-/-- The physical positive-response witness forces the integrated response covector to be nonzero. -/
-theorem bridge_ell_nonzero (D : BridgeData (P:=P) (KSpace:=KSpace)) :
-    D.ell ≠ 0 :=
-  covector_nonzero_of_positive D.ell D.positiveWitness D.response_positive
-
-/-- Factorization through the actual characteristic image forces the descended covector nonzero. -/
-theorem bridge_Lambda_nonzero (D : BridgeData (P:=P) (KSpace:=KSpace)) :
-    D.Lambda ≠ 0 :=
-  descended_covector_nonzero D.beta.rangeRestrict D.Lambda D.ell
-    D.factorization (bridge_ell_nonzero D)
-
-/-- On `im beta`, the Iyer-Wald characteristic covector is mathematically unique without
-any independent surjectivity premise. -/
-theorem bridge_Lambda_unique (D : BridgeData (P:=P) (KSpace:=KSpace))
-    (Λ' : LinearMap.range D.beta →ₗ[ℝ] ℝ)
-    (hΛ' : Λ'.comp D.beta.rangeRestrict = D.ell) :
-    Λ' = D.Lambda := by
-  exact characteristic_range_covector_unique D.beta D.ell Λ' D.Lambda hΛ' D.factorization
-
-/-- The characteristic quotient is canonically equivalent to the range of the unique covector. -/
-noncomputable def bridgeQuotientEquivRange (D : BridgeData (P:=P) (KSpace:=KSpace)) :
-    ((LinearMap.range D.beta) ⧸ LinearMap.ker D.Lambda) ≃ₗ[ℝ]
-      LinearMap.range D.Lambda :=
-  LinearMap.quotKerEquivRange D.Lambda
-
-/-- The characteristic quotient is in fact canonically equivalent to the real line. -/
-noncomputable def bridgeQuotientEquivReal (D : BridgeData (P:=P) (KSpace:=KSpace)) :
-    ((LinearMap.range D.beta) ⧸ LinearMap.ker D.Lambda) ≃ₗ[ℝ] ℝ :=
-  clockQuotientEquivReal D.Lambda (bridge_Lambda_nonzero D)
-
-/-- The range of the characteristic clock covector is all of `ℝ`. -/
-theorem bridge_range_full (D : BridgeData (P:=P) (KSpace:=KSpace)) :
-    LinearMap.range D.Lambda = ⊤ :=
-  range_eq_top_of_nonzero D.Lambda (bridge_Lambda_nonzero D)
-
-/-- Consequently the stress-visible characteristic quotient is forced to have finrank one. -/
-theorem bridge_quotient_finrank_one (D : BridgeData (P:=P) (KSpace:=KSpace)) :
-    Module.finrank ℝ ((LinearMap.range D.beta) ⧸ LinearMap.ker D.Lambda) = 1 :=
-  clockQuotient_finrank_one D.Lambda (bridge_Lambda_nonzero D)
-
-/-- Stronger bridge interface: the descendant covector is no longer data.
-Only the physically meaningful kernel-invisibility condition and a positivity witness are supplied. -/
-structure ForcedBridgeData where
-  beta : P →ₗ[ℝ] KSpace
-  ell : P →ₗ[ℝ] ℝ
-  kernel_invisible : LinearMap.ker beta ≤ LinearMap.ker ell
-  positiveWitness : P
-  response_positive : 0 < ell positiveWitness
-
-/-- The characteristic clock covector is canonically constructed from the response. -/
-noncomputable def ForcedBridgeData.Lambda
-    (D : ForcedBridgeData (P:=P) (KSpace:=KSpace)) :
-    LinearMap.range D.beta →ₗ[ℝ] ℝ :=
-  characteristicCovectorOfKernel D.beta D.ell D.kernel_invisible
-
-/-- No factorization hypothesis is needed: it is a theorem of the canonical construction. -/
-theorem forcedBridge_factorization
-    (D : ForcedBridgeData (P:=P) (KSpace:=KSpace)) :
-    D.Lambda.comp D.beta.rangeRestrict = D.ell :=
-  characteristicCovectorOfKernel_factorization
-    D.beta D.ell D.kernel_invisible
-
-/-- Positivity forces the canonically constructed characteristic covector to be nonzero. -/
-theorem forcedBridge_Lambda_nonzero
-    (D : ForcedBridgeData (P:=P) (KSpace:=KSpace)) :
-    D.Lambda ≠ 0 := by
-  exact descended_covector_nonzero
-    D.beta.rangeRestrict D.Lambda D.ell
-    (forcedBridge_factorization D)
-    (covector_nonzero_of_positive D.ell D.positiveWitness D.response_positive)
-
-/-- Any other covector reproducing the same physical response equals the canonical one. -/
-theorem forcedBridge_Lambda_unique
-    (D : ForcedBridgeData (P:=P) (KSpace:=KSpace))
-    (Λ' : LinearMap.range D.beta →ₗ[ℝ] ℝ)
-    (hΛ' : Λ'.comp D.beta.rangeRestrict = D.ell) :
-    Λ' = D.Lambda := by
-  exact characteristicCovectorOfKernel_unique
-    D.beta D.ell D.kernel_invisible Λ' hΛ'
-
-/-- The resulting stress-visible quotient is forced to be one-dimensional. -/
-theorem forcedBridge_quotient_finrank_one
-    (D : ForcedBridgeData (P:=P) (KSpace:=KSpace)) :
-    Module.finrank ℝ
-      ((LinearMap.range D.beta) ⧸ LinearMap.ker D.Lambda) = 1 := by
-  exact clockQuotient_finrank_one D.Lambda (forcedBridge_Lambda_nonzero D)
-
+/-- Minimal remaining algebraic interface to the still-unformalized Iyer-Wald layer.
+The response covector is not supplied, its factorization is not supplied, and kernel invisibility
+is not supplied.  The only structural premise is the physical statement that the integrated
+stress response depends only on the characteristic variation; positivity supplies nonvanishing.
+Everything below is derived from those two facts. -/
 /-- Even stronger interface: only extensionality of the response with respect to the
 characteristic variation and positivity are retained.  Kernel-invisibility and Λ are derived. -/
 structure ExtensionalBridgeData where
@@ -2626,11 +2532,7 @@ theorem scalar_backbone
 #check covector_pullback_injective
 #check characteristic_range_restriction_surjective
 #check descended_covector_unique
-#check bridge_ell_nonzero
-#check bridge_Lambda_nonzero
-#check bridge_Lambda_unique
 #check bridgeQuotientEquivReal
-#check bridge_quotient_finrank_one
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
@@ -2677,11 +2579,6 @@ theorem scalar_backbone
 #check characteristicCovectorOfKernel
 #check characteristicCovectorOfKernel_factorization
 #check characteristicCovectorOfKernel_unique
-#check ForcedBridgeData.Lambda
-#check forcedBridge_factorization
-#check forcedBridge_Lambda_nonzero
-#check forcedBridge_Lambda_unique
-#check forcedBridge_quotient_finrank_one
 #check involution_eigenspaces_orthogonal
 #check actionOpticalMap_injective
 #check actionOpticalMap_surjective
@@ -2778,5 +2675,4 @@ end RelativeRest
 -- The following commands are intentionally left as audit hooks for a real Lean build:
 -- #print axioms RelativeRest.scalar_backbone
 -- #print axioms RelativeRest.boost_balance_unique
--- #print axioms RelativeRest.bridge_Lambda_unique
 -- #print axioms RelativeRest.mino_clock_identity
