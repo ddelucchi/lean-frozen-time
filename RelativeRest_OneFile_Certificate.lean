@@ -1352,8 +1352,8 @@ theorem principalJetFromFApply_eq_principalJetApply
       apply Finset.sum_congr rfl
       intro j hj
       rw [principalJetFromF_eq_neg_principalStress]]
-  exact principalJetApply_eq_neg_stress
-    (principalChi E B) v i
+  exact (principalJetApply_eq_neg_stress
+    (principalChi E B) v i).symm
 
 /-- Normalized action of the field-derived carrier. -/
 def principalNormalizedJetFromFApply
@@ -1368,13 +1368,15 @@ theorem principalNormalizedJetFromFApply_eq_involution
     (v : Fin 4 → ℝ) :
     principalNormalizedJetFromFApply E B v =
       principalJetInvolution v := by
-  rw [show principalJetFromFApply E B v =
-      principalJetApply (principalChi E B) v by
-        exact principalJetFromFApply_eq_principalJetApply E B v]
   funext i
+  rw [principalNormalizedJetFromFApply]
+  have happ :
+      principalJetFromFApply E B v i =
+        principalJetApply (principalChi E B) v i := by
+    exact congrFun (principalJetFromFApply_eq_principalJetApply E B v) i
+  rw [happ]
   fin_cases i <;>
-    simp [principalNormalizedJetFromFApply, principalJetApply,
-      principalJetInvolution, hchi] <;>
+    simp [principalJetApply, principalJetInvolution, hchi] <;>
     field_simp [hchi]
 
 
