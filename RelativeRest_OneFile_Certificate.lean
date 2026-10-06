@@ -5033,6 +5033,22 @@ theorem clockLiouville_homogeneous (c κ : ℝ) (v : R2) :
   ring
 
 
+/-- The Liouville primitive annihilates the Euler/common-scale direction itself. -/
+@[simp] theorem clockLiouville_horizontal_Euler (κ : ℝ) :
+    clockLiouville κ (clockEuler κ) = 0 := by
+  simp [clockLiouville, clockEuler]
+
+/-- Full pullback homogeneity under positive/common-scale dilation, including the tangent map. -/
+theorem clockLiouville_dilation_pullback
+    (c κ : ℝ) (v : R2) :
+    clockLiouville (c * κ)
+      (clockDilationTangent c v) =
+      c * clockLiouville κ v := by
+  rcases v with ⟨vΘ, vκ⟩
+  simp [clockLiouville, clockDilationTangent]
+  ring
+
+
 /-- On the unit common-scale section `κ=1`, the homogeneous Liouville primitive is
 literally the descended clock one-form `dΘ`. -/
 theorem clockLiouville_unit_section (v : R2) :
@@ -6709,6 +6725,8 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check clockLiouville_horizontal_Euler
+#check clockLiouville_dilation_pullback
 #check relativeSymplecticPlus_hasDerivAt_zero
 #check relativeSymplecticMinus_eq_half_derivative
 #check relativeSymplecticMinus_exchange
@@ -7177,6 +7195,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.reeb_direction_unique
 #print axioms RelativeRest.clock_section_reeb_existsUnique
 #print axioms RelativeRest.clockLiouville_unique_of_homogeneity
+#print axioms RelativeRest.clockLiouville_dilation_pullback
 #print axioms RelativeRest.clockQuotientDualEquiv
 #print axioms RelativeRest.quotientBilinearForm_unique
 #print axioms RelativeRest.presymplecticReductionForm_left_nondegenerate
