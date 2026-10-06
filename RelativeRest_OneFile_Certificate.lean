@@ -2371,6 +2371,17 @@ theorem quotient_clock_covector_forced
   exact quotient_clock_covector_unique Λ λ (quotientClockCovector Λ)
     hλ (quotientClockCovector_pullback Λ)
 
+/-- Exact algebraic form of the manuscript's contact-transverse duality:
+the one-dimensional relative normal line is canonically the dual of the stress-visible
+characteristic quotient. -/
+noncomputable def clockQuotientDualEquiv
+    (Λ : K →ₗ[ℝ] ℝ) (hΛ : Λ ≠ 0) :
+    ℝ ≃ₗ[ℝ] ((K ⧸ LinearMap.ker Λ) →ₗ[ℝ] ℝ) :=
+  normalizedCovectorDualEquiv
+    (quotientClockCovector Λ)
+    (quotientClockCovector_nonzero Λ hΛ)
+    (clockQuotient_finrank_one Λ hΛ)
+
 end LinearDescent
 
 /-! ## 10. One-dimensional covector-preserving identification -/
@@ -2542,6 +2553,50 @@ noncomputable def normalizedClockEquiv
     L₁ ≃ₗ[ℝ] L₂ :=
   LinearEquiv.ofBijective (normalizedClockMap α u₂)
     (normalizedClockMap_bijective α β u₁ u₂ hαu hβu hfin₁ hfin₂)
+
+/-- Scalar multiplication of a distinguished covector defines the natural map from the
+relative normal line into the dual of a one-dimensional clock line. -/
+def covectorScaleMap
+    (α : L₁ →ₗ[ℝ] ℝ) :
+    ℝ →ₗ[ℝ] (L₁ →ₗ[ℝ] ℝ) where
+  toFun c := c • α
+  map_add' a b := by
+    ext x
+    simp [add_smul]
+  map_smul' c a := by
+    ext x
+    simp [mul_smul]
+
+/-- On a one-dimensional clock line, every covector is a unique scalar multiple of any
+chosen nonzero normalized clock covector. -/
+theorem covectorScaleMap_bijective
+    (α : L₁ →ₗ[ℝ] ℝ)
+    (hα : α ≠ 0)
+    (hfin : Module.finrank ℝ L₁ = 1) :
+    Function.Bijective (covectorScaleMap α) := by
+  let u := normalizedClockUnit α hα hfin
+  have hu : α u = 1 := normalizedClockUnit_eval α hα hfin
+  have hspan := reconstruction_from_normalized_covector α u hu hfin
+  constructor
+  · intro a b hab
+    have hfun := LinearMap.congr_fun hab u
+    simp [covectorScaleMap, hu] at hfun
+    exact hfun
+  · intro β
+    refine ⟨β u, ?_⟩
+    ext x
+    rw [hspan x]
+    simp [covectorScaleMap, hu, mul_comm]
+
+/-- The relative scalar normal line is canonically equivalent to the dual of the
+one-dimensional descended clock line. -/
+noncomputable def normalizedCovectorDualEquiv
+    (α : L₁ →ₗ[ℝ] ℝ)
+    (hα : α ≠ 0)
+    (hfin : Module.finrank ℝ L₁ = 1) :
+    ℝ ≃ₗ[ℝ] (L₁ →ₗ[ℝ] ℝ) :=
+  LinearEquiv.ofBijective (covectorScaleMap α)
+    (covectorScaleMap_bijective α hα hfin)
 
 end OneDimensional
 
@@ -3918,6 +3973,10 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check covectorScaleMap
+#check covectorScaleMap_bijective
+#check normalizedCovectorDualEquiv
+#check clockQuotientDualEquiv
 #check clockLiouville_unit_section
 #check dThetaVec_tangentToClockSection
 #check clockLiouville_unit_dThetaVec
@@ -4183,6 +4242,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.maxwellBridge_Lambda_unique
 #print axioms RelativeRest.reeb_direction_unique
 #print axioms RelativeRest.clock_section_reeb_existsUnique
+#print axioms RelativeRest.clockQuotientDualEquiv
 #print axioms RelativeRest.causal_extended_endpoints_mono
 #print axioms RelativeRest.kerrLogChi_hasDerivAt_r
 #print axioms RelativeRest.kerrNewman_mino_clock_forced
