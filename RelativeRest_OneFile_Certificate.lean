@@ -4840,6 +4840,60 @@ theorem synchronization_total_closed
   rw [hcancel]
   exact add_neg_cancel _
 
+
+/-! ### Covector-level synchronization and principal-orbit normalization -/
+
+section SynchronizationCovector
+
+variable {V : Type*} [AddCommGroup V] [Module ℝ V]
+
+/-- Forced synchronization correction between the exact radar clock differential and
+the locally normalized chronometric covector. -/
+def synchronizationCovector
+    (dRadar TO : V →ₗ[ℝ] ℝ) :
+    V →ₗ[ℝ] ℝ :=
+  dRadar - TO
+
+/-- By construction the exact radar covector is the local clock plus the unique correction. -/
+theorem synchronizationCovector_decomposition
+    (dRadar TO : V →ₗ[ℝ] ℝ) :
+    dRadar = TO + synchronizationCovector dRadar TO := by
+  ext v
+  simp [synchronizationCovector]
+
+/-- Any correction satisfying the same decomposition is the constructed one. -/
+theorem synchronizationCovector_unique
+    (dRadar TO β : V →ₗ[ℝ] ℝ)
+    (hβ : dRadar = TO + β) :
+    β = synchronizationCovector dRadar TO := by
+  ext v
+  have hv := LinearMap.congr_fun hβ v
+  change dRadar v = TO v + β v at hv
+  simp [synchronizationCovector]
+  linarith
+
+/-- If radar and local clocks both advance at unit rate on the selected clock direction,
+the synchronization correction vanishes there. -/
+theorem synchronizationCovector_vanishes_on_clock
+    (dRadar TO : V →ₗ[ℝ] ℝ)
+    (u : V)
+    (hRadar : dRadar u = 1)
+    (hTO : TO u = 1) :
+    synchronizationCovector dRadar TO u = 0 := by
+  simp [synchronizationCovector, hRadar, hTO]
+
+/-- Principal specialization of the manuscript condition `β^{pr}|_γ=0`. -/
+theorem principalSynchronization_vanishes
+    (dRadar : (Fin 4 → ℝ) →ₗ[ℝ] ℝ)
+    (hRadar : dRadar principalUhat = 1) :
+    synchronizationCovector dRadar principalTOLinear
+      principalUhat = 0 := by
+  exact synchronizationCovector_vanishes_on_clock
+    dRadar principalTOLinear principalUhat
+    hRadar (by simpa [principalTOLinear_apply] using principalTO_unit)
+
+end SynchronizationCovector
+
 /-! ## 15. Clock-cover canonical pair: finite-dimensional algebraic model -/
 
 /-- Standard clock-cover symplectic form on `(Θ,κ)` tangent vectors. -/
@@ -6585,6 +6639,10 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check synchronizationCovector_decomposition
+#check synchronizationCovector_unique
+#check synchronizationCovector_vanishes_on_clock
+#check principalSynchronization_vanishes
 #check carrierJetCurrent_eq_stressBridgeCurrent
 #check carrierBulkResponse_eq_minus_two_stressResponse
 #check carrier_bridge_scalar
@@ -7014,6 +7072,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalFrobeniusSpatialComponent_zero_iff
 #print axioms RelativeRest.clockTransport_projected_zero_iff
 #print axioms RelativeRest.principalFrobenius_all_zero_iff
+#print axioms RelativeRest.principalSynchronization_vanishes
 #print axioms RelativeRest.radarClockRadius_unit_radial_jet
 #print axioms RelativeRest.radarClockTime_unit_clock_jet
 #print axioms RelativeRest.primitive_relative_weights_reciprocal_iff_four
