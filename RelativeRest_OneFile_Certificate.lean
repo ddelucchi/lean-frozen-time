@@ -16616,6 +16616,20 @@ theorem principalMetricEulerRelativeOrbitVariation_forced_core_chain
   intro i j
   exact principalActionEulerJetLinear_basis D.carrier.E D.carrier.B i j
 
+/-! ### Single geometric bridge: Iyer-Wald constraint equals the canonical action Noether operator -/
+
+/-- The remaining covariant-phase-space geometry is isolated to one operator
+identity.  Both sides are concrete: the left is the constraint derived by the
+first-variation/Noether package, while the right is constructed from the displayed
+Einstein-Maxwell metric Euler derivative and its forced `2E^a{}_b` Noether current. -/
+structure PrincipalCanonicalNoetherVariationCharacteristicInput where
+  carrier : PrincipalCarrierCharacteristicInput (P:=P)
+  variation : LagrangianVariationNoetherOperators
+    (L:=R2) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ))
+  noetherConstraintFromAction :
+    variation.constraint =
+      carrier.noetherConstraintOperatorFromAction
+
 /-! ### Displayed-action orbit bridge: Noether constraint equals full metric Euler orbit -/
 
 /-- Strongest current finite-dimensional action/CPS interface. The sole bridge datum
@@ -16630,6 +16644,39 @@ structure PrincipalDisplayedMetricEulerOrbitVariationCharacteristicInput where
     ∀ s : ℝ, ∀ v : Fin 4 → ℝ,
       relativeConstraintOrbitEval variation.constraint v s =
         carrier.metricEulerRelativeOrbitResponse s v
+
+/-- The single canonical-constraint identity implies the previous finite-orbit
+bridge with no additional sector, sign, jet, or normalization hypothesis. -/
+def PrincipalCanonicalNoetherVariationCharacteristicInput.toDisplayedOrbitInput
+    (D : PrincipalCanonicalNoetherVariationCharacteristicInput (P:=P)) :
+    PrincipalDisplayedMetricEulerOrbitVariationCharacteristicInput (P:=P) where
+  carrier := D.carrier
+  variation := D.variation
+  noetherConstraintOrbitFromMetricEuler := by
+    intro s v
+    rw [D.noetherConstraintFromAction]
+    exact D.carrier.noetherConstraintOperatorFromAction_relativeOrbit s v
+
+/-- Conversely, the old orbit bridge already forces equality with the canonical
+action-derived Noether constraint operator.  Thus the two interfaces are logically
+equivalent, but the canonical form exposes the sole geometric theorem still needed. -/
+theorem PrincipalDisplayedMetricEulerOrbitVariationCharacteristicInput.constraint_eq_canonicalNoether
+    (D : PrincipalDisplayedMetricEulerOrbitVariationCharacteristicInput (P:=P)) :
+    D.variation.constraint =
+      D.carrier.noetherConstraintOperatorFromAction := by
+  apply (actionConstraintOperator_eq_iff_relative_orbit
+    D.variation.constraint D.carrier.metricEulerJetResponse).2
+  intro s v
+  rw [D.noetherConstraintOrbitFromMetricEuler,
+    D.carrier.metricEulerRelativeOrbitResponse_apply]
+
+/-- Hence every old displayed-orbit input canonically gives the single-identity input. -/
+def PrincipalDisplayedMetricEulerOrbitVariationCharacteristicInput.toCanonicalNoetherInput
+    (D : PrincipalDisplayedMetricEulerOrbitVariationCharacteristicInput (P:=P)) :
+    PrincipalCanonicalNoetherVariationCharacteristicInput (P:=P) where
+  carrier := D.carrier
+  variation := D.variation
+  noetherConstraintFromAction := D.constraint_eq_canonicalNoether
 
 /-- The literal displayed-action orbit bridge implies the reciprocal character
 required by the previous strongest interface. -/
@@ -18720,6 +18767,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.PrincipalCarrierCharacteristicInput.metricEulerRelativeOrbitResponse_eq_noetherIntegral
 #print axioms RelativeRest.PrincipalCarrierCharacteristicInput.noetherConstraintOperatorFromAction_DA
 #print axioms RelativeRest.PrincipalCarrierCharacteristicInput.noetherConstraintOperatorFromAction_relativeOrbit
+#print axioms RelativeRest.PrincipalDisplayedMetricEulerOrbitVariationCharacteristicInput.constraint_eq_canonicalNoether
 #print axioms RelativeRest.principalDiffeomorphismNoether_decomposition
 #print axioms RelativeRest.principalGeneralizedBianchi_forced_by_diffeomorphism_invariance
 #print axioms RelativeRest.principalMetricEulerDivergence_zero_of_generalizedBianchi_onMaxwellShell
