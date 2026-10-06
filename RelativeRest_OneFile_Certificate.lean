@@ -935,6 +935,20 @@ theorem relativeAction_fixed_point_jet
     relativeActionDefect_zero S, ?_⟩
   exact (relativeActionDefect_hasDerivAt_zero S).deriv
 
+/-- The normalized action defect/value ratio is exactly the rapidity coordinate. -/
+theorem relativeAction_defect_ratio
+    (S s : ℝ) (hS : S ≠ 0) :
+    - relativeActionDefect S s /
+        relativeActionValue S S s =
+      Real.tanh s := by
+  rw [relativeActionValue_diagonal]
+  unfold relativeActionDefect
+  rw [Real.tanh_eq_sinh_div_cosh,
+    Real.sinh_eq, Real.cosh_eq]
+  have hc : Real.cosh s ≠ 0 := ne_of_gt (Real.cosh_pos s)
+  field_simp [hS, hc]
+  ring
+
 abbrev R2 := ℝ × ℝ
 
 /-- Linearized solution residual on the two action-sector coefficients.
@@ -3321,6 +3335,22 @@ theorem defectvelocity_identity
     opticalEval RO (opticalObserver s) / opticalEval TO (opticalObserver s) =
       - carrierOdd η s / carrierEven η s := by
   rw [optical_velocity_ratio s, carrier_ratio η s hη]
+
+
+/-- The explicit reciprocal action, curvature carrier, and operational optical velocity
+are the same projective rapidity observable. -/
+theorem action_carrier_optical_ratio_identity
+    (S η s : ℝ) (hS : S ≠ 0) (hη : η ≠ 0) :
+    - relativeActionDefect S s /
+        relativeActionValue S S s =
+      - carrierOdd η s / carrierEven η s ∧
+    - relativeActionDefect S s /
+        relativeActionValue S S s =
+      opticalEval RO (opticalObserver s) /
+        opticalEval TO (opticalObserver s) := by
+  rw [relativeAction_defect_ratio S s hS,
+    carrier_ratio η s hη,
+    optical_velocity_ratio s]
 
 /-- Normalized optical boost generator, exchanging even and odd basis directions. -/
 def BO (v : R2) : R2 := (v.2, v.1)
@@ -9302,6 +9332,8 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check relativeAction_defect_ratio
+#check action_carrier_optical_ratio_identity
 #check relativeActionValue_exchange
 #check relativeActionValue_deriv_zero
 #check relativeActionValue_diagonal
