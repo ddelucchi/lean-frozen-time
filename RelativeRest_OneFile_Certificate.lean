@@ -8362,6 +8362,154 @@ def kerrChristoffelPartial
   kerrCoordPartial κ
     (fun rr th => kerrChristoffel rr M a Q th ρ μ ν) r θ
 
+/-! ### Local second-derivative transfer on the regular Kerr chart -/
+
+/-- Radial derivative of the simple meridional Christoffel
+`Γ^r_{rθ}=-a² sinθ cosθ/Σ`. -/
+theorem kerrChristoffel_r_rtheta_hasDerivAt_r
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    HasDerivAt
+      (fun x : ℝ => kerrChristoffel x M a Q θ 1 1 2)
+      (2 * a^2 * r * Real.cos θ * Real.sin θ /
+        (Sigma r a θ)^2) r := by
+  have hn :
+      HasDerivAt
+        (fun _ : ℝ => -a^2 * Real.cos θ * Real.sin θ)
+        0 r :=
+    hasDerivAt_const r
+      (-a^2 * Real.cos θ * Real.sin θ)
+  have hreg :=
+    hn.fun_div (Sigma_hasDerivAt_r r a θ) hsig
+  have hreg' :
+      HasDerivAt
+        (fun x : ℝ =>
+          -a^2 * Real.cos θ * Real.sin θ / Sigma x a θ)
+        (2 * a^2 * r * Real.cos θ * Real.sin θ /
+          (Sigma r a θ)^2) r := by
+    convert hreg using 1
+    field_simp [hsig]
+    ring
+  have hS :=
+    (Sigma_hasDerivAt_r r a θ).continuousAt.eventually_ne hsig
+  have hD :=
+    (Delta_hasDerivAt_r r M a Q).continuousAt.eventually_ne hdel
+  have heq :
+      (fun x : ℝ => kerrChristoffel x M a Q θ 1 1 2) =ᶠ[𝓝 r]
+        (fun x : ℝ =>
+          -a^2 * Real.cos θ * Real.sin θ / Sigma x a θ) := by
+    filter_upwards [hS, hD] with x hxS hxD
+    exact kerrChristoffel_r_rtheta x M a Q θ hxS hxD
+  exact hreg'.congr_of_eventuallyEq heq
+
+/-- Polar derivative of `Γ^θ_{rθ}=r/Σ`. -/
+theorem kerrChristoffel_theta_rtheta_hasDerivAt_theta
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    HasDerivAt
+      (fun x : ℝ => kerrChristoffel r M a Q x 2 1 2)
+      (2 * a^2 * r * Real.cos θ * Real.sin θ /
+        (Sigma r a θ)^2) θ := by
+  have hn :
+      HasDerivAt (fun _ : ℝ => r) 0 θ :=
+    hasDerivAt_const θ r
+  have hreg :=
+    hn.fun_div (Sigma_hasDerivAt_theta r a θ) hsig
+  have hreg' :
+      HasDerivAt
+        (fun x : ℝ => r / Sigma r a x)
+        (2 * a^2 * r * Real.cos θ * Real.sin θ /
+          (Sigma r a θ)^2) θ := by
+    convert hreg using 1
+    field_simp [hsig]
+    ring
+  have hS :=
+    (Sigma_hasDerivAt_theta r a θ).continuousAt.eventually_ne hsig
+  have heq :
+      (fun x : ℝ => kerrChristoffel r M a Q x 2 1 2) =ᶠ[𝓝 θ]
+        (fun x : ℝ => r / Sigma r a x) := by
+    filter_upwards [hS] with x hxS
+    exact kerrChristoffel_theta_rtheta
+      r M a Q x hxS hdel
+  exact hreg'.congr_of_eventuallyEq heq
+
+/-- Polar derivative of the radial connection trace `2r/Σ`. -/
+theorem kerrChristoffelTrace_r_hasDerivAt_theta
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    HasDerivAt
+      (fun x : ℝ => kerrChristoffelTrace r M a Q x 1)
+      (4 * a^2 * r * Real.cos θ * Real.sin θ /
+        (Sigma r a θ)^2) θ := by
+  have hn :
+      HasDerivAt (fun _ : ℝ => 2 * r) 0 θ :=
+    hasDerivAt_const θ (2 * r)
+  have hreg :=
+    hn.fun_div (Sigma_hasDerivAt_theta r a θ) hsig
+  have hreg' :
+      HasDerivAt
+        (fun x : ℝ => 2 * r / Sigma r a x)
+        (4 * a^2 * r * Real.cos θ * Real.sin θ /
+          (Sigma r a θ)^2) θ := by
+    convert hreg using 1
+    field_simp [hsig]
+    ring
+  have hS :=
+    (Sigma_hasDerivAt_theta r a θ).continuousAt.eventually_ne hsig
+  have hSin :=
+    (Real.hasDerivAt_sin θ).continuousAt.eventually_ne hsin
+  have heq :
+      (fun x : ℝ => kerrChristoffelTrace r M a Q x 1) =ᶠ[𝓝 θ]
+        (fun x : ℝ => 2 * r / Sigma r a x) := by
+    filter_upwards [hS, hSin] with x hxS hxSin
+    exact kerrChristoffelTrace_r
+      r M a Q x hxS hdel hxSin
+  exact hreg'.congr_of_eventuallyEq heq
+
+/-- The coordinate partials entering `R_{rθ}` are therefore explicit. -/
+theorem kerrChristoffelPartial_r_rtheta
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    kerrChristoffelPartial 1 r M a Q θ 1 1 2 =
+      2 * a^2 * r * Real.cos θ * Real.sin θ /
+        (Sigma r a θ)^2 := by
+  unfold kerrChristoffelPartial kerrCoordPartial
+  simpa using
+    (kerrChristoffel_r_rtheta_hasDerivAt_r
+      r M a Q θ hsig hdel).deriv
+
+theorem kerrChristoffelPartial_theta_rtheta
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    kerrChristoffelPartial 2 r M a Q θ 2 1 2 =
+      2 * a^2 * r * Real.cos θ * Real.sin θ /
+        (Sigma r a θ)^2 := by
+  unfold kerrChristoffelPartial kerrCoordPartial
+  simpa using
+    (kerrChristoffel_theta_rtheta_hasDerivAt_theta
+      r M a Q θ hsig hdel).deriv
+
+theorem kerrChristoffelTracePartial_theta_r
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrCoordPartial 2
+      (fun rr th => kerrChristoffelTrace rr M a Q th 1)
+      r θ =
+      4 * a^2 * r * Real.cos θ * Real.sin θ /
+        (Sigma r a θ)^2 := by
+  unfold kerrCoordPartial
+  simpa using
+    (kerrChristoffelTrace_r_hasDerivAt_theta
+      r M a Q θ hsig hdel hsin).deriv
+
 /-- Coordinate derivatives of odd-parity Christoffels vanish identically as well. -/
 @[simp] theorem kerrChristoffelPartial_zero_of_odd_stationary
     (κ : Fin 4) (r M a Q θ : ℝ)
@@ -8437,6 +8585,60 @@ theorem kerrRicciCovFromMetric_zero_of_odd_stationary
       r M a Q θ μ ν
   rw [hodd] at hp
   linarith
+
+/-! ### Mixed meridional Ricci equation -/
+
+/-- Structural reduction of `R_{rθ}` to the two meridional Christoffels, the two
+connection traces, and the cross-connection contraction. -/
+theorem kerrRicci_rtheta_reduction
+    (r M a Q θ : ℝ) :
+    kerrRicciCovFromMetric r M a Q θ 1 2 =
+      kerrChristoffelPartial 1 r M a Q θ 1 1 2 +
+      kerrChristoffelPartial 2 r M a Q θ 2 1 2 -
+      kerrCoordPartial 2
+        (fun rr th => kerrChristoffelTrace rr M a Q th 1)
+        r θ +
+      kerrChristoffel r M a Q θ 1 1 2 *
+        kerrChristoffelTrace r M a Q θ 1 +
+      kerrChristoffel r M a Q θ 2 1 2 *
+        kerrChristoffelTrace r M a Q θ 2 -
+      kerrConnectionCrossTrace r M a Q θ := by
+  unfold kerrRicciCovFromMetric kerrConnectionCrossTrace
+  simp [kerrStationarySign,
+    kerrChristoffel_zero_of_odd_stationary]
+  ring
+
+/-- The Kerr-Newman metric has identically vanishing mixed meridional Ricci component. -/
+theorem kerrRicci_rtheta_zero
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrRicciCovFromMetric r M a Q θ 1 2 = 0 := by
+  rw [kerrRicci_rtheta_reduction,
+    kerrChristoffelPartial_r_rtheta r M a Q θ hsig hdel,
+    kerrChristoffelPartial_theta_rtheta r M a Q θ hsig hdel,
+    kerrChristoffelTracePartial_theta_r r M a Q θ hsig hdel hsin,
+    kerrChristoffel_r_rtheta r M a Q θ hsig hdel,
+    kerrChristoffel_theta_rtheta r M a Q θ hsig hdel,
+    kerrChristoffelTrace_r r M a Q θ hsig hdel hsin,
+    kerrChristoffelTrace_theta r M a Q θ hsig hdel hsin,
+    kerrConnectionCrossTrace_formula r M a Q θ hsig hdel hsin]
+  field_simp [hsig, hsin]
+  have htrig := Real.sin_sq_add_cos_sq θ
+  unfold Sigma
+  nlinarith
+
+/-- This closes the `rθ` Einstein-Maxwell component because the field-forced target is zero. -/
+theorem kerrRicci_rtheta_eq_target
+    (Q r M a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrRicciCovFromMetric r M a Q θ 1 2 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 1 2 := by
+  rw [kerrRicci_rtheta_zero r M a Q θ hsig hdel hsin]
+  simp [kerrEinsteinTargetRicciCoordinate]
 
 /-! ### Einstein equations already closed by stationary-reflection parity -/
 
@@ -10869,6 +11071,15 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check kerrChristoffel_r_rtheta_hasDerivAt_r
+#check kerrChristoffel_theta_rtheta_hasDerivAt_theta
+#check kerrChristoffelTrace_r_hasDerivAt_theta
+#check kerrChristoffelPartial_r_rtheta
+#check kerrChristoffelPartial_theta_rtheta
+#check kerrChristoffelTracePartial_theta_r
+#check kerrRicci_rtheta_reduction
+#check kerrRicci_rtheta_zero
+#check kerrRicci_rtheta_eq_target
 #check kerrChristoffelTrace
 #check kerrConnectionCrossTrace
 #check kerrChristoffel_r_rtheta
@@ -11612,6 +11823,10 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrRicciCovFromMetric_eq_target_of_odd_stationary
 #print axioms RelativeRest.kerrRicci_stationary_meridional_zero
 #print axioms RelativeRest.kerrRicci_stationary_meridional_eq_target
+#print axioms RelativeRest.kerrChristoffel_r_rtheta_hasDerivAt_r
+#print axioms RelativeRest.kerrChristoffelTrace_r_hasDerivAt_theta
+#print axioms RelativeRest.kerrRicci_rtheta_zero
+#print axioms RelativeRest.kerrRicci_rtheta_eq_target
 #print axioms RelativeRest.kerrCoframe_orthonormal
 #print axioms RelativeRest.kerrEinsteinTargetRicci_trace_zero
 #print axioms RelativeRest.kerrFullRicciEquation_iff_even_obligations
