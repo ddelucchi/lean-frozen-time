@@ -3998,6 +3998,12 @@ theorem relativeSymplecticPlusEval_from_lagrangian
   rw [linearDescendant_reciprocal omegaOfL LG LM s]
   simp [relativeSymplecticPlusEval]
 
+/-- Exchange-odd half-difference selected at the fixed point. -/
+def relativeSymplecticMinusEval
+    (ΩG ΩM : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (x y : V) : ℝ :=
+  (-ΩG x y + ΩM x y) / 2
+
 /-- The odd fixed-point presymplectic descendant is the image of the Lagrangian
 normal jet, up to the universal factor one half. -/
 theorem relativeSymplecticMinus_from_lagrangian_normalJet
@@ -4012,11 +4018,6 @@ theorem relativeSymplecticMinus_from_lagrangian_normalJet
   simp [relativeSymplecticMinusEval]
   ring
 
-/-- Exchange-odd half-difference selected at the fixed point. -/
-def relativeSymplecticMinusEval
-    (ΩG ΩM : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
-    (x y : V) : ℝ :=
-  (-ΩG x y + ΩM x y) / 2
 
 /-- The normal derivative of the even sector sum is exactly twice the odd sector. -/
 theorem relativeSymplecticPlus_hasDerivAt_zero
@@ -9511,6 +9512,38 @@ theorem kerrStationaryA_hasDerivAt_r
     (hasDerivAt_const r (M * a^2 * (Real.cos θ)^2))).sub
     ((hasDerivAt_id r).const_mul (Q^2))) using 1 <;> ring
 
+/-! ### Stationary t-phi connection identities -/
+
+theorem kerrChristoffel_r_tphi
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    kerrChristoffel r M a Q θ 1 0 3 =
+      -a * (Real.sin θ)^2 * Delta r M a Q *
+        kerrStationaryA r M a Q θ / (Sigma r a θ)^3 := by
+  rw [kerrChristoffel_eq_regular r M a Q θ hsig hdel]
+  simp [kerrChristoffelRegular, kerrMetricInv,
+    kerrMetricDerivativeRegular,
+    kerrMetricRadialDerivative, kerrMetricPolarDerivative,
+    kerrStationaryA]
+  field_simp [hsig, hdel]
+  ring
+
+theorem kerrChristoffel_theta_tphi
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    kerrChristoffel r M a Q θ 2 0 3 =
+      a * Real.cos θ * Real.sin θ * (r^2 + a^2) *
+        kerrH r M Q / (Sigma r a θ)^3 := by
+  rw [kerrChristoffel_eq_regular r M a Q θ hsig hdel]
+  simp [kerrChristoffelRegular, kerrMetricInv,
+    kerrMetricDerivativeRegular,
+    kerrMetricRadialDerivative, kerrMetricPolarDerivative,
+    kerrH]
+  field_simp [hsig, hdel]
+  ring
+
 /-! ### Final phi-phi connection remainders -/
 
 def kerrPhiPhiRadialRemainder
@@ -9560,38 +9593,6 @@ theorem kerrChristoffel_theta_phiphi_relation
   have htrig := Real.sin_sq_add_cos_sq θ
   unfold Sigma
   nlinarith
-
-/-! ### Stationary t-phi connection identities -/
-
-theorem kerrChristoffel_r_tphi
-    (r M a Q θ : ℝ)
-    (hsig : Sigma r a θ ≠ 0)
-    (hdel : Delta r M a Q ≠ 0) :
-    kerrChristoffel r M a Q θ 1 0 3 =
-      -a * (Real.sin θ)^2 * Delta r M a Q *
-        kerrStationaryA r M a Q θ / (Sigma r a θ)^3 := by
-  rw [kerrChristoffel_eq_regular r M a Q θ hsig hdel]
-  simp [kerrChristoffelRegular, kerrMetricInv,
-    kerrMetricDerivativeRegular,
-    kerrMetricRadialDerivative, kerrMetricPolarDerivative,
-    kerrStationaryA]
-  field_simp [hsig, hdel]
-  ring
-
-theorem kerrChristoffel_theta_tphi
-    (r M a Q θ : ℝ)
-    (hsig : Sigma r a θ ≠ 0)
-    (hdel : Delta r M a Q ≠ 0) :
-    kerrChristoffel r M a Q θ 2 0 3 =
-      a * Real.cos θ * Real.sin θ * (r^2 + a^2) *
-        kerrH r M Q / (Sigma r a θ)^3 := by
-  rw [kerrChristoffel_eq_regular r M a Q θ hsig hdel]
-  simp [kerrChristoffelRegular, kerrMetricInv,
-    kerrMetricDerivativeRegular,
-    kerrMetricRadialDerivative, kerrMetricPolarDerivative,
-    kerrH]
-  field_simp [hsig, hdel]
-  ring
 
 /-! ### Stationary tt connection identities -/
 
@@ -10080,6 +10081,102 @@ theorem kerrChristoffelTracePartial_r_theta
     (kerrChristoffelTrace_theta_hasDerivAt_r
       r M a Q θ hsig hdel hsin).deriv
 
+/-! ### Stationary t-phi second-derivative transfer -/
+
+theorem kerrChristoffel_r_tphi_hasDerivAt_r
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    HasDerivAt
+      (fun x : ℝ => kerrChristoffel x M a Q θ 1 0 3)
+      (-a * (Real.sin θ)^2 *
+        (((2 * (r - M) * kerrStationaryA r M a Q θ +
+            Delta r M a Q * kerrH r M Q) * Sigma r a θ -
+          6 * r * Delta r M a Q * kerrStationaryA r M a Q θ) /
+            (Sigma r a θ)^4)) r := by
+  have hnum := (Delta_hasDerivAt_r r M a Q).mul
+    (kerrStationaryA_hasDerivAt_r r M a Q θ)
+  have hden := (Sigma_hasDerivAt_r r a θ).pow 3
+  have hquot := hnum.fun_div hden (pow_ne_zero 3 hsig)
+  have hreg := hquot.const_mul (-a * (Real.sin θ)^2)
+  have hreg' :
+      HasDerivAt
+        (fun x : ℝ => -a * (Real.sin θ)^2 * Delta x M a Q *
+          kerrStationaryA x M a Q θ / (Sigma x a θ)^3)
+        (-a * (Real.sin θ)^2 *
+          (((2 * (r - M) * kerrStationaryA r M a Q θ +
+              Delta r M a Q * kerrH r M Q) * Sigma r a θ -
+            6 * r * Delta r M a Q * kerrStationaryA r M a Q θ) /
+              (Sigma r a θ)^4)) r := by
+    convert hreg using 1 <;> field_simp [hsig] <;> ring
+  have hS := (Sigma_hasDerivAt_r r a θ).continuousAt.eventually_ne hsig
+  have hD := (Delta_hasDerivAt_r r M a Q).continuousAt.eventually_ne hdel
+  have heq :
+      (fun x : ℝ => kerrChristoffel x M a Q θ 1 0 3) =ᶠ[𝓝 r]
+        (fun x : ℝ => -a * (Real.sin θ)^2 * Delta x M a Q *
+          kerrStationaryA x M a Q θ / (Sigma x a θ)^3) := by
+    filter_upwards [hS, hD] with x hxS hxD
+    exact kerrChristoffel_r_tphi x M a Q θ hxS hxD
+  exact hreg'.congr_of_eventuallyEq heq
+
+theorem kerrChristoffel_theta_tphi_hasDerivAt_theta
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    HasDerivAt
+      (fun x : ℝ => kerrChristoffel r M a Q x 2 0 3)
+      (a * (r^2 + a^2) * kerrH r M Q *
+        (((Real.cos θ)^2 - (Real.sin θ)^2) * Sigma r a θ +
+          6 * a^2 * (Real.cos θ)^2 * (Real.sin θ)^2) /
+            (Sigma r a θ)^4)) θ := by
+  have hcs := (Real.hasDerivAt_cos θ).mul (Real.hasDerivAt_sin θ)
+  have hnum := hcs.const_mul (a * (r^2 + a^2) * kerrH r M Q)
+  have hden := (Sigma_hasDerivAt_theta r a θ).pow 3
+  have hreg := hnum.fun_div hden (pow_ne_zero 3 hsig)
+  have hreg' :
+      HasDerivAt
+        (fun x : ℝ => a * Real.cos x * Real.sin x * (r^2 + a^2) *
+          kerrH r M Q / (Sigma r a x)^3)
+        (a * (r^2 + a^2) * kerrH r M Q *
+          (((Real.cos θ)^2 - (Real.sin θ)^2) * Sigma r a θ +
+            6 * a^2 * (Real.cos θ)^2 * (Real.sin θ)^2) /
+              (Sigma r a θ)^4)) θ := by
+    convert hreg using 1 <;> field_simp [hsig] <;> ring
+  have hS := (Sigma_hasDerivAt_theta r a θ).continuousAt.eventually_ne hsig
+  have heq :
+      (fun x : ℝ => kerrChristoffel r M a Q x 2 0 3) =ᶠ[𝓝 θ]
+        (fun x : ℝ => a * Real.cos x * Real.sin x * (r^2 + a^2) *
+          kerrH r M Q / (Sigma r a x)^3) := by
+    filter_upwards [hS] with x hxS
+    exact kerrChristoffel_theta_tphi r M a Q x hxS hdel
+  exact hreg'.congr_of_eventuallyEq heq
+
+theorem kerrChristoffelPartial_r_tphi
+    (r M a Q θ : ℝ) (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    kerrChristoffelPartial 1 r M a Q θ 1 0 3 =
+      -a * (Real.sin θ)^2 *
+        (((2 * (r - M) * kerrStationaryA r M a Q θ +
+            Delta r M a Q * kerrH r M Q) * Sigma r a θ -
+          6 * r * Delta r M a Q * kerrStationaryA r M a Q θ) /
+            (Sigma r a θ)^4) := by
+  unfold kerrChristoffelPartial kerrCoordPartial
+  simpa using
+    (kerrChristoffel_r_tphi_hasDerivAt_r r M a Q θ hsig hdel).deriv
+
+theorem kerrChristoffelPartial_theta_tphi
+    (r M a Q θ : ℝ) (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    kerrChristoffelPartial 2 r M a Q θ 2 0 3 =
+      a * (r^2 + a^2) * kerrH r M Q *
+        (((Real.cos θ)^2 - (Real.sin θ)^2) * Sigma r a θ +
+          6 * a^2 * (Real.cos θ)^2 * (Real.sin θ)^2) /
+            (Sigma r a θ)^4) := by
+  unfold kerrChristoffelPartial kerrCoordPartial
+  simpa using
+    (kerrChristoffel_theta_tphi_hasDerivAt_theta
+      r M a Q θ hsig hdel).deriv
+
 /-! ### Final phi-phi derivative transfer -/
 
 theorem kerrPhiPhiRadialRemainder_hasDerivAt_r
@@ -10189,102 +10286,6 @@ theorem kerrChristoffelPartial_theta_phiphi_relation
   have hfinal := hsum.congr_of_eventuallyEq heq.symm
   unfold kerrChristoffelPartial kerrCoordPartial
   convert hfinal.deriv using 1 <;> ring
-
-/-! ### Stationary t-phi second-derivative transfer -/
-
-theorem kerrChristoffel_r_tphi_hasDerivAt_r
-    (r M a Q θ : ℝ)
-    (hsig : Sigma r a θ ≠ 0)
-    (hdel : Delta r M a Q ≠ 0) :
-    HasDerivAt
-      (fun x : ℝ => kerrChristoffel x M a Q θ 1 0 3)
-      (-a * (Real.sin θ)^2 *
-        (((2 * (r - M) * kerrStationaryA r M a Q θ +
-            Delta r M a Q * kerrH r M Q) * Sigma r a θ -
-          6 * r * Delta r M a Q * kerrStationaryA r M a Q θ) /
-            (Sigma r a θ)^4)) r := by
-  have hnum := (Delta_hasDerivAt_r r M a Q).mul
-    (kerrStationaryA_hasDerivAt_r r M a Q θ)
-  have hden := (Sigma_hasDerivAt_r r a θ).pow 3
-  have hquot := hnum.fun_div hden (pow_ne_zero 3 hsig)
-  have hreg := hquot.const_mul (-a * (Real.sin θ)^2)
-  have hreg' :
-      HasDerivAt
-        (fun x : ℝ => -a * (Real.sin θ)^2 * Delta x M a Q *
-          kerrStationaryA x M a Q θ / (Sigma x a θ)^3)
-        (-a * (Real.sin θ)^2 *
-          (((2 * (r - M) * kerrStationaryA r M a Q θ +
-              Delta r M a Q * kerrH r M Q) * Sigma r a θ -
-            6 * r * Delta r M a Q * kerrStationaryA r M a Q θ) /
-              (Sigma r a θ)^4)) r := by
-    convert hreg using 1 <;> field_simp [hsig] <;> ring
-  have hS := (Sigma_hasDerivAt_r r a θ).continuousAt.eventually_ne hsig
-  have hD := (Delta_hasDerivAt_r r M a Q).continuousAt.eventually_ne hdel
-  have heq :
-      (fun x : ℝ => kerrChristoffel x M a Q θ 1 0 3) =ᶠ[𝓝 r]
-        (fun x : ℝ => -a * (Real.sin θ)^2 * Delta x M a Q *
-          kerrStationaryA x M a Q θ / (Sigma x a θ)^3) := by
-    filter_upwards [hS, hD] with x hxS hxD
-    exact kerrChristoffel_r_tphi x M a Q θ hxS hxD
-  exact hreg'.congr_of_eventuallyEq heq
-
-theorem kerrChristoffel_theta_tphi_hasDerivAt_theta
-    (r M a Q θ : ℝ)
-    (hsig : Sigma r a θ ≠ 0)
-    (hdel : Delta r M a Q ≠ 0) :
-    HasDerivAt
-      (fun x : ℝ => kerrChristoffel r M a Q x 2 0 3)
-      (a * (r^2 + a^2) * kerrH r M Q *
-        (((Real.cos θ)^2 - (Real.sin θ)^2) * Sigma r a θ +
-          6 * a^2 * (Real.cos θ)^2 * (Real.sin θ)^2) /
-            (Sigma r a θ)^4)) θ := by
-  have hcs := (Real.hasDerivAt_cos θ).mul (Real.hasDerivAt_sin θ)
-  have hnum := hcs.const_mul (a * (r^2 + a^2) * kerrH r M Q)
-  have hden := (Sigma_hasDerivAt_theta r a θ).pow 3
-  have hreg := hnum.fun_div hden (pow_ne_zero 3 hsig)
-  have hreg' :
-      HasDerivAt
-        (fun x : ℝ => a * Real.cos x * Real.sin x * (r^2 + a^2) *
-          kerrH r M Q / (Sigma r a x)^3)
-        (a * (r^2 + a^2) * kerrH r M Q *
-          (((Real.cos θ)^2 - (Real.sin θ)^2) * Sigma r a θ +
-            6 * a^2 * (Real.cos θ)^2 * (Real.sin θ)^2) /
-              (Sigma r a θ)^4)) θ := by
-    convert hreg using 1 <;> field_simp [hsig] <;> ring
-  have hS := (Sigma_hasDerivAt_theta r a θ).continuousAt.eventually_ne hsig
-  have heq :
-      (fun x : ℝ => kerrChristoffel r M a Q x 2 0 3) =ᶠ[𝓝 θ]
-        (fun x : ℝ => a * Real.cos x * Real.sin x * (r^2 + a^2) *
-          kerrH r M Q / (Sigma r a x)^3) := by
-    filter_upwards [hS] with x hxS
-    exact kerrChristoffel_theta_tphi r M a Q x hxS hdel
-  exact hreg'.congr_of_eventuallyEq heq
-
-theorem kerrChristoffelPartial_r_tphi
-    (r M a Q θ : ℝ) (hsig : Sigma r a θ ≠ 0)
-    (hdel : Delta r M a Q ≠ 0) :
-    kerrChristoffelPartial 1 r M a Q θ 1 0 3 =
-      -a * (Real.sin θ)^2 *
-        (((2 * (r - M) * kerrStationaryA r M a Q θ +
-            Delta r M a Q * kerrH r M Q) * Sigma r a θ -
-          6 * r * Delta r M a Q * kerrStationaryA r M a Q θ) /
-            (Sigma r a θ)^4) := by
-  unfold kerrChristoffelPartial kerrCoordPartial
-  simpa using
-    (kerrChristoffel_r_tphi_hasDerivAt_r r M a Q θ hsig hdel).deriv
-
-theorem kerrChristoffelPartial_theta_tphi
-    (r M a Q θ : ℝ) (hsig : Sigma r a θ ≠ 0)
-    (hdel : Delta r M a Q ≠ 0) :
-    kerrChristoffelPartial 2 r M a Q θ 2 0 3 =
-      a * (r^2 + a^2) * kerrH r M Q *
-        (((Real.cos θ)^2 - (Real.sin θ)^2) * Sigma r a θ +
-          6 * a^2 * (Real.cos θ)^2 * (Real.sin θ)^2) /
-            (Sigma r a θ)^4) := by
-  unfold kerrChristoffelPartial kerrCoordPartial
-  simpa using
-    (kerrChristoffel_theta_tphi_hasDerivAt_theta
-      r M a Q θ hsig hdel).deriv
 
 /-! ### Stationary tt second-derivative transfer -/
 
