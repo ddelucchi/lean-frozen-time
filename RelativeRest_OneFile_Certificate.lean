@@ -2294,6 +2294,52 @@ def RO : R2 := (0, 1)
 def principalThetaPlus : R2 := TO + RO
 def principalThetaMinus : R2 := TO - RO
 
+
+/-- Normalized optical Minkowski bilinear form on the time/radial covector plane. -/
+def opticalBilinear : R2 →ₗ[ℝ] R2 →ₗ[ℝ] ℝ where
+  toFun v :=
+    { toFun := fun w => -v.1 * w.1 + v.2 * w.2
+      map_add' := by
+        intro x y
+        simp
+        ring
+      map_smul' := by
+        intro c x
+        simp
+        ring }
+  map_add' := by
+    intro x y
+    ext w
+    simp
+    ring
+  map_smul' := by
+    intro c x
+    ext w
+    simp
+    ring
+
+/-- The normalized chronometric covector is unit timelike. -/
+@[simp] theorem opticalBilinear_TO :
+    opticalBilinear TO TO = -1 := by
+  norm_num [opticalBilinear, TO]
+
+/-- The normalized radial covector is unit spacelike. -/
+@[simp] theorem opticalBilinear_RO :
+    opticalBilinear RO RO = 1 := by
+  norm_num [opticalBilinear, RO]
+
+/-- Time and radial covectors are orthogonal. -/
+@[simp] theorem opticalBilinear_TO_RO :
+    opticalBilinear TO RO = 0 := by
+  norm_num [opticalBilinear, TO, RO]
+
+/-- The two principal endpoint covectors are exactly null. -/
+theorem principal_endpoint_covectors_null :
+    opticalBilinear principalThetaPlus principalThetaPlus = 0 ∧
+    opticalBilinear principalThetaMinus principalThetaMinus = 0 := by
+  constructor <;> norm_num
+    [opticalBilinear, principalThetaPlus, principalThetaMinus, TO, RO]
+
 /-- Half-sum and half-difference of the principal null endpoints recover exactly the
 chronometric and radial covectors. -/
 theorem principal_endpoint_split :
@@ -3650,6 +3696,32 @@ theorem radialjet_certificate (θ : ℝ) :
   refine ⟨radarRadius_self θ, (principal_endpoint_split).2, RO_ne_zero⟩
 
 
+/-! ### Implicit null-endpoint differentiation algebra -/
+
+section EndpointDifferentiation
+
+variable {W : Type*} [AddCommGroup W] [Module ℝ W]
+
+/-- Linearized endpoint condition
+`d_x σ + σ_θ dΘ = 0` forces the endpoint covector uniquely whenever `σ_θ ≠ 0`. -/
+theorem implicit_endpoint_covector
+    (sigmaX dTheta : W) (sigmaTheta : ℝ)
+    (hden : sigmaTheta ≠ 0)
+    (hlin : sigmaX + sigmaTheta • dTheta = 0) :
+    dTheta = (-sigmaTheta⁻¹) • sigmaX := by
+  have hsd : sigmaTheta • dTheta = -sigmaX :=
+    eq_neg_of_add_eq_zero_left hlin
+  calc
+    dTheta = (sigmaTheta⁻¹ * sigmaTheta) • dTheta := by
+      rw [inv_mul_cancel₀ hden, one_smul]
+    _ = sigmaTheta⁻¹ • (sigmaTheta • dTheta) := by
+      rw [smul_smul]
+    _ = sigmaTheta⁻¹ • (-sigmaX) := by rw [hsd]
+    _ = (-sigmaTheta⁻¹) • sigmaX := by
+      simp
+
+end EndpointDifferentiation
+
 /- Abstract symmetric bilinear form, enough to prove the null sum/difference closure. -/
 section OpticalClosure
 
@@ -3659,6 +3731,29 @@ variable (B : W →ₗ[ℝ] W →ₗ[ℝ] ℝ)
 
 /-- Symmetric bilinear evaluation abbreviation. -/
 def bil (x y : W) : ℝ := B x y
+
+
+/-- Scalar rescaling preserves nullness of a covector. -/
+theorem bil_smul_self
+    (c : ℝ) (x : W) :
+    bil B (c • x) (c • x) = c^2 * bil B x x := by
+  simp [bil, pow_two]
+  ring
+
+/-- Therefore the implicit endpoint covector is null whenever the world-function
+covector entering the endpoint equation is null. -/
+theorem implicit_endpoint_covector_null
+    (hsym : ∀ x y, bil B x y = bil B y x)
+    (sigmaX dTheta : W) (sigmaTheta : ℝ)
+    (hden : sigmaTheta ≠ 0)
+    (hlin : sigmaX + sigmaTheta • dTheta = 0)
+    (hnull : bil B sigmaX sigmaX = 0) :
+    bil B dTheta dTheta = 0 := by
+  have hsolve :=
+    implicit_endpoint_covector sigmaX dTheta sigmaTheta hden hlin
+  rw [hsolve, bil_smul_self]
+  rw [hnull]
+  ring
 
 /-- If `T+R` and `T-R` are both null under a symmetric bilinear form, then `T` and `R` are
 orthogonal. -/
@@ -4808,6 +4903,13 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check opticalBilinear_TO
+#check opticalBilinear_RO
+#check opticalBilinear_TO_RO
+#check principal_endpoint_covectors_null
+#check implicit_endpoint_covector
+#check bil_smul_self
+#check implicit_endpoint_covector_null
 #check relationalObservable_hasDerivAt
 #check relationalObservable_deriv
 #check relationalObservable_gauge_invariant
@@ -5131,6 +5233,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.scalar_backbone
 #print axioms RelativeRest.relationalObservable_gauge_invariant
 #print axioms RelativeRest.relationalObservable_deriv
+#print axioms RelativeRest.implicit_endpoint_covector_null
 #print axioms RelativeRest.primitive_relative_weights_reciprocal_iff_four
 #print axioms RelativeRest.scalar_backbone_from_einstein_maxwell
 #print axioms RelativeRest.rescaled_solution_preserving_iff
