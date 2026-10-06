@@ -6300,6 +6300,208 @@ def kerrPrincipalB (Q r a θ : ℝ) : ℝ :=
   2 * Q * a * r * Real.cos θ / (Sigma r a θ)^2
 
 
+/-! ### Differential Maxwell equations for the explicit Kerr-Newman field -/
+
+/-- Radial derivative of the principal electric field. -/
+theorem kerrPrincipalE_hasDerivAt_r
+    (Q r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    HasDerivAt
+      (fun x : ℝ => kerrPrincipalE Q x a θ)
+      (-2 * Q * r *
+        (r^2 - 3 * a^2 * (Real.cos θ)^2) /
+        (Sigma r a θ)^3) r := by
+  have hn0 :
+      HasDerivAt
+        (fun x : ℝ => x^2 - a^2 * (Real.cos θ)^2)
+        (2 * r) r := by
+    convert ((hasDerivAt_id r).pow 2).sub_const
+      (a^2 * (Real.cos θ)^2) using 1 <;> ring
+  have hn := hn0.const_mul Q
+  have hd := (Sigma_hasDerivAt_r r a θ).pow 2
+  have hraw := hn.fun_div hd (pow_ne_zero 2 hsig)
+  unfold kerrPrincipalE
+  convert hraw using 1
+  field_simp [hsig]
+  unfold Sigma
+  ring
+
+/-- Polar derivative of the principal electric field. -/
+theorem kerrPrincipalE_hasDerivAt_theta
+    (Q r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    HasDerivAt
+      (fun x : ℝ => kerrPrincipalE Q r a x)
+      (2 * Q * a^2 *
+        (3 * r^2 - a^2 * (Real.cos θ)^2) *
+        Real.sin θ * Real.cos θ /
+        (Sigma r a θ)^3) θ := by
+  have hc2 := (Real.hasDerivAt_cos θ).pow 2
+  have hneg :
+      HasDerivAt
+        (fun x : ℝ => -(a^2) * (Real.cos x)^2)
+        (2 * a^2 * Real.cos θ * Real.sin θ) θ := by
+    convert hc2.const_mul (-(a^2)) using 1 <;> ring
+  have hn0 :
+      HasDerivAt
+        (fun x : ℝ => r^2 - a^2 * (Real.cos x)^2)
+        (2 * a^2 * Real.cos θ * Real.sin θ) θ := by
+    simpa [sub_eq_add_neg, mul_assoc] using hneg.const_add (r^2)
+  have hn := hn0.const_mul Q
+  have hd := (Sigma_hasDerivAt_theta r a θ).pow 2
+  have hraw := hn.fun_div hd (pow_ne_zero 2 hsig)
+  unfold kerrPrincipalE
+  convert hraw using 1
+  field_simp [hsig]
+  unfold Sigma
+  ring
+
+/-- Radial derivative of the principal magnetic field. -/
+theorem kerrPrincipalB_hasDerivAt_r
+    (Q r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    HasDerivAt
+      (fun x : ℝ => kerrPrincipalB Q x a θ)
+      (-2 * Q * a *
+        (3 * r^2 - a^2 * (Real.cos θ)^2) *
+        Real.cos θ /
+        (Sigma r a θ)^3) r := by
+  have hn :
+      HasDerivAt
+        (fun x : ℝ =>
+          (2 * Q * a * Real.cos θ) * x)
+        (2 * Q * a * Real.cos θ) r :=
+    (hasDerivAt_id r).const_mul
+      (2 * Q * a * Real.cos θ)
+  have hd := (Sigma_hasDerivAt_r r a θ).pow 2
+  have hraw := hn.fun_div hd (pow_ne_zero 2 hsig)
+  unfold kerrPrincipalB
+  convert hraw using 1
+  field_simp [hsig]
+  unfold Sigma
+  ring
+
+/-- Polar derivative of the principal magnetic field. -/
+theorem kerrPrincipalB_hasDerivAt_theta
+    (Q r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    HasDerivAt
+      (fun x : ℝ => kerrPrincipalB Q r a x)
+      (-2 * Q * a * r *
+        (r^2 - 3 * a^2 * (Real.cos θ)^2) *
+        Real.sin θ /
+        (Sigma r a θ)^3) θ := by
+  have hn :=
+    (Real.hasDerivAt_cos θ).const_mul
+      (2 * Q * a * r)
+  have hd := (Sigma_hasDerivAt_theta r a θ).pow 2
+  have hraw := hn.fun_div hd (pow_ne_zero 2 hsig)
+  unfold kerrPrincipalB
+  convert hraw using 1
+  field_simp [hsig]
+  unfold Sigma
+  ring
+
+/-- Densitized raised radial-time component
+`sqrt(-g) F^{rt}=-(r²+a²) sinθ E`. -/
+def kerrDensitizedFrt (Q r a θ : ℝ) : ℝ :=
+  -(r^2 + a^2) * Real.sin θ *
+    kerrPrincipalE Q r a θ
+
+/-- Densitized raised polar-time component
+`sqrt(-g) F^{θt}=a sin²θ B`. -/
+def kerrDensitizedFthetaT (Q r a θ : ℝ) : ℝ :=
+  a * (Real.sin θ)^2 * kerrPrincipalB Q r a θ
+
+/-- Densitized raised radial-azimuthal component
+`sqrt(-g) F^{rφ}=-a sinθ E`. -/
+def kerrDensitizedFrPhi (Q r a θ : ℝ) : ℝ :=
+  -a * Real.sin θ * kerrPrincipalE Q r a θ
+
+/-- Densitized raised polar-azimuthal component
+`sqrt(-g) F^{θφ}=B`. -/
+def kerrDensitizedFthetaPhi (Q r a θ : ℝ) : ℝ :=
+  kerrPrincipalB Q r a θ
+
+/-- Radial derivative of the densitized time flux. -/
+theorem kerrDensitizedFrt_hasDerivAt_r
+    (Q r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    HasDerivAt
+      (fun x : ℝ => kerrDensitizedFrt Q x a θ)
+      ((-2 * r * Real.sin θ) *
+          kerrPrincipalE Q r a θ +
+        (-(r^2 + a^2) * Real.sin θ) *
+          (-2 * Q * r *
+            (r^2 - 3 * a^2 * (Real.cos θ)^2) /
+            (Sigma r a θ)^3)) r := by
+  have hc0 :
+      HasDerivAt
+        (fun x : ℝ => -(x^2 + a^2) * Real.sin θ)
+        (-2 * r * Real.sin θ) r := by
+    have hsq := (hasDerivAt_id r).pow 2
+    have hadd := hsq.add_const (a^2)
+    convert hadd.neg.mul_const (Real.sin θ) using 1 <;> ring
+  have hE := kerrPrincipalE_hasDerivAt_r Q r a θ hsig
+  simpa [kerrDensitizedFrt] using hc0.mul hE
+
+/-- Polar derivative of the densitized time flux. -/
+theorem kerrDensitizedFthetaT_hasDerivAt_theta
+    (Q r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    HasDerivAt
+      (fun x : ℝ => kerrDensitizedFthetaT Q r a x)
+      ((2 * a * Real.sin θ * Real.cos θ) *
+          kerrPrincipalB Q r a θ +
+        (a * (Real.sin θ)^2) *
+          (-2 * Q * a * r *
+            (r^2 - 3 * a^2 * (Real.cos θ)^2) *
+            Real.sin θ /
+            (Sigma r a θ)^3)) θ := by
+  have hs2 := (Real.hasDerivAt_sin θ).pow 2
+  have hc :
+      HasDerivAt
+        (fun x : ℝ => a * (Real.sin x)^2)
+        (2 * a * Real.sin θ * Real.cos θ) θ := by
+    convert hs2.const_mul a using 1 <;> ring
+  have hB := kerrPrincipalB_hasDerivAt_theta Q r a θ hsig
+  simpa [kerrDensitizedFthetaT] using hc.mul hB
+
+/-- First nontrivial source-free Maxwell equation in Boyer-Lindquist coordinates. -/
+theorem kerrMaxwell_divergence_t
+    (Q r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    deriv (fun x : ℝ => kerrDensitizedFrt Q x a θ) r +
+      deriv (fun x : ℝ => kerrDensitizedFthetaT Q r a x) θ = 0 := by
+  rw [(kerrDensitizedFrt_hasDerivAt_r Q r a θ hsig).deriv,
+      (kerrDensitizedFthetaT_hasDerivAt_theta
+        Q r a θ hsig).deriv]
+  unfold kerrPrincipalE kerrPrincipalB
+  have htrig :
+      (Real.sin θ)^2 = 1 - (Real.cos θ)^2 := by
+    nlinarith [Real.sin_sq_add_cos_sq θ]
+  rw [htrig]
+  field_simp [hsig]
+  unfold Sigma
+  ring
+
+/-- Second nontrivial source-free Maxwell equation in Boyer-Lindquist coordinates. -/
+theorem kerrMaxwell_divergence_phi
+    (Q r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    deriv (fun x : ℝ => kerrDensitizedFrPhi Q x a θ) r +
+      deriv (fun x : ℝ => kerrDensitizedFthetaPhi Q r a x) θ = 0 := by
+  have hr :
+      HasDerivAt
+        (fun x : ℝ => kerrDensitizedFrPhi Q x a θ)
+        ((-a * Real.sin θ) *
+          (-2 * Q * r *
+            (r^2 - 3 * a^2 * (Real.cos θ)^2) /
+            (Sigma r a θ)^3)) r := by
+    simpa [kerrDensitizedFrPhi] using
+      (kerrPrincipalE_hasDerivAt_r Q r a θ hsig).const_mul
+        (-a * Real.sin θ)
+  have hth :=
+    kerrPrincipalB_hasDerivAt_theta Q r a θ hsig
+  rw [hr.deriv, hth.deriv]
+  unfold kerrPrincipalE kerrPrincipalB
+  field_simp [hsig]
+  unfold Sigma
+  ring
+
+
 /-- The radial derivative of `A_t` is exactly the principal electric coefficient. -/
 theorem kerrPotentialT_hasDerivAt_r
     (Q r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
@@ -8185,6 +8387,12 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check kerrPrincipalE_hasDerivAt_r
+#check kerrPrincipalE_hasDerivAt_theta
+#check kerrPrincipalB_hasDerivAt_r
+#check kerrPrincipalB_hasDerivAt_theta
+#check kerrMaxwell_divergence_t
+#check kerrMaxwell_divergence_phi
 #check principalRicciFromF_eq_Einstein
 #check principalRicciFromEinstein_trace_zero
 #check principalEinsteinTensorFromF_eq_stress
@@ -8772,6 +8980,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrNewman_mino_clock_from_principal_EM
 #print axioms RelativeRest.kerrMinoClockFromPrincipalEM
 #print axioms RelativeRest.kerrPotential_field_factorization
+#print axioms RelativeRest.kerrMaxwell_divergence_t
+#print axioms RelativeRest.kerrMaxwell_divergence_phi
 #print axioms RelativeRest.kerrCoordinateField_eq_CarterCoframe
 #print axioms RelativeRest.kerrPotential_to_CarterPrincipalField
 #print axioms RelativeRest.kerrPotential_metric_principal_alignment
