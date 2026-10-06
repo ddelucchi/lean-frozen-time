@@ -17316,6 +17316,76 @@ def PrincipalLocalNoetherVariationCharacteristicInput.characteristicCurrent
     (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
   D.toDisplayedOrbitInput.characteristicCurrent
 
+/-- The actual compensated Iyer-Wald current on the full relative action orbit
+is forced directly by locality and the local diffeomorphism derivative pairing.
+Neither a preferred symplectic-potential representative nor a preferred Noether
+charge representative appears in the result. -/
+theorem PrincipalLocalNoetherVariationCharacteristicInput.compensatedOrbit_forced_from_localNoether
+    (D : PrincipalLocalNoetherVariationCharacteristicInput (P:=P))
+    (s : ℝ) (v : Fin 4 → ℝ) :
+    D.variation.omegaXY (actionBoost s CA) v +
+        D.variation.dB (actionBoost s CA) v =
+      D.carrier.metricEulerRelativeOrbitResponse s v := by
+  have hcomp :=
+    D.variation.compensated_eq_constraint (actionBoost s CA)
+  have hcompv := congrArg
+    (fun F : (Fin 4 → ℝ) →ₗ[ℝ] ℝ => F v) hcomp
+  calc
+    D.variation.omegaXY (actionBoost s CA) v +
+        D.variation.dB (actionBoost s CA) v =
+      D.variation.constraint (actionBoost s CA) v := by
+        simpa using hcompv
+    _ = relativeConstraintOrbitEval D.variation.constraint v s := rfl
+    _ = D.carrier.metricEulerRelativeOrbitResponse s v :=
+      D.constraintOrbit_forced s v
+
+/-- At the frozen point, the exchange-odd normal picks out exactly the manuscript
+bulk bridge
+`ω_IW(X_ξ,Y)+dB_Y[ξ]=(8π)⁻¹ i_{J(ξ)} ε`.
+The right side is the literal action-derived Noether jet current. -/
+theorem PrincipalLocalNoetherVariationCharacteristicInput.compensatedNormal_forced_from_action
+    (D : PrincipalLocalNoetherVariationCharacteristicInput (P:=P))
+    (v : Fin 4 → ℝ) :
+    D.variation.omegaXY DA v + D.variation.dB DA v =
+      D.carrier.iε
+        (principalMetricEulerNoetherJetLinear
+          D.carrier.E D.carrier.B v) := by
+  have hcomp := D.variation.compensated_eq_constraint DA
+  have hcompv := congrArg
+    (fun F : (Fin 4 → ℝ) →ₗ[ℝ] ℝ => F v) hcomp
+  have hC :
+      D.variation.constraint =
+        D.carrier.noetherConstraintOperatorFromAction :=
+    D.toDisplayedOrbitInput.constraint_eq_canonicalNoether
+  have hDA :=
+    D.carrier.noetherConstraintOperatorFromAction_DA
+  have hDAv := congrArg
+    (fun F : (Fin 4 → ℝ) →ₗ[ℝ] ℝ => F v) hDA
+  calc
+    D.variation.omegaXY DA v + D.variation.dB DA v =
+      D.variation.constraint DA v := by simpa using hcompv
+    _ = D.carrier.noetherConstraintOperatorFromAction DA v := by
+      rw [hC]
+    _ = D.carrier.iε
+        (principalMetricEulerNoetherJetLinear
+          D.carrier.E D.carrier.B v) := by
+      simpa using hDAv
+
+/-- Therefore the characteristic clock covector is exactly negative one half of the
+action-derived compensated Iyer-Wald normal current, with no boundary-representative
+ambiguity. -/
+theorem PrincipalLocalNoetherVariationCharacteristicInput.characteristicCurrent_eq_neg_half_compensatedNormal
+    (D : PrincipalLocalNoetherVariationCharacteristicInput (P:=P)) :
+    D.characteristicCurrent =
+      (-1 / 2 : ℝ) •
+        (D.carrier.iε.comp
+          (principalMetricEulerNoetherJetLinear
+            D.carrier.E D.carrier.B)) := by
+  rw [PrincipalLocalNoetherVariationCharacteristicInput.characteristicCurrent]
+  rw [principalDisplayedMetricEulerOrbitVariation_current_eq_metricEulerResponse]
+  exact
+    D.carrier.metricEulerJetResponse_eq_neg_half_noetherIntegral
+
 /-- Strong forced-core theorem sourced only at locality of the covariant constraint
 and the local derivative-of-diffeomorphism Noether pairing.  The global relative
 orbit, canonical coefficient, sector signs, Iyer-Wald compensation, quotient
@@ -19900,6 +19970,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.PrincipalDisplayedMetricEulerOrbitVariationCharacteristicInput.constraint_eq_canonicalNoether
 #print axioms RelativeRest.PrincipalLocalNoetherVariationCharacteristicInput.bulkCoeff_forced
 #print axioms RelativeRest.PrincipalLocalNoetherVariationCharacteristicInput.constraintOrbit_forced
+#print axioms RelativeRest.PrincipalLocalNoetherVariationCharacteristicInput.compensatedOrbit_forced_from_localNoether
+#print axioms RelativeRest.PrincipalLocalNoetherVariationCharacteristicInput.compensatedNormal_forced_from_action
+#print axioms RelativeRest.PrincipalLocalNoetherVariationCharacteristicInput.characteristicCurrent_eq_neg_half_compensatedNormal
 #print axioms RelativeRest.principalLocalNoether_forced_core_chain
 #print axioms RelativeRest.principalCanonicalNoether_forced_core_chain
 #print axioms RelativeRest.principalCanonicalCompleted_forced_core_chain
