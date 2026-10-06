@@ -2828,9 +2828,10 @@ theorem Sigma_eq_zero_iff (r a θ : ℝ) :
     exact ⟨sq_eq_zero_iff.mp hr2, sq_eq_zero_iff.mp ha2⟩
   · rintro ⟨rfl, ha⟩
     unfold Sigma
-    have : a^2 * (Real.cos θ)^2 = 0 := by
-      nlinarith [sq_nonneg (a * Real.cos θ)]
-    simp [this]
+    have ha2 : (a * Real.cos θ)^2 = 0 := by
+      rw [ha]
+      norm_num
+    nlinarith
 
 
 
@@ -3132,6 +3133,69 @@ theorem extensionalBridge_quotient_finrank_one
       ((LinearMap.range D.beta) ⧸ LinearMap.ker D.Lambda) = 1 :=
   clockQuotient_finrank_one D.Lambda (extensionalBridge_Lambda_nonzero D)
 
+/-- Maxwell-specialized bridge data: positivity is no longer supplied as an abstract witness.
+It is forced by the explicit positive Maxwell response on one positive test profile. -/
+structure MaxwellBridgeData where
+  beta : P →ₗ[ℝ] KSpace
+  ell : P →ₗ[ℝ] ℝ
+  response_extensional : ∀ p q : P, beta p = beta q → ell p = ell q
+  positiveWitness : P
+  smear : ℝ
+  chi : ℝ
+  volume : ℝ
+  smear_pos : 0 < smear
+  chi_pos : 0 < chi
+  volume_pos : 0 < volume
+  response_formula :
+    ell positiveWitness = maxwellPositiveResponse smear chi volume
+
+theorem MaxwellBridgeData.response_positive
+    (D : MaxwellBridgeData (P:=P) (KSpace:=KSpace)) :
+    0 < D.ell D.positiveWitness := by
+  rw [D.response_formula]
+  exact maxwellPositiveResponse_pos
+    D.smear D.chi D.volume D.smear_pos D.chi_pos D.volume_pos
+
+theorem MaxwellBridgeData.kernel_invisible
+    (D : MaxwellBridgeData (P:=P) (KSpace:=KSpace)) :
+    LinearMap.ker D.beta ≤ LinearMap.ker D.ell :=
+  kernel_invisible_of_response_extensional
+    D.beta D.ell D.response_extensional
+
+/-- The Einstein-Maxwell characteristic clock covector is therefore a construction, not input data. -/
+noncomputable def MaxwellBridgeData.Lambda
+    (D : MaxwellBridgeData (P:=P) (KSpace:=KSpace)) :
+    LinearMap.range D.beta →ₗ[ℝ] ℝ :=
+  characteristicCovectorOfKernel D.beta D.ell D.kernel_invisible
+
+theorem maxwellBridge_factorization
+    (D : MaxwellBridgeData (P:=P) (KSpace:=KSpace)) :
+    D.Lambda.comp D.beta.rangeRestrict = D.ell :=
+  characteristicCovectorOfKernel_factorization
+    D.beta D.ell D.kernel_invisible
+
+theorem maxwellBridge_Lambda_nonzero
+    (D : MaxwellBridgeData (P:=P) (KSpace:=KSpace)) :
+    D.Lambda ≠ 0 := by
+  exact descended_covector_nonzero
+    D.beta.rangeRestrict D.Lambda D.ell
+    (maxwellBridge_factorization D)
+    (covector_nonzero_of_positive D.ell D.positiveWitness D.response_positive)
+
+theorem maxwellBridge_Lambda_unique
+    (D : MaxwellBridgeData (P:=P) (KSpace:=KSpace))
+    (Λ' : LinearMap.range D.beta →ₗ[ℝ] ℝ)
+    (hΛ' : Λ'.comp D.beta.rangeRestrict = D.ell) :
+    Λ' = D.Lambda :=
+  characteristicCovectorOfKernel_unique
+    D.beta D.ell D.kernel_invisible Λ' hΛ'
+
+theorem maxwellBridge_quotient_finrank_one
+    (D : MaxwellBridgeData (P:=P) (KSpace:=KSpace)) :
+    Module.finrank ℝ
+      ((LinearMap.range D.beta) ⧸ LinearMap.ker D.Lambda) = 1 :=
+  clockQuotient_finrank_one D.Lambda (maxwellBridge_Lambda_nonzero D)
+
 end GeometricInterface
 
 /-! ## 19. End-to-end dependency record -/
@@ -3177,6 +3241,13 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check MaxwellBridgeData.response_positive
+#check MaxwellBridgeData.kernel_invisible
+#check MaxwellBridgeData.Lambda
+#check maxwellBridge_factorization
+#check maxwellBridge_Lambda_nonzero
+#check maxwellBridge_Lambda_unique
+#check maxwellBridge_quotient_finrank_one
 #check Sigma_nonneg
 #check Sigma_eq_zero_iff
 #check kerrChiScalar_pos
@@ -3376,6 +3447,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.boost_balance_exists_unique_of_nonnull
 #print axioms RelativeRest.rapidity_forced_by_normalized_boost
 #print axioms RelativeRest.extensionalBridge_Lambda_unique
+#print axioms RelativeRest.maxwellBridge_Lambda_unique
 #print axioms RelativeRest.causal_extended_endpoints_mono
 #print axioms RelativeRest.kerrLogChi_hasDerivAt_r
 #print axioms RelativeRest.kerrNewman_mino_clock_forced
