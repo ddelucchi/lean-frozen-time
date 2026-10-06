@@ -8401,14 +8401,15 @@ def kerrChristoffelPartial
 def kerrRicciCovFromMetric
     (r M a Q θ : ℝ)
     (μ ν : Fin 4) : ℝ :=
-  ∑ ρ : Fin 4,
-    (kerrChristoffelPartial ρ r M a Q θ ρ μ ν -
-     kerrChristoffelPartial ν r M a Q θ ρ μ ρ +
+  (∑ ρ : Fin 4,
+    (kerrChristoffelPartial ρ r M a Q θ ρ μ ν +
+     kerrChristoffel r M a Q θ ρ μ ν *
+       kerrChristoffelTrace r M a Q θ ρ -
      ∑ σ : Fin 4,
-       (kerrChristoffel r M a Q θ ρ μ ν *
-          kerrChristoffel r M a Q θ σ ρ σ -
-        kerrChristoffel r M a Q θ σ μ ρ *
-          kerrChristoffel r M a Q θ ρ ν σ))
+       kerrChristoffel r M a Q θ σ μ ρ *
+         kerrChristoffel r M a Q θ ρ ν σ)) -
+  kerrCoordPartial ν
+    (fun rr th => kerrChristoffelTrace rr M a Q th μ) r θ
 
 
 /-- The metric-derived Ricci tensor inherits stationary-reflection parity. -/
