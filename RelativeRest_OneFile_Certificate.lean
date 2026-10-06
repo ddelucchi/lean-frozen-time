@@ -8259,6 +8259,41 @@ def kerrChristoffelPartial
   kerrCoordPartial κ
     (fun rr th => kerrChristoffel rr M a Q th ρ μ ν) r θ
 
+/-- Coordinate derivatives of odd-parity Christoffels vanish identically as well. -/
+@[simp] theorem kerrChristoffelPartial_zero_of_odd_stationary
+    (κ : Fin 4) (r M a Q θ : ℝ)
+    (ρ μ ν : Fin 4)
+    (hodd :
+      kerrStationarySign ρ *
+        kerrStationarySign μ *
+        kerrStationarySign ν = -1) :
+    kerrChristoffelPartial κ r M a Q θ ρ μ ν = 0 := by
+  unfold kerrChristoffelPartial kerrCoordPartial
+  by_cases h1 : κ = 1
+  · rw [if_pos h1]
+    have hfun :
+        (fun x : ℝ =>
+          kerrChristoffel x M a Q θ ρ μ ν) =
+        (fun _ : ℝ => 0) := by
+      funext x
+      exact kerrChristoffel_zero_of_odd_stationary
+        x M a Q θ ρ μ ν hodd
+    rw [hfun]
+    simp
+  · rw [if_neg h1]
+    by_cases h2 : κ = 2
+    · rw [if_pos h2]
+      have hfun :
+          (fun x : ℝ =>
+            kerrChristoffel r M a Q x ρ μ ν) =
+          (fun _ : ℝ => 0) := by
+        funext x
+        exact kerrChristoffel_zero_of_odd_stationary
+          r M a Q x ρ μ ν hodd
+      rw [hfun]
+      simp
+    · rw [if_neg h2]
+
 /-- Ricci tensor obtained by contracting the standard coordinate Riemann formula. -/
 def kerrRicciCovFromMetric
     (r M a Q θ : ℝ)
@@ -8271,6 +8306,33 @@ def kerrRicciCovFromMetric
           kerrChristoffel r M a Q θ σ ρ σ -
         kerrChristoffel r M a Q θ σ μ ρ *
           kerrChristoffel r M a Q θ ρ ν σ))
+
+
+/-- The metric-derived Ricci tensor inherits stationary-reflection parity. -/
+theorem kerrRicciCovFromMetric_stationary_parity
+    (r M a Q θ : ℝ)
+    (μ ν : Fin 4) :
+    kerrStationarySign μ *
+        kerrStationarySign ν *
+        kerrRicciCovFromMetric r M a Q θ μ ν =
+      kerrRicciCovFromMetric r M a Q θ μ ν := by
+  fin_cases μ <;> fin_cases ν <;>
+    simp [kerrStationarySign, kerrRicciCovFromMetric,
+      kerrChristoffel_zero_of_odd_stationary] <;> ring
+
+/-- Therefore every stationary-meridional Ricci cross component vanishes identically. -/
+theorem kerrRicciCovFromMetric_zero_of_odd_stationary
+    (r M a Q θ : ℝ)
+    (μ ν : Fin 4)
+    (hodd :
+      kerrStationarySign μ *
+        kerrStationarySign ν = -1) :
+    kerrRicciCovFromMetric r M a Q θ μ ν = 0 := by
+  have hp :=
+    kerrRicciCovFromMetric_stationary_parity
+      r M a Q θ μ ν
+  rw [hodd] at hp
+  linarith
 
 /-- Scalar curvature computed from the metric-derived Ricci tensor. -/
 def kerrScalarCurvatureFromMetric
@@ -10483,6 +10545,9 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check kerrChristoffelPartial_zero_of_odd_stationary
+#check kerrRicciCovFromMetric_stationary_parity
+#check kerrRicciCovFromMetric_zero_of_odd_stationary
 #check kerrStationarySign
 #check kerrChristoffel_stationary_parity
 #check kerrChristoffel_zero_of_odd_stationary
@@ -11196,6 +11261,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrChristoffel_lower_symmetric
 #print axioms RelativeRest.kerrChristoffel_stationary_parity
 #print axioms RelativeRest.kerrChristoffel_zero_of_odd_stationary
+#print axioms RelativeRest.kerrChristoffelPartial_zero_of_odd_stationary
+#print axioms RelativeRest.kerrRicciCovFromMetric_stationary_parity
+#print axioms RelativeRest.kerrRicciCovFromMetric_zero_of_odd_stationary
 #print axioms RelativeRest.kerrCoframe_orthonormal
 #print axioms RelativeRest.kerrEinsteinTargetRicci_trace_zero
 #print axioms RelativeRest.kerrEinsteinTargetRicciCov_eq_coordinate
