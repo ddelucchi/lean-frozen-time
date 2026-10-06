@@ -177,6 +177,69 @@ def gravScaleExponent (D : ℝ) : ℝ := D - 2
 def maxwellMetricScaleExponent (D : ℝ) : ℝ := D - 4
 
 
+/-! ### Primitive homothety count behind the action weights -/
+
+/-- Volume density weight under `g ↦ ρ²g`. -/
+def volumeHomothetyExponent (D : ℝ) : ℝ := D
+
+/-- Scalar-curvature weight under a constant homothety. -/
+def scalarCurvatureHomothetyExponent : ℝ := -2
+
+/-- Each inverse metric contributes `ρ⁻²`; Maxwell `F²` contains two inverse metrics. -/
+def maxwellInverseMetricExponent : ℝ := -4
+
+/-- The quadratic Maxwell density carries two powers of the potential/field scaling `λ`. -/
+def maxwellFieldAmplitudeExponent : ℝ := 2
+
+/-- The Einstein-Hilbert density weight `D-2` is exactly volume plus scalar-curvature weight. -/
+theorem gravScaleExponent_from_primitive_weights (D : ℝ) :
+    gravScaleExponent D =
+      volumeHomothetyExponent D + scalarCurvatureHomothetyExponent := by
+  simp [gravScaleExponent, volumeHomothetyExponent,
+    scalarCurvatureHomothetyExponent]
+  ring
+
+/-- The Maxwell metric weight `D-4` is exactly volume plus the two inverse-metric weights. -/
+theorem maxwellMetricScaleExponent_from_primitive_weights (D : ℝ) :
+    maxwellMetricScaleExponent D =
+      volumeHomothetyExponent D + maxwellInverseMetricExponent := by
+  simp [maxwellMetricScaleExponent, volumeHomothetyExponent,
+    maxwellInverseMetricExponent]
+  ring
+
+/-- After `ρ=e^{(u-s)/2}`, the gravity relative exponent is forced by the primitive weights. -/
+theorem gravity_relative_weight_from_primitive_counts (D : ℝ) :
+    (volumeHomothetyExponent D + scalarCurvatureHomothetyExponent) *
+        (-1 / 2 : ℝ) =
+      wG D := by
+  simp [volumeHomothetyExponent, scalarCurvatureHomothetyExponent, wG]
+  ring
+
+/-- After `ρ=e^{(u-s)/2}`, `λ=e^{(u+s)/2}`, the Maxwell relative exponent is
+forced by metric and field-amplitude counts. -/
+theorem maxwell_relative_weight_from_primitive_counts (D : ℝ) :
+    (volumeHomothetyExponent D + maxwellInverseMetricExponent) *
+          (-1 / 2 : ℝ) +
+        maxwellFieldAmplitudeExponent * (1 / 2 : ℝ) =
+      wM D := by
+  simp [volumeHomothetyExponent, maxwellInverseMetricExponent,
+    maxwellFieldAmplitudeExponent, wM]
+  ring
+
+/-- Thus primitive homothety counting itself yields reciprocal relative action weights
+if and only if `D=4`. -/
+theorem primitive_relative_weights_reciprocal_iff_four (D : ℝ) :
+    (volumeHomothetyExponent D + scalarCurvatureHomothetyExponent) *
+        (-1 / 2 : ℝ) =
+      -((volumeHomothetyExponent D + maxwellInverseMetricExponent) *
+          (-1 / 2 : ℝ) +
+        maxwellFieldAmplitudeExponent * (1 / 2 : ℝ)) ↔
+      D = 4 := by
+  rw [gravity_relative_weight_from_primitive_counts,
+    maxwell_relative_weight_from_primitive_counts]
+  exact reciprocal_weights_iff_four D
+
+
 /-- Conformal weight of the Hodge star on a p-form under `g ↦ Ω²g`. -/
 def hodgeConformalExponent (D p : ℝ) : ℝ := D - 2 * p
 
@@ -4250,6 +4313,11 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check gravScaleExponent_from_primitive_weights
+#check maxwellMetricScaleExponent_from_primitive_weights
+#check gravity_relative_weight_from_primitive_counts
+#check maxwell_relative_weight_from_primitive_counts
+#check primitive_relative_weights_reciprocal_iff_four
 #check lambdaUS_div_rhoUS
 #check maxwellStressScaleFactor_US
 #check rescaled_field_equation_weight
@@ -4528,6 +4596,7 @@ end RelativeRest
 /-! Kernel axiom audit. These commands are executable and are intentionally part of the build
 transcript: they expose every axiom used by representative end-to-end theorems. -/
 #print axioms RelativeRest.scalar_backbone
+#print axioms RelativeRest.primitive_relative_weights_reciprocal_iff_four
 #print axioms RelativeRest.scalar_backbone_from_einstein_maxwell
 #print axioms RelativeRest.rescaled_solution_preserving_iff
 #print axioms RelativeRest.characteristic_half_contraction_from_relative_scaling
