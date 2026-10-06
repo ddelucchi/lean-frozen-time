@@ -8691,6 +8691,52 @@ theorem kerrChristoffelTracePartial_r_theta
       simp
     · rw [if_neg h2]
 
+/-- Coordinate differentiation preserves the symmetry of the two lower Christoffel indices. -/
+theorem kerrChristoffelPartial_lower_symmetric
+    (κ : Fin 4) (r M a Q θ : ℝ)
+    (ρ μ ν : Fin 4) :
+    kerrChristoffelPartial κ r M a Q θ ρ μ ν =
+      kerrChristoffelPartial κ r M a Q θ ρ ν μ := by
+  unfold kerrChristoffelPartial kerrCoordPartial
+  by_cases h1 : κ = 1
+  · rw [if_pos h1]
+    have hfun :
+        (fun x : ℝ => kerrChristoffel x M a Q θ ρ μ ν) =
+          (fun x : ℝ => kerrChristoffel x M a Q θ ρ ν μ) := by
+      funext x
+      exact kerrChristoffel_lower_symmetric x M a Q θ ρ μ ν
+    rw [hfun]
+  · rw [if_neg h1]
+    by_cases h2 : κ = 2
+    · rw [if_pos h2]
+      have hfun :
+          (fun x : ℝ => kerrChristoffel r M a Q x ρ μ ν) =
+            (fun x : ℝ => kerrChristoffel r M a Q x ρ ν μ) := by
+        funext x
+        exact kerrChristoffel_lower_symmetric r M a Q x ρ μ ν
+      rw [hfun]
+    · rw [if_neg h2]
+
+/-- Quadratic connection contraction in the coordinate Ricci tensor. -/
+def kerrConnectionProductTrace
+    (r M a Q θ : ℝ) (μ ν : Fin 4) : ℝ :=
+  ∑ ρ : Fin 4, ∑ σ : Fin 4,
+    kerrChristoffel r M a Q θ σ μ ρ *
+      kerrChristoffel r M a Q θ ρ ν σ
+
+/-- The quadratic Ricci contraction is symmetric in its two free lower indices. -/
+theorem kerrConnectionProductTrace_symmetric
+    (r M a Q θ : ℝ) (μ ν : Fin 4) :
+    kerrConnectionProductTrace r M a Q θ μ ν =
+      kerrConnectionProductTrace r M a Q θ ν μ := by
+  unfold kerrConnectionProductTrace
+  rw [Finset.sum_comm]
+  apply Finset.sum_congr rfl
+  intro σ hσ
+  apply Finset.sum_congr rfl
+  intro ρ hρ
+  ring
+
 /-- Ricci tensor obtained by contracting the standard coordinate Riemann formula. -/
 def kerrRicciCovFromMetric
     (r M a Q θ : ℝ)
@@ -8705,6 +8751,49 @@ def kerrRicciCovFromMetric
   kerrCoordPartial ν
     (fun rr th => kerrChristoffelTrace rr M a Q th μ) r θ
 
+
+/-- Equivalent contracted form with the quadratic connection trace pulled outside the
+outer sum. -/
+theorem kerrRicciCovFromMetric_contracted
+    (r M a Q θ : ℝ) (μ ν : Fin 4) :
+    kerrRicciCovFromMetric r M a Q θ μ ν =
+      (∑ ρ : Fin 4,
+        (kerrChristoffelPartial ρ r M a Q θ ρ μ ν +
+         kerrChristoffel r M a Q θ ρ μ ν *
+           kerrChristoffelTrace r M a Q θ ρ)) -
+      kerrConnectionProductTrace r M a Q θ μ ν -
+      kerrCoordPartial ν
+        (fun rr th => kerrChristoffelTrace rr M a Q th μ) r θ := by
+  unfold kerrRicciCovFromMetric kerrConnectionProductTrace
+  rw [Finset.sum_sub_distrib]
+
+/-- The stationary off-diagonal Ricci component is symmetric without any curvature
+component evaluation: stationarity kills the trace derivatives and all remaining
+terms are symmetric algebraically. -/
+theorem kerrRicci_tphi_symmetric
+    (r M a Q θ : ℝ) :
+    kerrRicciCovFromMetric r M a Q θ 0 3 =
+      kerrRicciCovFromMetric r M a Q θ 3 0 := by
+  rw [kerrRicciCovFromMetric_contracted,
+      kerrRicciCovFromMetric_contracted]
+  have hsum :
+      (∑ ρ : Fin 4,
+        (kerrChristoffelPartial ρ r M a Q θ ρ 0 3 +
+         kerrChristoffel r M a Q θ ρ 0 3 *
+           kerrChristoffelTrace r M a Q θ ρ)) =
+      (∑ ρ : Fin 4,
+        (kerrChristoffelPartial ρ r M a Q θ ρ 3 0 +
+         kerrChristoffel r M a Q θ ρ 3 0 *
+           kerrChristoffelTrace r M a Q θ ρ)) := by
+    apply Finset.sum_congr rfl
+    intro ρ hρ
+    rw [kerrChristoffelPartial_lower_symmetric
+          ρ r M a Q θ ρ 0 3,
+        kerrChristoffel_lower_symmetric
+          r M a Q θ ρ 0 3]
+  rw [hsum, kerrConnectionProductTrace_symmetric
+      r M a Q θ 0 3]
+  simp [kerrCoordPartial]
 
 /-- The metric-derived Ricci tensor inherits stationary-reflection parity. -/
 theorem kerrRicciCovFromMetric_stationary_parity
@@ -9209,6 +9298,14 @@ def kerrEinsteinTargetRicciCoordinate
       Sigma r a θ
   else 0
 
+/-- The explicit coordinate Einstein-Maxwell Ricci target is symmetric. -/
+theorem kerrEinsteinTargetRicciCoordinate_symmetric
+    (Q r M a θ : ℝ) (i j : Fin 4) :
+    kerrEinsteinTargetRicciCoordinate Q r M a θ i j =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ j i := by
+  fin_cases i <;> fin_cases j <;>
+    simp [kerrEinsteinTargetRicciCoordinate]
+
 /-- The explicit Einstein-Maxwell Ricci target has the same stationary-reflection parity
 as any covariant rank-two tensor built from the Kerr-Newman geometry. -/
 theorem kerrEinsteinTargetRicciCoordinate_stationary_parity
@@ -9580,6 +9677,71 @@ theorem kerrEinsteinEquation_from_sixRicciObligations
     Q r M a θ hsig hdel hsin
   exact (kerrEvenRicciObligations_iff_six
     Q r M a θ (ne_of_gt hsig) (ne_of_gt hdel) hsin).2 hSix
+
+/-- Stationary-block symmetry removes the reverse t-phi equation as an independent
+obligation.  These five scalar identities are the remaining Kerr-Newman Ricci block. -/
+def kerrFiveRicciObligations
+    (Q r M a θ : ℝ) : Prop :=
+  kerrRicciCovFromMetric r M a Q θ 0 0 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 0 0 ∧
+  kerrRicciCovFromMetric r M a Q θ 0 3 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 0 3 ∧
+  kerrRicciCovFromMetric r M a Q θ 1 1 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 1 1 ∧
+  kerrRicciCovFromMetric r M a Q θ 2 2 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 2 2 ∧
+  kerrRicciCovFromMetric r M a Q θ 3 3 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 3 3
+
+/-- The six-component closure is equivalent to five components because both the metric
+Ricci tensor and the forced target have equal t-phi and phi-t entries. -/
+theorem kerrSixRicciObligations_iff_five
+    (Q r M a θ : ℝ) :
+    kerrSixRicciObligations Q r M a θ ↔
+      kerrFiveRicciObligations Q r M a θ := by
+  constructor
+  · rintro ⟨h00,h03,h11,h22,_h30,h33⟩
+    exact ⟨h00,h03,h11,h22,h33⟩
+  · rintro ⟨h00,h03,h11,h22,h33⟩
+    have h30 :
+        kerrRicciCovFromMetric r M a Q θ 3 0 =
+          kerrEinsteinTargetRicciCoordinate Q r M a θ 3 0 := by
+      rw [← kerrRicci_tphi_symmetric r M a Q θ,
+          ← kerrEinsteinTargetRicciCoordinate_symmetric
+            Q r M a θ 0 3]
+      exact h03
+    exact ⟨h00,h03,h11,h22,h30,h33⟩
+
+/-- On the regular chart, the complete sixteen-component Ricci equation has now been
+reduced to five scalar curvature identities. -/
+theorem kerrFullRicciEquation_iff_five_obligations
+    (Q r M a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    (∀ i j : Fin 4,
+      kerrRicciCovFromMetric r M a Q θ i j =
+        kerrEinsteinTargetRicciCoordinate Q r M a θ i j) ↔
+      kerrFiveRicciObligations Q r M a θ := by
+  exact (kerrFullRicciEquation_iff_six_obligations
+    Q r M a θ hsig hdel hsin).trans
+      (kerrSixRicciObligations_iff_five Q r M a θ)
+
+/-- Five scalar Ricci identities therefore suffice for the complete metric-derived
+Einstein-Maxwell equation on the regular chart. -/
+theorem kerrEinsteinEquation_from_fiveRicciObligations
+    (Q r M a θ : ℝ)
+    (hsig : 0 < Sigma r a θ)
+    (hdel : 0 < Delta r M a Q)
+    (hsin : Real.sin θ ≠ 0)
+    (hFive : kerrFiveRicciObligations Q r M a θ) :
+    kerrScalarCurvatureFromMetric r M a Q θ = 0 ∧
+    (∀ i j : Fin 4,
+      kerrEinsteinCovFromMetric r M a Q θ i j =
+        kerrEinsteinTargetRicciCov Q r M a θ i j) := by
+  apply kerrEinsteinEquation_from_sixRicciObligations
+    Q r M a θ hsig hdel hsin
+  exact (kerrSixRicciObligations_iff_five Q r M a θ).2 hFive
 
 /-- Mixed Ricci eigenvalue obtained by raising the first Carter-frame index. -/
 def kerrRicciFrameMixedCoeff
@@ -11344,6 +11506,10 @@ theorem scalar_backbone_from_einstein_maxwell
 #check syngeImplicitEndpoint_hasStrictFDerivAt
 #check syngeImplicitEndpoint_continuousAt
 #check syngeImplicitEndpoint_tendsto
+#check kerrChristoffelPartial_lower_symmetric
+#check kerrConnectionProductTrace_symmetric
+#check kerrRicciCovFromMetric_contracted
+#check kerrRicci_tphi_symmetric
 #check kerrChristoffelTrace_theta_hasDerivAt_r
 #check kerrChristoffelTracePartial_r_theta
 #check kerrRicci_thetar_reduction
@@ -11423,6 +11589,11 @@ theorem scalar_backbone_from_einstein_maxwell
 #check kerrEvenRicciObligations_iff_six
 #check kerrFullRicciEquation_iff_six_obligations
 #check kerrEinsteinEquation_from_sixRicciObligations
+#check kerrEinsteinTargetRicciCoordinate_symmetric
+#check kerrFiveRicciObligations
+#check kerrSixRicciObligations_iff_five
+#check kerrFullRicciEquation_iff_five_obligations
+#check kerrEinsteinEquation_from_fiveRicciObligations
 #check kerrEinsteinTargetRicci_frame_norm
 #check kerrEinsteinTargetRicci_frame_norm_formula
 #check kerrCoframe0_norm
@@ -12111,6 +12282,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrChristoffelTrace_r_hasDerivAt_theta
 #print axioms RelativeRest.kerrRicci_rtheta_zero
 #print axioms RelativeRest.kerrRicci_rtheta_eq_target
+#print axioms RelativeRest.kerrChristoffelPartial_lower_symmetric
+#print axioms RelativeRest.kerrConnectionProductTrace_symmetric
+#print axioms RelativeRest.kerrRicci_tphi_symmetric
 #print axioms RelativeRest.kerrChristoffelTrace_theta_hasDerivAt_r
 #print axioms RelativeRest.kerrRicci_thetar_zero
 #print axioms RelativeRest.kerrRicci_thetar_eq_target
@@ -12120,6 +12294,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrEinsteinEquation_from_evenRicciObligations
 #print axioms RelativeRest.kerrFullRicciEquation_iff_six_obligations
 #print axioms RelativeRest.kerrEinsteinEquation_from_sixRicciObligations
+#print axioms RelativeRest.kerrFullRicciEquation_iff_five_obligations
+#print axioms RelativeRest.kerrEinsteinEquation_from_fiveRicciObligations
 #print axioms RelativeRest.kerrEinsteinTargetRicciCov_eq_coordinate
 #print axioms RelativeRest.kerrEinsteinTargetRicci_frame_norm_formula
 #print axioms RelativeRest.kerrEinsteinTarget_frame_equation
