@@ -2327,6 +2327,55 @@ theorem principalActionEulerJetLinear_eq_principalJetFromF
   intro j hj
   rw [← principalJetFromF_forced_from_actionEulerJet E B i j]
 
+/-- Full normalized metric-Euler endomorphism along the physical relative orbit.
+Unlike `principalActionEulerJetLinear`, this uses the displayed action Euler
+coefficient at finite rapidity `s`, with the reciprocal gravity character `e^{-s}`
+restored. -/
+def principalMetricEulerRelativeLinear
+    (E B s : ℝ) : (Fin 4 → ℝ) →ₗ[ℝ] (Fin 4 → ℝ) where
+  toFun v := fun i =>
+    ∑ j : Fin 4,
+      ((16 * Real.pi / principalMetricSign i) * Real.exp (-s) *
+        principalScaledMetricEulerCoeffFromAction E B i j s) * v j
+  map_add' x y := by
+    funext i
+    simp [mul_add, Finset.sum_add_distrib]
+  map_smul' a x := by
+    funext i
+    simp [mul_assoc]
+
+theorem principalMetricEulerRelativeLinear_basis
+    (E B s : ℝ) (i j : Fin 4) :
+    principalMetricEulerRelativeLinear E B s (principalBasis j) i =
+      (16 * Real.pi / principalMetricSign i) * Real.exp (-s) *
+        principalScaledMetricEulerCoeffFromAction E B i j s := by
+  simp [principalMetricEulerRelativeLinear, principalBasis]
+
+/-- The finite metric-Euler relative orbit is completely fixed by the surviving
+action Euler jet. -/
+theorem principalMetricEulerRelativeLinear_eq_smul_jet
+    (E B s : ℝ) :
+    principalMetricEulerRelativeLinear E B s =
+      ((-1 / 2 : ℝ) * (Real.exp (-s) - Real.exp s)) •
+        principalActionEulerJetLinear E B := by
+  apply principalLinearMap_ext_on_basis
+  intro j
+  funext i
+  rw [principalMetricEulerRelativeLinear_basis,
+      principalActionEulerJetLinear_basis,
+      principalScaledMetricEulerCoeffFromAction_eq_residual,
+      (principalScaledMetricEulerCoeffFromAction_hasDerivAt_zero
+        E B i j).deriv]
+  have hi := principalMetricSign_ne_zero i
+  have hexp : Real.exp (-s) * Real.exp (2 * s) = Real.exp s := by
+    rw [← Real.exp_add]
+    congr 1
+    ring
+  unfold principalScaledResidualFromF principalJetFromF
+  field_simp [hi, ne_of_gt Real.pi_pos]
+  rw [hexp]
+  ring
+
 /-- Action of the principal mixed Maxwell stress endomorphism on a vector. -/
 def principalStressApply (u : ℝ) (v : Fin 4 → ℝ) (i : Fin 4) : ℝ :=
   ∑ j : Fin 4, principalStress u i j * v j
@@ -4461,6 +4510,18 @@ end CarrierCurrentBridge
 constraint contributions agree at the fixed point. -/
 def relativeConstraintResidual (ell s : ℝ) : ℝ :=
   Real.exp (-s) * (ell - Real.exp (2 * s) * ell)
+
+/-- Exponential-difference form of the reciprocal constraint character. -/
+theorem relativeConstraintResidual_eq_exp_diff (ell s : ℝ) :
+    relativeConstraintResidual ell s =
+      (Real.exp (-s) - Real.exp s) * ell := by
+  unfold relativeConstraintResidual
+  have hexp : Real.exp (-s) * Real.exp (2 * s) = Real.exp s := by
+    rw [← Real.exp_add]
+    congr 1
+    ring
+  rw [mul_sub, mul_assoc, hexp]
+  ring
 
 /-- The constraint residual is the same reciprocal Lagrangian descendant with
 opposite sector values. -/
@@ -14087,6 +14148,38 @@ theorem PrincipalCarrierCharacteristicInput.metricEulerJetResponse_eq_stress
     D.actionEulerResponse_eq_stress]
 
 
+/-- Hypersurface response obtained directly from the full finite-rapidity metric
+Euler endomorphism. -/
+def PrincipalCarrierCharacteristicInput.metricEulerRelativeOrbitResponse
+    (D : PrincipalCarrierCharacteristicInput (P:=P)) (s : ℝ) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
+  carrierBulkResponse LinearMap.id
+    (principalMetricEulerRelativeLinear D.E D.B s) D.iε
+
+/-- The full action-Euler orbit response is the reciprocal character multiplying
+the fixed metric-Euler jet response. -/
+theorem PrincipalCarrierCharacteristicInput.metricEulerRelativeOrbitResponse_eq_smul
+    (D : PrincipalCarrierCharacteristicInput (P:=P)) (s : ℝ) :
+    D.metricEulerRelativeOrbitResponse s =
+      (Real.exp (-s) - Real.exp s) • D.metricEulerJetResponse := by
+  ext v
+  unfold PrincipalCarrierCharacteristicInput.metricEulerRelativeOrbitResponse
+    PrincipalCarrierCharacteristicInput.metricEulerJetResponse
+    carrierBulkResponse halfCarrierBulkCurrent carrierJetCurrent
+  rw [principalMetricEulerRelativeLinear_eq_smul_jet]
+  simp
+  ring
+
+/-- Pointwise, that hypersurface response is exactly the reciprocal
+Einstein-Maxwell constraint residual. -/
+theorem PrincipalCarrierCharacteristicInput.metricEulerRelativeOrbitResponse_apply
+    (D : PrincipalCarrierCharacteristicInput (P:=P))
+    (s : ℝ) (v : Fin 4 → ℝ) :
+    D.metricEulerRelativeOrbitResponse s v =
+      relativeConstraintResidual (D.metricEulerJetResponse v) s := by
+  rw [D.metricEulerRelativeOrbitResponse_eq_smul]
+  simp [relativeConstraintResidual_eq_exp_diff]
+
 /-- Hence the action-Euler response is positive on the distinguished future profile. -/
 theorem PrincipalCarrierCharacteristicInput.actionEulerResponse_positive
     (D : PrincipalCarrierCharacteristicInput (P:=P)) :
@@ -15394,6 +15487,115 @@ theorem principalMetricEulerRelativeOrbitVariation_forced_core_chain
   intro i j
   exact principalActionEulerJetLinear_basis D.carrier.E D.carrier.B i j
 
+/-! ### Displayed-action orbit bridge: Noether constraint equals full metric Euler orbit -/
+
+/-- Strongest current finite-dimensional action/CPS interface. The sole bridge datum
+equates the covariant Noether-constraint descendant along the physical relative orbit
+with a hypersurface response computed from the full finite-rapidity metric
+Euler-Lagrange coefficient of the displayed Einstein-Maxwell action. -/
+structure PrincipalDisplayedMetricEulerOrbitVariationCharacteristicInput where
+  carrier : PrincipalCarrierCharacteristicInput (P:=P)
+  variation : LagrangianVariationNoetherOperators
+    (L:=R2) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ))
+  noetherConstraintOrbitFromMetricEuler :
+    ∀ s : ℝ, ∀ v : Fin 4 → ℝ,
+      relativeConstraintOrbitEval variation.constraint v s =
+        carrier.metricEulerRelativeOrbitResponse s v
+
+/-- The literal displayed-action orbit bridge implies the reciprocal character
+required by the previous strongest interface. -/
+def PrincipalDisplayedMetricEulerOrbitVariationCharacteristicInput.toMetricEulerRelativeOrbitInput
+    (D : PrincipalDisplayedMetricEulerOrbitVariationCharacteristicInput (P:=P)) :
+    PrincipalMetricEulerRelativeOrbitVariationCharacteristicInput (P:=P) where
+  carrier := D.carrier
+  variation := D.variation
+  relativeMetricEulerCharacter := by
+    intro s v
+    rw [D.noetherConstraintOrbitFromMetricEuler]
+    exact D.carrier.metricEulerRelativeOrbitResponse_apply s v
+
+def PrincipalDisplayedMetricEulerOrbitVariationCharacteristicInput.characteristicCurrent
+    (D : PrincipalDisplayedMetricEulerOrbitVariationCharacteristicInput (P:=P)) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
+  D.toMetricEulerRelativeOrbitInput.characteristicCurrent
+
+/-- The derived covariant current is exactly the fixed metric-Euler derivative response. -/
+theorem principalDisplayedMetricEulerOrbitVariation_current_eq_metricEulerResponse
+    (D : PrincipalDisplayedMetricEulerOrbitVariationCharacteristicInput (P:=P)) :
+    D.characteristicCurrent = D.carrier.metricEulerJetResponse :=
+  principalMetricEulerRelativeOrbitVariation_current_eq_metricEulerResponse
+    D.toMetricEulerRelativeOrbitInput
+
+theorem principalDisplayedMetricEulerOrbitVariation_current_eq_characteristicCurrent
+    (D : PrincipalDisplayedMetricEulerOrbitVariationCharacteristicInput (P:=P)) :
+    D.characteristicCurrent =
+      D.carrier.toCharacteristicCurrentData.current :=
+  principalMetricEulerRelativeOrbitVariation_current_eq_characteristicCurrent
+    D.toMetricEulerRelativeOrbitInput
+
+theorem principalDisplayedMetricEulerOrbitVariation_clock_chain
+    (D : PrincipalDisplayedMetricEulerOrbitVariationCharacteristicInput (P:=P)) :
+    D.characteristicCurrent =
+        D.carrier.toCharacteristicCurrentData.current ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    (quotientClockCovector principalTOLinear).comp
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda) =
+      D.carrier.toCharacteristicCurrentData.clockCovector ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat :=
+  principalMetricEulerRelativeOrbitVariation_clock_chain
+    D.toMetricEulerRelativeOrbitInput
+
+/-- End-to-end finite-dimensional action-to-clock theorem sourced by the full
+metric Euler orbit rather than an independently supplied stress or carrier current. -/
+theorem principalDisplayedMetricEulerOrbitVariation_forced_core_chain
+    (D : PrincipalDisplayedMetricEulerOrbitVariationCharacteristicInput (P:=P))
+    (u s : ℝ) :
+    ((8 * Real.pi * principalFieldEnergyDensity D.carrier.E D.carrier.B =
+        8 * Real.pi *
+          maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+          principalFieldEnergyDensity D.carrier.E D.carrier.B) ↔ s = 0) ∧
+    (∀ i j : Fin 4,
+      principalMetricEulerRelativeLinear D.carrier.E D.carrier.B s
+          (principalBasis j) i =
+        (16 * Real.pi / principalMetricSign i) * Real.exp (-s) *
+          principalScaledMetricEulerCoeffFromAction
+            D.carrier.E D.carrier.B i j s) ∧
+    (∀ τ : ℝ, ∀ v : Fin 4 → ℝ,
+      relativeConstraintOrbitEval D.variation.constraint v τ =
+        D.carrier.metricEulerRelativeOrbitResponse τ v) ∧
+    D.variation.constraint =
+      actionConstraintResponseLinear D.carrier.metricEulerJetResponse ∧
+    D.characteristicCurrent = D.carrier.metricEulerJetResponse ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat := by
+  have h := principalMetricEulerRelativeOrbitVariation_forced_core_chain
+    D.toMetricEulerRelativeOrbitInput u s
+  rcases h with ⟨hrest,_hjet,_hCA,_hDA,hop,hcur,hL,hdim,hnorm⟩
+  refine ⟨hrest, ?_, D.noetherConstraintOrbitFromMetricEuler,
+    hop,hcur,hL,hdim,hnorm⟩
+  intro i j
+  exact principalMetricEulerRelativeLinear_basis
+    D.carrier.E D.carrier.B s i j
+
 /-! ### Central manuscript closure certificate -/
 
 /-- A single closure theorem assembling the manuscript's central forced chain.
@@ -15409,7 +15611,7 @@ theorem centralPaper_forced_closure_certificate
     (Bform : W →ₗ[ℝ] W →ₗ[ℝ] ℝ)
     (S : SyngeEndpointJetData Bform)
     (hsym : ∀ x y, bil Bform x y = bil Bform y x)
-    (D : PrincipalMetricEulerRelativeOrbitVariationCharacteristicInput (P:=P))
+    (D : PrincipalDisplayedMetricEulerOrbitVariationCharacteristicInput (P:=P))
     (u s Q r M a θ dt dlam : ℝ)
     (hQ : Q ≠ 0)
     (hsig : 0 < Sigma r a θ)
@@ -15477,8 +15679,9 @@ theorem centralPaper_forced_closure_certificate
       (carterObserver r M a Q θ) = -1 ∧
     kerrClockRateFromPrincipalEM Q r a θ * dt =
       Real.sqrt 2 * |Q| * dlam := by
+  have Drel := D.toMetricEulerRelativeOrbitInput
   have hfp := principalMetricEulerRelativeOrbitVariation_forced_core_chain
-    D u s
+    Drel u s
   rcases hfp with
     ⟨hrest, _hJ, hCA, hDAmetric, _hop, hcurMetric,
       hLambda, hdim, hnorm⟩
@@ -15490,7 +15693,7 @@ theorem centralPaper_forced_closure_certificate
       D.carrier.actionEulerResponse := by
     rw [hcurMetric, D.carrier.metricEulerJetResponse_eq_actionEulerResponse]
   have hcurChar :=
-    principalMetricEulerRelativeOrbitVariation_current_eq_characteristicCurrent D
+    principalMetricEulerRelativeOrbitVariation_current_eq_characteristicCurrent Drel
   have hrainich : ∀ i j : Fin 4,
       (∑ k : Fin 4,
         principalJetFromF D.carrier.E D.carrier.B i k *
