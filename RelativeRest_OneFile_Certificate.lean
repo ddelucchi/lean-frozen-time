@@ -398,62 +398,6 @@ theorem balanced_dyad_invariant
     congr 1
     ring
 
-
-/-- For nonzero null components, the boost defect is strictly decreasing.  This is the
-kernel-checked monotonicity statement used in the manuscript to rule out a second balance. -/
-theorem boostDefect_strictAnti
-    (qm qp : ℝ) (hqm : qm ≠ 0) (hqp : qp ≠ 0) :
-    StrictAnti (boostDefect qm qp) := by
-  intro σ τ hστ
-  have hqm2 : 0 < qm^2 := sq_pos_of_ne_zero hqm
-  have hqp2 : 0 < qp^2 := sq_pos_of_ne_zero hqp
-  have hminus : Real.exp (-2 * τ) < Real.exp (-2 * σ) := by
-    exact Real.exp_lt_exp.mpr (by linarith)
-  have hplus : Real.exp (2 * σ) < Real.exp (2 * τ) := by
-    exact Real.exp_lt_exp.mpr (by linarith)
-  have hm := mul_lt_mul_of_pos_right hminus hqm2
-  have hp := mul_lt_mul_of_pos_right hplus hqp2
-  unfold boostDefect
-  linarith
-
-/-- The rapidity written in the manuscript actually attains the unique boost balance. -/
-theorem sigmaStar_balance
-    (qm qp : ℝ) (hqm : qm ≠ 0) (hqp : qp ≠ 0) :
-    boostDefect qm qp (sigmaStar qm qp) = 0 := by
-  have hr : 0 < |qm / qp| := abs_pos.mpr (div_ne_zero hqm hqp)
-  have hepos : Real.exp (2 * sigmaStar qm qp) = |qm / qp| := by
-    rw [sigmaStar]
-    have harg :
-        2 * ((1 / 2 : ℝ) * Real.log |qm / qp|) = Real.log |qm / qp| := by
-      ring
-    rw [harg, Real.exp_log hr]
-  have heneg : Real.exp (-2 * sigmaStar qm qp) = (|qm / qp|)⁻¹ := by
-    rw [show -2 * sigmaStar qm qp = -(2 * sigmaStar qm qp) by ring]
-    rw [Real.exp_neg, hepos]
-  rw [boostDefect, hepos, heneg, abs_div]
-  rw [← sq_abs qm, ← sq_abs qp]
-  have hma : |qm| ≠ 0 := abs_ne_zero.mpr hqm
-  have hpa : |qp| ≠ 0 := abs_ne_zero.mpr hqp
-  field_simp [hma, hpa]
-  ring
-
-/-- Changing the initial null dyad by rapidity τ shifts the balancing rapidity by -τ. -/
-theorem sigmaStar_shift_covariance
-    (qm qp τ : ℝ) (hqm : qm ≠ 0) (hqp : qp ≠ 0) :
-    sigmaStar (Real.exp (-τ) * qm) (Real.exp τ * qp) =
-      sigmaStar qm qp - τ := by
-  have hqm' : Real.exp (-τ) * qm ≠ 0 :=
-    mul_ne_zero (ne_of_gt (Real.exp_pos (-τ))) hqm
-  have hqp' : Real.exp τ * qp ≠ 0 :=
-    mul_ne_zero (ne_of_gt (Real.exp_pos τ)) hqp
-  apply boost_balance_unique
-      (Real.exp (-τ) * qm) (Real.exp τ * qp)
-      (sigmaStar (Real.exp (-τ) * qm) (Real.exp τ * qp))
-      (sigmaStar qm qp - τ) hqm' hqp'
-  · exact sigmaStar_balance _ _ hqm' hqp'
-  · rw [balance_shift_covariance]
-    convert sigmaStar_balance qm qp hqm hqp using 1 <;> ring
-
 /-! ## 7. Conformal normalization uniqueness in the stated carrier-algebraic category -/
 
 /-- Homogeneity `f(cχ)=c f(χ)` forces a one-variable conformal factor to be linear. -/
@@ -515,71 +459,6 @@ theorem optical_rest_iff_zero (s : ℝ) :
 theorem relative_rest_equivalences (s : ℝ) :
     (Real.exp (-s) = Real.exp s) ↔ (Real.tanh s = 0) := by
   rw [action_rest_iff_zero, optical_rest_iff_zero]
-
-
-/-! ### Forced action-to-optical intertwiner -/
-
-/-- Optical even basis covector. -/
-def TO : R2 := (1, 0)
-
-/-- Optical odd basis covector. -/
-def RO : R2 := (0, 1)
-
-/-- Normalized optical boost generator, exchanging even and odd basis directions. -/
-def BO (v : R2) : R2 := (v.2, v.1)
-
-@[simp] theorem BO_TO : BO TO = RO := by
-  ext <;> norm_num [BO, TO, RO]
-
-@[simp] theorem BO_RO : BO RO = TO := by
-  ext <;> norm_num [BO, TO, RO]
-
-@[simp] theorem BO_sq (v : R2) : BO (BO v) = v := by
-  rcases v with ⟨x, y⟩
-  ext <;> simp [BO]
-
-/-- The unique normalized linear identification sending the action even/odd basis to the
-optical time/radial basis. -/
-def actionOpticalMap : R2 →ₗ[ℝ] R2 where
-  toFun v := ((v.1 + v.2) / 2, (v.2 - v.1) / 2)
-  map_add' x y := by
-    rcases x with ⟨x₁, x₂⟩
-    rcases y with ⟨y₁, y₂⟩
-    ext <;> simp <;> ring
-  map_smul' c x := by
-    rcases x with ⟨x₁, x₂⟩
-    ext <;> simp <;> ring
-
-@[simp] theorem actionOpticalMap_CA : actionOpticalMap CA = TO := by
-  ext <;> norm_num [actionOpticalMap, CA, TO]
-
-@[simp] theorem actionOpticalMap_DA : actionOpticalMap DA = RO := by
-  ext <;> norm_num [actionOpticalMap, DA, RO]
-
-/-- The normalized map intertwines the action and optical boost generators pointwise. -/
-theorem actionOpticalMap_intertwines_generator (v : R2) :
-    actionOpticalMap (YA v) = BO (actionOpticalMap v) := by
-  rcases v with ⟨x, y⟩
-  ext <;> simp [actionOpticalMap, YA, BO] <;> ring
-
-/-- No second normalized linear action-to-optical map exists. -/
-theorem actionOpticalMap_unique
-    (I : R2 →ₗ[ℝ] R2)
-    (hC : I CA = TO) (hD : I DA = RO) :
-    I = actionOpticalMap := by
-  ext v
-  rcases v with ⟨x, y⟩
-  have hv :
-      (x, y) =
-        ((x + y) / 2) • CA + ((y - x) / 2) • DA := by
-    ext <;> simp [CA, DA] <;> ring
-  calc
-    I (x, y)
-        = I (((x + y) / 2) • CA + ((y - x) / 2) • DA) := by rw [← hv]
-    _ = ((x + y) / 2) • TO + ((y - x) / 2) • RO := by
-          rw [map_add, map_smul, map_smul, hC, hD]
-    _ = actionOpticalMap (x, y) := by
-          ext <;> simp [TO, RO, actionOpticalMap] <;> ring
 
 /-! ## 9. Abstract Iyer–Wald/characteristic linear descent
 
@@ -990,11 +869,6 @@ theorem scalar_backbone
 #check principalStress_sq
 #check normalized_involution
 #check boost_balance_unique
-#check boostDefect_strictAnti
-#check sigmaStar_balance
-#check sigmaStar_shift_covariance
-#check actionOpticalMap_unique
-#check actionOpticalMap_intertwines_generator
 #check homogeneous_conformal_factor
 #check covector_pullback_injective
 #check descended_covector_unique
