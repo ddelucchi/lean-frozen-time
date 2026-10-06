@@ -7946,6 +7946,51 @@ theorem kerr_rankOne_trace
   intro j hj
   ring
 
+/-- The coordinate trace reduces exactly to the four orthonormal-frame norms. -/
+theorem kerrEinsteinTargetRicciTrace_eq_frame_sum
+    (Q r M a θ : ℝ) :
+    kerrEinsteinTargetRicciTrace Q r M a θ =
+      ∑ A : Fin 4,
+        kerrRicciFrameCovCoeff Q r a θ A *
+          kerrCovectorInner r M a Q θ
+            (kerrCoframe r M a Q θ A)
+            (kerrCoframe r M a Q θ A) := by
+  unfold kerrEinsteinTargetRicciTrace
+  simp_rw [kerrEinsteinTargetRicciCov, Finset.mul_sum]
+  calc
+    (∑ i : Fin 4, ∑ j : Fin 4, ∑ A : Fin 4,
+      kerrMetricInv r M a Q θ i j *
+        (kerrRicciFrameCovCoeff Q r a θ A *
+          kerrCoframe r M a Q θ A i *
+          kerrCoframe r M a Q θ A j))
+        =
+      ∑ i : Fin 4, ∑ A : Fin 4, ∑ j : Fin 4,
+        kerrMetricInv r M a Q θ i j *
+          (kerrRicciFrameCovCoeff Q r a θ A *
+            kerrCoframe r M a Q θ A i *
+            kerrCoframe r M a Q θ A j) := by
+          apply Finset.sum_congr rfl
+          intro i hi
+          rw [Finset.sum_comm]
+    _ =
+      ∑ A : Fin 4, ∑ i : Fin 4, ∑ j : Fin 4,
+        kerrMetricInv r M a Q θ i j *
+          (kerrRicciFrameCovCoeff Q r a θ A *
+            kerrCoframe r M a Q θ A i *
+            kerrCoframe r M a Q θ A j) := by
+          rw [Finset.sum_comm]
+    _ =
+      ∑ A : Fin 4,
+        kerrRicciFrameCovCoeff Q r a θ A *
+          kerrCovectorInner r M a Q θ
+            (kerrCoframe r M a Q θ A)
+            (kerrCoframe r M a Q θ A) := by
+          apply Finset.sum_congr rfl
+          intro A hA
+          exact kerr_rankOne_trace r M a Q θ
+            (kerrRicciFrameCovCoeff Q r a θ A)
+            (kerrCoframe r M a Q θ A)
+
 /-- The Einstein-Maxwell Ricci target is trace-free in the actual Kerr metric. -/
 theorem kerrEinsteinTargetRicci_trace_zero
     (Q r M a θ : ℝ)
@@ -7953,31 +7998,11 @@ theorem kerrEinsteinTargetRicci_trace_zero
     (hdel : 0 < Delta r M a Q)
     (hsin : Real.sin θ ≠ 0) :
     kerrEinsteinTargetRicciTrace Q r M a θ = 0 := by
-  unfold kerrEinsteinTargetRicciTrace
-  simp_rw [kerrEinsteinTargetRicciCov]
-  simp_rw [Finset.mul_sum]
-  rw [Finset.sum_comm]
-  simp_rw [← Finset.mul_sum]
-  rw [Finset.sum_comm]
-  simp_rw [← Finset.mul_sum]
-  have horth := kerrCoframe_orthonormal
-    r M a Q θ hsig hdel hsin
-  simp_rw [show ∀ A : Fin 4,
-      (∑ i : Fin 4, ∑ j : Fin 4,
-        kerrMetricInv r M a Q θ i j *
-          (kerrRicciFrameCovCoeff Q r a θ A *
-            kerrCoframe r M a Q θ A i *
-            kerrCoframe r M a Q θ A j)) =
-        kerrRicciFrameCovCoeff Q r a θ A *
-          kerrCovectorInner r M a Q θ
-            (kerrCoframe r M a Q θ A)
-            (kerrCoframe r M a Q θ A) by
-      intro A
-      exact kerr_rankOne_trace r M a Q θ
-        (kerrRicciFrameCovCoeff Q r a θ A)
-        (kerrCoframe r M a Q θ A)]
-  simp_rw [horth]
-  simp [kerrRicciFrameCovCoeff, principalMetricSign]
+  rw [kerrEinsteinTargetRicciTrace_eq_frame_sum]
+  simp_rw [kerrCoframe_orthonormal
+    r M a Q θ hsig hdel hsin]
+  simp [Fin.sum_univ_four,
+    kerrRicciFrameCovCoeff, principalMetricSign]
   ring
 
 /-- The frame invariant squared Ricci norm of the target is four times q squared. -/
@@ -9665,6 +9690,7 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check kerrEinsteinTargetRicciTrace_eq_frame_sum
 #check kerrEinsteinTargetRicci_trace_zero
 #check kerrEinsteinTargetRicci_frame_norm
 #check kerrEinsteinTargetRicci_frame_norm_formula
