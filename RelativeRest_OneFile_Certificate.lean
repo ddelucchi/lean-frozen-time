@@ -1579,13 +1579,12 @@ theorem normalized_null_rescaling_is_boost
       a = Real.exp (-σ) ∧ b = Real.exp σ := by
   refine ⟨Real.log b, ?_, ?_⟩
   · constructor
-    · have hb0 : b ≠ 0 := ne_of_gt hb
-      rw [Real.exp_neg, Real.exp_log hb]
-      rw [inv_eq_iff_eq_inv₀ hb0]
-      exact hab.symm
+    · rw [Real.exp_neg, Real.exp_log hb]
+      exact eq_inv_iff_mul_eq_one.mpr hab
     · exact (Real.exp_log hb).symm
   · intro σ hσ
-    exact Real.exp_injective (hσ.2.trans (Real.exp_log hb))
+    apply Real.exp_injective
+    exact hσ.2.symm.trans (Real.exp_log hb).symm
 
 /-- The fixed-point jet is minus the principal Maxwell stress endomorphism, so its
 Lorentzian principal plane carries the positive carrier eigenvalue. -/
