@@ -4066,6 +4066,16 @@ theorem LagrangianIyerWaldOperators.omegaXY_unique
   apply add_right_cancel (b := D.dB X)
   exact (hW X).trans (D.compensated_eq_constraint X).symm
 
+/-- Existence and uniqueness form: the reversed presymplectic current is the unique
+linear current whose boundary compensation equals the Lagrangian constraint operator. -/
+theorem LagrangianIyerWaldOperators.omegaXY_existsUnique
+    (D : LagrangianIyerWaldOperators (L:=L) (C:=C)) :
+    ∃! W : L →ₗ[ℝ] C,
+      ∀ X : L, W X + D.dB X = D.constraint X := by
+  refine ⟨D.omegaXY, D.compensated_eq_constraint, ?_⟩
+  intro W hW
+  exact D.omegaXY_unique W hW
+
 /-- Opposite gravity/Maxwell constraint descendants force the relative normal
 constraint to be exactly `-2 ell`. -/
 theorem LagrangianIyerWaldOperators.constraint_normalJet_of_opposite
@@ -12560,6 +12570,107 @@ theorem principalField_forced_core_chain
     principalCarrierCharacteristic_clock_chain D⟩
   intro i j
   exact principalJetFromF_rainich D.E D.B i j
+
+
+/-! ### Lagrangian-backed characteristic clock: covariant phase space to the normalized line -/
+
+section LagrangianBackedCharacteristic
+
+variable {L : Type*} [AddCommGroup L] [Module ℝ L]
+
+/-- Strongest current interface in the file: the explicit principal Maxwell field
+constructs the stress/carrier current, while a single Lagrangian-level Iyer-Wald
+operator identity identifies that current with the covariant-phase-space descendant
+of the reciprocal Einstein-Maxwell Lagrangian normal jet. -/
+structure PrincipalLagrangianCharacteristicInput where
+  carrier : PrincipalCarrierCharacteristicInput (P:=P)
+  LG : L
+  LM : L
+  iw : LagrangianIyerWaldOperators
+    (L:=L) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ))
+  constraintGravity :
+    iw.constraint LG =
+      stressResponse LinearMap.id carrier.T carrier.iε
+  constraintMaxwell :
+    iw.constraint LM =
+      -(stressResponse LinearMap.id carrier.T carrier.iε)
+
+/-- The relative-normal Lagrangian direction itself. -/
+def PrincipalLagrangianCharacteristicInput.relativeNormalJet
+    (D : PrincipalLagrangianCharacteristicInput (P:=P) (L:=L)) : L :=
+  reciprocalLagrangianNormalJet D.LG D.LM
+
+/-- Characteristic current constructed directly from the Lagrangian Iyer-Wald
+descendant, with the universal negative-half normalization. -/
+def PrincipalLagrangianCharacteristicInput.iwCharacteristicCurrent
+    (D : PrincipalLagrangianCharacteristicInput (P:=P) (L:=L)) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
+  (-1 / 2 : ℝ) •
+    (D.iw.omegaXY D.relativeNormalJet +
+      D.iw.dB D.relativeNormalJet)
+
+/-- The Lagrangian Iyer-Wald current is exactly the explicit Maxwell stress response. -/
+theorem principalLagrangianCharacteristic_iwCurrent_eq_stress
+    (D : PrincipalLagrangianCharacteristicInput (P:=P) (L:=L)) :
+    D.iwCharacteristicCurrent =
+      stressResponse LinearMap.id D.carrier.T D.carrier.iε := by
+  unfold PrincipalLagrangianCharacteristicInput.iwCharacteristicCurrent
+    PrincipalLagrangianCharacteristicInput.relativeNormalJet
+  exact lagrangianIyerWald_half_compensated_eq_stressResponse
+    D.iw D.LG D.LM LinearMap.id
+    D.carrier.J D.carrier.T D.carrier.iε rfl
+    D.constraintGravity D.constraintMaxwell
+
+/-- Hence the current obtained from the Lagrangian covariant-phase-space identity
+coincides exactly with the current used to construct the characteristic quotient. -/
+theorem principalLagrangianCharacteristic_iwCurrent_eq_characteristicCurrent
+    (D : PrincipalLagrangianCharacteristicInput (P:=P) (L:=L)) :
+    D.iwCharacteristicCurrent =
+      D.carrier.toCharacteristicCurrentData.current := by
+  rw [principalLagrangianCharacteristic_iwCurrent_eq_stress D,
+    principalCarrierCharacteristic_current D.carrier]
+
+/-- The covariant-phase-space current is nonzero because its Lagrangian descendant
+is the positive Maxwell stress current on the distinguished future test profile. -/
+theorem principalLagrangianCharacteristic_iwCurrent_nonzero
+    (D : PrincipalLagrangianCharacteristicInput (P:=P) (L:=L)) :
+    D.iwCharacteristicCurrent ≠ 0 := by
+  rw [principalLagrangianCharacteristic_iwCurrent_eq_characteristicCurrent D]
+  intro hzero
+  have hcur : D.carrier.toCharacteristicCurrentData.current = 0 := hzero
+  have hp := D.carrier.toCharacteristicCurrentData.current_positive
+  rw [hcur] at hp
+  simp at hp
+
+/-- End-to-end Lagrangian-backed clock certificate: the unique compensated
+Iyer-Wald descendant equals the explicit Maxwell current, and the entire already-proved
+one-dimensional clock/normalization chain follows from that same current. -/
+theorem principalLagrangianCharacteristic_clock_chain
+    (D : PrincipalLagrangianCharacteristicInput (P:=P) (L:=L)) :
+    D.iwCharacteristicCurrent =
+        D.carrier.toCharacteristicCurrentData.current ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    (quotientClockCovector principalTOLinear).comp
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda) =
+      D.carrier.toCharacteristicCurrentData.clockCovector ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat := by
+  rcases principalCarrierCharacteristic_clock_chain D.carrier with
+    ⟨hL, hdim, hpull, hnorm⟩
+  exact ⟨
+    principalLagrangianCharacteristic_iwCurrent_eq_characteristicCurrent D,
+    hL, hdim, hpull, hnorm⟩
+
+end LagrangianBackedCharacteristic
 
 end FullyFieldDerivedCharacteristic
 
