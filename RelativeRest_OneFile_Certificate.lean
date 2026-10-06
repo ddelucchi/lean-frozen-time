@@ -176,6 +176,27 @@ def gravScaleExponent (D : ℝ) : ℝ := D - 2
 /-- Algebraic metric exponent of the Maxwell density under constant homothety. -/
 def maxwellMetricScaleExponent (D : ℝ) : ℝ := D - 4
 
+
+/-- Conformal weight of the Hodge star on a p-form under `g ↦ Ω²g`. -/
+def hodgeConformalExponent (D p : ℝ) : ℝ := D - 2 * p
+
+/-- Two-forms have conformally invariant Hodge dual exactly in four dimensions. -/
+theorem hodge_twoform_conformal_iff_four (D : ℝ) :
+    hodgeConformalExponent D 2 = 0 ↔ D = 4 := by
+  unfold hodgeConformalExponent
+  constructor <;> intro h <;> linarith
+
+@[simp] theorem hodge_twoform_four_dimensional :
+    hodgeConformalExponent 4 2 = 0 := by
+  norm_num [hodgeConformalExponent]
+
+/-- The Maxwell action's constant-homothety exponent is the same four-dimensional
+exceptional exponent as the Hodge star on two-forms. -/
+theorem maxwell_hodge_exponents_agree (D : ℝ) :
+    maxwellMetricScaleExponent D = hodgeConformalExponent D 2 := by
+  unfold maxwellMetricScaleExponent hodgeConformalExponent
+  ring
+
 /-- Substitution `ρ=e^((u-s)/2)`, `λ=e^((u+s)/2)` gives the advertised relative exponents. -/
 theorem relative_exponent_algebra (D : ℝ) :
     (-(D - 2) / 2 = wG D) ∧ ((D - 4) * (-1 / 2) + 2 * (1 / 2) = wM D) := by
@@ -1349,6 +1370,34 @@ theorem conformal_factor_forced
   have hCeq : f 1 = 1 :=
     unit_involution_fixes_conformal_constant (f 1) χ hC hχ hunit'
   rw [hlin, hCeq, one_mul]
+
+/-! ### Conformal null-Hamiltonian transport -/
+
+/-- Product-rule algebra for a conformally rescaled Hamiltonian `Ĥ=cH`: on the null cone
+`H=0`, the differential is simply scaled by `c`. -/
+theorem conformal_null_hamiltonian_differential
+    (c H dc dH : ℝ) (hH : H = 0) :
+    c * dH + H * dc = c * dH := by
+  rw [hH]
+  ring
+
+/-- Applying any linear symplectic-sharp map preserves that same null-cone scaling. -/
+theorem linear_sharp_respects_null_scaling
+    {V : Type*} [AddCommGroup V] [Module ℝ V]
+    (sharp : V →ₗ[ℝ] V) (c : ℝ) (dH : V) :
+    sharp (c • dH) = c • sharp dH := by
+  exact map_smul sharp c dH
+
+/-- Hence once `dĤ=c dH` on the null cone, the corresponding Hamiltonian directions
+differ only by the same positive conformal factor. -/
+theorem conformal_null_hamiltonian_vector_scaling
+    {V : Type*} [AddCommGroup V] [Module ℝ V]
+    (sharp : V →ₗ[ℝ] V)
+    (dH dHhat : V) (c : ℝ)
+    (h : dHhat = c • dH) :
+    sharp dHhat = c • sharp dH := by
+  rw [h]
+  exact map_smul sharp c dH
 
 /-! ## 8. Relative rapidity identity -/
 
@@ -3061,6 +3110,12 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check hodge_twoform_conformal_iff_four
+#check hodge_twoform_four_dimensional
+#check maxwell_hodge_exponents_agree
+#check conformal_null_hamiltonian_differential
+#check linear_sharp_respects_null_scaling
+#check conformal_null_hamiltonian_vector_scaling
 #check actionBoost_add
 #check actionBoost_neg_inverse
 #check opticalBoost_add
