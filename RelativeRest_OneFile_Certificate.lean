@@ -3346,6 +3346,146 @@ noncomputable def normalizedCovectorDualEquiv
 
 end OneDimensional
 
+/-! ### Exact global-to-principal-local clock identification -/
+
+section GlobalLocalClockIso
+
+variable {K : Type*} [AddCommGroup K] [Module ℝ K]
+
+/-- The selected local unit is the quotient class of the normalized principal timelike vector. -/
+def principalLocalQuotientUnit :
+    (Fin 4 → ℝ) ⧸ LinearMap.ker principalTOLinear :=
+  Submodule.Quotient.mk principalUhat
+
+/-- The local descended clock covector evaluates to one on the selected principal unit. -/
+@[simp] theorem principalLocalQuotientUnit_normalized :
+    quotientClockCovector principalTOLinear
+      principalLocalQuotientUnit = 1 := by
+  have h :=
+    LinearMap.congr_fun
+      (quotientClockCovector_pullback principalTOLinear)
+      principalUhat
+  change
+    quotientClockCovector principalTOLinear
+        (Submodule.Quotient.mk principalUhat) =
+      principalTOLinear principalUhat at h
+  simpa [principalLocalQuotientUnit, principalTOLinear_apply,
+    principalTO_unit] using h
+
+/-- The principal local clock covector is nonzero. -/
+theorem principalTOLinear_nonzero :
+    principalTOLinear ≠ 0 := by
+  intro h
+  have hu : principalTOLinear principalUhat = 1 := by
+    simpa [principalTOLinear_apply] using principalTO_unit
+  rw [h] at hu
+  simp at hu
+
+/-- The principal local quotient is exactly one-dimensional. -/
+theorem principalLocalQuotient_finrank_one :
+    Module.finrank ℝ
+      ((Fin 4 → ℝ) ⧸ LinearMap.ker principalTOLinear) = 1 :=
+  clockQuotient_finrank_one principalTOLinear principalTOLinear_nonzero
+
+/-- Globally normalized element selected by a nonzero characteristic clock covector. -/
+noncomputable def globalClockQuotientUnit
+    (Λ : K →ₗ[ℝ] ℝ) (hΛ : Λ ≠ 0) :
+    K ⧸ LinearMap.ker Λ :=
+  normalizedClockUnit
+    (quotientClockCovector Λ)
+    (quotientClockCovector_nonzero Λ hΛ)
+    (clockQuotient_finrank_one Λ hΛ)
+
+@[simp] theorem globalClockQuotientUnit_normalized
+    (Λ : K →ₗ[ℝ] ℝ) (hΛ : Λ ≠ 0) :
+    quotientClockCovector Λ
+      (globalClockQuotientUnit Λ hΛ) = 1 := by
+  exact normalizedClockUnit_eval
+    (quotientClockCovector Λ)
+    (quotientClockCovector_nonzero Λ hΛ)
+    (clockQuotient_finrank_one Λ hΛ)
+
+/-- Manuscript map
+`I_{Φ,x}(X)=dΘ_Φ(X)[û_*]` from the integrated clock line to the local one. -/
+def globalToPrincipalLocalClockMap
+    (Λ : K →ₗ[ℝ] ℝ) :
+    (K ⧸ LinearMap.ker Λ) →ₗ[ℝ]
+      ((Fin 4 → ℝ) ⧸ LinearMap.ker principalTOLinear) :=
+  normalizedClockMap
+    (quotientClockCovector Λ)
+    principalLocalQuotientUnit
+
+@[simp] theorem globalToPrincipalLocalClockMap_apply
+    (Λ : K →ₗ[ℝ] ℝ)
+    (X : K ⧸ LinearMap.ker Λ) :
+    globalToPrincipalLocalClockMap Λ X =
+      (quotientClockCovector Λ X) •
+        principalLocalQuotientUnit := rfl
+
+/-- The local clock covector pulls back exactly to the global descended clock covector. -/
+theorem globalToPrincipalLocalClockMap_pullback
+    (Λ : K →ₗ[ℝ] ℝ) :
+    (quotientClockCovector principalTOLinear).comp
+        (globalToPrincipalLocalClockMap Λ) =
+      quotientClockCovector Λ := by
+  ext X
+  exact normalizedClockMap_preserves_covector
+    (quotientClockCovector Λ)
+    (quotientClockCovector principalTOLinear)
+    principalLocalQuotientUnit
+    principalLocalQuotientUnit_normalized
+    X
+
+/-- For nonzero global response the clock map is automatically bijective. -/
+theorem globalToPrincipalLocalClockMap_bijective
+    (Λ : K →ₗ[ℝ] ℝ) (hΛ : Λ ≠ 0) :
+    Function.Bijective
+      (globalToPrincipalLocalClockMap Λ) := by
+  exact normalizedClockMap_bijective
+    (quotientClockCovector Λ)
+    (quotientClockCovector principalTOLinear)
+    (globalClockQuotientUnit Λ hΛ)
+    principalLocalQuotientUnit
+    (globalClockQuotientUnit_normalized Λ hΛ)
+    principalLocalQuotientUnit_normalized
+    (clockQuotient_finrank_one Λ hΛ)
+    principalLocalQuotient_finrank_one
+
+/-- The exact global/local clock isomorphism forced by covector preservation. -/
+noncomputable def globalToPrincipalLocalClockEquiv
+    (Λ : K →ₗ[ℝ] ℝ) (hΛ : Λ ≠ 0) :
+    (K ⧸ LinearMap.ker Λ) ≃ₗ[ℝ]
+      ((Fin 4 → ℝ) ⧸ LinearMap.ker principalTOLinear) :=
+  LinearEquiv.ofBijective
+    (globalToPrincipalLocalClockMap Λ)
+    (globalToPrincipalLocalClockMap_bijective Λ hΛ)
+
+/-- The globally normalized positive unit maps to the selected local principal unit. -/
+theorem globalClockUnit_maps_to_principalUnit
+    (Λ : K →ₗ[ℝ] ℝ) (hΛ : Λ ≠ 0) :
+    globalToPrincipalLocalClockMap Λ
+      (globalClockQuotientUnit Λ hΛ) =
+        principalLocalQuotientUnit := by
+  rw [globalToPrincipalLocalClockMap_apply,
+    globalClockQuotientUnit_normalized, one_smul]
+
+/-- Composing the local quotient lift with the global/local identification sends the
+globally normalized unit all the way to the normalized principal timelike vector. -/
+theorem normalizationBridge_principal
+    (Λ : K →ₗ[ℝ] ℝ) (hΛ : Λ ≠ 0) :
+    principalLocalLift
+      (globalToPrincipalLocalClockMap Λ
+        (globalClockQuotientUnit Λ hΛ)) =
+      principalUhat := by
+  rw [globalClockUnit_maps_to_principalUnit Λ hΛ]
+  change
+    principalLocalLift
+      (Submodule.Quotient.mk principalUhat) =
+      principalUhat
+  simpa using principalLocalLift_inverts_timelike (1 : ℝ)
+
+end GlobalLocalClockIso
+
 /-! ### Contact-transverse duality for the characteristic quotient -/
 
 section ClockQuotientDuality
@@ -5516,6 +5656,14 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check principalLocalQuotientUnit_normalized
+#check principalLocalQuotient_finrank_one
+#check globalToPrincipalLocalClockMap_apply
+#check globalToPrincipalLocalClockMap_pullback
+#check globalToPrincipalLocalClockMap_bijective
+#check globalToPrincipalLocalClockEquiv
+#check globalClockUnit_maps_to_principalUnit
+#check normalizationBridge_principal
 #check principalTO_ker_eq_spatial
 #check principalLocalLift_mk
 #check principal_local_remainder_mem_kernel
@@ -5894,6 +6042,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.characteristic_half_contraction_from_relative_scaling
 #print axioms RelativeRest.principalLocalClockRatio_forced
 #print axioms RelativeRest.principalLocalLift_section
+#print axioms RelativeRest.globalToPrincipalLocalClockMap_pullback
+#print axioms RelativeRest.normalizationBridge_principal
 #print axioms RelativeRest.principalMaxwell_timelike_eigen_from_chi
 #print axioms RelativeRest.principalStressFromF_eq_principalStress
 #print axioms RelativeRest.principalJetFromF_rainich
