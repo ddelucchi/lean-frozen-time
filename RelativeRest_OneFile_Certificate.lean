@@ -2251,6 +2251,58 @@ theorem principalEinsteinMaxwell_local_first_variation
   rw [principalEinsteinHilbertMetricVariationCoeff_from_ricci]
   ring
 
+/-- With the Einstein equation written using the Ricci-reconstructed Einstein
+tensor, metric stationarity is no longer stated for an arbitrary candidate tensor. -/
+theorem principalEinsteinMaxwellMetricVariationCoeff_from_ricci_eq_zero_iff
+    (RicCov : Fin 4 → Fin 4 → ℝ)
+    (E B : ℝ) (i j : Fin 4) :
+    principalEinsteinMaxwellMetricVariationCoeff
+        (principalEinsteinMixedFromRicci RicCov) E B i j = 0 ↔
+      principalEinsteinMixedFromRicci RicCov i j =
+        8 * Real.pi * principalStressFromF E B i j :=
+  principalEinsteinMaxwellMetricVariationCoeff_eq_zero_iff
+    (principalEinsteinMixedFromRicci RicCov) E B i j
+
+/-- On an Einstein-Maxwell solution, the complete local first variation has no
+bulk part: it is exactly the sum of the Einstein-Hilbert and Maxwell symplectic
+potential divergences. -/
+theorem principalEinsteinMaxwell_onShell_local_first_variation_is_boundary
+    (RicCov : Fin 4 → Fin 4 → ℝ)
+    (nabla2H : Fin 4 → Fin 4 → Fin 4 → Fin 4 → ℝ)
+    (hsym : ∀ d e a b, nabla2H d e a b = nabla2H d e b a)
+    (E B : ℝ) (i j : Fin 4)
+    (nablaF nablaDeltaA : Fin 4 → Fin 4 → ℝ)
+    (deltaA : Fin 4 → ℝ)
+    (hEinstein :
+      principalEinsteinMaxwellMetricVariationCoeff
+        (principalEinsteinMixedFromRicci RicCov) E B i j = 0)
+    (hMaxwell : ∀ b : Fin 4,
+      principalMaxwellPotentialEulerCoeff nablaF b = 0) :
+    deriv
+        (principalEinsteinHilbertLagrangianMetricLineFromRicci
+          RicCov
+          (fun _ _ =>
+            principalPalatiniBoundaryDivergence
+              (principalNablaLinearizedChristoffelFromMetricSecondDerivative
+                nabla2H))
+          i j) 0 +
+      deriv (principalMaxwellLagrangianMetricLine E B i j) 0 +
+      deriv
+        (principalMaxwellPotentialLagrangianLine
+          (principalMaxwellFsq E B)
+          (principalMaxwellFUp E B) nablaDeltaA) 0 =
+      principalEinsteinHilbertSymplecticPotentialDivergence nabla2H +
+        principalMaxwellSymplecticPotentialDivergence
+          (principalMaxwellFUp E B) nablaF nablaDeltaA deltaA := by
+  rw [principalEinsteinMaxwell_local_first_variation
+    RicCov nabla2H hsym E B i j nablaF nablaDeltaA deltaA]
+  have hEuler :
+      principalMaxwellPotentialEulerDensity nablaF deltaA = 0 := by
+    rw [principalMaxwellPotentialEulerDensity_eq_divergence_contraction]
+    simp [hMaxwell]
+  rw [hEinstein, hEuler]
+  ring
+
 /-- The total metric first-variation coefficient factors by the Einstein-Maxwell
 residual `G^i_j - 8π T^i_j`. -/
 theorem principalEinsteinMaxwellMetricVariationCoeff_factor
@@ -18275,6 +18327,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalEinsteinHilbertLagrangianMetricLineFromRicci_hasDerivAt_zero
 #print axioms RelativeRest.principalEinsteinHilbertMetricVariationCoeff_eq_bulk_lagrangian_deriv
 #print axioms RelativeRest.principalEinsteinMaxwell_local_first_variation
+#print axioms RelativeRest.principalEinsteinMaxwellMetricVariationCoeff_from_ricci_eq_zero_iff
+#print axioms RelativeRest.principalEinsteinMaxwell_onShell_local_first_variation_is_boundary
 #print axioms RelativeRest.linearDescendant_reciprocal
 #print axioms RelativeRest.linearDescendant_normalJet_of_opposite
 #print axioms RelativeRest.linearDescendant_reciprocal_hasDerivAt_zero
