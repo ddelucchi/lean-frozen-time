@@ -3891,11 +3891,149 @@ theorem frobeniusObstruction_zero_iff
 
 /-! ## 14. Null exchange / optical closure -/
 
+/-! ### Endpoint-integrated radar clock -/
+
+/-- Clock reading assigned to an endpoint parameter by integrating the intrinsic local rate. -/
+def endpointClock
+    (ω : ℝ → ℝ) (τ0 : ℝ) (τend : ℝ → ℝ) (x : ℝ) : ℝ :=
+  clockAccumulation ω τ0 (τend x)
+
+/-- Endpoint differentiation is forced by FTC plus the chain rule:
+`dΘ = ω(τ_end) dτ_end`. -/
+theorem endpointClock_hasDerivAt
+    (ω τend : ℝ → ℝ) (τ0 x dτ : ℝ)
+    (hω : Continuous ω)
+    (hend : HasDerivAt τend dτ x) :
+    HasDerivAt
+      (endpointClock ω τ0 τend)
+      (ω (τend x) * dτ) x := by
+  unfold endpointClock
+  exact (clockAccumulation_hasDerivAt
+    ω τ0 (τend x) hω).comp x hend
+
+/-- Derivative form of the endpoint clock identity. -/
+theorem endpointClock_deriv
+    (ω τend : ℝ → ℝ) (τ0 x dτ : ℝ)
+    (hω : Continuous ω)
+    (hend : HasDerivAt τend dτ x) :
+    deriv (endpointClock ω τ0 τend) x =
+      ω (τend x) * dτ :=
+  (endpointClock_hasDerivAt ω τend τ0 x dτ hω hend).deriv
+
 /-- Exchange-even radar midpoint. -/
 def radarTime (θplus θminus : ℝ) : ℝ := (θplus + θminus) / 2
 
 /-- Exchange-odd radar defect. -/
 def radarRadius (θplus θminus : ℝ) : ℝ := (θplus - θminus) / 2
+
+
+/-- Spacetime radar clock obtained by integrating the same local rate to the future and
+past endpoint parameters and taking the exchange-even midpoint. -/
+def radarClockTime
+    (ω : ℝ → ℝ) (τ0 : ℝ)
+    (τplus τminus : ℝ → ℝ) (x : ℝ) : ℝ :=
+  radarTime
+    (endpointClock ω τ0 τplus x)
+    (endpointClock ω τ0 τminus x)
+
+/-- Exchange-odd synchronized radial reading from the same endpoint clocks. -/
+def radarClockRadius
+    (ω : ℝ → ℝ) (τ0 : ℝ)
+    (τplus τminus : ℝ → ℝ) (x : ℝ) : ℝ :=
+  radarRadius
+    (endpointClock ω τ0 τplus x)
+    (endpointClock ω τ0 τminus x)
+
+/-- Derivative of the exchange-even radar clock midpoint. -/
+theorem radarClockTime_hasDerivAt
+    (ω τplus τminus : ℝ → ℝ)
+    (τ0 x dplus dminus : ℝ)
+    (hω : Continuous ω)
+    (hp : HasDerivAt τplus dplus x)
+    (hm : HasDerivAt τminus dminus x) :
+    HasDerivAt
+      (radarClockTime ω τ0 τplus τminus)
+      ((ω (τplus x) * dplus +
+        ω (τminus x) * dminus) / 2) x := by
+  have hp' := endpointClock_hasDerivAt
+    ω τplus τ0 x dplus hω hp
+  have hm' := endpointClock_hasDerivAt
+    ω τminus τ0 x dminus hω hm
+  unfold radarClockTime radarTime
+  simpa [div_eq_mul_inv, mul_assoc, mul_left_comm, mul_comm] using
+    (hp'.add hm').const_mul (1 / 2 : ℝ)
+
+/-- Derivative of the exchange-odd radar radius. -/
+theorem radarClockRadius_hasDerivAt
+    (ω τplus τminus : ℝ → ℝ)
+    (τ0 x dplus dminus : ℝ)
+    (hω : Continuous ω)
+    (hp : HasDerivAt τplus dplus x)
+    (hm : HasDerivAt τminus dminus x) :
+    HasDerivAt
+      (radarClockRadius ω τ0 τplus τminus)
+      ((ω (τplus x) * dplus -
+        ω (τminus x) * dminus) / 2) x := by
+  have hp' := endpointClock_hasDerivAt
+    ω τplus τ0 x dplus hω hp
+  have hm' := endpointClock_hasDerivAt
+    ω τminus τ0 x dminus hω hm
+  unfold radarClockRadius radarRadius
+  simpa [div_eq_mul_inv, mul_assoc, mul_left_comm, mul_comm] using
+    (hp'.sub hm').const_mul (1 / 2 : ℝ)
+
+/-- On the generating orbit, coincident endpoint parameters force zero synchronized radius. -/
+theorem radarClockRadius_zero_of_coincident_endpoint
+    (ω : ℝ → ℝ) (τ0 τ : ℝ)
+    (τplus τminus : ℝ → ℝ) (x : ℝ)
+    (hcoinc : τplus x = τminus x) :
+    radarClockRadius ω τ0 τplus τminus x = 0 := by
+  unfold radarClockRadius radarRadius endpointClock
+  rw [hcoinc]
+  ring
+
+/-- At a coincident endpoint with positive nonzero rate, opposite normalized endpoint
+variations give unit radial first jet. -/
+theorem radarClockRadius_unit_radial_jet
+    (ω τplus τminus : ℝ → ℝ)
+    (τ0 x τ : ℝ)
+    (hω : Continuous ω)
+    (hcoincp : τplus x = τ)
+    (hcoincm : τminus x = τ)
+    (hrate : ω τ ≠ 0)
+    (hp : HasDerivAt τplus (ω τ)⁻¹ x)
+    (hm : HasDerivAt τminus (-(ω τ)⁻¹) x) :
+    HasDerivAt
+      (radarClockRadius ω τ0 τplus τminus)
+      1 x := by
+  have h :=
+    radarClockRadius_hasDerivAt
+      ω τplus τminus τ0 x
+      (ω τ)⁻¹ (-(ω τ)⁻¹) hω hp hm
+  rw [hcoincp, hcoincm] at h
+  convert h using 1
+  field_simp [hrate]
+
+/-- Equal normalized endpoint variations give unit clock first jet and zero radial first jet. -/
+theorem radarClockTime_unit_clock_jet
+    (ω τplus τminus : ℝ → ℝ)
+    (τ0 x τ : ℝ)
+    (hω : Continuous ω)
+    (hcoincp : τplus x = τ)
+    (hcoincm : τminus x = τ)
+    (hrate : ω τ ≠ 0)
+    (hp : HasDerivAt τplus (ω τ)⁻¹ x)
+    (hm : HasDerivAt τminus (ω τ)⁻¹ x) :
+    HasDerivAt
+      (radarClockTime ω τ0 τplus τminus)
+      1 x := by
+  have h :=
+    radarClockTime_hasDerivAt
+      ω τplus τminus τ0 x
+      (ω τ)⁻¹ (ω τ)⁻¹ hω hp hm
+  rw [hcoincp, hcoincm] at h
+  convert h using 1
+  field_simp [hrate]
 
 /-- The midpoint is exchange-even and the radial defect exchange-odd. -/
 theorem radar_exchange_parity (θplus θminus : ℝ) :
@@ -5656,6 +5794,13 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check endpointClock_hasDerivAt
+#check endpointClock_deriv
+#check radarClockTime_hasDerivAt
+#check radarClockRadius_hasDerivAt
+#check radarClockRadius_zero_of_coincident_endpoint
+#check radarClockRadius_unit_radial_jet
+#check radarClockTime_unit_clock_jet
 #check principalLocalQuotientUnit_normalized
 #check principalLocalQuotient_finrank_one
 #check globalToPrincipalLocalClockMap_apply
@@ -6036,6 +6181,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.relationalObservable_deriv
 #print axioms RelativeRest.implicit_endpoint_covector_null
 #print axioms RelativeRest.clockAccumulation_hasDerivAt
+#print axioms RelativeRest.radarClockRadius_unit_radial_jet
+#print axioms RelativeRest.radarClockTime_unit_clock_jet
 #print axioms RelativeRest.primitive_relative_weights_reciprocal_iff_four
 #print axioms RelativeRest.scalar_backbone_from_einstein_maxwell
 #print axioms RelativeRest.rescaled_solution_preserving_iff
