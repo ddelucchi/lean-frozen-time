@@ -8334,6 +8334,73 @@ theorem kerrRicciCovFromMetric_zero_of_odd_stationary
   rw [hodd] at hp
   linarith
 
+/-! ### Einstein equations already closed by stationary-reflection parity -/
+
+/-- All ordered stationary-meridional Ricci components vanish identically. -/
+theorem kerrRicci_stationary_meridional_zero
+    (r M a Q θ : ℝ) :
+    kerrRicciCovFromMetric r M a Q θ 0 1 = 0 ∧
+    kerrRicciCovFromMetric r M a Q θ 0 2 = 0 ∧
+    kerrRicciCovFromMetric r M a Q θ 3 1 = 0 ∧
+    kerrRicciCovFromMetric r M a Q θ 3 2 = 0 ∧
+    kerrRicciCovFromMetric r M a Q θ 1 0 = 0 ∧
+    kerrRicciCovFromMetric r M a Q θ 2 0 = 0 ∧
+    kerrRicciCovFromMetric r M a Q θ 1 3 = 0 ∧
+    kerrRicciCovFromMetric r M a Q θ 2 3 = 0 := by
+  constructor
+  · apply kerrRicciCovFromMetric_zero_of_odd_stationary
+    norm_num [kerrStationarySign]
+  · constructor
+    · apply kerrRicciCovFromMetric_zero_of_odd_stationary
+      norm_num [kerrStationarySign]
+    · constructor
+      · apply kerrRicciCovFromMetric_zero_of_odd_stationary
+        norm_num [kerrStationarySign]
+      · constructor
+        · apply kerrRicciCovFromMetric_zero_of_odd_stationary
+          norm_num [kerrStationarySign]
+        · constructor
+          · apply kerrRicciCovFromMetric_zero_of_odd_stationary
+            norm_num [kerrStationarySign]
+          · constructor
+            · apply kerrRicciCovFromMetric_zero_of_odd_stationary
+              norm_num [kerrStationarySign]
+            · constructor
+              · apply kerrRicciCovFromMetric_zero_of_odd_stationary
+                norm_num [kerrStationarySign]
+              · apply kerrRicciCovFromMetric_zero_of_odd_stationary
+                norm_num [kerrStationarySign]
+
+/-- Those eight components already satisfy the Einstein-Maxwell Ricci target exactly. -/
+theorem kerrRicci_stationary_meridional_eq_target
+    (Q r M a θ : ℝ) :
+    kerrRicciCovFromMetric r M a Q θ 0 1 =
+        kerrEinsteinTargetRicciCoordinate Q r M a θ 0 1 ∧
+    kerrRicciCovFromMetric r M a Q θ 0 2 =
+        kerrEinsteinTargetRicciCoordinate Q r M a θ 0 2 ∧
+    kerrRicciCovFromMetric r M a Q θ 3 1 =
+        kerrEinsteinTargetRicciCoordinate Q r M a θ 3 1 ∧
+    kerrRicciCovFromMetric r M a Q θ 3 2 =
+        kerrEinsteinTargetRicciCoordinate Q r M a θ 3 2 ∧
+    kerrRicciCovFromMetric r M a Q θ 1 0 =
+        kerrEinsteinTargetRicciCoordinate Q r M a θ 1 0 ∧
+    kerrRicciCovFromMetric r M a Q θ 2 0 =
+        kerrEinsteinTargetRicciCoordinate Q r M a θ 2 0 ∧
+    kerrRicciCovFromMetric r M a Q θ 1 3 =
+        kerrEinsteinTargetRicciCoordinate Q r M a θ 1 3 ∧
+    kerrRicciCovFromMetric r M a Q θ 2 3 =
+        kerrEinsteinTargetRicciCoordinate Q r M a θ 2 3 := by
+  rcases kerrRicci_stationary_meridional_zero r M a Q θ with
+    ⟨h01,h02,h31,h32,h10,h20,h13,h23⟩
+  simpa [kerrEinsteinTargetRicciCoordinate] using
+    And.intro h01
+      (And.intro h02
+        (And.intro h31
+          (And.intro h32
+            (And.intro h10
+              (And.intro h20
+                (And.intro h13 h23))))))
+
 /-- Scalar curvature computed from the metric-derived Ricci tensor. -/
 def kerrScalarCurvatureFromMetric
     (r M a Q θ : ℝ) : ℝ :=
@@ -10545,6 +10612,8 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check kerrRicci_stationary_meridional_zero
+#check kerrRicci_stationary_meridional_eq_target
 #check kerrChristoffelPartial_zero_of_odd_stationary
 #check kerrRicciCovFromMetric_stationary_parity
 #check kerrRicciCovFromMetric_zero_of_odd_stationary
@@ -11264,6 +11333,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrChristoffelPartial_zero_of_odd_stationary
 #print axioms RelativeRest.kerrRicciCovFromMetric_stationary_parity
 #print axioms RelativeRest.kerrRicciCovFromMetric_zero_of_odd_stationary
+#print axioms RelativeRest.kerrRicci_stationary_meridional_zero
+#print axioms RelativeRest.kerrRicci_stationary_meridional_eq_target
 #print axioms RelativeRest.kerrCoframe_orthonormal
 #print axioms RelativeRest.kerrEinsteinTargetRicci_trace_zero
 #print axioms RelativeRest.kerrEinsteinTargetRicciCov_eq_coordinate
