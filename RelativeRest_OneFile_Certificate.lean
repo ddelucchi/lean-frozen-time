@@ -5778,6 +5778,91 @@ theorem LagrangianVariationNoetherOperators.dDeltaCharge_forced
     LinearMap.comp_apply, LinearMap.neg_apply] at hN hD ⊢
   module
 
+/-- Forget a genuine Noether package to its first-variation/Cartan core. -/
+def LagrangianVariationNoetherOperators.toFirstVariationCartanData
+    (D : LagrangianVariationNoetherOperators (L:=L) (C:=C)) :
+    LagrangianFirstVariationCartanData (L:=L) (C:=C) where
+  deltaL := D.deltaL
+  euler := D.euler
+  dTheta := D.dTheta
+  contractGauge := D.contractGauge
+  deltaThetaGauge := D.deltaThetaGauge
+  lieTheta := D.lieTheta
+  dContractTheta := D.dContractTheta
+  first_variation := D.first_variation
+  cartan_on_dTheta := D.cartan_on_dTheta
+
+/-- A genuine Noether package whose bulk constraint is the prescribed canonical
+constraint is exactly the canonical completion of its own first-variation/Cartan
+core.  Hence neither `deltaConstraint` nor `dDeltaCharge` carries residual freedom. -/
+theorem LagrangianVariationNoetherOperators_eq_canonical_completion
+    (D : LagrangianVariationNoetherOperators (L:=L) (C:=C))
+    (canonicalConstraint : L →ₗ[ℝ] C)
+    (hC : D.constraint = canonicalConstraint) :
+    D =
+      D.toFirstVariationCartanData.toNoetherOperators
+        canonicalConstraint := by
+  cases D with
+  | mk deltaL euler dTheta contractGauge deltaThetaGauge lieTheta
+      dContractTheta deltaConstraint dDeltaCharge first_variation
+      cartan_on_dTheta noether_decomposition_variation =>
+    simp only [LagrangianVariationNoetherOperators.toFirstVariationCartanData]
+    have hDelta :
+        deltaConstraint =
+          -canonicalConstraint - contractGauge.comp euler := by
+      exact
+        (LagrangianVariationNoetherOperators.deltaConstraint_forced
+          { deltaL := deltaL
+            euler := euler
+            dTheta := dTheta
+            contractGauge := contractGauge
+            deltaThetaGauge := deltaThetaGauge
+            lieTheta := lieTheta
+            dContractTheta := dContractTheta
+            deltaConstraint := deltaConstraint
+            dDeltaCharge := dDeltaCharge
+            first_variation := first_variation
+            cartan_on_dTheta := cartan_on_dTheta
+            noether_decomposition_variation := noether_decomposition_variation }
+          canonicalConstraint hC)
+    have hCharge :
+        dDeltaCharge =
+          (deltaThetaGauge - contractGauge.comp deltaL) -
+            (-canonicalConstraint - contractGauge.comp euler) := by
+      exact
+        (LagrangianVariationNoetherOperators.dDeltaCharge_forced
+          { deltaL := deltaL
+            euler := euler
+            dTheta := dTheta
+            contractGauge := contractGauge
+            deltaThetaGauge := deltaThetaGauge
+            lieTheta := lieTheta
+            dContractTheta := dContractTheta
+            deltaConstraint := deltaConstraint
+            dDeltaCharge := dDeltaCharge
+            first_variation := first_variation
+            cartan_on_dTheta := cartan_on_dTheta
+            noether_decomposition_variation := noether_decomposition_variation }
+          canonicalConstraint hC)
+    subst deltaConstraint
+    subst dDeltaCharge
+    rfl
+
+/-- Consequently two genuine Noether packages with identical first-variation/Cartan
+core and the same canonical bulk constraint are identical. -/
+theorem LagrangianVariationNoetherOperators_unique_of_core_and_constraint
+    (D₁ D₂ : LagrangianVariationNoetherOperators (L:=L) (C:=C))
+    (hcore :
+      D₁.toFirstVariationCartanData =
+        D₂.toFirstVariationCartanData)
+    (canonicalConstraint : L →ₗ[ℝ] C)
+    (h₁ : D₁.constraint = canonicalConstraint)
+    (h₂ : D₂.constraint = canonicalConstraint) :
+    D₁ = D₂ := by
+  rw [D₁.eq_canonical_completion canonicalConstraint h₁,
+    D₂.eq_canonical_completion canonicalConstraint h₂,
+    hcore]
+
 /-- Ordered presymplectic current derived from the potential variation. -/
 def LagrangianVariationNoetherOperators.omegaYX
     (D : LagrangianVariationNoetherOperators (L:=L) (C:=C)) :
@@ -18910,6 +18995,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.LagrangianFirstVariationCartanData.toNoetherOperators_constraint
 #print axioms RelativeRest.LagrangianVariationNoetherOperators.deltaConstraint_forced
 #print axioms RelativeRest.LagrangianVariationNoetherOperators.dDeltaCharge_forced
+#print axioms RelativeRest.LagrangianVariationNoetherOperators_eq_canonical_completion
+#print axioms RelativeRest.LagrangianVariationNoetherOperators_unique_of_core_and_constraint
 #print axioms RelativeRest.principalMetricEulerDivergence_zero_of_generalizedBianchi_onMaxwellShell
 #print axioms RelativeRest.linearDescendant_reciprocal
 #print axioms RelativeRest.linearDescendant_normalJet_of_opposite
