@@ -16980,6 +16980,53 @@ def PrincipalLocalNoetherVariationCharacteristicInput.toDisplayedOrbitInput
   variation := D.variation
   noetherConstraintOrbitFromMetricEuler := D.constraintOrbit_forced
 
+/-- Characteristic current determined from the local Noether data. -/
+def PrincipalLocalNoetherVariationCharacteristicInput.characteristicCurrent
+    (D : PrincipalLocalNoetherVariationCharacteristicInput (P:=P)) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
+  D.toDisplayedOrbitInput.characteristicCurrent
+
+/-- Strong forced-core theorem sourced only at locality of the covariant constraint
+and the local derivative-of-diffeomorphism Noether pairing.  The global relative
+orbit, canonical coefficient, sector signs, Iyer-Wald compensation, quotient
+dimension and normalized clock are all conclusions. -/
+theorem principalLocalNoether_forced_core_chain
+    (D : PrincipalLocalNoetherVariationCharacteristicInput (P:=P))
+    (u s : ℝ) :
+    ((8 * Real.pi * principalFieldEnergyDensity D.carrier.E D.carrier.B =
+        8 * Real.pi *
+          maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+          principalFieldEnergyDensity D.carrier.E D.carrier.B) ↔ s = 0) ∧
+    (∀ i j : Fin 4,
+      D.bulkCoeff s i j =
+        2 * principalMetricSign i * Real.exp (-s) *
+          principalScaledMetricEulerCoeffFromAction
+            D.carrier.E D.carrier.B i j s) ∧
+    (∀ τ : ℝ, ∀ v : Fin 4 → ℝ,
+      relativeConstraintOrbitEval D.variation.constraint v τ =
+        D.carrier.metricEulerRelativeOrbitResponse τ v) ∧
+    D.variation.constraint =
+      D.carrier.noetherConstraintOperatorFromAction ∧
+    D.characteristicCurrent = D.carrier.metricEulerJetResponse ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat := by
+  have h := principalDisplayedMetricEulerOrbitVariation_forced_core_chain
+    D.toDisplayedOrbitInput u s
+  rcases h with ⟨hrest,_hmetric,horbit,hop,hcur,hL,hdim,hnorm⟩
+  refine ⟨hrest,?_,horbit,?_,hcur,hL,hdim,hnorm⟩
+  · intro i j
+    exact D.bulkCoeff_forced s i j
+  · exact D.toDisplayedOrbitInput.constraint_eq_canonicalNoether
+
 /-- The single canonical-constraint identity implies the previous finite-orbit
 bridge with no additional sector, sign, jet, or normalization hypothesis. -/
 def PrincipalCanonicalNoetherVariationCharacteristicInput.toDisplayedOrbitInput
@@ -19232,6 +19279,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.PrincipalDisplayedMetricEulerOrbitVariationCharacteristicInput.constraint_eq_canonicalNoether
 #print axioms RelativeRest.PrincipalLocalNoetherVariationCharacteristicInput.bulkCoeff_forced
 #print axioms RelativeRest.PrincipalLocalNoetherVariationCharacteristicInput.constraintOrbit_forced
+#print axioms RelativeRest.principalLocalNoether_forced_core_chain
 #print axioms RelativeRest.principalCanonicalNoether_forced_core_chain
 #print axioms RelativeRest.principalCanonicalCompleted_forced_core_chain
 #print axioms RelativeRest.principalDiffeomorphismNoether_decomposition
