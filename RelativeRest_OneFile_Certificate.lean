@@ -1384,6 +1384,17 @@ def principalMaxwellMetricVariationCoeff
   principalMaxwellInverseMetricVariationCoeff E B i j +
     principalMaxwellVolumeVariationCoeff E B i j
 
+/-- Mixed Maxwell stress computed directly from the explicit two-form:
+`T^a_b=(4π)⁻¹(F^{ac}F_{bc}-(1/4)δ^a_b F²)`. -/
+def principalStressFromF (E B : ℝ) (i j : Fin 4) : ℝ :=
+  (1 / (4 * Real.pi)) *
+    (principalMetricSign i *
+        (∑ c : Fin 4,
+          principalMaxwellF E B i c *
+            principalMetricSign c *
+            principalMaxwellF E B j c)
+      - (1 / 4 : ℝ) * (if i = j then 1 else 0) * maxwellI E B)
+
 /-- Covariant stress obtained by lowering the first index of the mixed stress. -/
 def principalStressCovFromF
     (E B : ℝ) (i j : Fin 4) : ℝ :=
@@ -1462,17 +1473,6 @@ theorem principalEinsteinMaxwellMetricVariationCoeff_eq_zero_iff
   · intro h
     rw [h]
     ring
-
-/-- Mixed Maxwell stress computed directly from the explicit two-form:
-`T^a_b=(4π)⁻¹(F^{ac}F_{bc}-(1/4)δ^a_b F²)`. -/
-def principalStressFromF (E B : ℝ) (i j : Fin 4) : ℝ :=
-  (1 / (4 * Real.pi)) *
-    (principalMetricSign i *
-        (∑ c : Fin 4,
-          principalMaxwellF E B i c *
-            principalMetricSign c *
-            principalMaxwellF E B j c)
-      - (1 / 4 : ℝ) * (if i = j then 1 else 0) * maxwellI E B)
 
 /-- Principal electromagnetic energy density from the explicit field. -/
 def principalFieldEnergyDensity (E B : ℝ) : ℝ :=
