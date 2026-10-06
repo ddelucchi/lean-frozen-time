@@ -1,0 +1,13 @@
+name: Runner smoke test
+
+on:
+  push:
+    branches:
+      - "formalization/deep-forced-pass-2"
+
+jobs:
+  smoke:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Confirm runner allocation
+        run: echo "runner allocated"
