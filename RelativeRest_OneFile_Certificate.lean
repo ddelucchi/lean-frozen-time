@@ -15266,6 +15266,49 @@ theorem PrincipalCarrierCharacteristicInput.metricEulerRelativeOrbitResponse_app
   rw [D.metricEulerRelativeOrbitResponse_eq_smul]
   simp [relativeConstraintResidual_eq_exp_diff]
 
+/-! ### Canonical Noether constraint operator sourced entirely at the action -/
+
+/-- The canonical two-sector bulk Noether constraint descendant.  Its coefficient
+is the response reconstructed from the displayed action's metric Euler normal jet;
+there is no independent stress or current normalization in this definition. -/
+def PrincipalCarrierCharacteristicInput.noetherConstraintOperatorFromAction
+    (D : PrincipalCarrierCharacteristicInput (P:=P)) :
+    R2 →ₗ[ℝ] ((Fin 4 → ℝ) →ₗ[ℝ] ℝ) :=
+  actionConstraintResponseLinear D.metricEulerJetResponse
+
+/-- The common/even action direction is frozen definitionally by the canonical
+action-derived Noether constraint. -/
+@[simp] theorem PrincipalCarrierCharacteristicInput.noetherConstraintOperatorFromAction_CA
+    (D : PrincipalCarrierCharacteristicInput (P:=P)) :
+    D.noetherConstraintOperatorFromAction CA = 0 := by
+  simp [PrincipalCarrierCharacteristicInput.noetherConstraintOperatorFromAction]
+
+/-- The surviving odd constraint is exactly the hypersurface integral of the
+literal `2E^a{}_b[Y]` Noether bulk current derived from the action. -/
+theorem PrincipalCarrierCharacteristicInput.noetherConstraintOperatorFromAction_DA
+    (D : PrincipalCarrierCharacteristicInput (P:=P)) :
+    D.noetherConstraintOperatorFromAction DA =
+      D.iε.comp (principalMetricEulerNoetherJetLinear D.E D.B) := by
+  rw [PrincipalCarrierCharacteristicInput.noetherConstraintOperatorFromAction,
+    actionConstraintResponseLinear_DA,
+    D.metricEulerJetResponse_eq_neg_half_noetherIntegral]
+  ext v
+  simp
+  ring
+
+/-- Along the entire relative action orbit, the canonical Noether constraint is
+exactly the finite metric-Euler/Noether current already derived from the displayed
+action. -/
+theorem PrincipalCarrierCharacteristicInput.noetherConstraintOperatorFromAction_relativeOrbit
+    (D : PrincipalCarrierCharacteristicInput (P:=P))
+    (s : ℝ) (v : Fin 4 → ℝ) :
+    relativeConstraintOrbitEval
+        D.noetherConstraintOperatorFromAction v s =
+      D.metricEulerRelativeOrbitResponse s v := by
+  unfold PrincipalCarrierCharacteristicInput.noetherConstraintOperatorFromAction
+  rw [actionConstraintResponseLinear_relative_orbit,
+    D.metricEulerRelativeOrbitResponse_apply]
+
 /-- Hence the action-Euler response is positive on the distinguished future profile. -/
 theorem PrincipalCarrierCharacteristicInput.actionEulerResponse_positive
     (D : PrincipalCarrierCharacteristicInput (P:=P)) :
@@ -18675,6 +18718,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.carrierBulkResponse_actionEuler_eq_metricNoether
 #print axioms RelativeRest.PrincipalCarrierCharacteristicInput.metricEulerJetResponse_eq_neg_half_noetherIntegral
 #print axioms RelativeRest.PrincipalCarrierCharacteristicInput.metricEulerRelativeOrbitResponse_eq_noetherIntegral
+#print axioms RelativeRest.PrincipalCarrierCharacteristicInput.noetherConstraintOperatorFromAction_DA
+#print axioms RelativeRest.PrincipalCarrierCharacteristicInput.noetherConstraintOperatorFromAction_relativeOrbit
 #print axioms RelativeRest.principalDiffeomorphismNoether_decomposition
 #print axioms RelativeRest.principalGeneralizedBianchi_forced_by_diffeomorphism_invariance
 #print axioms RelativeRest.principalMetricEulerDivergence_zero_of_generalizedBianchi_onMaxwellShell
