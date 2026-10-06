@@ -1342,12 +1342,24 @@ theorem principalRicciFromF_trace_sq (E B : ℝ) :
       ((-1 / 2 : ℝ) * principalJetFromF E B i k) *
         ((-1 / 2 : ℝ) * principalJetFromF E B k i))
         =
+      (∑ i : Fin 4, ∑ k : Fin 4,
+        (1 / 4 : ℝ) *
+          (principalJetFromF E B i k *
+            principalJetFromF E B k i)) := by
+              apply Finset.sum_congr rfl
+              intro i hi
+              apply Finset.sum_congr rfl
+              intro k hk
+              ring
+    _ =
       (1 / 4 : ℝ) *
         (∑ i : Fin 4, ∑ k : Fin 4,
           principalJetFromF E B i k *
             principalJetFromF E B k i) := by
-              simp_rw [← Finset.mul_sum]
-              ring
+              rw [Finset.mul_sum]
+              apply Finset.sum_congr rfl
+              intro i hi
+              rw [Finset.mul_sum]
     _ = (1 / 4 : ℝ) *
         (4 * (principalChi E B)^2) := by rw [hJ]
     _ = (principalChi E B)^2 := by ring
