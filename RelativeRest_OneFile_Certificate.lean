@@ -7406,6 +7406,309 @@ def Delta (r M a Q : ℝ) : ℝ := r^2 - 2*M*r + a^2 + Q^2
 
 /-! ### Boyer-Lindquist metric inverse and densitized Maxwell field -/
 
+/-- Compact Kerr-Newman mass/charge factor `H=2Mr-Q²`. -/
+def kerrH (r M Q : ℝ) : ℝ :=
+  2 * M * r - Q^2
+
+/-- Simplified stationary metric coefficients on the regular `Σ ≠ 0` chart. -/
+theorem kerrGtt_alt
+    (r M a Q θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    kerrGtt r M a Q θ =
+      -1 + kerrH r M Q / Sigma r a θ := by
+  unfold kerrGtt kerrH Delta
+  field_simp [hsig]
+  unfold Sigma
+  ring
+
+theorem kerrGtPhi_alt
+    (r M a Q θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    kerrGtPhi r M a Q θ =
+      -a * (Real.sin θ)^2 *
+        kerrH r M Q / Sigma r a θ := by
+  unfold kerrGtPhi kerrH Delta
+  field_simp [hsig]
+  ring
+
+theorem kerrGPhiPhi_alt
+    (r M a Q θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    kerrGPhiPhi r M a Q θ =
+      (Real.sin θ)^2 * (r^2 + a^2) +
+      a^2 * (Real.sin θ)^4 *
+        kerrH r M Q / Sigma r a θ := by
+  unfold kerrGPhiPhi kerrH Delta
+  field_simp [hsig]
+  have htrig :
+      (Real.sin θ)^2 + (Real.cos θ)^2 = 1 :=
+    Real.sin_sq_add_cos_sq θ
+  unfold Sigma
+  nlinarith
+
+/-- Radial derivative of `H`. -/
+theorem kerrH_hasDerivAt_r (r M Q : ℝ) :
+    HasDerivAt (fun x : ℝ => kerrH x M Q) (2 * M) r := by
+  unfold kerrH
+  convert (hasDerivAt_id r).const_mul (2 * M) |>.sub_const (Q^2) using 1 <;> ring
+
+/-- Radial derivative of `g_tt`. -/
+theorem kerrGtt_hasDerivAt_r
+    (r M a Q θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    HasDerivAt
+      (fun x : ℝ => kerrGtt x M a Q θ)
+      (2 * (M * (a^2 * (Real.cos θ)^2 - r^2) + Q^2 * r) /
+        (Sigma r a θ)^2) r := by
+  have hfun :
+      (fun x : ℝ => kerrGtt x M a Q θ) =
+        (fun x : ℝ =>
+          -1 + kerrH x M Q / Sigma x a θ) := by
+    funext x
+    by_cases hx : Sigma x a θ = 0
+    · unfold kerrGtt kerrH Delta Sigma
+      simp [hx]
+    · exact kerrGtt_alt x M a Q θ hx
+  rw [hfun]
+  have hq :=
+    (kerrH_hasDerivAt_r r M Q).fun_div
+      (Sigma_hasDerivAt_r r a θ) hsig
+  have hraw := (hasDerivAt_const r (-1 : ℝ)).add hq
+  convert hraw using 1
+  field_simp [hsig]
+  unfold kerrH Sigma
+  ring
+
+/-- Polar derivative of `g_tt`. -/
+theorem kerrGtt_hasDerivAt_theta
+    (r M a Q θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    HasDerivAt
+      (fun x : ℝ => kerrGtt r M a Q x)
+      (2 * a^2 * kerrH r M Q *
+        Real.sin θ * Real.cos θ /
+        (Sigma r a θ)^2) θ := by
+  have hfun :
+      (fun x : ℝ => kerrGtt r M a Q x) =
+        (fun x : ℝ =>
+          -1 + kerrH r M Q / Sigma r a x) := by
+    funext x
+    by_cases hx : Sigma r a x = 0
+    · unfold kerrGtt kerrH Delta Sigma
+      simp [hx]
+    · exact kerrGtt_alt r M a Q x hx
+  rw [hfun]
+  have hn :
+      HasDerivAt (fun _ : ℝ => kerrH r M Q) 0 θ :=
+    hasDerivAt_const θ (kerrH r M Q)
+  have hq :=
+    hn.fun_div (Sigma_hasDerivAt_theta r a θ) hsig
+  have hraw := (hasDerivAt_const θ (-1 : ℝ)).add hq
+  convert hraw using 1
+  field_simp [hsig]
+  ring
+
+/-- Radial derivative of `g_tφ`. -/
+theorem kerrGtPhi_hasDerivAt_r
+    (r M a Q θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    HasDerivAt
+      (fun x : ℝ => kerrGtPhi x M a Q θ)
+      (-a * (Real.sin θ)^2 *
+        (2 * (M * (a^2 * (Real.cos θ)^2 - r^2) + Q^2 * r) /
+          (Sigma r a θ)^2)) r := by
+  have hfun :
+      (fun x : ℝ => kerrGtPhi x M a Q θ) =
+        (fun x : ℝ =>
+          (-a * (Real.sin θ)^2) *
+            (kerrH x M Q / Sigma x a θ)) := by
+    funext x
+    by_cases hx : Sigma x a θ = 0
+    · unfold kerrGtPhi kerrH Delta Sigma
+      simp [hx]
+    · rw [kerrGtPhi_alt x M a Q θ hx]
+      ring
+  rw [hfun]
+  have hq :=
+    (kerrH_hasDerivAt_r r M Q).fun_div
+      (Sigma_hasDerivAt_r r a θ) hsig
+  have hraw := hq.const_mul (-a * (Real.sin θ)^2)
+  convert hraw using 1
+  field_simp [hsig]
+  unfold kerrH Sigma
+  ring
+
+/-- Polar derivative of `g_tφ`. -/
+theorem kerrGtPhi_hasDerivAt_theta
+    (r M a Q θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    HasDerivAt
+      (fun x : ℝ => kerrGtPhi r M a Q x)
+      (-2 * a * kerrH r M Q * (r^2 + a^2) *
+        Real.sin θ * Real.cos θ /
+        (Sigma r a θ)^2) θ := by
+  have hsin2 := (Real.hasDerivAt_sin θ).pow 2
+  have hc :
+      HasDerivAt
+        (fun x : ℝ => -a * (Real.sin x)^2)
+        (-2 * a * Real.sin θ * Real.cos θ) θ := by
+    convert hsin2.const_mul (-a) using 1 <;> ring
+  have hn :
+      HasDerivAt (fun _ : ℝ => kerrH r M Q) 0 θ :=
+    hasDerivAt_const θ (kerrH r M Q)
+  have hq :=
+    hn.fun_div (Sigma_hasDerivAt_theta r a θ) hsig
+  have hraw := hc.mul hq
+  have hfun :
+      (fun x : ℝ =>
+        (-a * (Real.sin x)^2) *
+          (kerrH r M Q / Sigma r a x)) =
+        (fun x : ℝ => kerrGtPhi r M a Q x) := by
+    funext x
+    by_cases hx : Sigma r a x = 0
+    · unfold kerrGtPhi kerrH Delta Sigma
+      simp [hx]
+    · rw [kerrGtPhi_alt r M a Q x hx]
+      ring
+  rw [← hfun]
+  convert hraw using 1
+  field_simp [hsig]
+  unfold Sigma
+  ring
+
+/-- Radial derivative of `g_rr`. -/
+theorem kerrGrr_hasDerivAt_r
+    (r M a Q θ : ℝ) (hdel : Delta r M a Q ≠ 0) :
+    HasDerivAt
+      (fun x : ℝ => kerrGrr x M a Q θ)
+      (2 * (r * Delta r M a Q -
+        (r - M) * Sigma r a θ) /
+        (Delta r M a Q)^2) r := by
+  have hd :
+      HasDerivAt
+        (fun x : ℝ => Delta x M a Q)
+        (2 * (r - M)) r := by
+    unfold Delta
+    convert (((hasDerivAt_id r).pow 2).sub
+      ((hasDerivAt_id r).const_mul (2 * M))).add_const (a^2 + Q^2) using 1 <;> ring
+  have hraw :=
+    (Sigma_hasDerivAt_r r a θ).fun_div hd hdel
+  unfold kerrGrr
+  convert hraw using 1
+  field_simp [hdel]
+  ring
+
+/-- Polar derivative of `g_rr`. -/
+theorem kerrGrr_hasDerivAt_theta
+    (r M a Q θ : ℝ) (hdel : Delta r M a Q ≠ 0) :
+    HasDerivAt
+      (fun x : ℝ => kerrGrr r M a Q x)
+      (-2 * a^2 * Real.cos θ * Real.sin θ /
+        Delta r M a Q) θ := by
+  have hd :
+      HasDerivAt (fun _ : ℝ => Delta r M a Q) 0 θ :=
+    hasDerivAt_const θ (Delta r M a Q)
+  have hraw :=
+    (Sigma_hasDerivAt_theta r a θ).fun_div hd hdel
+  simpa [kerrGrr] using hraw
+
+/-- Derivatives of `g_θθ=Σ`. -/
+theorem kerrGthetaTheta_hasDerivAt_r
+    (r a θ : ℝ) :
+    HasDerivAt
+      (fun x : ℝ => kerrGthetaTheta x a θ)
+      (2 * r) r := by
+  simpa [kerrGthetaTheta] using
+    Sigma_hasDerivAt_r r a θ
+
+theorem kerrGthetaTheta_hasDerivAt_theta
+    (r a θ : ℝ) :
+    HasDerivAt
+      (fun x : ℝ => kerrGthetaTheta r a x)
+      (-2 * a^2 * Real.cos θ * Real.sin θ) θ := by
+  simpa [kerrGthetaTheta] using
+    Sigma_hasDerivAt_theta r a θ
+
+/-- Radial derivative of `g_φφ`. -/
+theorem kerrGPhiPhi_hasDerivAt_r
+    (r M a Q θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    HasDerivAt
+      (fun x : ℝ => kerrGPhiPhi x M a Q θ)
+      (2 * r * (Real.sin θ)^2 +
+        a^2 * (Real.sin θ)^4 *
+          (2 * (M * (a^2 * (Real.cos θ)^2 - r^2) + Q^2 * r) /
+            (Sigma r a θ)^2)) r := by
+  have hbase :
+      HasDerivAt
+        (fun x : ℝ => (Real.sin θ)^2 * (x^2 + a^2))
+        (2 * r * (Real.sin θ)^2) r := by
+    convert (((hasDerivAt_id r).pow 2).add_const (a^2)).const_mul
+      ((Real.sin θ)^2) using 1 <;> ring
+  have hq :=
+    (kerrH_hasDerivAt_r r M Q).fun_div
+      (Sigma_hasDerivAt_r r a θ) hsig
+  have hcorr :=
+    hq.const_mul (a^2 * (Real.sin θ)^4)
+  have hraw := hbase.add hcorr
+  have hfun :
+      (fun x : ℝ =>
+        (Real.sin θ)^2 * (x^2 + a^2) +
+        a^2 * (Real.sin θ)^4 *
+          (kerrH x M Q / Sigma x a θ)) =
+        (fun x : ℝ => kerrGPhiPhi x M a Q θ) := by
+    funext x
+    by_cases hx : Sigma x a θ = 0
+    · unfold kerrGPhiPhi kerrH Delta Sigma
+      simp [hx]
+    · rw [kerrGPhiPhi_alt x M a Q θ hx]
+  rw [← hfun]
+  convert hraw using 1
+  field_simp [hsig]
+  unfold kerrH Sigma
+  ring
+
+/-- Polar derivative of `g_φφ`. -/
+theorem kerrGPhiPhi_hasDerivAt_theta
+    (r M a Q θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    HasDerivAt
+      (fun x : ℝ => kerrGPhiPhi r M a Q x)
+      (2 * Real.sin θ * Real.cos θ * (r^2 + a^2) +
+       2 * a^2 * kerrH r M Q *
+         (Real.sin θ)^3 * Real.cos θ / Sigma r a θ +
+       2 * a^2 * kerrH r M Q * (r^2 + a^2) *
+         (Real.sin θ)^3 * Real.cos θ /
+         (Sigma r a θ)^2) θ := by
+  have hs2 := (Real.hasDerivAt_sin θ).pow 2
+  have hbase :
+      HasDerivAt
+        (fun x : ℝ => (Real.sin x)^2 * (r^2 + a^2))
+        (2 * Real.sin θ * Real.cos θ * (r^2 + a^2)) θ := by
+    convert hs2.mul_const (r^2 + a^2) using 1 <;> ring
+  have hs4 := hs2.pow 2
+  have hc :
+      HasDerivAt
+        (fun x : ℝ => a^2 * (Real.sin x)^4)
+        (4 * a^2 * (Real.sin θ)^3 * Real.cos θ) θ := by
+    convert hs4.const_mul (a^2) using 1 <;> ring
+  have hn :
+      HasDerivAt (fun _ : ℝ => kerrH r M Q) 0 θ :=
+    hasDerivAt_const θ (kerrH r M Q)
+  have hq :=
+    hn.fun_div (Sigma_hasDerivAt_theta r a θ) hsig
+  have hcorr := hc.mul hq
+  have hraw := hbase.add hcorr
+  have hfun :
+      (fun x : ℝ =>
+        (Real.sin x)^2 * (r^2 + a^2) +
+        a^2 * (Real.sin x)^4 *
+          (kerrH r M Q / Sigma r a x)) =
+        (fun x : ℝ => kerrGPhiPhi r M a Q x) := by
+    funext x
+    by_cases hx : Sigma r a x = 0
+    · unfold kerrGPhiPhi kerrH Delta Sigma
+      simp [hx]
+    · rw [kerrGPhiPhi_alt r M a Q x hx]
+  rw [← hfun]
+  convert hraw using 1
+  field_simp [hsig]
+  unfold Sigma
+  ring
+
+/-! ### Boyer-Lindquist metric inverse and densitized Maxwell field -/
+
 /-- Covariant stationary metric coefficients obtained by expanding the two square-form
 stationary one-forms. -/
 def kerrGtt (r M a Q θ : ℝ) : ℝ :=
@@ -9875,6 +10178,20 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check kerrGtt_alt
+#check kerrGtPhi_alt
+#check kerrGPhiPhi_alt
+#check kerrH_hasDerivAt_r
+#check kerrGtt_hasDerivAt_r
+#check kerrGtt_hasDerivAt_theta
+#check kerrGtPhi_hasDerivAt_r
+#check kerrGtPhi_hasDerivAt_theta
+#check kerrGrr_hasDerivAt_r
+#check kerrGrr_hasDerivAt_theta
+#check kerrGthetaTheta_hasDerivAt_r
+#check kerrGthetaTheta_hasDerivAt_theta
+#check kerrGPhiPhi_hasDerivAt_r
+#check kerrGPhiPhi_hasDerivAt_theta
 #check kerrCoordPartial
 #check kerrMetricPartial
 #check kerrMetricPartial_symmetric
@@ -10539,6 +10856,10 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrPotential_field_factorization
 #print axioms RelativeRest.kerr_stationary_inverse_block
 #print axioms RelativeRest.kerrMetric_inverse_certificate
+#print axioms RelativeRest.kerrGtt_hasDerivAt_r
+#print axioms RelativeRest.kerrGtPhi_hasDerivAt_theta
+#print axioms RelativeRest.kerrGrr_hasDerivAt_r
+#print axioms RelativeRest.kerrGPhiPhi_hasDerivAt_theta
 #print axioms RelativeRest.kerrMetricPartial_symmetric
 #print axioms RelativeRest.kerrChristoffel_lower_symmetric
 #print axioms RelativeRest.kerrCoframe_orthonormal
