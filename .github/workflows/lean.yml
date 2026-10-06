@@ -7,6 +7,8 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
+  issues: write
 
 jobs:
   build:
@@ -15,5 +17,49 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Lean and build
-        uses: leanprover/lean-action@v1
+      - name: Run fully logged Lean build
+        id: proof
+        shell: bash
+        run: |
+          set +e
+          {
+            echo "=== install elan ==="
+            curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+            export PATH="$HOME/.elan/bin:$PATH"
+            echo "=== toolchain ==="
+            cat lean-toolchain
+            elan default "$(cat lean-toolchain)"
+            lean --version
+            lake --version
+            echo "=== update ==="
+            lake update
+            echo "=== cache ==="
+            lake exe cache get
+            echo "=== build ==="
+            lake --no-ansi build
+          } > build.log 2>&1
+          status=$?
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Publish compiler diagnostic to PR
+        if: github.event_name == 'pull_request' && steps.proof.outputs.status != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        shell: bash
+        run: |
+          {
+            echo "### Lean CI diagnostic"
+            echo
+            echo '~~~text'
+            tail -c 50000 build.log
+            echo
+            echo '~~~'
+          } > ci-comment.md
+          gh pr comment "$PR_NUMBER" --body-file ci-comment.md
+
+      - name: Fail on Lean error
+        if: steps.proof.outputs.status != '0'
+        shell: bash
+        run: exit 1
