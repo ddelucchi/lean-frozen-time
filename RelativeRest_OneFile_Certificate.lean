@@ -8098,7 +8098,6 @@ def kerrChristoffel
          kerrMetricPartial ν r M a Q θ σ μ -
          kerrMetricPartial σ r M a Q θ μ ν)
 
-
 /-- On the regular chart, the genuine Levi-Civita Christoffels contain no remaining
 unevaluated first derivatives. -/
 theorem kerrChristoffel_eq_regular
@@ -8115,6 +8114,7 @@ theorem kerrChristoffel_eq_regular
   rw [kerrMetricPartial_eq_regular μ r M a Q θ hsig hdel σ ν,
       kerrMetricPartial_eq_regular ν r M a Q θ hsig hdel σ μ,
       kerrMetricPartial_eq_regular σ r M a Q θ hsig hdel μ ν]
+
 
 /-- The coordinate Levi-Civita connection is torsion-free by construction. -/
 theorem kerrChristoffel_lower_symmetric
