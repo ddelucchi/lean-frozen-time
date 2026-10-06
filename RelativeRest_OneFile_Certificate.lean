@@ -1030,6 +1030,46 @@ theorem principalStress_sq (u : ℝ) (i j : Fin 4) :
     simp [principalStress] <;> ring
 
 
+/-- Trace of the squared principal endomorphism. -/
+def principalStressTraceSq (u : ℝ) : ℝ :=
+  ∑ i : Fin 4, ∑ k : Fin 4,
+    principalStress u i k * principalStress u k i
+
+/-- In four dimensions the squared trace is exactly four times the Rainich eigenvalue square. -/
+theorem principalStress_trace_sq (u : ℝ) :
+    principalStressTraceSq u = 4 * u^2 := by
+  unfold principalStressTraceSq
+  simp_rw [principalStress_sq]
+  norm_num
+
+
+/-- Since the fixed-point jet is `J=-2R`, the principal Ricci endomorphism is
+`R=-J/2`; its squared trace is therefore one quarter of the jet squared trace. -/
+def principalRicciNormFromCarrier (χ : ℝ) : ℝ :=
+  (1 / 4 : ℝ) * principalStressTraceSq χ
+
+/-- The Einstein-Maxwell Rainich carrier forces the Ricci norm to be exactly `χ²`. -/
+theorem principalRicciNormFromCarrier_eq (χ : ℝ) :
+    principalRicciNormFromCarrier χ = χ^2 := by
+  rw [principalRicciNormFromCarrier, principalStress_trace_sq]
+  ring
+
+/-- Literal principal-frame form of
+`J^a{}_c J^c{}_b = (1/4) tr(J²) δ^a{}_b`. -/
+theorem principalStress_rainich (u : ℝ) (i j : Fin 4) :
+    (∑ k : Fin 4, principalStress u i k * principalStress u k j) =
+      (1 / 4 : ℝ) * principalStressTraceSq u * (if i = j then 1 else 0) := by
+  rw [principalStress_sq, principalStress_trace_sq]
+  by_cases h : i = j <;> simp [h] <;> ring
+
+
+/-! ### Explicit principal Einstein-Maxwell jet and Lorentzian plane -/
+
+/-- Standard coordinate basis in the four-dimensional principal frame. -/
+def principalBasis (i : Fin 4) : Fin 4 → ℝ :=
+  fun j => if j = i then 1 else 0
+
+
 /-- Action of the principal mixed Maxwell stress endomorphism on a vector. -/
 def principalStressApply (u : ℝ) (v : Fin 4 → ℝ) (i : Fin 4) : ℝ :=
   ∑ j : Fin 4, principalStress u i j * v j
@@ -1073,45 +1113,6 @@ theorem principalEnergyDensity_recovers_chi (χ : ℝ) :
     16 * Real.pi * principalEnergyDensity χ = χ := by
   unfold principalEnergyDensity
   field_simp [ne_of_gt Real.pi_pos]
-
-/-- Trace of the squared principal endomorphism. -/
-def principalStressTraceSq (u : ℝ) : ℝ :=
-  ∑ i : Fin 4, ∑ k : Fin 4,
-    principalStress u i k * principalStress u k i
-
-/-- In four dimensions the squared trace is exactly four times the Rainich eigenvalue square. -/
-theorem principalStress_trace_sq (u : ℝ) :
-    principalStressTraceSq u = 4 * u^2 := by
-  unfold principalStressTraceSq
-  simp_rw [principalStress_sq]
-  norm_num
-
-
-/-- Since the fixed-point jet is `J=-2R`, the principal Ricci endomorphism is
-`R=-J/2`; its squared trace is therefore one quarter of the jet squared trace. -/
-def principalRicciNormFromCarrier (χ : ℝ) : ℝ :=
-  (1 / 4 : ℝ) * principalStressTraceSq χ
-
-/-- The Einstein-Maxwell Rainich carrier forces the Ricci norm to be exactly `χ²`. -/
-theorem principalRicciNormFromCarrier_eq (χ : ℝ) :
-    principalRicciNormFromCarrier χ = χ^2 := by
-  rw [principalRicciNormFromCarrier, principalStress_trace_sq]
-  ring
-
-/-- Literal principal-frame form of
-`J^a{}_c J^c{}_b = (1/4) tr(J²) δ^a{}_b`. -/
-theorem principalStress_rainich (u : ℝ) (i j : Fin 4) :
-    (∑ k : Fin 4, principalStress u i k * principalStress u k j) =
-      (1 / 4 : ℝ) * principalStressTraceSq u * (if i = j then 1 else 0) := by
-  rw [principalStress_sq, principalStress_trace_sq]
-  by_cases h : i = j <;> simp [h] <;> ring
-
-
-/-! ### Explicit principal Einstein-Maxwell jet and Lorentzian plane -/
-
-/-- Standard coordinate basis in the four-dimensional principal frame. -/
-def principalBasis (i : Fin 4) : Fin 4 → ℝ :=
-  fun j => if j = i then 1 else 0
 
 /-- Minkowski quadratic form in the principal orthonormal frame. -/
 def principalMinkowskiSq (v : Fin 4 → ℝ) : ℝ :=
