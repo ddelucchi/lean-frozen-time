@@ -539,6 +539,26 @@ theorem principalStress_sq (u : ℝ) (i j : Fin 4) :
   fin_cases i <;> fin_cases j <;>
     simp [principalStress] <;> ring
 
+/-- Trace of the squared principal endomorphism. -/
+def principalStressTraceSq (u : ℝ) : ℝ :=
+  ∑ i : Fin 4, ∑ k : Fin 4,
+    principalStress u i k * principalStress u k i
+
+/-- In four dimensions the squared trace is exactly four times the Rainich eigenvalue square. -/
+theorem principalStress_trace_sq (u : ℝ) :
+    principalStressTraceSq u = 4 * u^2 := by
+  unfold principalStressTraceSq
+  simp_rw [principalStress_sq]
+  norm_num
+
+/-- Literal principal-frame form of
+`J^a{}_c J^c{}_b = (1/4) tr(J²) δ^a{}_b`. -/
+theorem principalStress_rainich (u : ℝ) (i j : Fin 4) :
+    (∑ k : Fin 4, principalStress u i k * principalStress u k j) =
+      (1 / 4 : ℝ) * principalStressTraceSq u * (if i = j then 1 else 0) := by
+  rw [principalStress_sq, principalStress_trace_sq]
+  by_cases h : i = j <;> simp [h] <;> ring
+
 /-- Normalizing an endomorphism satisfying `J² = χ² I` produces an involution. -/
 theorem normalized_involution
     {V : Type*} [AddCommGroup V] [Module ℝ V]
@@ -1764,6 +1784,8 @@ theorem scalar_backbone
 #check solution_preserving_fixed_point
 #check defect_hasDerivAt_zero
 #check principalStress_sq
+#check principalStress_trace_sq
+#check principalStress_rainich
 #check normalized_involution
 #check involution_projectors_sum
 #check involutionProjPlus_eigen
