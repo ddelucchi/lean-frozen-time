@@ -8252,6 +8252,109 @@ theorem kerrChristoffel_zero_of_odd_stationary
   rw [hodd] at hp
   linarith
 
+/-! ### Meridional connection identities -/
+
+/-- Trace `Γ^ρ_{μρ}` of the Levi-Civita connection. -/
+def kerrChristoffelTrace
+    (r M a Q θ : ℝ) (μ : Fin 4) : ℝ :=
+  ∑ ρ : Fin 4, kerrChristoffel r M a Q θ ρ μ ρ
+
+/-- Mixed contraction `Tr(Γ_r Γ_θ)` appearing in `R_{rθ}`. -/
+def kerrConnectionCrossTrace
+    (r M a Q θ : ℝ) : ℝ :=
+  ∑ ρ : Fin 4, ∑ σ : Fin 4,
+    kerrChristoffel r M a Q θ σ 1 ρ *
+      kerrChristoffel r M a Q θ ρ 2 σ
+
+/-- First simple meridional connection coefficient. -/
+theorem kerrChristoffel_r_rtheta
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    kerrChristoffel r M a Q θ 1 1 2 =
+      -a^2 * Real.cos θ * Real.sin θ /
+        Sigma r a θ := by
+  rw [kerrChristoffel_eq_regular r M a Q θ hsig hdel]
+  simp [kerrChristoffelRegular, kerrMetricInv,
+    kerrMetricDerivativeRegular,
+    kerrMetricRadialDerivative, kerrMetricPolarDerivative]
+  field_simp [hsig, hdel]
+  ring
+
+/-- Second simple meridional connection coefficient. -/
+theorem kerrChristoffel_theta_rtheta
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    kerrChristoffel r M a Q θ 2 1 2 =
+      r / Sigma r a θ := by
+  rw [kerrChristoffel_eq_regular r M a Q θ hsig hdel]
+  simp [kerrChristoffelRegular, kerrMetricInv,
+    kerrMetricDerivativeRegular,
+    kerrMetricRadialDerivative, kerrMetricPolarDerivative]
+  field_simp [hsig, hdel]
+  ring
+
+/-- Radial connection trace equals the logarithmic radial derivative of
+`sqrt(-g)=Σ sinθ`. -/
+theorem kerrChristoffelTrace_r
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrChristoffelTrace r M a Q θ 1 =
+      2 * r / Sigma r a θ := by
+  unfold kerrChristoffelTrace
+  simp_rw [kerrChristoffel_eq_regular r M a Q θ hsig hdel]
+  simp [kerrChristoffelRegular, kerrMetricInv,
+    kerrMetricDerivativeRegular,
+    kerrMetricRadialDerivative, kerrMetricPolarDerivative]
+  field_simp [hsig, hdel, hsin]
+  have htrig := Real.sin_sq_add_cos_sq θ
+  unfold Delta Sigma kerrH
+  nlinarith
+
+/-- Polar connection trace equals the logarithmic polar derivative of
+`sqrt(-g)=Σ sinθ`. -/
+theorem kerrChristoffelTrace_theta
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrChristoffelTrace r M a Q θ 2 =
+      Real.cos θ / Real.sin θ -
+        2 * a^2 * Real.cos θ * Real.sin θ /
+          Sigma r a θ := by
+  unfold kerrChristoffelTrace
+  simp_rw [kerrChristoffel_eq_regular r M a Q θ hsig hdel]
+  simp [kerrChristoffelRegular, kerrMetricInv,
+    kerrMetricDerivativeRegular,
+    kerrMetricRadialDerivative, kerrMetricPolarDerivative]
+  field_simp [hsig, hdel, hsin]
+  have htrig := Real.sin_sq_add_cos_sq θ
+  unfold Delta Sigma kerrH
+  nlinarith
+
+/-- The connection-product contraction in the mixed meridional Ricci component. -/
+theorem kerrConnectionCrossTrace_formula
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrConnectionCrossTrace r M a Q θ =
+      r * Real.cos θ *
+        (5 * a^2 * (Real.cos θ)^2 - 4 * a^2 + r^2) /
+        ((Sigma r a θ)^2 * Real.sin θ) := by
+  unfold kerrConnectionCrossTrace
+  simp_rw [kerrChristoffel_eq_regular r M a Q θ hsig hdel]
+  simp [kerrChristoffelRegular, kerrMetricInv,
+    kerrMetricDerivativeRegular,
+    kerrMetricRadialDerivative, kerrMetricPolarDerivative]
+  field_simp [hsig, hdel, hsin]
+  have htrig := Real.sin_sq_add_cos_sq θ
+  unfold Delta Sigma kerrH
+  nlinarith
+
 /-- Coordinate derivative of a Christoffel symbol. -/
 def kerrChristoffelPartial
     (κ : Fin 4) (r M a Q θ : ℝ)
@@ -10648,6 +10751,13 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check kerrChristoffelTrace
+#check kerrConnectionCrossTrace
+#check kerrChristoffel_r_rtheta
+#check kerrChristoffel_theta_rtheta
+#check kerrChristoffelTrace_r
+#check kerrChristoffelTrace_theta
+#check kerrConnectionCrossTrace_formula
 #check kerrRicci_stationary_meridional_zero
 #check kerrRicci_stationary_meridional_eq_target
 #check kerrEinsteinTargetRicciCoordinate_stationary_parity
@@ -11369,6 +11479,11 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrChristoffel_lower_symmetric
 #print axioms RelativeRest.kerrChristoffel_stationary_parity
 #print axioms RelativeRest.kerrChristoffel_zero_of_odd_stationary
+#print axioms RelativeRest.kerrChristoffel_r_rtheta
+#print axioms RelativeRest.kerrChristoffel_theta_rtheta
+#print axioms RelativeRest.kerrChristoffelTrace_r
+#print axioms RelativeRest.kerrChristoffelTrace_theta
+#print axioms RelativeRest.kerrConnectionCrossTrace_formula
 #print axioms RelativeRest.kerrChristoffelPartial_zero_of_odd_stationary
 #print axioms RelativeRest.kerrRicciCovFromMetric_stationary_parity
 #print axioms RelativeRest.kerrRicciCovFromMetric_zero_of_odd_stationary
