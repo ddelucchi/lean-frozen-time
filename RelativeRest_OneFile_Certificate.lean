@@ -1184,6 +1184,42 @@ def actionConstraintResponseLinear
   simp [actionConstraintResponseLinear, DA]
   module
 
+/-- The frozen common direction and surviving exchange-odd normal jet already determine
+the entire two-sector linear constraint operator. No coordinate-basis values are needed. -/
+theorem actionConstraintResponseLinear_unique_from_CA_DA
+    {C : Type*} [AddCommGroup C] [Module ℝ C]
+    (ell : C) (F : R2 →ₗ[ℝ] C)
+    (hCA : F CA = 0)
+    (hDA : F DA = (-2 : ℝ) • ell) :
+    F = actionConstraintResponseLinear ell := by
+  ext x
+  rcases x with ⟨xG,xM⟩
+  have hx :
+      (xG,xM) =
+        ((xG + xM) / 2) • CA +
+          ((xM - xG) / 2) • DA := by
+    ext <;> simp [CA, DA] <;> ring
+  rw [hx, map_add, map_smul, map_smul, hCA, hDA]
+  simp [actionConstraintResponseLinear, CA, DA]
+  module
+
+/-- Equivalently, two linear constraint descendants with the same frozen value and
+same normalized first normal jet must coincide everywhere on action space. -/
+theorem actionConstraintOperator_unique_from_fixed_point_jet
+    {C : Type*} [AddCommGroup C] [Module ℝ C]
+    (F G : R2 →ₗ[ℝ] C)
+    (hCA : F CA = G CA)
+    (hDA : F DA = G DA) :
+    F = G := by
+  ext x
+  rcases x with ⟨xG,xM⟩
+  have hx :
+      (xG,xM) =
+        ((xG + xM) / 2) • CA +
+          ((xM - xG) / 2) • DA := by
+    ext <;> simp [CA, DA] <;> ring
+  rw [hx, map_add, map_add, map_smul, map_smul, map_smul, map_smul, hCA, hDA]
+
 /-- Evaluation of the covector-valued action residual reproduces the scalar residual
 already used to derive the fixed-point carrier. Thus the characteristic constraint
 response is not a new two-sector sign convention. -/
@@ -14500,6 +14536,18 @@ theorem principalActionEulerSectorVariation_current_eq_characteristicCurrent
   rw [principalActionEulerSectorVariation_current_eq_stress D,
     principalCarrierCharacteristic_current D.carrier]
 
+/-- Stronger uniqueness in the paper's even/odd basis: any linear constraint map with
+the same frozen common value and the same normalized odd jet is the action-Euler map. -/
+theorem PrincipalActionEulerSectorVariationCharacteristicInput.constraint_unique_from_fixed_point_jet
+    (D : PrincipalActionEulerSectorVariationCharacteristicInput (P:=P))
+    (C' : R2 →ₗ[ℝ] ((Fin 4 → ℝ) →ₗ[ℝ] ℝ))
+    (hCA : C' CA = 0)
+    (hDA : C' DA = (-2 : ℝ) • D.carrier.actionEulerResponse) :
+    C' = D.variation.constraint := by
+  rw [D.constraintFromActionEuler]
+  exact actionConstraintResponseLinear_unique_from_CA_DA
+    D.carrier.actionEulerResponse C' hCA hDA
+
 /-- No second linear two-sector constraint operator can have the same gravity/Maxwell
 action-Euler values. -/
 theorem PrincipalActionEulerSectorVariationCharacteristicInput.constraint_unique
@@ -16285,6 +16333,8 @@ theorem scalar_backbone_from_einstein_maxwell
 #check actionConstraintResponseLinear_CA
 #check actionConstraintResponseLinear_DA
 #check actionConstraintResponseLinear_apply_eq_residualLinear
+#check actionConstraintResponseLinear_unique_from_CA_DA
+#check actionConstraintOperator_unique_from_fixed_point_jet
 #check JA_CA
 #check JA_DA
 #check JA_actionBoost
