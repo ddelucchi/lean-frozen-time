@@ -2753,6 +2753,76 @@ and its stress response are supplied.  These theorems are directly reusable when
 Einstein–Maxwell current is formalized.
 -/
 
+/-! ### Reciprocal-character derivation of the odd presymplectic sector -/
+
+section RelativeSymplecticSector
+
+variable {V : Type*} [AddCommGroup V] [Module ℝ V]
+
+/-- Evaluation of the common/even presymplectic sector under the relative characters
+`e^{-s}` and `e^s`. -/
+def relativeSymplecticPlusEval
+    (ΩG ΩM : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (s : ℝ) (x y : V) : ℝ :=
+  Real.exp (-s) * ΩG x y +
+    Real.exp s * ΩM x y
+
+/-- Exchange-odd half-difference selected at the fixed point. -/
+def relativeSymplecticMinusEval
+    (ΩG ΩM : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (x y : V) : ℝ :=
+  (-ΩG x y + ΩM x y) / 2
+
+/-- The normal derivative of the even sector sum is exactly twice the odd sector. -/
+theorem relativeSymplecticPlus_hasDerivAt_zero
+    (ΩG ΩM : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (x y : V) :
+    HasDerivAt
+      (fun s : ℝ =>
+        relativeSymplecticPlusEval ΩG ΩM s x y)
+      (2 * relativeSymplecticMinusEval ΩG ΩM x y) 0 := by
+  have hneg : HasDerivAt (fun s : ℝ => -s) (-1) 0 :=
+    (hasDerivAt_id 0).neg
+  have hGexp :
+      HasDerivAt (fun s : ℝ => Real.exp (-s)) (-1) 0 := by
+    simpa using (Real.hasDerivAt_exp 0).comp 0 hneg
+  have hG :=
+    hGexp.mul_const (ΩG x y)
+  have hM :=
+    (Real.hasDerivAt_exp 0).mul_const (ΩM x y)
+  unfold relativeSymplecticPlusEval
+  convert hG.add hM using 1
+  · funext s
+    rfl
+  · unfold relativeSymplecticMinusEval
+    norm_num
+    ring
+
+/-- Therefore the manuscript definition
+`Ω_-=(1/2)L_Y Ω_+` is an identity of the reciprocal sector characters. -/
+theorem relativeSymplecticMinus_eq_half_derivative
+    (ΩG ΩM : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (x y : V) :
+    (1 / 2 : ℝ) *
+      deriv
+        (fun s : ℝ =>
+          relativeSymplecticPlusEval ΩG ΩM s x y) 0 =
+      relativeSymplecticMinusEval ΩG ΩM x y := by
+  rw [(relativeSymplecticPlus_hasDerivAt_zero
+    ΩG ΩM x y).deriv]
+  ring
+
+/-- Exchange of the two sectors reverses the odd presymplectic descendant. -/
+theorem relativeSymplecticMinus_exchange
+    (ΩG ΩM : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (x y : V) :
+    relativeSymplecticMinusEval ΩM ΩG x y =
+      - relativeSymplecticMinusEval ΩG ΩM x y := by
+  unfold relativeSymplecticMinusEval
+  ring
+
+end RelativeSymplecticSector
+
 /-! ### Carrier-current bridge forced by the Einstein-Maxwell jet -/
 
 section CarrierCurrentBridge
@@ -6639,6 +6709,9 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check relativeSymplecticPlus_hasDerivAt_zero
+#check relativeSymplecticMinus_eq_half_derivative
+#check relativeSymplecticMinus_exchange
 #check synchronizationCovector_decomposition
 #check synchronizationCovector_unique
 #check synchronizationCovector_vanishes_on_clock
@@ -7079,6 +7152,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.scalar_backbone_from_einstein_maxwell
 #print axioms RelativeRest.rescaled_solution_preserving_iff
 #print axioms RelativeRest.characteristic_half_contraction_from_relative_scaling
+#print axioms RelativeRest.relativeSymplecticMinus_eq_half_derivative
 #print axioms RelativeRest.carrierJetCurrent_eq_stressBridgeCurrent
 #print axioms RelativeRest.carrierBulkResponse_eq_minus_two_stressResponse
 #print axioms RelativeRest.principalLocalClockRatio_forced
