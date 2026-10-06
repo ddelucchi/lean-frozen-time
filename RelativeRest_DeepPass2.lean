@@ -392,12 +392,4 @@ theorem pure_radial_balance_forces_zero_boost_observer
     (pure_radial_boost_balance_iff_zero q σ hq).mp hbal
   rw [hs]
 
-/-- The displayed Carter angular velocity is the ratio of the phi and t coefficients of its
-unnormalized principal timelike direction. -/
-theorem carter_angular_velocity
-    (r a : ℝ)
-    (hden : r^2 + a^2 ≠ 0) :
-    a / (r^2 + a^2) = a / (r^2 + a^2) := by
-  rfl
-
 end RelativeRest
