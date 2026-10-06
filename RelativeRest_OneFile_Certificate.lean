@@ -1199,7 +1199,8 @@ theorem principalStressFromF_trace_zero (E B : ℝ) :
     principalStressFromFTrace E B = 0 := by
   unfold principalStressFromFTrace
   simp_rw [principalStressFromF_eq_principalStress]
-  simp [principalStress, principalFieldEnergyDensity]
+  simp [principalStress]
+  ring
 
 /-- Squared trace of the explicit Maxwell stress endomorphism. -/
 def principalStressFromFTraceSq (E B : ℝ) : ℝ :=
@@ -4171,8 +4172,8 @@ theorem relationalObservable_gauge_invariant
       relationalObservable flow F T θ x := by
   unfold relationalObservable
   rw [hclock t x, hflow]
-  congr 2
-  ring
+  have hparam : θ - (T x + t) + t = θ - T x := by ring
+  rw [hparam]
 
 /-- At the intrinsic clock reading, the relational observable reduces to the original
 observable whenever zero flow is the identity. -/
@@ -4196,8 +4197,8 @@ theorem relationalGeneratorObservable_gauge_invariant
       relationalGeneratorObservable flow XF T θ x := by
   unfold relationalGeneratorObservable
   rw [hclock t x, hflow]
-  congr 2
-  ring
+  have hparam : θ - (T x + t) + t = θ - T x := by ring
+  rw [hparam]
 
 end RelationalFlow
 
