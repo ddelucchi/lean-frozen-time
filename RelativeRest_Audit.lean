@@ -1,4 +1,4 @@
-import RelativeRest_DeepPass15
+import RelativeRest_DeepPass16
 
 /-!
 # Referee-facing axiom audit
@@ -47,3 +47,8 @@ headline formal statements.  There are no project-local axiom declarations in th
 #print axioms RelativeRest.canonicalClock_reconstruction
 #print axioms RelativeRest.canonicalClockUnit_unique
 #print axioms RelativeRest.canonicalClockLineMap_unique
+
+#print axioms RelativeRest.descendantOnRange_factorization
+#print axioms RelativeRest.descendantOnRange_unique
+#print axioms RelativeRest.characteristicLambda_nonzero
+#print axioms RelativeRest.characteristicClockLine
