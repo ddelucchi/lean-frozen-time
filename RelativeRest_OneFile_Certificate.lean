@@ -336,8 +336,10 @@ theorem rescaled_solution_preserving_iff
         8 * Real.pi * T
             = 8 * Real.pi * Real.exp (2 * s) * T := h
         _ = Real.exp (2 * s) * (8 * Real.pi * T) := by ring
-    exact solution_preserving_fixed_point
-      (8 * Real.pi * T) s hc heq
+    have hscale : (1 : ℝ) = Real.exp (2 * s) := by
+      apply mul_right_cancel₀ hc
+      simpa using heq
+    exact (exp_two_eq_one_iff s).mp hscale.symm
   · rintro rfl
     simp
 
