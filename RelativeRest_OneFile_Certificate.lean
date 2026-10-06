@@ -14158,7 +14158,7 @@ structure PrincipalActionSectorVariationCharacteristicInput where
 
 /-- The common/even action direction is automatically on shell. -/
 theorem PrincipalActionSectorVariationCharacteristicInput.constraint_CA
-    (D : PrincipalActionSectorVariationCharacteristicInput (P:=P)) :
+    (D : PrincipalFixedPointJetVariationCharacteristicInput (P:=P)) :
     D.variation.constraint CA = 0 := by
   rw [D.constraintFromActionLinearization]
   exact actionConstraintResponseLinear_CA _
@@ -14505,6 +14505,132 @@ theorem principalActionEulerSectorVariation_forced_core_chain
   intro i j
   exact D.carrier.J_basis_eq_actionEulerJet i j
 
+/-! ### Fixed-point-jet-forced constraint: frozen value + surviving derivative determine all -/
+
+/-- Minimal finite-dimensional covariant-phase-space interface matching the paper's
+central mechanism. The only action-space information supplied is that the exchange-even
+common direction is frozen and that the exchange-odd normal has the action-Euler response
+fixed by the metric Euler jet. Since `(CA,DA)` is a basis, the entire linear constraint
+operator is then forced. -/
+structure PrincipalFixedPointJetVariationCharacteristicInput where
+  carrier : PrincipalCarrierCharacteristicInput (P:=P)
+  variation : LagrangianVariationNoetherOperators
+    (L:=R2) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ))
+  frozenCommon : variation.constraint CA = 0
+  survivingNormal :
+    variation.constraint DA =
+      (-2 : ℝ) • carrier.actionEulerResponse
+
+/-- Frozen value plus surviving normal jet uniquely reconstruct the full two-sector
+constraint operator. -/
+theorem PrincipalFixedPointJetVariationCharacteristicInput.constraint_operator_forced
+    (D : PrincipalFixedPointJetVariationCharacteristicInput (P:=P)) :
+    D.variation.constraint =
+      actionConstraintResponseLinear D.carrier.actionEulerResponse := by
+  exact actionConstraintResponseLinear_unique_from_CA_DA
+    D.carrier.actionEulerResponse D.variation.constraint
+    D.frozenCommon D.survivingNormal
+
+/-- Gravity and Maxwell sector values are consequences of that fixed-point jet. -/
+theorem PrincipalFixedPointJetVariationCharacteristicInput.constraint_gravity
+    (D : PrincipalFixedPointJetVariationCharacteristicInput (P:=P)) :
+    D.variation.constraint actionGravitySector =
+      D.carrier.actionEulerResponse := by
+  rw [D.constraint_operator_forced]
+  exact actionConstraintResponseLinear_gravity _
+
+theorem PrincipalFixedPointJetVariationCharacteristicInput.constraint_maxwell
+    (D : PrincipalFixedPointJetVariationCharacteristicInput (P:=P)) :
+    D.variation.constraint actionMaxwellSector =
+      -D.carrier.actionEulerResponse := by
+  rw [D.constraint_operator_forced]
+  exact actionConstraintResponseLinear_maxwell _
+
+/-- The stronger sector-operator package is reconstructed from the fixed point and jet. -/
+def PrincipalFixedPointJetVariationCharacteristicInput.toSectorInput
+    (D : PrincipalFixedPointJetVariationCharacteristicInput (P:=P)) :
+    PrincipalActionEulerSectorVariationCharacteristicInput (P:=P) where
+  carrier := D.carrier
+  variation := D.variation
+  constraintFromActionEuler := D.constraint_operator_forced
+
+def PrincipalFixedPointJetVariationCharacteristicInput.characteristicCurrent
+    (D : PrincipalFixedPointJetVariationCharacteristicInput (P:=P)) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
+  D.toSectorInput.characteristicCurrent
+
+theorem principalFixedPointJetVariation_current_eq_actionEulerResponse
+    (D : PrincipalFixedPointJetVariationCharacteristicInput (P:=P)) :
+    D.characteristicCurrent = D.carrier.actionEulerResponse :=
+  principalActionEulerSectorVariation_current_eq_actionEulerResponse D.toSectorInput
+
+theorem principalFixedPointJetVariation_current_eq_characteristicCurrent
+    (D : PrincipalFixedPointJetVariationCharacteristicInput (P:=P)) :
+    D.characteristicCurrent =
+      D.carrier.toCharacteristicCurrentData.current :=
+  principalActionEulerSectorVariation_current_eq_characteristicCurrent D.toSectorInput
+
+theorem principalFixedPointJetVariation_clock_chain
+    (D : PrincipalFixedPointJetVariationCharacteristicInput (P:=P)) :
+    D.characteristicCurrent =
+        D.carrier.toCharacteristicCurrentData.current ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    (quotientClockCovector principalTOLinear).comp
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda) =
+      D.carrier.toCharacteristicCurrentData.clockCovector ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat :=
+  principalActionEulerSectorVariation_clock_chain D.toSectorInput
+
+/-- Strongest finite-dimensional forced-core theorem: the fixed value and its first
+normal jet determine the whole constraint map, the derived Iyer-Wald current, and the
+normalized one-dimensional clock. -/
+theorem principalFixedPointJetVariation_forced_core_chain
+    (D : PrincipalFixedPointJetVariationCharacteristicInput (P:=P))
+    (u s : ℝ) :
+    ((8 * Real.pi * principalFieldEnergyDensity D.carrier.E D.carrier.B =
+        8 * Real.pi *
+          maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+          principalFieldEnergyDensity D.carrier.E D.carrier.B) ↔ s = 0) ∧
+    (∀ i j : Fin 4,
+      D.carrier.J (principalBasis j) i =
+        (16 * Real.pi / principalMetricSign i) *
+          deriv (principalScaledMetricEulerCoeffFromAction
+            D.carrier.E D.carrier.B i j) 0) ∧
+    D.variation.constraint CA = 0 ∧
+    D.variation.constraint DA =
+      (-2 : ℝ) • D.carrier.actionEulerResponse ∧
+    D.variation.constraint actionGravitySector =
+      D.carrier.actionEulerResponse ∧
+    D.variation.constraint actionMaxwellSector =
+      -D.carrier.actionEulerResponse ∧
+    D.characteristicCurrent = D.carrier.actionEulerResponse ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat := by
+  have h := principalActionEulerSectorVariation_forced_core_chain
+    D.toSectorInput u s
+  rcases h with ⟨hrest,hJ,hCA,hDA,hcur,hL,hdim,hnorm⟩
+  exact ⟨hrest,hJ,hCA,hDA,D.constraint_gravity,D.constraint_maxwell,
+    hcur,hL,hdim,hnorm⟩
+
 /-! ### Basis-forced action-Euler constraint: only common on-shellness + gravity response -/
 
 /-- A still weaker and more geometric interface than the full two-sector operator equality.
@@ -14715,9 +14841,20 @@ theorem centralPaper_forced_closure_certificate
       (carterObserver r M a Q θ) = -1 ∧
     kerrClockRateFromPrincipalEM Q r a θ * dt =
       Real.sqrt 2 * |Q| * dlam := by
-  rcases principalActionSectorVariation_forced_core_chain D u s with
-    ⟨hrest, _hjet, hrainich, hCA, hDA, hcurEuler, hcurChar,
+  have hfp := principalFixedPointJetVariation_forced_core_chain D u s
+  rcases hfp with
+    ⟨hrest, _hJ, hCA, hDA, _hG, _hM, hcurEuler,
       hLambda, hdim, hnorm⟩
+  have hcurChar :=
+    principalFixedPointJetVariation_current_eq_characteristicCurrent D
+  have hrainich : ∀ i j : Fin 4,
+      (∑ k : Fin 4,
+        principalJetFromF D.carrier.E D.carrier.B i k *
+          principalJetFromF D.carrier.E D.carrier.B k j) =
+        (principalChi D.carrier.E D.carrier.B)^2 *
+          (if i = j then 1 else 0) := by
+    intro i j
+    exact principalJetFromF_rainich D.carrier.E D.carrier.B i j
   have hJ : ∀ i j : Fin 4,
       D.carrier.J (principalBasis j) i =
         (16 * Real.pi / principalMetricSign i) *
