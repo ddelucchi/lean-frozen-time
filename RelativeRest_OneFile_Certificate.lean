@@ -4610,6 +4610,29 @@ theorem actionConstraintOperator_eq_iff_relative_orbit
       simpa using hder
     exact actionConstraintResponseLinear_unique_from_CA_DA ell F hCA hDA
 
+/-- Exact finite-vs-infinitesimal equivalence. For a linear two-sector descendant,
+having the reciprocal Einstein-Maxwell character on the whole relative orbit is
+equivalent to freezing the even value and fixing the first surviving odd jet.
+Thus the fixed point plus first jet determines the complete finite `sinh` response. -/
+theorem actionConstraint_relative_orbit_iff_fixed_point_jet
+    (F : R2 →ₗ[ℝ] ((Fin 4 → ℝ) →ₗ[ℝ] ℝ))
+    (ell : (Fin 4 → ℝ) →ₗ[ℝ] ℝ) :
+    (∀ s : ℝ, ∀ v : Fin 4 → ℝ,
+      relativeConstraintOrbitEval F v s =
+        relativeConstraintResidual (ell v) s) ↔
+    (F CA = 0 ∧ F DA = (-2 : ℝ) • ell) := by
+  constructor
+  · intro horbit
+    have hF : F = actionConstraintResponseLinear ell :=
+      (actionConstraintOperator_eq_iff_relative_orbit F ell).2 horbit
+    rw [hF]
+    exact ⟨actionConstraintResponseLinear_CA ell,
+      actionConstraintResponseLinear_DA ell⟩
+  · rintro ⟨hCA,hDA⟩
+    have hF : F = actionConstraintResponseLinear ell :=
+      actionConstraintResponseLinear_unique_from_CA_DA ell F hCA hDA
+    exact (actionConstraintOperator_eq_iff_relative_orbit F ell).1 hF
+
 /-! ### First-variation derivation of the Iyer-Wald operator identity -/
 
 section FirstVariationNoetherDerivation
@@ -15210,6 +15233,45 @@ structure PrincipalMetricEulerRelativeOrbitVariationCharacteristicInput where
       relativeConstraintOrbitEval variation.constraint v s =
         relativeConstraintResidual (carrier.metricEulerJetResponse v) s
 
+/-- Conversely, the finite relative action character contains exactly the local
+fixed-point value and metric-Euler normal jet, no more and no less. -/
+def PrincipalMetricEulerRelativeOrbitVariationCharacteristicInput.toMetricEulerJetInput
+    (D : PrincipalMetricEulerRelativeOrbitVariationCharacteristicInput (P:=P)) :
+    PrincipalMetricEulerJetVariationCharacteristicInput (P:=P) where
+  carrier := D.carrier
+  variation := D.variation
+  frozenCommon := by
+    have h := (actionConstraint_relative_orbit_iff_fixed_point_jet
+      D.variation.constraint D.carrier.metricEulerJetResponse).1
+        D.relativeMetricEulerCharacter
+    exact h.1
+  survivingNormalFromMetricEuler := by
+    have h := (actionConstraint_relative_orbit_iff_fixed_point_jet
+      D.variation.constraint D.carrier.metricEulerJetResponse).1
+        D.relativeMetricEulerCharacter
+    exact h.2
+
+/-- The local metric-Euler fixed-point data already force the entire finite relative
+action orbit. This is the exact formal version of 'the value freezes, the derivative
+survives': no higher relative-orbit data remain free. -/
+theorem PrincipalMetricEulerJetVariationCharacteristicInput.relativeMetricEulerCharacter
+    (D : PrincipalMetricEulerJetVariationCharacteristicInput (P:=P)) :
+    ∀ s : ℝ, ∀ v : Fin 4 → ℝ,
+      relativeConstraintOrbitEval D.variation.constraint v s =
+        relativeConstraintResidual (D.carrier.metricEulerJetResponse v) s := by
+  exact (actionConstraint_relative_orbit_iff_fixed_point_jet
+    D.variation.constraint D.carrier.metricEulerJetResponse).2
+      ⟨D.frozenCommon, D.survivingNormalFromMetricEuler⟩
+
+/-- Hence the whole finite relative orbit is constructed from the displayed action's
+metric-Euler fixed point and first normal derivative. -/
+def PrincipalMetricEulerJetVariationCharacteristicInput.toMetricEulerRelativeOrbitInput
+    (D : PrincipalMetricEulerJetVariationCharacteristicInput (P:=P)) :
+    PrincipalMetricEulerRelativeOrbitVariationCharacteristicInput (P:=P) where
+  carrier := D.carrier
+  variation := D.variation
+  relativeMetricEulerCharacter := D.relativeMetricEulerCharacter
+
 /-- The entire two-sector covariant constraint map is reconstructed from that one
 relative action character. -/
 theorem PrincipalMetricEulerRelativeOrbitVariationCharacteristicInput.constraint_operator_forced
@@ -17222,6 +17284,7 @@ theorem scalar_backbone_from_einstein_maxwell
 #check relativeConstraintOrbitEval_deriv_zero
 #check actionConstraintResponseLinear_relative_orbit
 #check actionConstraintOperator_eq_iff_relative_orbit
+#check actionConstraint_relative_orbit_iff_fixed_point_jet
 #check JA_CA
 #check JA_DA
 #check JA_actionBoost
