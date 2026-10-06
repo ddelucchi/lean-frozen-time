@@ -2603,6 +2603,22 @@ theorem optical_covector_norm_scalar
   rw [hs]
   ring
 
+
+/-- Stronger chronometric norm theorem: `K=ω⁴` is derived from the carrier identities
+rather than supplied independently. -/
+theorem optical_covector_norm_from_carrier
+    (norm_u K χ ω : ℝ)
+    (hu : norm_u = -1)
+    (hχ : 0 ≤ χ)
+    (hKχ : K = χ^2)
+    (hω : ω = Real.sqrt χ) :
+    ω^2 * norm_u = - Real.sqrt K := by
+  have hrate := clock_rate_square K χ ω hχ hKχ hω
+  have hωnonneg : 0 ≤ ω := by
+    rw [hω]
+    exact Real.sqrt_nonneg χ
+  exact optical_covector_norm_scalar norm_u ω K hu hrate.2 hωnonneg
+
 /-! ## 13. Transport/integrability algebra -/
 
 /-- Scalar coefficient identity behind `D_b ω = (ω/4) D_b log K` when `K=ω⁴`. -/
@@ -3670,6 +3686,7 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check optical_covector_norm_from_carrier
 #check kerrPrincipal_field_magnitude
 #check kerrPrincipalChi_formula
 #check kerrChiScalar_eq_principalChi
