@@ -2302,6 +2302,48 @@ theorem homogeneous_conformal_factor
   have h := hhom χ 1 hχ (by norm_num)
   simpa [mul_comm] using h
 
+
+/-- Common Einstein-Maxwell representative invariance itself forces the required
+one-homogeneity.  Here `r2` is the positive metric homothety factor:
+`g ↦ r2 g`, `χ ↦ χ/r2`, and invariance of `f(χ)g` means
+`f(χ/r2) r2 = f(χ)`. -/
+theorem common_scale_invariance_implies_homogeneous
+    (f : ℝ → ℝ)
+    (hinv :
+      ∀ r2 χ : ℝ,
+        0 < r2 → 0 < χ →
+        f (χ / r2) * r2 = f χ) :
+    ∀ c χ : ℝ,
+      0 < c → 0 < χ →
+      f (c * χ) = c * f χ := by
+  intro c χ hc hχ
+  have hc0 : c ≠ 0 := ne_of_gt hc
+  have hr2 : 0 < (1 / c : ℝ) := by positivity
+  have h := hinv (1 / c) χ hr2 hχ
+  have harg : χ / (1 / c) = c * χ := by
+    field_simp [hc0]
+    ring
+  rw [harg] at h
+  calc
+    f (c * χ)
+        = c * (f (c * χ) * (1 / c)) := by
+            field_simp [hc0]
+    _ = c * f χ := by rw [h]
+
+/-- Therefore common-scale invariance already forces the linear form
+`f(χ)=f(1)χ`. -/
+theorem common_scale_invariance_forces_linear_factor
+    (f : ℝ → ℝ)
+    (hinv :
+      ∀ r2 χ : ℝ,
+        0 < r2 → 0 < χ →
+        f (χ / r2) * r2 = f χ)
+    (χ : ℝ) (hχ : 0 < χ) :
+    f χ = f 1 * χ := by
+  exact homogeneous_conformal_factor f
+    (common_scale_invariance_implies_homogeneous f hinv)
+    χ hχ
+
 /-- If `J²=χ²I`, then among factors `Cχ` the unit-involution normalization forces `C=1`
 for positive `C,χ`. -/
 theorem unit_involution_fixes_conformal_constant
@@ -2355,6 +2397,24 @@ theorem conformal_factor_forced
   have hCeq : f 1 = 1 :=
     unit_involution_fixes_conformal_constant (f 1) χ hC hχ hunit'
   rw [hlin, hCeq, one_mul]
+
+
+/-- Strong form of the manuscript's conformal-normalization argument: representative
+invariance plus unit-involution normalization force `f(χ)=χ` directly, with
+one-homogeneity no longer supplied as a premise. -/
+theorem conformal_factor_forced_from_common_scale
+    (f : ℝ → ℝ)
+    (hinv :
+      ∀ r2 χ : ℝ,
+        0 < r2 → 0 < χ →
+        f (χ / r2) * r2 = f χ)
+    (χ : ℝ) (hχ : 0 < χ)
+    (hC : 0 < f 1)
+    (hunit : χ^2 / (f χ)^2 = 1) :
+    f χ = χ := by
+  exact conformal_factor_forced f
+    (common_scale_invariance_implies_homogeneous f hinv)
+    χ hχ hC hunit
 
 
 /-! ### Chronometric normalization under the forced conformal metric -/
@@ -7229,6 +7289,9 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check common_scale_invariance_implies_homogeneous
+#check common_scale_invariance_forces_linear_factor
+#check conformal_factor_forced_from_common_scale
 #check opticalMetric2_inverse
 #check opticalInverseMetric2_basis_norms
 #check opticalMetric2_lapse_form
@@ -7690,6 +7753,7 @@ end RelativeRest
 /-! Kernel axiom audit. These commands are executable and are intentionally part of the build
 transcript: they expose every axiom used by representative end-to-end theorems. -/
 #print axioms RelativeRest.scalar_backbone
+#print axioms RelativeRest.conformal_factor_forced_from_common_scale
 #print axioms RelativeRest.relationalObservable_gauge_invariant
 #print axioms RelativeRest.relationalObservable_deriv
 #print axioms RelativeRest.implicit_endpoint_covector_null
