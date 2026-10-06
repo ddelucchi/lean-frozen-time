@@ -6729,6 +6729,80 @@ theorem characteristicCurrentDataOfCarrier_Lambda_apply
 
 end CarrierCharacteristicConstruction
 
+/-! ### Maxwell field-derived positivity for a current-first interface -/
+
+/-- Strong current-first Maxwell interface.  The current is the only covariant-phase-space
+object supplied; its nonvanishing is forced by one explicit principal-field test value. -/
+structure PrincipalFieldCurrentData where
+  beta : P →ₗ[ℝ] KSpace
+  current : KSpace →ₗ[ℝ] ℝ
+  positiveWitness : P
+  smear : ℝ
+  E : ℝ
+  B : ℝ
+  volume : ℝ
+  smear_pos : 0 < smear
+  field_nonzero : E ≠ 0 ∨ B ≠ 0
+  volume_pos : 0 < volume
+  current_formula :
+    current (beta positiveWitness) =
+      maxwellPositiveResponseFromField smear E B volume
+
+/-- Maxwell positivity makes the supplied physical current positive on the test profile. -/
+theorem PrincipalFieldCurrentData.current_positive
+    (D : PrincipalFieldCurrentData (P:=P) (KSpace:=KSpace)) :
+    0 < D.current (D.beta D.positiveWitness) := by
+  rw [D.current_formula]
+  exact maxwellPositiveResponseFromField_pos
+    D.smear D.E D.B D.volume
+    D.smear_pos D.field_nonzero D.volume_pos
+
+/-- Therefore the strong Maxwell data canonically gives the minimal current-first datum. -/
+def PrincipalFieldCurrentData.toCharacteristicCurrentData
+    (D : PrincipalFieldCurrentData (P:=P) (KSpace:=KSpace)) :
+    CharacteristicCurrentData (P:=P) (KSpace:=KSpace) where
+  beta := D.beta
+  current := D.current
+  positiveWitness := D.positiveWitness
+  current_positive := D.current_positive
+
+/-- Its parameter response is not input data; it is the pullback of the physical current. -/
+def PrincipalFieldCurrentData.ell
+    (D : PrincipalFieldCurrentData (P:=P) (KSpace:=KSpace)) :
+    P →ₗ[ℝ] ℝ :=
+  D.toCharacteristicCurrentData.ell
+
+/-- The characteristic covector is likewise the forced restriction of the physical current. -/
+def PrincipalFieldCurrentData.Lambda
+    (D : PrincipalFieldCurrentData (P:=P) (KSpace:=KSpace)) :
+    LinearMap.range D.beta →ₗ[ℝ] ℝ :=
+  D.toCharacteristicCurrentData.Lambda
+
+theorem principalFieldCurrent_factorization
+    (D : PrincipalFieldCurrentData (P:=P) (KSpace:=KSpace)) :
+    D.Lambda.comp D.beta.rangeRestrict = D.ell :=
+  characteristicCurrent_factorization D.toCharacteristicCurrentData
+
+theorem principalFieldCurrent_Lambda_nonzero
+    (D : PrincipalFieldCurrentData (P:=P) (KSpace:=KSpace)) :
+    D.Lambda ≠ 0 :=
+  characteristicCurrent_Lambda_nonzero D.toCharacteristicCurrentData
+
+theorem principalFieldCurrent_Lambda_unique
+    (D : PrincipalFieldCurrentData (P:=P) (KSpace:=KSpace))
+    (Λ' : LinearMap.range D.beta →ₗ[ℝ] ℝ)
+    (hΛ' : Λ'.comp D.beta.rangeRestrict = D.ell) :
+    Λ' = D.Lambda :=
+  characteristicCurrent_Lambda_unique
+    D.toCharacteristicCurrentData Λ' hΛ'
+
+theorem principalFieldCurrent_quotient_finrank_one
+    (D : PrincipalFieldCurrentData (P:=P) (KSpace:=KSpace)) :
+    Module.finrank ℝ
+      ((LinearMap.range D.beta) ⧸ LinearMap.ker D.Lambda) = 1 :=
+  characteristicCurrent_quotient_finrank_one
+    D.toCharacteristicCurrentData
+
 /-- Minimal remaining algebraic interface to the still-unformalized Iyer-Wald layer.
 The response covector is not supplied, its factorization is not supplied, and kernel invisibility
 is not supplied.  The only structural premise is the physical statement that the integrated
@@ -6986,6 +7060,12 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check PrincipalFieldCurrentData.current_positive
+#check PrincipalFieldCurrentData.toCharacteristicCurrentData
+#check principalFieldCurrent_factorization
+#check principalFieldCurrent_Lambda_nonzero
+#check principalFieldCurrent_Lambda_unique
+#check principalFieldCurrent_quotient_finrank_one
 #check characteristicCurrentDataOfCarrier
 #check characteristicCurrentDataOfCarrier_current
 #check characteristicCurrentDataOfCarrier_ell
@@ -7475,6 +7555,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.characteristicCurrent_Lambda_unique
 #print axioms RelativeRest.characteristicCurrent_quotient_finrank_one
 #print axioms RelativeRest.characteristicCurrentDataOfCarrier_Lambda_apply
+#print axioms RelativeRest.principalFieldCurrent_Lambda_unique
+#print axioms RelativeRest.principalFieldCurrent_quotient_finrank_one
 #print axioms RelativeRest.reeb_direction_unique
 #print axioms RelativeRest.clock_section_reeb_existsUnique
 #print axioms RelativeRest.clockLiouville_unique_of_homogeneity
