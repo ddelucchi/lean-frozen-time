@@ -841,6 +841,100 @@ theorem carrier_ratio
 
 /-! ## 4. The action boost module -/
 
+/-! ### Explicit reciprocal two-sector action -/
+
+/-- Common-character-removed two-sector action along the relative coordinate. -/
+def relativeActionValue
+    (SG SM s : ℝ) : ℝ :=
+  Real.exp (-s) * SG + Real.exp s * SM
+
+/-- Exchange of gravity/Maxwell sectors is exactly reversal of the relative coordinate. -/
+theorem relativeActionValue_exchange
+    (SG SM s : ℝ) :
+    relativeActionValue SM SG (-s) =
+      relativeActionValue SG SM s := by
+  unfold relativeActionValue
+  ring
+
+/-- The normal derivative of the reciprocal action is the exchange-odd sector difference. -/
+theorem relativeActionValue_hasDerivAt
+    (SG SM s : ℝ) :
+    HasDerivAt
+      (relativeActionValue SG SM)
+      (-Real.exp (-s) * SG + Real.exp s * SM) s := by
+  have hneg : HasDerivAt (fun x : ℝ => -x) (-1) s :=
+    (hasDerivAt_id s).neg
+  have hG :
+      HasDerivAt
+        (fun x : ℝ => Real.exp (-x) * SG)
+        (-Real.exp (-s) * SG) s := by
+    have he := (Real.hasDerivAt_exp (-s)).comp s hneg
+    convert he.mul_const SG using 1 <;> ring
+  have hM :
+      HasDerivAt
+        (fun x : ℝ => Real.exp x * SM)
+        (Real.exp s * SM) s :=
+    (Real.hasDerivAt_exp s).mul_const SM
+  simpa [relativeActionValue] using hG.add hM
+
+/-- At the relative fixed point the action normal is exactly `SM-SG`. -/
+theorem relativeActionValue_deriv_zero
+    (SG SM : ℝ) :
+    deriv (relativeActionValue SG SM) 0 = SM - SG := by
+  rw [(relativeActionValue_hasDerivAt SG SM 0).deriv]
+  simp
+  ring
+
+/-- On the solution-preserving diagonal the relative action is exchange-even. -/
+theorem relativeActionValue_diagonal
+    (S s : ℝ) :
+    relativeActionValue S S s =
+      2 * S * Real.cosh s := by
+  unfold relativeActionValue
+  rw [Real.cosh_eq]
+  ring
+
+/-- Consequently its first normal derivative vanishes at relative rest. -/
+theorem relativeActionValue_diagonal_deriv_zero
+    (S : ℝ) :
+    deriv (relativeActionValue S S) 0 = 0 := by
+  rw [relativeActionValue_deriv_zero]
+  ring
+
+/-- The corresponding sector difference is the odd companion and survives at first order. -/
+def relativeActionDefect
+    (S s : ℝ) : ℝ :=
+  Real.exp (-s) * S - Real.exp s * S
+
+@[simp] theorem relativeActionDefect_zero
+    (S : ℝ) :
+    relativeActionDefect S 0 = 0 := by
+  simp [relativeActionDefect]
+
+theorem relativeActionDefect_hasDerivAt_zero
+    (S : ℝ) :
+    HasDerivAt (relativeActionDefect S) (-2 * S) 0 := by
+  have hfun :
+      relativeActionDefect S =
+        fun s : ℝ => (-2 * S) * Real.sinh s := by
+    funext s
+    unfold relativeActionDefect
+    rw [Real.sinh_eq]
+    ring
+  rw [hfun]
+  simpa using (Real.hasDerivAt_sinh 0).const_mul (-2 * S)
+
+/-- The action pair therefore has the same fixed-value/first-jet architecture as the
+field-equation carrier: even value, vanishing odd value, surviving odd first jet. -/
+theorem relativeAction_fixed_point_jet
+    (S : ℝ) :
+    deriv (relativeActionValue S S) 0 = 0 ∧
+    relativeActionDefect S 0 = 0 ∧
+    deriv (relativeActionDefect S) 0 = -2 * S := by
+  refine ⟨relativeActionValue_diagonal_deriv_zero S,
+    relativeActionDefect_zero S, ?_⟩
+  exact (relativeActionDefect_hasDerivAt_zero S).deriv
+
 abbrev R2 := ℝ × ℝ
 
 /-- Linearized solution residual on the two action-sector coefficients.
@@ -9208,6 +9302,11 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check relativeActionValue_exchange
+#check relativeActionValue_deriv_zero
+#check relativeActionValue_diagonal
+#check relativeActionDefect_hasDerivAt_zero
+#check relativeAction_fixed_point_jet
 #check relativeSymplecticMinus_apply
 #check relativeSymplecticMinus_apply_eq_half_derivative
 #check relativeLiouvilleCovector_apply
@@ -9756,6 +9855,7 @@ end RelativeRest
 /-! Kernel axiom audit. These commands are executable and are intentionally part of the build
 transcript: they expose every axiom used by representative end-to-end theorems. -/
 #print axioms RelativeRest.scalar_backbone
+#print axioms RelativeRest.relativeAction_fixed_point_jet
 #print axioms RelativeRest.conformal_factor_forced_from_common_scale
 #print axioms RelativeRest.carrier_chi_common_scale
 #print axioms RelativeRest.normalizedCarrierEndomorphism_common_scale
