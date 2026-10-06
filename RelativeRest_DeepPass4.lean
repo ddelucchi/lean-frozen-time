@@ -162,14 +162,14 @@ theorem normalizedClockEquiv_unique
     (hIu : I u1 = u2) :
     I = (normalizedClockEquiv alpha beta u1 u2
       halpha hbeta hspan1 hspan2).toLinearMap := by
-  apply unique_covector_preserving_map
+  exact unique_covector_preserving_map
     alpha beta u1 u2 halpha hbeta hspan1 hspan2
-  · exact I
-  · exact (normalizedClockEquiv alpha beta u1 u2
+    I
+    (normalizedClockEquiv alpha beta u1 u2
       halpha hbeta hspan1 hspan2).toLinearMap
-  · exact hIu
-  · exact normalizedClockEquiv_maps_unit
-      alpha beta u1 u2 halpha hbeta hspan1 hspan2
+    hIu
+    (normalizedClockEquiv_maps_unit
+      alpha beta u1 u2 halpha hbeta hspan1 hspan2)
 
 end ClockLineIso
 
