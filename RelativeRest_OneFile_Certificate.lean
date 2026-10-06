@@ -2978,6 +2978,141 @@ theorem principalBasis_decomposition
   funext i
   fin_cases i <;> simp [principalBasis]
 
+/-! ### Local Noether identity and generalized Bianchi residual -/
+
+/-- Divergence coefficient of a symmetric metric Euler tensor in the local frame. -/
+def principalMetricEulerDivergence
+    (nablaE : Fin 4 → Fin 4 → Fin 4 → ℝ)
+    (b : Fin 4) : ℝ :=
+  ∑ a : Fin 4, nablaE a a b
+
+/-- Gauge-covariant Maxwell force contribution `E_A^a F_{ba}` to the
+diffeomorphism Noether identity. -/
+def principalMaxwellEulerForce
+    (EA : Fin 4 → ℝ)
+    (F : Fin 4 → Fin 4 → ℝ)
+    (b : Fin 4) : ℝ :=
+  ∑ a : Fin 4, EA a * F b a
+
+/-- Generalized Einstein-Maxwell Bianchi/Noether residual
+`-2∇_aE_g^{ab}+E_A^aF^b{}_a` in local components. -/
+def principalGeneralizedBianchiResidual
+    (nablaE : Fin 4 → Fin 4 → Fin 4 → ℝ)
+    (EA : Fin 4 → ℝ)
+    (F : Fin 4 → Fin 4 → ℝ)
+    (b : Fin 4) : ℝ :=
+  -2 * principalMetricEulerDivergence nablaE b +
+    principalMaxwellEulerForce EA F b
+
+/-- Metric Euler pairing with a gauge-covariant infinitesimal diffeomorphism.
+The factor two is the symmetry factor from the metric Lie derivative. -/
+def principalMetricDiffeomorphismEulerPairing
+    (E nablaXi : Fin 4 → Fin 4 → ℝ) : ℝ :=
+  2 * ∑ a : Fin 4, ∑ b : Fin 4,
+    E a b * nablaXi a b
+
+/-- Maxwell Euler pairing with the gauge-covariant diffeomorphism
+`δ_ξ A_a=ξ^bF_{ba}`. -/
+def principalMaxwellDiffeomorphismEulerPairing
+    (EA : Fin 4 → ℝ)
+    (F : Fin 4 → Fin 4 → ℝ)
+    (xi : Fin 4 → ℝ) : ℝ :=
+  ∑ b : Fin 4,
+    principalMaxwellEulerForce EA F b * xi b
+
+/-- Product-rule expansion of the divergence of the metric Noether current
+`2E_g^{ab}ξ_b`. -/
+def principalMetricNoetherBoundaryExpansion
+    (E : Fin 4 → Fin 4 → ℝ)
+    (nablaE : Fin 4 → Fin 4 → Fin 4 → ℝ)
+    (xi : Fin 4 → ℝ)
+    (nablaXi : Fin 4 → Fin 4 → ℝ) : ℝ :=
+  2 * (∑ b : Fin 4,
+    principalMetricEulerDivergence nablaE b * xi b) +
+  principalMetricDiffeomorphismEulerPairing E nablaXi
+
+/-- Pairing the generalized Bianchi residual with `ξ` is exactly the difference
+between the Maxwell force term and twice the metric-Euler divergence term. -/
+theorem principalGeneralizedBianchiResidual_pairing
+    (nablaE : Fin 4 → Fin 4 → Fin 4 → ℝ)
+    (EA : Fin 4 → ℝ)
+    (F : Fin 4 → Fin 4 → ℝ)
+    (xi : Fin 4 → ℝ) :
+    (∑ b : Fin 4,
+      principalGeneralizedBianchiResidual nablaE EA F b * xi b) =
+      -2 * (∑ b : Fin 4,
+        principalMetricEulerDivergence nablaE b * xi b) +
+      principalMaxwellDiffeomorphismEulerPairing EA F xi := by
+  unfold principalGeneralizedBianchiResidual
+    principalMaxwellDiffeomorphismEulerPairing
+  simp_rw [add_mul, Finset.sum_add_distrib]
+  ring
+
+/-- Exact finite-index Noether decomposition.  The total Euler pairing under a
+gauge-covariant diffeomorphism equals the divergence of `2E_g·ξ` plus the
+generalized Bianchi residual paired with `ξ`. -/
+theorem principalDiffeomorphismNoether_decomposition
+    (E : Fin 4 → Fin 4 → ℝ)
+    (nablaE : Fin 4 → Fin 4 → Fin 4 → ℝ)
+    (EA : Fin 4 → ℝ)
+    (F : Fin 4 → Fin 4 → ℝ)
+    (xi : Fin 4 → ℝ)
+    (nablaXi : Fin 4 → Fin 4 → ℝ) :
+    principalMetricDiffeomorphismEulerPairing E nablaXi +
+        principalMaxwellDiffeomorphismEulerPairing EA F xi =
+      principalMetricNoetherBoundaryExpansion
+          E nablaE xi nablaXi +
+        ∑ b : Fin 4,
+          principalGeneralizedBianchiResidual nablaE EA F b * xi b := by
+  rw [principalGeneralizedBianchiResidual_pairing]
+  unfold principalMetricNoetherBoundaryExpansion
+  ring
+
+/-- Conversely, if diffeomorphism covariance makes the Euler variation a pure
+boundary for every local vector `ξ`, the generalized Einstein-Maxwell Bianchi
+identity is forced componentwise.  No Bianchi residual can be added freely. -/
+theorem principalGeneralizedBianchi_forced_by_diffeomorphism_invariance
+    (E : Fin 4 → Fin 4 → ℝ)
+    (nablaE : Fin 4 → Fin 4 → Fin 4 → ℝ)
+    (EA : Fin 4 → ℝ)
+    (F : Fin 4 → Fin 4 → ℝ)
+    (nablaXiOf : (Fin 4 → ℝ) → Fin 4 → Fin 4 → ℝ)
+    (hinv : ∀ xi : Fin 4 → ℝ,
+      principalMetricDiffeomorphismEulerPairing E (nablaXiOf xi) +
+          principalMaxwellDiffeomorphismEulerPairing EA F xi =
+        principalMetricNoetherBoundaryExpansion
+          E nablaE xi (nablaXiOf xi)) :
+    ∀ b : Fin 4,
+      principalGeneralizedBianchiResidual nablaE EA F b = 0 := by
+  have hpair : ∀ xi : Fin 4 → ℝ,
+      (∑ b : Fin 4,
+        principalGeneralizedBianchiResidual nablaE EA F b * xi b) = 0 := by
+    intro xi
+    have hdec := principalDiffeomorphismNoether_decomposition
+      E nablaE EA F xi (nablaXiOf xi)
+    rw [hinv xi] at hdec
+    linarith
+  intro b
+  have hb := hpair (principalBasis b)
+  simpa [principalBasis] using hb
+
+/-- On Maxwell shell the generalized identity reduces to conservation of the
+metric Euler tensor. -/
+theorem principalMetricEulerDivergence_zero_of_generalizedBianchi_onMaxwellShell
+    (nablaE : Fin 4 → Fin 4 → Fin 4 → ℝ)
+    (EA : Fin 4 → ℝ)
+    (F : Fin 4 → Fin 4 → ℝ)
+    (hEA : ∀ a : Fin 4, EA a = 0)
+    (hBianchi : ∀ b : Fin 4,
+      principalGeneralizedBianchiResidual nablaE EA F b = 0) :
+    ∀ b : Fin 4, principalMetricEulerDivergence nablaE b = 0 := by
+  intro b
+  have h := hBianchi b
+  unfold principalGeneralizedBianchiResidual
+    principalMaxwellEulerForce at h
+  simp [hEA] at h
+  linarith
+
 /-- Linear endomorphisms of the principal frame are determined by their values on
 the four principal basis vectors. -/
 theorem principalLinearMap_ext_on_basis
@@ -18387,6 +18522,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalEinsteinMaxwell_onShell_local_first_variation_is_boundary
 #print axioms RelativeRest.principalMetricEulerNoetherJetCoeff_eq_carrier
 #print axioms RelativeRest.principalMetricEulerNoetherJetResponse_eq_carrier
+#print axioms RelativeRest.principalDiffeomorphismNoether_decomposition
+#print axioms RelativeRest.principalGeneralizedBianchi_forced_by_diffeomorphism_invariance
+#print axioms RelativeRest.principalMetricEulerDivergence_zero_of_generalizedBianchi_onMaxwellShell
 #print axioms RelativeRest.linearDescendant_reciprocal
 #print axioms RelativeRest.linearDescendant_normalJet_of_opposite
 #print axioms RelativeRest.linearDescendant_reciprocal_hasDerivAt_zero
