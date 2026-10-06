@@ -184,11 +184,28 @@ theorem solution_preserving_fixed_point
   have he : (1 : ℝ) = Real.exp (2 * s) := mul_left_cancel₀ ht hm
   exact (exp_two_eq_one_iff s).mp he.symm
 
+/-- The field-equation fixed point is an exact iff for every nonzero electrovac component. -/
+theorem solution_preserving_fixed_point_iff
+    (t s : ℝ) (ht : t ≠ 0) :
+    t = Real.exp (2 * s) * t ↔ s = 0 := by
+  constructor
+  · exact solution_preserving_fixed_point t s ht
+  · rintro rfl
+    simp
+
 /-- Scalar model of the on-shell odd normal defect. -/
 def defect (T s : ℝ) : ℝ := -16 * Real.pi * Real.sinh s * T
 
 @[simp] theorem defect_zero (T : ℝ) : defect T 0 = 0 := by
   simp [defect]
+
+/-- On the nonvacuum sector, the odd defect itself has exactly the same unique zero. -/
+theorem defect_eq_zero_iff
+    (T s : ℝ) (hT : T ≠ 0) :
+    defect T s = 0 ↔ s = 0 := by
+  unfold defect
+  have hpi : Real.pi ≠ 0 := ne_of_gt Real.pi_pos
+  simp [hT, hpi, Real.sinh_eq_zero]
 
 /-- The normal derivative of the on-shell defect at the fixed point is `-16πT`. -/
 theorem defect_hasDerivAt_zero (T : ℝ) :
@@ -231,6 +248,19 @@ theorem jet_eq_minus_two_ricci
     -16 * Real.pi * T = -2 * Ric := by
   rw [hRic]
   ring
+
+/-- Every odd defect jet is therefore exactly the same curvature carrier `-2 Ric`. -/
+theorem defect_odd_iteratedDeriv_eq_minus_two_ricci
+    (T Ric : ℝ) (hRic : Ric = 8 * Real.pi * T) (n : ℕ) :
+    iteratedDeriv (2 * n + 1) (defect T) 0 = -2 * Ric := by
+  rw [defect_odd_iteratedDeriv_carrier, jet_eq_minus_two_ricci T Ric hRic]
+
+/-- Nonzero Ricci carrier means every odd normal jet genuinely survives freezing. -/
+theorem defect_odd_iteratedDeriv_ne_zero
+    (T Ric : ℝ) (hRic : Ric = 8 * Real.pi * T) (hRic0 : Ric ≠ 0) (n : ℕ) :
+    iteratedDeriv (2 * n + 1) (defect T) 0 ≠ 0 := by
+  rw [defect_odd_iteratedDeriv_eq_minus_two_ricci T Ric hRic n]
+  exact mul_ne_zero (by norm_num) hRic0
 
 /-- Even/odd carrier pair used in the manuscript. -/
 def carrierEven (η s : ℝ) : ℝ := 2 * Real.cosh s * η
@@ -731,6 +761,14 @@ theorem optical_velocity_ratio (s : ℝ) :
       Real.tanh s := by
   simp [opticalEval, RO, TO, opticalObserver, Real.tanh_eq_sinh_div_cosh]
 
+/-- The manuscript's operational defect-velocity equation is an identity:
+the optical radial/time ratio and the action odd/even ratio are the same `tanh s`. -/
+theorem defectvelocity_identity
+    (η s : ℝ) (hη : η ≠ 0) :
+    opticalEval RO (opticalObserver s) / opticalEval TO (opticalObserver s) =
+      - carrierOdd η s / carrierEven η s := by
+  rw [optical_velocity_ratio s, carrier_ratio η s hη]
+
 /-- Normalized optical boost generator, exchanging even and odd basis directions. -/
 def BO (v : R2) : R2 := (v.2, v.1)
 
@@ -1087,6 +1125,21 @@ theorem energy_density_clock_rate_value
     Real.sq_sqrt hpie
   have hrhs : 0 ≤ 4 * Real.sqrt (Real.pi * ε) := by positivity
   nlinarith
+
+/-- The electromagnetic clock identities close into one forced scalar chain:
+the same positive `ω` is fixed by energy density and its fourth power is the invariant
+Maxwell magnitude. -/
+theorem chronometric_invariant_chain
+    (E B ε ω : ℝ)
+    (hε : 0 ≤ ε) (hω : 0 ≤ ω)
+    (hcarrier : ω^2 = principalChi E B)
+    (henergy : principalChi E B = 16 * Real.pi * ε) :
+    ω = 4 * Real.sqrt (Real.pi * ε) ∧
+    ω^4 = (maxwellI E B)^2 + (maxwellJ E B)^2 := by
+  constructor
+  · apply energy_density_clock_rate_value ε ω hε hω
+    exact hcarrier.trans henergy
+  · exact maxwell_clock_fourth_power E B ω hcarrier
 
 /-- The local optical covector has background norm `-ω²=-sqrt K` once the unit timelike norm
 and `K=ω⁴` are supplied. -/
@@ -1486,6 +1539,12 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check solution_preserving_fixed_point_iff
+#check defect_eq_zero_iff
+#check defect_odd_iteratedDeriv_eq_minus_two_ricci
+#check defect_odd_iteratedDeriv_ne_zero
+#check defectvelocity_identity
+#check chronometric_invariant_chain
 #check defect_even_iteratedDeriv_zero
 #check defect_odd_iteratedDeriv_carrier
 #check defect_full_jet_parity
