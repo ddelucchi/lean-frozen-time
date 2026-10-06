@@ -1006,6 +1006,84 @@ theorem principal_plus_plane_lorentzian_certificate :
   refine ⟨principal_lorentz_basis_eigen_plus.1,
     principal_lorentz_basis_eigen_plus.2, ?_, ?_⟩ <;> norm_num
 
+
+/-! ### Explicit local clock decomposition in the principal frame -/
+
+/-- Chronometric covector `T_O=-û♭` in the canonical principal orthonormal frame. -/
+def principalTO (v : Fin 4 → ℝ) : ℝ := v 0
+
+/-- Chronometric unit timelike vector `û_*`. -/
+def principalUhat : Fin 4 → ℝ := principalBasis 0
+
+/-- Physical-metric unit vector `u_* = ω û_*` when `χ=ω²`. -/
+def principalPhysicalU (ω : ℝ) : Fin 4 → ℝ :=
+  ω • principalUhat
+
+/-- Carrier endomorphism `J=χS=ω²S` in the normalized principal frame. -/
+def principalJetFromRate (ω : ℝ) (v : Fin 4 → ℝ) : Fin 4 → ℝ :=
+  fun i => ω^2 * principalJetInvolution v i
+
+/-- Spatial remainder after removing the forced timelike carrier component. -/
+def principalSpatialRemainder (ω : ℝ) (v : Fin 4 → ℝ) : Fin 4 → ℝ :=
+  principalJetFromRate ω v -
+    (ω * principalTO v) • principalPhysicalU ω
+
+/-- Every carrier image splits exactly as
+`Jv = ω T_O(v) u_* + w`. -/
+theorem principalJet_local_decomposition
+    (ω : ℝ) (v : Fin 4 → ℝ) :
+    principalJetFromRate ω v =
+      (ω * principalTO v) • principalPhysicalU ω +
+        principalSpatialRemainder ω v := by
+  unfold principalSpatialRemainder
+  module
+
+/-- The remainder is spatial: its time component vanishes identically. -/
+theorem principalSpatialRemainder_time_zero
+    (ω : ℝ) (v : Fin 4 → ℝ) :
+    principalSpatialRemainder ω v 0 = 0 := by
+  simp [principalSpatialRemainder, principalJetFromRate,
+    principalJetInvolution, principalPhysicalU, principalUhat,
+    principalTO, principalBasis]
+  ring
+
+/-- The scalar left after restricting the pointwise response to the principal rest
+three-plane is proportional to `T_O(v)`. -/
+def principalRestrictedResponse (ω : ℝ) (v : Fin 4 → ℝ) : ℝ :=
+  ω * principalTO v
+
+/-- The normalized unit has response coefficient exactly `ω`. -/
+@[simp] theorem principalRestrictedResponse_unit (ω : ℝ) :
+    principalRestrictedResponse ω principalUhat = ω := by
+  simp [principalRestrictedResponse, principalTO, principalUhat, principalBasis]
+
+/-- Every restricted pointwise response factors through the unit response by the
+chronometric covector and nothing else. -/
+theorem principalRestrictedResponse_factor
+    (ω : ℝ) (v : Fin 4 → ℝ) :
+    principalRestrictedResponse ω v =
+      principalTO v * principalRestrictedResponse ω principalUhat := by
+  simp [principalRestrictedResponse]
+  ring
+
+/-- On the positive-rate sector, the ratio coefficient in the local Iyer-Wald response
+is uniquely the chronometric covector value `T_O(v)`. -/
+theorem principalLocalClockRatio_forced
+    (ω λ : ℝ) (v : Fin 4 → ℝ) (hω : ω ≠ 0)
+    (hresponse :
+      principalRestrictedResponse ω v =
+        λ * principalRestrictedResponse ω principalUhat) :
+    λ = principalTO v := by
+  rw [principalRestrictedResponse_unit] at hresponse
+  unfold principalRestrictedResponse at hresponse
+  apply mul_right_cancel₀ hω
+  simpa [mul_comm] using hresponse.symm
+
+/-- The local chronometric covector is normalized on the selected timelike unit. -/
+@[simp] theorem principalTO_unit :
+    principalTO principalUhat = 1 := by
+  simp [principalTO, principalUhat, principalBasis]
+
 /-- The invariant Rainich magnitude `χ = 1/2 sqrt(tr J²)` recovers the positive
 principal eigenvalue exactly. -/
 theorem principalStress_chi_from_trace
@@ -3754,6 +3832,12 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check principalJet_local_decomposition
+#check principalSpatialRemainder_time_zero
+#check principalRestrictedResponse_unit
+#check principalRestrictedResponse_factor
+#check principalLocalClockRatio_forced
+#check principalTO_unit
 #check relativeConstraintResidual_eq_sinh
 #check relativeConstraintResidual_hasDerivAt_zero
 #check relativeConstraintResidual_deriv_zero
@@ -3995,6 +4079,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.scalar_backbone
 #print axioms RelativeRest.scalar_backbone_from_einstein_maxwell
 #print axioms RelativeRest.characteristic_half_contraction_from_relative_scaling
+#print axioms RelativeRest.principalLocalClockRatio_forced
 #print axioms RelativeRest.defect_from_on_shell_equation
 #print axioms RelativeRest.scaledResidual_first_jet_eq_minus_two_ricci_from_EM
 #print axioms RelativeRest.boost_balance_exists_unique_of_nonnull
