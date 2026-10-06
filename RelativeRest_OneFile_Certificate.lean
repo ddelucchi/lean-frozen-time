@@ -3475,6 +3475,78 @@ theorem relativeSymplecticMinus_exchange
   unfold relativeSymplecticMinusEval
   ring
 
+/-- The exchange-odd descendant as an actual bilinear linear map. -/
+def relativeSymplecticMinus
+    (ΩG ΩM : V →ₗ[ℝ] V →ₗ[ℝ] ℝ) :
+    V →ₗ[ℝ] V →ₗ[ℝ] ℝ :=
+  (-1 / 2 : ℝ) • ΩG + (1 / 2 : ℝ) • ΩM
+
+@[simp] theorem relativeSymplecticMinus_apply
+    (ΩG ΩM : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (x y : V) :
+    relativeSymplecticMinus ΩG ΩM x y =
+      relativeSymplecticMinusEval ΩG ΩM x y := by
+  simp [relativeSymplecticMinus,
+    relativeSymplecticMinusEval]
+  ring
+
+/-- The half-normal derivative identity therefore holds as equality with the actual
+odd bilinear form at every pair of tangent vectors. -/
+theorem relativeSymplecticMinus_apply_eq_half_derivative
+    (ΩG ΩM : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (x y : V) :
+    relativeSymplecticMinus ΩG ΩM x y =
+      (1 / 2 : ℝ) *
+        deriv
+          (fun s : ℝ =>
+            relativeSymplecticPlusEval ΩG ΩM s x y) 0 := by
+  rw [relativeSymplecticMinus_apply,
+    relativeSymplecticMinus_eq_half_derivative]
+
+/-- Contraction with the already-fixed common-scale Euler direction gives the
+relative homogeneous Liouville covector. -/
+def relativeLiouvilleCovector
+    (ΩG ΩM : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (D : V) : V →ₗ[ℝ] ℝ :=
+  relativeSymplecticMinus ΩG ΩM D
+
+@[simp] theorem relativeLiouvilleCovector_apply
+    (ΩG ΩM : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (D X : V) :
+    relativeLiouvilleCovector ΩG ΩM D X =
+      relativeSymplecticMinusEval ΩG ΩM D X := by
+  simp [relativeLiouvilleCovector]
+
+/-- If the sector two-forms are skew, the odd descendant is skew as well. -/
+theorem relativeSymplecticMinus_skew
+    (ΩG ΩM : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (hG : ∀ x y : V, ΩG x y = - ΩG y x)
+    (hM : ∀ x y : V, ΩM x y = - ΩM y x)
+    (x y : V) :
+    relativeSymplecticMinus ΩG ΩM x y =
+      - relativeSymplecticMinus ΩG ΩM y x := by
+  simp [relativeSymplecticMinus_apply,
+    relativeSymplecticMinusEval,
+    hG x y, hM x y, hG y x, hM y x]
+  ring
+
+/-- Consequently the homogeneous primitive is horizontal on the Euler direction:
+`ι_D Ω_-(D)=0`. -/
+theorem relativeLiouvilleCovector_horizontal
+    (ΩG ΩM : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (D : V)
+    (hG : ∀ x y : V, ΩG x y = - ΩG y x)
+    (hM : ∀ x y : V, ΩM x y = - ΩM y x) :
+    relativeLiouvilleCovector ΩG ΩM D D = 0 := by
+  have hsk :=
+    relativeSymplecticMinus_skew
+      ΩG ΩM hG hM D D
+  have hEq :
+      relativeLiouvilleCovector ΩG ΩM D D =
+        relativeSymplecticMinus ΩG ΩM D D := rfl
+  rw [hEq]
+  linarith
+
 end RelativeSymplecticSector
 
 /-! ### Carrier-current bridge forced by the Einstein-Maxwell jet -/
@@ -9136,6 +9208,11 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check relativeSymplecticMinus_apply
+#check relativeSymplecticMinus_apply_eq_half_derivative
+#check relativeLiouvilleCovector_apply
+#check relativeSymplecticMinus_skew
+#check relativeLiouvilleCovector_horizontal
 #check kerrNewman_forced_specialization_certificate
 #check principalField_forced_core_chain
 #check kerr_metric_det_eq_scalar
@@ -9708,6 +9785,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.iyerWald_compensated_eq_carrierBulkResponse
 #print axioms RelativeRest.iyerWald_half_compensated_eq_stressResponse
 #print axioms RelativeRest.relativeSymplecticMinus_eq_half_derivative
+#print axioms RelativeRest.relativeLiouvilleCovector_horizontal
 #print axioms RelativeRest.carrierJetCurrent_eq_stressBridgeCurrent
 #print axioms RelativeRest.carrierBulkResponse_eq_minus_two_stressResponse
 #print axioms RelativeRest.halfCarrierBulkCurrent_eq_stressResponse
