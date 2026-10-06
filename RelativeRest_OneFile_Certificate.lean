@@ -1405,6 +1405,11 @@ def principalBasis (i : Fin 4) : Fin 4 → ℝ :=
   fun j => if j = i then 1 else 0
 
 
+/-- Chronometric unit timelike vector `û_*`, declared here because the canonical
+principal null dyad reconstructs it before the later local-clock section. -/
+def principalUhat : Fin 4 → ℝ := principalBasis 0
+
+
 /-- Action of the principal mixed Maxwell stress endomorphism on a vector. -/
 def principalStressApply (u : ℝ) (v : Fin 4 → ℝ) (i : Fin 4) : ℝ :=
   ∑ j : Fin 4, principalStress u i j * v j
@@ -1749,9 +1754,6 @@ theorem principal_plus_plane_lorentzian_certificate :
 
 /-- Chronometric covector `T_O=-û♭` in the canonical principal orthonormal frame. -/
 def principalTO (v : Fin 4 → ℝ) : ℝ := v 0
-
-/-- Chronometric unit timelike vector `û_*`. -/
-def principalUhat : Fin 4 → ℝ := principalBasis 0
 
 /-- Physical-metric unit vector `u_* = ω û_*` when `χ=ω²`. -/
 def principalPhysicalU (ω : ℝ) : Fin 4 → ℝ :=
