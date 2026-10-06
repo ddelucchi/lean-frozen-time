@@ -1823,11 +1823,6 @@ def principalPhysicalU (ω : ℝ) : Fin 4 → ℝ :=
   simp [principalTO, principalPhysicalU, principalUhat,
     principalBasis]
 
-/-- Equivalently, the local clock linear map evaluates to `ω` on the physical unit tangent. -/
-@[simp] theorem principalTOLinear_physicalU (ω : ℝ) :
-    principalTOLinear (principalPhysicalU ω) = ω := by
-  simpa [principalTOLinear_apply] using principalTO_physicalU ω
-
 /-- If `χ=ω²`, the vector `u_*=ω û_*` is unit timelike for the background metric
 `g=χ⁻¹ ĝ`. -/
 theorem principalPhysicalU_background_unit
@@ -2096,6 +2091,12 @@ def principalTOLinear :
 
 @[simp] theorem principalTOLinear_apply (v : Fin 4 → ℝ) :
     principalTOLinear v = principalTO v := rfl
+
+
+/-- The local clock linear map evaluates to `ω` on the physical unit tangent. -/
+@[simp] theorem principalTOLinear_physicalU (ω : ℝ) :
+    principalTOLinear (principalPhysicalU ω) = ω := by
+  simpa [principalTOLinear_apply] using principalTO_physicalU ω
 
 /-- The invariant Rainich magnitude `χ = 1/2 sqrt(tr J²)` recovers the positive
 principal eigenvalue exactly. -/
