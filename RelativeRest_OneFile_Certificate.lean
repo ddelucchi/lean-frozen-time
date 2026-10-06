@@ -1634,6 +1634,113 @@ def principalEinsteinHilbertMetricVariationCoeff
   (1 / (16 * Real.pi)) *
     principalMetricSign i * Gmixed i j
 
+/-! ### Einstein-Hilbert bulk coefficient from the displayed density
+
+The Maxwell coefficient above is already a literal derivative of the displayed
+Lagrangian.  The gravity coefficient can be pushed back one layer as well.  The
+only geometric datum left at this stage is the standard Palatini divergence in
+the scalar-curvature variation; its bulk Ricci term is not assumed below. -/
+
+/-- Scalar curvature obtained by contracting a covariant Ricci tensor in the
+principal orthonormal frame. -/
+def principalScalarCurvatureFromRicci
+    (RicCov : Fin 4 → Fin 4 → ℝ) : ℝ :=
+  ∑ i : Fin 4, principalMetricSign i * RicCov i i
+
+/-- Covariant Einstein tensor reconstructed from Ricci and its metric trace. -/
+def principalEinsteinCovFromRicci
+    (RicCov : Fin 4 → Fin 4 → ℝ) (i j : Fin 4) : ℝ :=
+  RicCov i j -
+    (1 / 2 : ℝ) * principalMetricCov i j *
+      principalScalarCurvatureFromRicci RicCov
+
+/-- Mixed Einstein tensor obtained by raising the first index in the principal
+orthonormal frame. -/
+def principalEinsteinMixedFromRicci
+    (RicCov : Fin 4 → Fin 4 → ℝ) (i j : Fin 4) : ℝ :=
+  principalMetricSign i * principalEinsteinCovFromRicci RicCov i j
+
+/-- A literal Einstein-Hilbert density line for an inverse-metric component
+variation.  The scalar-curvature derivative is written as the forced Ricci bulk
+term plus an explicit Palatini boundary coefficient. -/
+def principalEinsteinHilbertLagrangianMetricLineFromRicci
+    (RicCov boundary : Fin 4 → Fin 4 → ℝ)
+    (i j : Fin 4) (s : ℝ) : ℝ :=
+  einsteinHilbertLagrangianDensity
+    (1 + s * principalInverseMetricVolumeDerivative i j)
+    (principalScalarCurvatureFromRicci RicCov +
+      s * (RicCov i j + boundary i j))
+
+/-- Direct differentiation of the displayed Einstein-Hilbert density produces
+exactly the Einstein bulk tensor plus the Palatini boundary coefficient. -/
+theorem principalEinsteinHilbertLagrangianMetricLineFromRicci_hasDerivAt_zero
+    (RicCov boundary : Fin 4 → Fin 4 → ℝ) (i j : Fin 4) :
+    HasDerivAt
+      (principalEinsteinHilbertLagrangianMetricLineFromRicci
+        RicCov boundary i j)
+      ((1 / (16 * Real.pi)) *
+        (principalEinsteinCovFromRicci RicCov i j + boundary i j)) 0 := by
+  have h := einsteinMaxwellLagrangianDensity_hasDerivAt_line_zero
+    1 (principalScalarCurvatureFromRicci RicCov) 0
+    (principalInverseMetricVolumeDerivative i j)
+    (RicCov i j + boundary i j) 0
+  unfold principalEinsteinHilbertLagrangianMetricLineFromRicci
+  convert h using 1 <;>
+    simp [einsteinHilbertLagrangianDensity,
+      einsteinMaxwellLagrangianDensity,
+      principalInverseMetricVolumeDerivative,
+      principalEinsteinCovFromRicci] <;>
+    ring
+
+/-- Derivative form of the Einstein-Hilbert bulk-plus-boundary decomposition. -/
+theorem principalEinsteinHilbertLagrangianMetricLineFromRicci_deriv
+    (RicCov boundary : Fin 4 → Fin 4 → ℝ) (i j : Fin 4) :
+    deriv
+      (principalEinsteinHilbertLagrangianMetricLineFromRicci
+        RicCov boundary i j) 0 =
+      (1 / (16 * Real.pi)) *
+        (principalEinsteinCovFromRicci RicCov i j + boundary i j) :=
+  (principalEinsteinHilbertLagrangianMetricLineFromRicci_hasDerivAt_zero
+    RicCov boundary i j).deriv
+
+/-- After the Palatini divergence is removed by the usual bulk/boundary
+separation, the literal density derivative is precisely the Einstein tensor
+coefficient. -/
+theorem principalEinsteinHilbert_bulk_deriv_eq_einsteinCov
+    (RicCov : Fin 4 → Fin 4 → ℝ) (i j : Fin 4) :
+    deriv
+      (principalEinsteinHilbertLagrangianMetricLineFromRicci
+        RicCov (fun _ _ => 0) i j) 0 =
+      (1 / (16 * Real.pi)) *
+        principalEinsteinCovFromRicci RicCov i j := by
+  rw [principalEinsteinHilbertLagrangianMetricLineFromRicci_deriv]
+  simp
+
+/-- The pre-existing mixed-index gravity coefficient is therefore not an
+independent normalization when its Einstein tensor is reconstructed from Ricci. -/
+theorem principalEinsteinHilbertMetricVariationCoeff_from_ricci
+    (RicCov : Fin 4 → Fin 4 → ℝ) (i j : Fin 4) :
+    principalEinsteinHilbertMetricVariationCoeff
+        (principalEinsteinMixedFromRicci RicCov) i j =
+      (1 / (16 * Real.pi)) *
+        principalEinsteinCovFromRicci RicCov i j := by
+  fin_cases i <;>
+    simp [principalEinsteinHilbertMetricVariationCoeff,
+      principalEinsteinMixedFromRicci, principalMetricSign]
+
+/-- Consequently the gravity metric-Euler coefficient used in the forced chain
+is literally the bulk derivative of the displayed Einstein-Hilbert density,
+once the Palatini divergence has been separated. -/
+theorem principalEinsteinHilbertMetricVariationCoeff_eq_bulk_lagrangian_deriv
+    (RicCov : Fin 4 → Fin 4 → ℝ) (i j : Fin 4) :
+    principalEinsteinHilbertMetricVariationCoeff
+        (principalEinsteinMixedFromRicci RicCov) i j =
+      deriv
+        (principalEinsteinHilbertLagrangianMetricLineFromRicci
+          RicCov (fun _ _ => 0) i j) 0 := by
+  rw [principalEinsteinHilbertMetricVariationCoeff_from_ricci,
+    principalEinsteinHilbert_bulk_deriv_eq_einsteinCov]
+
 /-- Total Einstein-Maxwell metric Euler-Lagrange coefficient for an arbitrary
 candidate mixed Einstein tensor and the explicit principal Maxwell field. -/
 def principalEinsteinMaxwellMetricVariationCoeff
@@ -17651,6 +17758,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.einsteinMaxwellLagrangianDensity_decomposition
 #print axioms RelativeRest.principalMaxwellLagrangianMetricLine_hasDerivAt_zero
 #print axioms RelativeRest.principalMaxwellLagrangianMetricLine_deriv_eq_neg_half_stress
+#print axioms RelativeRest.principalEinsteinHilbertLagrangianMetricLineFromRicci_hasDerivAt_zero
+#print axioms RelativeRest.principalEinsteinHilbertMetricVariationCoeff_eq_bulk_lagrangian_deriv
 #print axioms RelativeRest.linearDescendant_reciprocal
 #print axioms RelativeRest.linearDescendant_normalJet_of_opposite
 #print axioms RelativeRest.linearDescendant_reciprocal_hasDerivAt_zero
