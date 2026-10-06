@@ -3468,6 +3468,34 @@ theorem maxwellPositiveResponse_ne_zero
     maxwellPositiveResponse f χ vol ≠ 0 :=
   ne_of_gt (maxwellPositiveResponse_pos f χ vol hf hχ hvol)
 
+
+/-- The same positive response written directly in terms of the principal Maxwell field. -/
+def maxwellPositiveResponseFromField
+    (f E B vol : ℝ) : ℝ :=
+  f * principalFieldEnergyDensity E B * vol
+
+/-- Field and carrier expressions for the positive response are identical. -/
+theorem maxwellPositiveResponseFromField_eq
+    (f E B vol : ℝ) :
+    maxwellPositiveResponseFromField f E B vol =
+      maxwellPositiveResponse f (principalChi E B) vol := by
+  unfold maxwellPositiveResponseFromField maxwellPositiveResponse
+  rw [principalFieldEnergyDensity_eq_chi]
+  ring
+
+/-- Any nonzero principal Maxwell field and positive test profile gives a strictly positive
+physical response. -/
+theorem maxwellPositiveResponseFromField_pos
+    (f E B vol : ℝ)
+    (hf : 0 < f)
+    (hfield : E ≠ 0 ∨ B ≠ 0)
+    (hvol : 0 < vol) :
+    0 < maxwellPositiveResponseFromField f E B vol := by
+  rw [maxwellPositiveResponseFromField_eq]
+  exact maxwellPositiveResponse_pos
+    f (principalChi E B) vol hf
+    (principalChi_pos E B hfield) hvol
+
 /-- Principal stress energy density fixes the same clock scale. -/
 theorem energy_density_clock_rate
     (χ ε ω : ℝ)
@@ -4932,6 +4960,74 @@ theorem maxwellBridge_quotient_finrank_one
       ((LinearMap.range D.beta) ⧸ LinearMap.ker D.Lambda) = 1 :=
   clockQuotient_finrank_one D.Lambda (maxwellBridge_Lambda_nonzero D)
 
+/-- Strongest algebraic bridge interface currently needed: the Maxwell positivity witness
+is derived from an actual nonzero principal field.  The sole genuinely geometric premise left
+is response extensionality through the characteristic variation. -/
+structure PrincipalFieldBridgeData where
+  beta : P →ₗ[ℝ] KSpace
+  ell : P →ₗ[ℝ] ℝ
+  response_extensional : ∀ p q : P, beta p = beta q → ell p = ell q
+  positiveWitness : P
+  smear : ℝ
+  E : ℝ
+  B : ℝ
+  volume : ℝ
+  smear_pos : 0 < smear
+  field_nonzero : E ≠ 0 ∨ B ≠ 0
+  volume_pos : 0 < volume
+  response_formula :
+    ell positiveWitness =
+      maxwellPositiveResponseFromField smear E B volume
+
+theorem PrincipalFieldBridgeData.response_positive
+    (D : PrincipalFieldBridgeData (P:=P) (KSpace:=KSpace)) :
+    0 < D.ell D.positiveWitness := by
+  rw [D.response_formula]
+  exact maxwellPositiveResponseFromField_pos
+    D.smear D.E D.B D.volume
+    D.smear_pos D.field_nonzero D.volume_pos
+
+theorem PrincipalFieldBridgeData.kernel_invisible
+    (D : PrincipalFieldBridgeData (P:=P) (KSpace:=KSpace)) :
+    LinearMap.ker D.beta ≤ LinearMap.ker D.ell :=
+  kernel_invisible_of_response_extensional
+    D.beta D.ell D.response_extensional
+
+noncomputable def PrincipalFieldBridgeData.Lambda
+    (D : PrincipalFieldBridgeData (P:=P) (KSpace:=KSpace)) :
+    LinearMap.range D.beta →ₗ[ℝ] ℝ :=
+  characteristicCovectorOfKernel D.beta D.ell D.kernel_invisible
+
+theorem principalFieldBridge_factorization
+    (D : PrincipalFieldBridgeData (P:=P) (KSpace:=KSpace)) :
+    D.Lambda.comp D.beta.rangeRestrict = D.ell :=
+  characteristicCovectorOfKernel_factorization
+    D.beta D.ell D.kernel_invisible
+
+theorem principalFieldBridge_Lambda_nonzero
+    (D : PrincipalFieldBridgeData (P:=P) (KSpace:=KSpace)) :
+    D.Lambda ≠ 0 := by
+  exact descended_covector_nonzero
+    D.beta.rangeRestrict D.Lambda D.ell
+    (principalFieldBridge_factorization D)
+    (covector_nonzero_of_positive
+      D.ell D.positiveWitness D.response_positive)
+
+theorem principalFieldBridge_Lambda_unique
+    (D : PrincipalFieldBridgeData (P:=P) (KSpace:=KSpace))
+    (Λ' : LinearMap.range D.beta →ₗ[ℝ] ℝ)
+    (hΛ' : Λ'.comp D.beta.rangeRestrict = D.ell) :
+    Λ' = D.Lambda :=
+  characteristicCovectorOfKernel_unique
+    D.beta D.ell D.kernel_invisible Λ' hΛ'
+
+theorem principalFieldBridge_quotient_finrank_one
+    (D : PrincipalFieldBridgeData (P:=P) (KSpace:=KSpace)) :
+    Module.finrank ℝ
+      ((LinearMap.range D.beta) ⧸ LinearMap.ker D.Lambda) = 1 :=
+  clockQuotient_finrank_one
+    D.Lambda (principalFieldBridge_Lambda_nonzero D)
+
 end GeometricInterface
 
 /-! ## 19. End-to-end dependency record -/
@@ -5005,6 +5101,14 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check maxwellPositiveResponseFromField_eq
+#check maxwellPositiveResponseFromField_pos
+#check PrincipalFieldBridgeData.response_positive
+#check PrincipalFieldBridgeData.Lambda
+#check principalFieldBridge_factorization
+#check principalFieldBridge_Lambda_nonzero
+#check principalFieldBridge_Lambda_unique
+#check principalFieldBridge_quotient_finrank_one
 #check presymplecticReductionForm
 #check presymplecticReductionForm_mk
 #check presymplecticReductionForm_left_nondegenerate
@@ -5361,6 +5465,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.rapidity_forced_by_normalized_boost
 #print axioms RelativeRest.extensionalBridge_Lambda_unique
 #print axioms RelativeRest.maxwellBridge_Lambda_unique
+#print axioms RelativeRest.principalFieldBridge_Lambda_unique
 #print axioms RelativeRest.reeb_direction_unique
 #print axioms RelativeRest.clock_section_reeb_existsUnique
 #print axioms RelativeRest.clockQuotientDualEquiv
