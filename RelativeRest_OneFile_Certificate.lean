@@ -3477,6 +3477,46 @@ theorem optical_covector_norm_from_carrier
     exact Real.sqrt_nonneg χ
   exact optical_covector_norm_scalar norm_u ω K hu hrate.2 hωnonneg
 
+/-! ### Accumulated intrinsic clock along the selected worldline -/
+
+/-- Intrinsic clock accumulated from its local curvature rate. -/
+def clockAccumulation (ω : ℝ → ℝ) (τ0 τ : ℝ) : ℝ :=
+  ∫ s in τ0..τ, ω s
+
+/-- A continuous intrinsic rate integrates to a clock whose derivative is exactly that rate. -/
+theorem clockAccumulation_hasDerivAt
+    (ω : ℝ → ℝ) (τ0 τ : ℝ)
+    (hω : Continuous ω) :
+    HasDerivAt (clockAccumulation ω τ0) (ω τ) τ := by
+  unfold clockAccumulation
+  exact intervalIntegral.integral_hasDerivAt_right
+    (hω.intervalIntegrable τ0 τ)
+    hω.aestronglyMeasurable.stronglyMeasurableAtFilter
+    hω.continuousAt
+
+/-- Derivative form of the intrinsic clock-rate identity. -/
+theorem clockAccumulation_deriv
+    (ω : ℝ → ℝ) (τ0 τ : ℝ)
+    (hω : Continuous ω) :
+    deriv (clockAccumulation ω τ0) τ = ω τ :=
+  (clockAccumulation_hasDerivAt ω τ0 τ hω).deriv
+
+/-- The accumulated clock has the chosen additive origin at `τ0`. -/
+@[simp] theorem clockAccumulation_origin
+    (ω : ℝ → ℝ) (τ0 : ℝ) :
+    clockAccumulation ω τ0 τ0 = 0 := by
+  simp [clockAccumulation]
+
+/-- If the rate is positive everywhere, the accumulated clock is locally strictly increasing
+where the FTC derivative is evaluated. -/
+theorem clockAccumulation_deriv_pos
+    (ω : ℝ → ℝ) (τ0 τ : ℝ)
+    (hω : Continuous ω)
+    (hpos : 0 < ω τ) :
+    0 < deriv (clockAccumulation ω τ0) τ := by
+  rw [clockAccumulation_deriv ω τ0 τ hω]
+  exact hpos
+
 /-! ## 13. Transport/integrability algebra -/
 
 /-- Scalar coefficient identity behind `D_b ω = (ω/4) D_b log K` when `K=ω⁴`. -/
@@ -4902,6 +4942,10 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check clockAccumulation_hasDerivAt
+#check clockAccumulation_deriv
+#check clockAccumulation_origin
+#check clockAccumulation_deriv_pos
 #check opticalBilinear_TO
 #check opticalBilinear_RO
 #check opticalBilinear_TO_RO
@@ -5233,6 +5277,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.relationalObservable_gauge_invariant
 #print axioms RelativeRest.relationalObservable_deriv
 #print axioms RelativeRest.implicit_endpoint_covector_null
+#print axioms RelativeRest.clockAccumulation_hasDerivAt
 #print axioms RelativeRest.primitive_relative_weights_reciprocal_iff_four
 #print axioms RelativeRest.scalar_backbone_from_einstein_maxwell
 #print axioms RelativeRest.rescaled_solution_preserving_iff
