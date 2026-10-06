@@ -1214,10 +1214,20 @@ theorem principalScaledResidualFromF_00_zero_iff
       (neg_ne_zero.mpr hε)
   constructor
   · intro h
-    have hscale :
-        Real.exp (2 * s) = 1 := by
-      apply (mul_left_cancel₀ hcoef)
-      simpa [mul_assoc, mul_left_comm, mul_comm] using h
+    have hfact :
+        (8 * Real.pi * (-principalFieldEnergyDensity E B)) *
+          (1 - Real.exp (2 * s)) = 0 := by
+      calc
+        (8 * Real.pi * (-principalFieldEnergyDensity E B)) *
+            (1 - Real.exp (2 * s))
+            =
+          8 * Real.pi * (-principalFieldEnergyDensity E B) -
+            8 * Real.pi * Real.exp (2 * s) *
+              (-principalFieldEnergyDensity E B) := by ring
+        _ = 0 := h
+    have hscale0 : 1 - Real.exp (2 * s) = 0 :=
+      (mul_eq_zero.mp hfact).resolve_left hcoef
+    have hscale : Real.exp (2 * s) = 1 := by linarith
     exact (exp_two_eq_one_iff s).mp hscale
   · rintro rfl
     simp
