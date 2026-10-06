@@ -5038,16 +5038,6 @@ theorem clockLiouville_homogeneous (c κ : ℝ) (v : R2) :
     clockLiouville κ (clockEuler κ) = 0 := by
   simp [clockLiouville, clockEuler]
 
-/-- Full pullback homogeneity under positive/common-scale dilation, including the tangent map. -/
-theorem clockLiouville_dilation_pullback
-    (c κ : ℝ) (v : R2) :
-    clockLiouville (c * κ)
-      (clockDilationTangent c v) =
-      c * clockLiouville κ v := by
-  rcases v with ⟨vΘ, vκ⟩
-  simp [clockLiouville, clockDilationTangent]
-  ring
-
 
 /-- On the unit common-scale section `κ=1`, the homogeneous Liouville primitive is
 literally the descended clock one-form `dΘ`. -/
@@ -5094,6 +5084,17 @@ theorem clock_section_reeb_existsUnique :
 /-- Tangent action of positive common-scale dilation on the clock cover. -/
 def clockDilationTangent (c : ℝ) (v : R2) : R2 :=
   (v.1, c * v.2)
+
+
+/-- Full pullback homogeneity under positive/common-scale dilation, including the tangent map. -/
+theorem clockLiouville_dilation_pullback
+    (c κ : ℝ) (v : R2) :
+    clockLiouville (c * κ)
+      (clockDilationTangent c v) =
+      c * clockLiouville κ v := by
+  rcases v with ⟨vΘ, vκ⟩
+  simp [clockLiouville, clockDilationTangent]
+  ring
 
 
 /-- Every tangent vector at positive scale is the dilation of a unique explicit vector
