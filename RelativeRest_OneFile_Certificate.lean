@@ -1669,6 +1669,50 @@ def principalEinsteinMixedFromRicci
     (RicCov : Fin 4 → Fin 4 → ℝ) (i j : Fin 4) : ℝ :=
   principalMetricSign i * principalEinsteinCovFromRicci RicCov i j
 
+/-! #### Palatini contraction: the curvature variation boundary is a divergence -/
+
+/-- Covariant Palatini identity at one orthonormal-frame point.  The four indices of
+`nablaDGamma` are respectively derivative, raised connection index, and the two
+lower connection indices. -/
+def principalPalatiniDeltaRicci
+    (nablaDGamma : Fin 4 → Fin 4 → Fin 4 → Fin 4 → ℝ)
+    (a b : Fin 4) : ℝ :=
+  (∑ c : Fin 4, nablaDGamma c c a b) -
+    ∑ c : Fin 4, nablaDGamma b c a c
+
+/-- The part of `δR` coming from `g^{ab} δR_ab`. -/
+def principalPalatiniScalarBoundary
+    (nablaDGamma : Fin 4 → Fin 4 → Fin 4 → Fin 4 → ℝ) : ℝ :=
+  ∑ a : Fin 4,
+    principalMetricSign a *
+      principalPalatiniDeltaRicci nablaDGamma a a
+
+/-- Divergence of the standard Palatini boundary vector
+`V^c = g^{ab} δΓ^c_ab - g^{ac} δΓ^b_ab` in the principal orthonormal frame. -/
+def principalPalatiniBoundaryDivergence
+    (nablaDGamma : Fin 4 → Fin 4 → Fin 4 → Fin 4 → ℝ) : ℝ :=
+  ∑ c : Fin 4,
+    ((∑ a : Fin 4,
+        principalMetricSign a * nablaDGamma c c a a) -
+      principalMetricSign c *
+        (∑ b : Fin 4, nablaDGamma c b c b))
+
+/-- The contracted linearized-Ricci term is exactly the Palatini divergence.
+This is the finite-index algebra behind
+`g^{ab} δR_ab = ∇_c(g^{ab}δΓ^c_ab-g^{ac}δΓ^b_ab)`. -/
+theorem principalPalatini_scalar_boundary_eq_divergence
+    (nablaDGamma : Fin 4 → Fin 4 → Fin 4 → Fin 4 → ℝ) :
+    principalPalatiniScalarBoundary nablaDGamma =
+      principalPalatiniBoundaryDivergence nablaDGamma := by
+  unfold principalPalatiniScalarBoundary
+    principalPalatiniDeltaRicci
+    principalPalatiniBoundaryDivergence
+  simp_rw [mul_sub, Finset.mul_sum]
+  rw [Finset.sum_sub_distrib, Finset.sum_sub_distrib]
+  congr 1
+  · rw [Finset.sum_comm]
+  · rfl
+
 /-- A literal Einstein-Hilbert density line for an inverse-metric component
 variation.  The scalar-curvature derivative is written as the forced Ricci bulk
 term plus an explicit Palatini boundary coefficient. -/
@@ -17767,6 +17811,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.einsteinMaxwellLagrangianDensity_decomposition
 #print axioms RelativeRest.principalMaxwellLagrangianMetricLine_hasDerivAt_zero
 #print axioms RelativeRest.principalMaxwellLagrangianMetricLine_deriv_eq_neg_half_stress
+#print axioms RelativeRest.principalPalatini_scalar_boundary_eq_divergence
 #print axioms RelativeRest.principalEinsteinHilbertLagrangianMetricLineFromRicci_hasDerivAt_zero
 #print axioms RelativeRest.principalEinsteinHilbertMetricVariationCoeff_eq_bulk_lagrangian_deriv
 #print axioms RelativeRest.linearDescendant_reciprocal
