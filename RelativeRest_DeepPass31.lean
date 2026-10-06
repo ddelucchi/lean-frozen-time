@@ -74,6 +74,21 @@ theorem carrierMagnitude_eq_sqrt_curvature
     Real.sqrt_nonneg K
   nlinarith
 
+/-- The positive clock rate is literally the iterated square root sqrt(sqrt K),
+i.e. the positive real fourth root K^(1/4). -/
+theorem curvature_forces_clock_rate
+    (J R : V)
+    (K chi omega : ℝ)
+    (hJ : J = (-2 : ℝ) • R)
+    (hK : K = C R R)
+    (hKnonneg : 0 ≤ K)
+    (hchi : chi = (1 / 2 : ℝ) * Real.sqrt (C J J))
+    (homega : omega = Real.sqrt chi) :
+    omega = Real.sqrt (Real.sqrt K) := by
+  rw [homega,
+    carrierMagnitude_eq_sqrt_curvature
+      C J R K chi hJ hK hKnonneg hchi]
+
 /-- Consequently omega=sqrt(chi) is the positive fourth-root rate of K without a separately
 supplied chi=sqrt(K) hypothesis. -/
 theorem curvature_forces_clock_fourth_power
