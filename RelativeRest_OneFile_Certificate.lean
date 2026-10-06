@@ -4113,6 +4113,71 @@ theorem principalFrobeniusSpatialComponent_zero_iff
     mul_ne_zero (by norm_num) (pow_ne_zero 2 hω)
   exact mul_eq_zero_iff_left hcoef
 
+
+/-- Vanishing of all projected transport components is exactly the paper's acceleration/
+vorticity balance, once the rate is nonzero and `K=ω⁴` supplies the logarithmic gradient. -/
+theorem clockTransport_projected_zero_iff
+    (ω : ℝ) (dω dlogK : Fin 4 → ℝ)
+    (du : Fin 4 → Fin 4 → ℝ)
+    (hω : ω ≠ 0)
+    (hunit : adaptedUnitNormalization du)
+    (hlog :
+      ∀ i : Fin 3,
+        dlogK i.succ = 4 * dω i.succ / ω) :
+    ((∀ i j : Fin 3,
+        clockTransportTwoForm ω dω du i.succ j.succ = 0) ∧
+      (∀ i : Fin 3,
+        clockTransportTwoForm ω dω du 0 i.succ = 0)) ↔
+    ((∀ i j : Fin 3, principalVorticity du i j = 0) ∧
+      (∀ i : Fin 3,
+        principalAcceleration du i =
+          -dlogK i.succ / 4)) := by
+  constructor
+  · rintro ⟨hsp, hmix⟩
+    constructor
+    · intro i j
+      have h := hsp i j
+      rw [clockTransport_spatial] at h
+      have hcoef : -2 * ω ≠ 0 :=
+        mul_ne_zero (by norm_num) hω
+      exact (mul_eq_zero.mp h).resolve_left hcoef
+    · intro i
+      have h := hmix i
+      rw [clockTransport_mixed_logK
+        ω dω dlogK du hω hunit hlog i] at h
+      have hs :
+          principalAcceleration du i +
+            dlogK i.succ / 4 = 0 :=
+        (mul_eq_zero.mp h).resolve_left (neg_ne_zero.mpr hω)
+      linarith
+  · rintro ⟨hsp, hmix⟩
+    constructor
+    · intro i j
+      rw [clockTransport_spatial, hsp i j]
+      ring
+    · intro i
+      rw [clockTransport_mixed_logK
+        ω dω dlogK du hω hunit hlog i, hmix i]
+      ring
+
+/-- The weaker Frobenius condition on all spatial components is exactly vanishing
+vorticity, with no acceleration condition. -/
+theorem principalFrobenius_all_zero_iff
+    (ω : ℝ) (dω : Fin 4 → ℝ)
+    (du : Fin 4 → Fin 4 → ℝ)
+    (hω : ω ≠ 0) :
+    (∀ i j : Fin 3,
+      principalFrobeniusSpatialComponent ω dω du i j = 0) ↔
+    (∀ i j : Fin 3,
+      principalVorticity du i j = 0) := by
+  constructor
+  · intro h i j
+    exact (principalFrobeniusSpatialComponent_zero_iff
+      ω dω du i j hω).1 (h i j)
+  · intro h i j
+    exact (principalFrobeniusSpatialComponent_zero_iff
+      ω dω du i j hω).2 (h i j)
+
 /-- If the spatial and mixed pieces of a two-form are independently zero, the manuscript's
 transport conditions reduce to vorticity zero and acceleration-gradient balance. -/
 theorem transport_zero_iff
@@ -6114,6 +6179,8 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check clockTransport_projected_zero_iff
+#check principalFrobenius_all_zero_iff
 #check clockDilation_undilate
 #check clockLiouville_unique_of_homogeneity
 #check clockCoverOneForm_unique
@@ -6523,6 +6590,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.clockTransport_spatial
 #print axioms RelativeRest.clockTransport_mixed_logK
 #print axioms RelativeRest.principalFrobeniusSpatialComponent_zero_iff
+#print axioms RelativeRest.clockTransport_projected_zero_iff
+#print axioms RelativeRest.principalFrobenius_all_zero_iff
 #print axioms RelativeRest.radarClockRadius_unit_radial_jet
 #print axioms RelativeRest.radarClockTime_unit_clock_jet
 #print axioms RelativeRest.primitive_relative_weights_reciprocal_iff_four
