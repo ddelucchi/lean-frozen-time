@@ -5948,16 +5948,32 @@ theorem carterTemporalCoframe_on_observer
       (Real.sqrt (Sigma r a θ * Delta r M a Q))^2 =
         Sigma r a θ * Delta r M a Q :=
     Real.sq_sqrt (le_of_lt hp)
-  unfold carterTemporalCoframeCoeffs carterObserver opticalEval
-  rw [show
-    (kerrTemporalOneFormCoeffs a θ).1 *
-        (carterNumerator r a).1 +
-      (kerrTemporalOneFormCoeffs a θ).2 *
-        (carterNumerator r a).2 =
-      Sigma r a θ by
-        simpa [kerrTemporalOneFormCoeffs, opticalEval]
-          using carterNumerator_time_leg r a θ]
-  simp only [Prod.smul_fst, Prod.smul_snd, smul_eq_mul]
+  have hleg :
+      opticalEval
+        (kerrTemporalOneFormCoeffs a θ)
+        (carterNumerator r a) =
+      Sigma r a θ := by
+    unfold opticalEval kerrTemporalOneFormCoeffs
+    simpa using carterNumerator_time_leg r a θ
+  unfold carterTemporalCoframeCoeffs carterObserver
+  have hscale :
+      opticalEval
+        ((Delta r M a Q /
+            Real.sqrt (Sigma r a θ * Delta r M a Q)) •
+          kerrTemporalOneFormCoeffs a θ)
+        ((Real.sqrt (Sigma r a θ * Delta r M a Q))⁻¹ •
+          carterNumerator r a)
+      =
+      (Delta r M a Q /
+          Real.sqrt (Sigma r a θ * Delta r M a Q)) *
+        (Real.sqrt (Sigma r a θ * Delta r M a Q))⁻¹ *
+        opticalEval
+          (kerrTemporalOneFormCoeffs a θ)
+          (carterNumerator r a) := by
+    unfold opticalEval
+    simp only [Prod.smul_fst, Prod.smul_snd, smul_eq_mul]
+    ring
+  rw [hscale, hleg]
   field_simp [hs0]
   nlinarith
 
@@ -5967,13 +5983,16 @@ theorem carterAxialOneForm_on_observer
     opticalEval
       (kerrAxialOneFormCoeffs r a)
       (carterObserver r M a Q θ) = 0 := by
-  unfold carterObserver opticalEval kerrAxialOneFormCoeffs
+  have hax :
+      opticalEval
+        (kerrAxialOneFormCoeffs r a)
+        (carterNumerator r a) = 0 := by
+    unfold opticalEval kerrAxialOneFormCoeffs
+    simpa using carterNumerator_axial_leg r a
+  unfold carterObserver
+  unfold opticalEval at hax ⊢
   simp only [Prod.smul_fst, Prod.smul_snd, smul_eq_mul]
-  have hax := carterNumerator_axial_leg r a
-  unfold carterNumerator at hax
-  ring_nf at hax ⊢
-  rw [hax]
-  ring
+  rw [← mul_add, hax, mul_zero]
 
 /-- The potential-derived Maxwell field blocks and the metric-normalized Carter observer
 therefore share the same principal stationary coframe. -/
