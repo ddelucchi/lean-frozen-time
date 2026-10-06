@@ -2458,6 +2458,7 @@ theorem skew_right_radical_of_left
   intro x
   have hz0 : B z x = 0 := by
     have hzker := hleft hz
+    change B z = 0 at hzker
     exact LinearMap.congr_fun hzker x
   simp [LinearMap.flip_apply, hskew x z, hz0]
 
