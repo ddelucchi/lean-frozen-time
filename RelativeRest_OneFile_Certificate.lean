@@ -1799,6 +1799,37 @@ theorem carrier_chi_eq_sqrt_ricci_norm
   · ring
   · positivity
 
+/-- Carrier endomorphism normalized by its positive Rainich magnitude. -/
+def normalizedCarrierEndomorphism
+    {V : Type*} [AddCommGroup V] [Module ℝ V]
+    (J : V →ₗ[ℝ] V) (χ : ℝ) :
+    V →ₗ[ℝ] V :=
+  (χ⁻¹) • J
+
+/-- If the mixed carrier and its invariant magnitude acquire the same nonzero
+homothety weight, the normalized involution is unchanged. -/
+theorem normalizedCarrierEndomorphism_scale_invariant
+    {V : Type*} [AddCommGroup V] [Module ℝ V]
+    (J : V →ₗ[ℝ] V) (χ c : ℝ)
+    (hχ : χ ≠ 0) (hc : c ≠ 0) :
+    normalizedCarrierEndomorphism (c • J) (c * χ) =
+      normalizedCarrierEndomorphism J χ := by
+  ext v
+  simp [normalizedCarrierEndomorphism, smul_smul]
+  field_simp [hχ, hc]
+
+/-- In particular the common Einstein-Maxwell weight `ρ⁻²` cancels identically
+between the mixed carrier and `χ`. -/
+theorem normalizedCarrierEndomorphism_common_scale
+    {V : Type*} [AddCommGroup V] [Module ℝ V]
+    (J : V →ₗ[ℝ] V) (χ ρ : ℝ)
+    (hχ : χ ≠ 0) (hρ : ρ ≠ 0) :
+    normalizedCarrierEndomorphism
+        (((ρ⁻¹)^2) • J) (((ρ⁻¹)^2) * χ) =
+      normalizedCarrierEndomorphism J χ := by
+  exact normalizedCarrierEndomorphism_scale_invariant
+    J χ ((ρ⁻¹)^2) hχ (pow_ne_zero 2 (inv_ne_zero hρ))
+
 /-- Normalizing an endomorphism satisfying `J² = χ² I` produces an involution. -/
 theorem normalized_involution
     {V : Type*} [AddCommGroup V] [Module ℝ V]
@@ -1840,6 +1871,22 @@ def involutionProjMinus
     {V : Type*} [AddCommGroup V] [Module ℝ V]
     (S : V →ₗ[ℝ] V) (v : V) : V :=
   (1 / 2 : ℝ) • (v - S v)
+
+/-- The principal projectors are representative-independent whenever the normalized
+carrier is representative-independent. -/
+theorem involution_projectors_scale_invariant
+    {V : Type*} [AddCommGroup V] [Module ℝ V]
+    (J : V →ₗ[ℝ] V) (χ c : ℝ)
+    (hχ : χ ≠ 0) (hc : c ≠ 0) (v : V) :
+    involutionProjPlus
+        (normalizedCarrierEndomorphism (c • J) (c * χ)) v =
+      involutionProjPlus
+        (normalizedCarrierEndomorphism J χ) v ∧
+    involutionProjMinus
+        (normalizedCarrierEndomorphism (c • J) (c * χ)) v =
+      involutionProjMinus
+        (normalizedCarrierEndomorphism J χ) v := by
+  rw [normalizedCarrierEndomorphism_scale_invariant J χ c hχ hc]
 
 /-- The two Rainich projectors reconstruct every vector. -/
 theorem involution_projectors_sum
@@ -7360,6 +7407,9 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check normalizedCarrierEndomorphism_scale_invariant
+#check normalizedCarrierEndomorphism_common_scale
+#check involution_projectors_scale_invariant
 #check carrierMagnitude_common_scale
 #check carrier_chi_common_scale
 #check common_scale_invariance_implies_homogeneous
@@ -7828,6 +7878,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.scalar_backbone
 #print axioms RelativeRest.conformal_factor_forced_from_common_scale
 #print axioms RelativeRest.carrier_chi_common_scale
+#print axioms RelativeRest.normalizedCarrierEndomorphism_common_scale
+#print axioms RelativeRest.involution_projectors_scale_invariant
 #print axioms RelativeRest.relationalObservable_gauge_invariant
 #print axioms RelativeRest.relationalObservable_deriv
 #print axioms RelativeRest.implicit_endpoint_covector_null
