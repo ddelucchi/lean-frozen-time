@@ -8087,6 +8087,18 @@ def kerrChristoffelRegular
          kerrMetricDerivativeRegular ν r M a Q θ σ μ -
          kerrMetricDerivativeRegular σ r M a Q θ μ ν)
 
+/-- Levi-Civita Christoffel symbols constructed directly from the metric and inverse metric. -/
+def kerrChristoffel
+    (r M a Q θ : ℝ)
+    (ρ μ ν : Fin 4) : ℝ :=
+  (1 / 2 : ℝ) *
+    ∑ σ : Fin 4,
+      kerrMetricInv r M a Q θ ρ σ *
+        (kerrMetricPartial μ r M a Q θ σ ν +
+         kerrMetricPartial ν r M a Q θ σ μ -
+         kerrMetricPartial σ r M a Q θ μ ν)
+
+
 /-- On the regular chart, the genuine Levi-Civita Christoffels contain no remaining
 unevaluated first derivatives. -/
 theorem kerrChristoffel_eq_regular
@@ -8103,17 +8115,6 @@ theorem kerrChristoffel_eq_regular
   rw [kerrMetricPartial_eq_regular μ r M a Q θ hsig hdel σ ν,
       kerrMetricPartial_eq_regular ν r M a Q θ hsig hdel σ μ,
       kerrMetricPartial_eq_regular σ r M a Q θ hsig hdel μ ν]
-
-/-- Levi-Civita Christoffel symbols constructed directly from the metric and inverse metric. -/
-def kerrChristoffel
-    (r M a Q θ : ℝ)
-    (ρ μ ν : Fin 4) : ℝ :=
-  (1 / 2 : ℝ) *
-    ∑ σ : Fin 4,
-      kerrMetricInv r M a Q θ ρ σ *
-        (kerrMetricPartial μ r M a Q θ σ ν +
-         kerrMetricPartial ν r M a Q θ σ μ -
-         kerrMetricPartial σ r M a Q θ μ ν)
 
 /-- The coordinate Levi-Civita connection is torsion-free by construction. -/
 theorem kerrChristoffel_lower_symmetric
