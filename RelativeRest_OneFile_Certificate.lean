@@ -1221,6 +1221,26 @@ theorem boost_balance_exists_unique
   exact boost_balance_unique qm qp τ (sigmaStar qm qp) hqm hqp
     hτ (sigmaStar_balance qm qp hqm hqp)
 
+
+/-- A covector that is purely spatial/radial in the unboosted principal frame has opposite
+null components and is balanced exactly at zero rapidity. -/
+theorem opposite_null_components_balance_iff_zero
+    (q σ : ℝ) (hq : q ≠ 0) :
+    boostDefect q (-q) σ = 0 ↔ σ = 0 := by
+  constructor
+  · intro h
+    apply boost_balance_unique q (-q) σ 0 hq (neg_ne_zero.mpr hq) h
+    simp [boostDefect]
+  · rintro rfl
+    simp [boostDefect]
+
+/-- The explicit balancing rapidity of opposite nonzero null components is therefore zero. -/
+theorem sigmaStar_opposite_components
+    (q : ℝ) (hq : q ≠ 0) :
+    sigmaStar q (-q) = 0 := by
+  exact (opposite_null_components_balance_iff_zero q (sigmaStar q (-q)) hq).mp
+    (sigmaStar_balance q (-q) hq (neg_ne_zero.mpr hq))
+
 /-- In the manuscript's geometric hypothesis `p² ≠ 0`, the unique balance follows from
 one non-null condition rather than two separately imposed component assumptions. -/
 theorem boost_balance_exists_unique_of_nonnull
@@ -2736,6 +2756,33 @@ theorem kerrNewman_clock_rate
     ring
   nlinarith
 
+/-- Curvature-derived Kerr-Newman separability multiplier. -/
+def kerrMultiplier (Q sig : ℝ) : ℝ :=
+  sig / (Real.sqrt 2 * |Q|)
+
+/-- Corresponding intrinsic clock rate. -/
+def kerrClockRate (Q sig : ℝ) : ℝ :=
+  Real.sqrt 2 * |Q| / sig
+
+/-- Away from the vacuum and ring singular strata, the clock rate and multiplier are exact reciprocals. -/
+theorem kerrClockRate_mul_multiplier
+    (Q sig : ℝ) (hQ : Q ≠ 0) (hsig : sig ≠ 0) :
+    kerrClockRate Q sig * kerrMultiplier Q sig = 1 := by
+  unfold kerrClockRate kerrMultiplier
+  have hsqrt : Real.sqrt 2 ≠ 0 := by positivity
+  have habs : |Q| ≠ 0 := abs_ne_zero.mpr hQ
+  field_simp [hsqrt, habs, hsig]
+
+/-- Equivalently the field-derived clock rate is the inverse separability multiplier. -/
+theorem kerrClockRate_eq_inv_multiplier
+    (Q sig : ℝ) (hQ : Q ≠ 0) (hsig : sig ≠ 0) :
+    kerrClockRate Q sig = (kerrMultiplier Q sig)⁻¹ := by
+  have hm : kerrMultiplier Q sig ≠ 0 := by
+    unfold kerrMultiplier
+    exact div_ne_zero hsig (mul_ne_zero (by positivity) (abs_ne_zero.mpr hQ))
+  apply (eq_inv_iff_mul_eq_one₀ hm).2
+  exact kerrClockRate_mul_multiplier Q sig hQ hsig
+
 /-- The inverse fourth-root curvature multiplier is `Σ/(√2 |Q|)` once its square is fixed. -/
 theorem kerrNewman_multiplier_squared
     (Q sig M : ℝ)
@@ -2785,6 +2832,25 @@ theorem kerrNewman_vacuum_carrier_vanishes
     χ = 0 := by
   rw [hχ, hK]
   norm_num
+
+/-- Kerr-Newman Carter angular velocity. -/
+def carterOmega (r a : ℝ) : ℝ :=
+  a / (r^2 + a^2)
+
+/-- Coordinate numerator of the Carter principal observer in the `(∂t,∂φ)` plane. -/
+def carterNumerator (r a : ℝ) : R2 :=
+  (r^2 + a^2, a)
+
+/-- The Carter numerator is exactly the stationary direction with angular velocity
+`Ω_C=a/(r²+a²)`, multiplied by its forced normalization factor. -/
+theorem carterNumerator_factorization
+    (r a : ℝ) (h : r^2 + a^2 ≠ 0) :
+    carterNumerator r a =
+      (r^2 + a^2) • ((1 : ℝ), carterOmega r a) := by
+  ext
+  · simp [carterNumerator]
+  · simp [carterNumerator, carterOmega]
+    field_simp [h]
 
 /-- Reissner-Nordström specialization (`a=0`) of `Σ`. -/
 theorem sigma_reissner_nordstrom (r θ : ℝ) : Sigma r 0 θ = r^2 := by
@@ -2902,6 +2968,11 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check opposite_null_components_balance_iff_zero
+#check sigmaStar_opposite_components
+#check kerrClockRate_mul_multiplier
+#check kerrClockRate_eq_inv_multiplier
+#check carterNumerator_factorization
 #check Sigma_hasDerivAt_r
 #check kerrChiScalar_hasDerivAt_r
 #check kerrLogChi_hasDerivAt_r
