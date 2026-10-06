@@ -629,6 +629,18 @@ def TO : R2 := (1, 0)
 /-- Optical odd basis covector. -/
 def RO : R2 := (0, 1)
 
+/-- Evaluation pairing for the finite-dimensional optical model. -/
+def opticalEval (α v : R2) : ℝ := α.1 * v.1 + α.2 * v.2
+
+/-- Unit boosted observer in the normalized optical basis. -/
+def opticalObserver (s : ℝ) : R2 := (Real.cosh s, Real.sinh s)
+
+/-- The operational radial/time ratio of the boosted observer is exactly `tanh s`. -/
+theorem optical_velocity_ratio (s : ℝ) :
+    opticalEval RO (opticalObserver s) / opticalEval TO (opticalObserver s) =
+      Real.tanh s := by
+  simp [opticalEval, RO, TO, opticalObserver, Real.tanh_eq_sinh_div_cosh]
+
 /-- Normalized optical boost generator, exchanging even and odd basis directions. -/
 def BO (v : R2) : R2 := (v.2, v.1)
 
@@ -743,6 +755,25 @@ theorem kernel_inclusion_of_factorization
   simp [hbp] at this
   exact this.symm
 
+/-- A strictly positive response on one vector forces a real covector to be nonzero. -/
+theorem covector_nonzero_of_positive
+    (ℓ : P →ₗ[ℝ] ℝ) (p : P) (hp : 0 < ℓ p) :
+    ℓ ≠ 0 := by
+  intro hzero
+  rw [hzero] at hp
+  simp at hp
+
+/-- Factorization transfers nonvanishing of the physical response to the descended covector. -/
+theorem descended_covector_nonzero
+    (β : P →ₗ[ℝ] K) (Λ : K →ₗ[ℝ] ℝ) (ℓ : P →ₗ[ℝ] ℝ)
+    (hfac : Λ.comp β = ℓ)
+    (hℓ : ℓ ≠ 0) :
+    Λ ≠ 0 := by
+  intro hΛ
+  apply hℓ
+  rw [← hfac, hΛ]
+  simp
+
 /-- A nonzero real covector has full range `ℝ`. -/
 theorem nonzero_covector_surjective
     (Λ : K →ₗ[ℝ] ℝ) (hΛ : Λ ≠ 0) : Function.Surjective Λ := by
@@ -799,6 +830,15 @@ theorem unique_covector_preserving_map
     (hIu : I u₁ = u₂) (hJu : J u₁ = u₂) : I = J := by
   ext x
   rw [hspan₁ x, map_smul, map_smul, hIu, hJu]
+
+/-- A normalized covector selects at most one unit on a line reconstructed by that covector. -/
+theorem normalized_unit_unique
+    (α : L₁ →ₗ[ℝ] ℝ) (u v : L₁)
+    (hu : α u = 1)
+    (hspan : ∀ x : L₁, x = (α x) • u)
+    (hv : α v = 1) :
+    v = u := by
+  rw [hspan v, hv, one_smul]
 
 /-- Explicit normalized map between two one-dimensional clock lines. -/
 def normalizedClockMap
@@ -967,6 +1007,36 @@ theorem transport_zero_iff
 
 /-! ## 14. Null exchange / optical closure -/
 
+/-- Exchange-even radar midpoint. -/
+def radarTime (θplus θminus : ℝ) : ℝ := (θplus + θminus) / 2
+
+/-- Exchange-odd radar defect. -/
+def radarRadius (θplus θminus : ℝ) : ℝ := (θplus - θminus) / 2
+
+/-- The midpoint is exchange-even and the radial defect exchange-odd. -/
+theorem radar_exchange_parity (θplus θminus : ℝ) :
+    radarTime θminus θplus = radarTime θplus θminus ∧
+    radarRadius θminus θplus = - radarRadius θplus θminus := by
+  constructor <;> unfold radarTime radarRadius <;> ring
+
+/-- Midpoint and defect reconstruct the two endpoint readings exactly. -/
+theorem radar_reconstruction (θplus θminus : ℝ) :
+    radarTime θplus θminus + radarRadius θplus θminus = θplus ∧
+    radarTime θplus θminus - radarRadius θplus θminus = θminus := by
+  constructor <;> unfold radarTime radarRadius <;> ring
+
+/-- A common shift changes only the clock origin and leaves the radial defect invariant. -/
+theorem radar_common_shift (θplus θminus C : ℝ) :
+    radarTime (θplus + C) (θminus + C) = radarTime θplus θminus + C ∧
+    radarRadius (θplus + C) (θminus + C) = radarRadius θplus θminus := by
+  constructor <;> unfold radarTime radarRadius <;> ring
+
+/-- Coincident endpoints force vanishing relative radius. -/
+@[simp] theorem radarRadius_self (θ : ℝ) : radarRadius θ θ = 0 := by
+  unfold radarRadius
+  ring
+
+
 /- Abstract symmetric bilinear form, enough to prove the null sum/difference closure. -/
 section OpticalClosure
 
@@ -1023,6 +1093,25 @@ theorem synchronization_correction_unique
     (h₂ : dT = TO + β₂) : β₁ = β₂ := by
   rw [h₁] at h₂
   exact add_left_cancel h₂
+
+/-- Abstract exterior-derivative algebra behind `dβ=-dT_O`: if the radar clock is exact,
+the forced correction cancels the curvature of the local chronometric covector. -/
+theorem synchronization_curvature_cancellation
+    {W Z : Type*} [AddCommGroup W] [AddCommGroup Z]
+    (d : W →+ Z) (dT TO β : W)
+    (hβ : β = dT - TO)
+    (hexact : d dT = 0) :
+    d β = - d TO := by
+  rw [hβ, map_sub, hexact, zero_sub]
+
+/-- Consequently the corrected covector is closed. -/
+theorem synchronization_total_closed
+    {W Z : Type*} [AddCommGroup W] [AddCommGroup Z]
+    (d : W →+ Z) (TO β : W)
+    (hcancel : d β = - d TO) :
+    d TO + d β = 0 := by
+  rw [hcancel]
+  exact add_neg_cancel _
 
 /-! ## 15. Clock-cover canonical pair: finite-dimensional algebraic model -/
 
@@ -1250,6 +1339,15 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check normalized_unit_unique
+#check covector_nonzero_of_positive
+#check descended_covector_nonzero
+#check radar_exchange_parity
+#check radar_reconstruction
+#check radar_common_shift
+#check synchronization_curvature_cancellation
+#check synchronization_total_closed
+#check optical_velocity_ratio
 #check boost_balance_exists_unique
 #check sigmaStar_balanced_dyad_invariant
 #check actionOpticalMap_intertwines_boost
