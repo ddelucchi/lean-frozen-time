@@ -17545,6 +17545,42 @@ theorem PrincipalLocalNoetherVariationCharacteristicInput.characteristicCurrent_
   exact
     D.carrier.metricEulerJetResponse_eq_neg_half_noetherIntegral
 
+/-- Universal physical-representative theorem.  Any independently constructed
+Noether package whose constraint is locally represented by a bulk coefficient and
+whose derivative-of-diffeomorphism pairing is the one forced by the displayed
+Einstein-Maxwell action has the same compensated Iyer-Wald operator as the
+action-derived canonical current. -/
+theorem PrincipalCarrierCharacteristicInput.anyLocalNoetherRealization_compensated_eq_action
+    (D : PrincipalCarrierCharacteristicInput (P:=P))
+    (variation : LagrangianVariationNoetherOperators
+      (L:=R2) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ)))
+    (bulkCoeff : ℝ → Fin 4 → Fin 4 → ℝ)
+    (hlocal :
+      ∀ s : ℝ, ∀ v : Fin 4 → ℝ,
+        relativeConstraintOrbitEval variation.constraint v s =
+          D.iε
+            (fun i : Fin 4 =>
+              ∑ j : Fin 4, bulkCoeff s i j * v j))
+    (hpair :
+      ∀ s : ℝ, ∀ nablaXi : Fin 4 → Fin 4 → ℝ,
+        (∑ i : Fin 4, ∑ j : Fin 4,
+          bulkCoeff s i j * nablaXi i j) =
+        principalMetricDiffeomorphismEulerPairing
+          (fun i j =>
+            principalMetricSign i * Real.exp (-s) *
+              principalScaledMetricEulerCoeffFromAction
+                D.E D.B i j s)
+          nablaXi) :
+    variation.omegaXY + variation.dB =
+      D.noetherConstraintOperatorFromAction := by
+  let N : PrincipalLocalNoetherVariationCharacteristicInput (P:=P) :=
+    { carrier := D
+      variation := variation
+      bulkCoeff := bulkCoeff
+      constraint_is_bulk_integral := hlocal
+      local_diffeomorphism_derivative_pairing := hpair }
+  exact N.compensatedOperator_eq_actionConstraint
+
 /-- Strong forced-core theorem sourced only at locality of the covariant constraint
 and the local derivative-of-diffeomorphism Noether pairing.  The global relative
 orbit, canonical coefficient, sector signs, Iyer-Wald compensation, quotient
@@ -19354,6 +19390,26 @@ structure PaperActionBulkIFTArchitectureCertificate
       (core.toNoetherOperators D.noetherConstraintOperatorFromAction).omegaXY +
           (core.toNoetherOperators D.noetherConstraintOperatorFromAction).dB =
         D.noetherConstraintOperatorFromAction
+  universalLocalNoetherRealization :
+    ∀ (variation : LagrangianVariationNoetherOperators
+          (L:=R2) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ)))
+      (bulkCoeff : ℝ → Fin 4 → Fin 4 → ℝ),
+      (∀ τ : ℝ, ∀ v : Fin 4 → ℝ,
+        relativeConstraintOrbitEval variation.constraint v τ =
+          D.iε
+            (fun i : Fin 4 =>
+              ∑ j : Fin 4, bulkCoeff τ i j * v j)) →
+      (∀ τ : ℝ, ∀ nablaXi : Fin 4 → Fin 4 → ℝ,
+        (∑ i : Fin 4, ∑ j : Fin 4,
+          bulkCoeff τ i j * nablaXi i j) =
+        principalMetricDiffeomorphismEulerPairing
+          (fun i j =>
+            principalMetricSign i * Real.exp (-τ) *
+              principalScaledMetricEulerCoeffFromAction
+                D.E D.B i j τ)
+          nablaXi) →
+      variation.omegaXY + variation.dB =
+        D.noetherConstraintOperatorFromAction
   characteristicCurrent :
     D.metricEulerJetResponse =
       D.toCharacteristicCurrentData.current
@@ -19463,6 +19519,7 @@ theorem paper_actionBulk_IFT_architecture_certificate
     canonicalNoetherNormal := hDA
     finiteNoetherOrbit := horbit
     universalCompensatedRepresentative := ?_
+    universalLocalNoetherRealization := ?_
     characteristicCurrent := hcurrent
     quotientOneDimensional := hdim
     normalizedClockLift := hnorm
@@ -19482,6 +19539,9 @@ theorem paper_actionBulk_IFT_architecture_certificate
         Q r M a θ dt dlam hQ hsig hdel hsin hmino }
   · intro core
     exact D.anyCanonicalCompletion_compensated_eq_action core
+  · intro variation bulkCoeff hlocal hpair
+    exact D.anyLocalNoetherRealization_compensated_eq_action
+      variation bulkCoeff hlocal hpair
   · intro O XF T ϑ hO
     exact relational_evolution_from_flow_derivative O XF T ϑ hO
   · intro P₁ P₂ F₁ F₂ hP hF
@@ -20316,6 +20376,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.PrincipalLocalNoetherVariationCharacteristicInput.constraintOrbit_forced
 #print axioms RelativeRest.PrincipalLocalNoetherVariationCharacteristicInput.constraint_eq_actionConstraint
 #print axioms RelativeRest.PrincipalLocalNoetherVariationCharacteristicInput.compensatedOperator_eq_actionConstraint
+#print axioms RelativeRest.PrincipalCarrierCharacteristicInput.anyLocalNoetherRealization_compensated_eq_action
 #print axioms RelativeRest.PrincipalLocalNoetherVariationCharacteristicInput.compensatedOrbit_forced_from_localNoether
 #print axioms RelativeRest.PrincipalLocalNoetherVariationCharacteristicInput.compensatedNormal_forced_from_action
 #print axioms RelativeRest.PrincipalLocalNoetherVariationCharacteristicInput.characteristicCurrent_eq_neg_half_compensatedNormal
