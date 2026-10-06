@@ -4354,24 +4354,6 @@ def PrimitiveNoetherOperators.toFirstVariationNoetherOperators
     unfold PrimitiveNoetherOperators.deltaConstraint
     module
 
-/-- Consequently the off-shell Iyer-Wald operator identity has no independent
-identity hypothesis at primitive Noether level. -/
-theorem PrimitiveNoetherOperators.iyerWald_operator_identity
-    (D : PrimitiveNoetherOperators (L:=L) (C:=C)) :
-    D.toFirstVariationNoetherOperators.omegaYX =
-      D.toFirstVariationNoetherOperators.dB -
-        D.toFirstVariationNoetherOperators.constraint :=
-  D.toFirstVariationNoetherOperators.iyerWald_operator_identity
-
-/-- The compensated current is unique already at primitive Noether level. -/
-theorem PrimitiveNoetherOperators.omegaXY_existsUnique
-    (D : PrimitiveNoetherOperators (L:=L) (C:=C)) :
-    ∃! W : L →ₗ[ℝ] C,
-      ∀ X : L,
-        W X + D.toFirstVariationNoetherOperators.dB X =
-          D.toFirstVariationNoetherOperators.constraint X :=
-  D.toFirstVariationNoetherOperators.omegaXY_existsUnique
-
 /-- Presymplectic current in the ordered pair (ordinary variation, gauge variation). -/
 def FirstVariationNoetherOperators.omegaYX
     (D : FirstVariationNoetherOperators (L:=L) (C:=C)) :
@@ -4442,6 +4424,24 @@ theorem FirstVariationNoetherOperators.omegaXY_existsUnique
       W X + D.dB X = D.omegaXY X + D.dB X :=
     (hW X).trans (D.compensated_eq_constraint X).symm
   exact add_right_cancel hEq
+
+/-- Consequently the off-shell Iyer-Wald operator identity has no independent
+identity hypothesis at primitive Noether level. -/
+theorem PrimitiveNoetherOperators.iyerWald_operator_identity
+    (D : PrimitiveNoetherOperators (L:=L) (C:=C)) :
+    D.toFirstVariationNoetherOperators.omegaYX =
+      D.toFirstVariationNoetherOperators.dB -
+        D.toFirstVariationNoetherOperators.constraint :=
+  D.toFirstVariationNoetherOperators.iyerWald_operator_identity
+
+/-- The compensated current is unique already at primitive Noether level. -/
+theorem PrimitiveNoetherOperators.omegaXY_existsUnique
+    (D : PrimitiveNoetherOperators (L:=L) (C:=C)) :
+    ∃! W : L →ₗ[ℝ] C,
+      ∀ X : L,
+        W X + D.toFirstVariationNoetherOperators.dB X =
+          D.toFirstVariationNoetherOperators.constraint X :=
+  D.toFirstVariationNoetherOperators.omegaXY_existsUnique
 
 end FirstVariationNoetherDerivation
 
