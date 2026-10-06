@@ -1947,6 +1947,64 @@ theorem principalEinsteinHilbertSymplecticPotentialCoeff_from_metric_variation
   rw [principalEinsteinHilbertThetaNumerator_from_metric_variation
     nablaH hsym c]
 
+/-! #### The Palatini divergence is the divergence of the EH potential -/
+
+/-- Covariant derivative of the metric-generated linearized connection, expressed
+through second covariant derivatives of the metric variation. -/
+def principalNablaLinearizedChristoffelFromMetricSecondDerivative
+    (nabla2H : Fin 4 → Fin 4 → Fin 4 → Fin 4 → ℝ)
+    (d a b c : Fin 4) : ℝ :=
+  principalLinearizedChristoffelFromMetricDerivative
+    (fun e i j => nabla2H d e i j) a b c
+
+/-- The previously defined Palatini scalar divergence is literally the sum of
+directional derivatives of the Palatini boundary-vector components. -/
+theorem principalPalatiniBoundaryDivergence_eq_sum_boundaryVector
+    (nablaDGamma : Fin 4 → Fin 4 → Fin 4 → Fin 4 → ℝ) :
+    principalPalatiniBoundaryDivergence nablaDGamma =
+      ∑ c : Fin 4,
+        principalPalatiniBoundaryVector
+          (fun a b d => nablaDGamma c a b d) c := by
+  rfl
+
+/-- Divergence of the Einstein-Hilbert symplectic-potential numerator generated
+by the second derivatives of the same metric variation. -/
+def principalEinsteinHilbertThetaDivergenceFromMetricSecondDerivative
+    (nabla2H : Fin 4 → Fin 4 → Fin 4 → Fin 4 → ℝ) : ℝ :=
+  ∑ c : Fin 4,
+    principalEinsteinHilbertThetaNumerator
+      (fun e a b => nabla2H c e a b) c
+
+/-- If the metric variation is symmetric, the Palatini divergence constructed
+from `∇δΓ[h]` is exactly the divergence of the EH symplectic potential constructed
+from `∇h`. -/
+theorem principalPalatiniBoundaryDivergence_from_metric_second_derivative
+    (nabla2H : Fin 4 → Fin 4 → Fin 4 → Fin 4 → ℝ)
+    (hsym : ∀ d e a b, nabla2H d e a b = nabla2H d e b a) :
+    principalPalatiniBoundaryDivergence
+        (principalNablaLinearizedChristoffelFromMetricSecondDerivative nabla2H) =
+      principalEinsteinHilbertThetaDivergenceFromMetricSecondDerivative
+        nabla2H := by
+  rw [principalPalatiniBoundaryDivergence_eq_sum_boundaryVector]
+  unfold principalEinsteinHilbertThetaDivergenceFromMetricSecondDerivative
+  apply Finset.sum_congr rfl
+  intro c hc
+  change
+    principalPalatiniBoundaryVector
+        (principalLinearizedChristoffelFromMetricDerivative
+          (fun e i j => nabla2H c e i j)) c =
+      principalEinsteinHilbertThetaNumerator
+        (fun e a b => nabla2H c e a b) c
+  exact principalEinsteinHilbertThetaNumerator_from_metric_variation
+    (fun e a b => nabla2H c e a b)
+    (fun e a b => hsym c e a b) c
+
+/-- Normalized divergence of the EH symplectic potential. -/
+def principalEinsteinHilbertSymplecticPotentialDivergence
+    (nabla2H : Fin 4 → Fin 4 → Fin 4 → Fin 4 → ℝ) : ℝ :=
+  (1 / (16 * Real.pi)) *
+    principalEinsteinHilbertThetaDivergenceFromMetricSecondDerivative nabla2H
+
 /-- A literal Einstein-Hilbert density line for an inverse-metric component
 variation.  The scalar-curvature derivative is written as the forced Ricci bulk
 term plus an explicit Palatini boundary coefficient. -/
@@ -1989,6 +2047,33 @@ theorem principalEinsteinHilbertLagrangianMetricLineFromRicci_deriv
         (principalEinsteinCovFromRicci RicCov i j + boundary i j) :=
   (principalEinsteinHilbertLagrangianMetricLineFromRicci_hasDerivAt_zero
     RicCov boundary i j).deriv
+
+/-- Full pointwise Einstein-Hilbert first-variation identity at the principal
+orthonormal-frame point.  The curvature variation is supplied by the
+metric-generated `∇δΓ[h]`; its contraction is already proved to be the divergence
+of the EH symplectic potential. -/
+theorem principalEinsteinHilbert_first_variation_from_metric_second_derivative
+    (RicCov : Fin 4 → Fin 4 → ℝ)
+    (nabla2H : Fin 4 → Fin 4 → Fin 4 → Fin 4 → ℝ)
+    (hsym : ∀ d e a b, nabla2H d e a b = nabla2H d e b a)
+    (i j : Fin 4) :
+    deriv
+        (principalEinsteinHilbertLagrangianMetricLineFromRicci
+          RicCov
+          (fun _ _ =>
+            principalPalatiniBoundaryDivergence
+              (principalNablaLinearizedChristoffelFromMetricSecondDerivative
+                nabla2H))
+          i j) 0 =
+      (1 / (16 * Real.pi)) *
+          principalEinsteinCovFromRicci RicCov i j +
+        principalEinsteinHilbertSymplecticPotentialDivergence
+          nabla2H := by
+  rw [principalEinsteinHilbertLagrangianMetricLineFromRicci_deriv]
+  rw [principalPalatiniBoundaryDivergence_from_metric_second_derivative
+    nabla2H hsym]
+  unfold principalEinsteinHilbertSymplecticPotentialDivergence
+  ring
 
 /-- After the Palatini divergence is removed by the usual bulk/boundary
 separation, the literal density derivative is precisely the Einstein tensor
@@ -18052,6 +18137,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalLinearizedChristoffelFromMetricDerivative_lower_symmetric
 #print axioms RelativeRest.principalEinsteinHilbertThetaNumerator_from_metric_variation
 #print axioms RelativeRest.principalEinsteinHilbertSymplecticPotentialCoeff_from_metric_variation
+#print axioms RelativeRest.principalPalatiniBoundaryDivergence_from_metric_second_derivative
+#print axioms RelativeRest.principalEinsteinHilbert_first_variation_from_metric_second_derivative
 #print axioms RelativeRest.principalEinsteinHilbertLagrangianMetricLineFromRicci_hasDerivAt_zero
 #print axioms RelativeRest.principalEinsteinHilbertMetricVariationCoeff_eq_bulk_lagrangian_deriv
 #print axioms RelativeRest.linearDescendant_reciprocal
