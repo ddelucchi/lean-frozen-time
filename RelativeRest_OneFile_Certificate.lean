@@ -9017,11 +9017,65 @@ theorem RegularSyngeEndpointSource.sigmaTheta_ne
     simpa [RegularSyngeEndpointSource.sigmaTheta, hzero]
   exact one_ne_zero h10
 
+/-- An invertible one-dimensional partial derivative has inverse given by
+division by its value on the unit scalar. -/
+theorem RegularSyngeEndpointSource.thetaInverse_apply
+    (D : RegularSyngeEndpointSource Bdual) (y : ℝ) :
+    (D.Dsigma ∘L ContinuousLinearMap.inr ℝ X ℝ).inverse y =
+      D.sigmaTheta⁻¹ * y := by
+  apply (D.thetaInvertible.inverse_apply_eq).2
+  change
+    y =
+      (D.Dsigma ∘L ContinuousLinearMap.inr ℝ X ℝ)
+        (D.sigmaTheta⁻¹ * y)
+  have hmap :
+      (D.Dsigma ∘L ContinuousLinearMap.inr ℝ X ℝ)
+          (D.sigmaTheta⁻¹ * y) =
+        (D.sigmaTheta⁻¹ * y) * D.sigmaTheta := by
+    change
+      (D.Dsigma ∘L ContinuousLinearMap.inr ℝ X ℝ)
+          ((D.sigmaTheta⁻¹ * y) • (1 : ℝ)) =
+        (D.sigmaTheta⁻¹ * y) *
+          (D.Dsigma ∘L ContinuousLinearMap.inr ℝ X ℝ) 1
+    rw [map_smul]
+    rfl
+  rw [hmap]
+  field_simp [D.sigmaTheta_ne]
+
+/-- The continuous linear derivative returned by the implicit-function theorem is
+exactly the manuscript covector
+`-(∂_Θσ)⁻¹ d_xσ`. -/
+theorem RegularSyngeEndpointSource.implicitDerivative_eq_explicit
+    (D : RegularSyngeEndpointSource Bdual) :
+    -((D.Dsigma ∘L ContinuousLinearMap.inr ℝ X ℝ).inverse) ∘L
+        (D.Dsigma ∘L ContinuousLinearMap.inl ℝ X ℝ) =
+      (-D.sigmaTheta⁻¹) • D.sigmaX := by
+  ext x
+  simp only [ContinuousLinearMap.neg_apply, ContinuousLinearMap.comp_apply,
+    ContinuousLinearMap.smul_apply]
+  rw [D.thetaInverse_apply]
+  unfold RegularSyngeEndpointSource.sigmaX
+  ring
+
 /-- The actual local endpoint map supplied by Mathlib's implicit-function theorem. -/
 noncomputable def RegularSyngeEndpointSource.endpointMap
     (D : RegularSyngeEndpointSource Bdual) :
     X → ℝ :=
   syngeImplicitEndpoint D.strictDeriv D.thetaInvertible
+
+/-- Hence the actual IFT endpoint map has precisely the paper's explicit
+endpoint covector as its strict derivative. -/
+theorem RegularSyngeEndpointSource.endpointMap_hasStrictFDerivAt_explicit
+    (D : RegularSyngeEndpointSource Bdual) :
+    HasStrictFDerivAt
+      D.endpointMap
+      ((-D.sigmaTheta⁻¹) • D.sigmaX)
+      D.u.1 := by
+  have h :=
+    syngeImplicitEndpoint_hasStrictFDerivAt
+      D.strictDeriv D.thetaInvertible
+  rw [D.implicitDerivative_eq_explicit] at h
+  exact h
 
 /-- That map locally solves the same world-function level equation. -/
 theorem RegularSyngeEndpointSource.endpointMap_eventually_solves
@@ -19432,6 +19486,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.SyngeEndpointJetData.endpoint_eikonals_null
 #print axioms RelativeRest.SyngeEndpointJetData.optical_closure
 #print axioms RelativeRest.RegularSyngeEndpointSource.sigmaTheta_ne
+#print axioms RelativeRest.RegularSyngeEndpointSource.thetaInverse_apply
+#print axioms RelativeRest.RegularSyngeEndpointSource.implicitDerivative_eq_explicit
+#print axioms RelativeRest.RegularSyngeEndpointSource.endpointMap_hasStrictFDerivAt_explicit
 #print axioms RelativeRest.RegularSyngeEndpointSource.endpointMap_eventually_solves
 #print axioms RelativeRest.RegularSyngeEndpointPairSource.optical_closure
 #print axioms RelativeRest.syngeImplicitEndpoint_eventually_solves
