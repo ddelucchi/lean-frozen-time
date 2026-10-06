@@ -5922,6 +5922,82 @@ theorem carterObserver_unit_timelike
         (Sigma r a θ * Delta r M a Q)) := by ring
     _ = -1 := by rw [hc]
 
+
+/-- Normalized temporal Carter coframe coefficient, written without a square-root quotient:
+`e⁰ = (Δ/sqrt(ΣΔ))(dt-a sin²θ dφ)`. -/
+def carterTemporalCoframeCoeffs
+    (r M a Q θ : ℝ) : R2 :=
+  (Delta r M a Q /
+      Real.sqrt (Sigma r a θ * Delta r M a Q)) •
+    kerrTemporalOneFormCoeffs a θ
+
+/-- The normalized Carter observer evaluates to one on the temporal principal coframe. -/
+theorem carterTemporalCoframe_on_observer
+    (r M a Q θ : ℝ)
+    (hsig : 0 < Sigma r a θ)
+    (hdel : 0 < Delta r M a Q) :
+    opticalEval
+      (carterTemporalCoframeCoeffs r M a Q θ)
+      (carterObserver r M a Q θ) = 1 := by
+  have hp : 0 < Sigma r a θ * Delta r M a Q :=
+    mul_pos hsig hdel
+  have hs0 :
+      Real.sqrt (Sigma r a θ * Delta r M a Q) ≠ 0 :=
+    ne_of_gt (Real.sqrt_pos.2 hp)
+  have hs :
+      (Real.sqrt (Sigma r a θ * Delta r M a Q))^2 =
+        Sigma r a θ * Delta r M a Q :=
+    Real.sq_sqrt (le_of_lt hp)
+  unfold carterTemporalCoframeCoeffs carterObserver opticalEval
+  rw [show
+    (kerrTemporalOneFormCoeffs a θ).1 *
+        (carterNumerator r a).1 +
+      (kerrTemporalOneFormCoeffs a θ).2 *
+        (carterNumerator r a).2 =
+      Sigma r a θ by
+        simpa [kerrTemporalOneFormCoeffs, opticalEval]
+          using carterNumerator_time_leg r a θ]
+  simp only [Prod.smul_fst, Prod.smul_snd, smul_eq_mul]
+  field_simp [hs0]
+  nlinarith
+
+/-- The same Carter observer annihilates the complementary principal stationary one-form. -/
+theorem carterAxialOneForm_on_observer
+    (r M a Q θ : ℝ) :
+    opticalEval
+      (kerrAxialOneFormCoeffs r a)
+      (carterObserver r M a Q θ) = 0 := by
+  unfold carterObserver opticalEval kerrAxialOneFormCoeffs
+  simp only [Prod.smul_fst, Prod.smul_snd, smul_eq_mul]
+  have hax := carterNumerator_axial_leg r a
+  unfold carterNumerator at hax
+  ring_nf at hax ⊢
+  rw [hax]
+  ring
+
+/-- The potential-derived Maxwell field blocks and the metric-normalized Carter observer
+therefore share the same principal stationary coframe. -/
+theorem kerrMaxwell_Carter_principal_structure
+    (Q r M a θ : ℝ)
+    (hsig : 0 < Sigma r a θ)
+    (hdel : 0 < Delta r M a Q) :
+    kerrRadialFieldBlock Q r a θ =
+        (kerrPrincipalE Q r a θ) •
+          kerrTemporalOneFormCoeffs a θ ∧
+    kerrPolarFieldBlock Q r a θ =
+        (-kerrPrincipalB Q r a θ * Real.sin θ) •
+          kerrAxialOneFormCoeffs r a ∧
+    opticalEval
+      (carterTemporalCoframeCoeffs r M a Q θ)
+      (carterObserver r M a Q θ) = 1 ∧
+    opticalEval
+      (kerrAxialOneFormCoeffs r a)
+      (carterObserver r M a Q θ) = 0 := by
+  exact ⟨kerrRadialFieldBlock_carter_aligned Q r a θ,
+    kerrPolarFieldBlock_carter_aligned Q r a θ,
+    carterTemporalCoframe_on_observer r M a Q θ hsig hdel,
+    carterAxialOneForm_on_observer r M a Q θ⟩
+
 /-- The Carter numerator is exactly the stationary direction with angular velocity
 `Ω_C=a/(r²+a²)`, multiplied by its forced normalization factor. -/
 theorem carterNumerator_factorization
@@ -6252,6 +6328,9 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check carterTemporalCoframe_on_observer
+#check carterAxialOneForm_on_observer
+#check kerrMaxwell_Carter_principal_structure
 #check principalEpsilonHSpatialCoeff_eq
 #check principalBridgeSpatialCoeff_formula
 #check principalBridgeSpatialCoeff_unit
@@ -6711,5 +6790,6 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrPotential_metric_principal_alignment
 #print axioms RelativeRest.kerr_relative_rest_carter_certificate
 #print axioms RelativeRest.carterObserver_unit_timelike
+#print axioms RelativeRest.kerrMaxwell_Carter_principal_structure
 #print axioms RelativeRest.kerr_relative_rest_carter_regular
 #print axioms RelativeRest.kerr_regular_first_or_second_radial_jet_resolves
