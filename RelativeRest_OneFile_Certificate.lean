@@ -946,23 +946,35 @@ variable {L₁ L₂ : Type*}
   [AddCommGroup L₁] [Module ℝ L₁]
   [AddCommGroup L₂] [Module ℝ L₂]
 
-/-- In a one-dimensional space equipped with a chosen unit `u`, a normalized covector reconstructs
-vectors by their scalar value.  This is the exact algebra used by the local/global clock bridge. -/
+/-- In a genuinely one-dimensional real vector space, a normalized covector and its
+unit vector force the reconstruction formula; it is not an additional hypothesis. -/
 theorem reconstruction_from_normalized_covector
     (α : L₁ →ₗ[ℝ] ℝ) (u : L₁)
     (hu : α u = 1)
-    (hspan : ∀ x : L₁, x = (α x) • u) :
-    ∀ x : L₁, x = (α x) • u := hspan
+    (hfin : Module.finrank ℝ L₁ = 1) :
+    ∀ x : L₁, x = (α x) • u := by
+  have hu0 : u ≠ 0 := by
+    intro hzero
+    rw [hzero] at hu
+    simp at hu
+  intro x
+  rcases ((finrank_eq_one_iff_of_nonzero' u hu0).mp hfin x) with ⟨c, hc⟩
+  have hcoeff : c = α x := by
+    have hx := congrArg α hc
+    simpa [hu] using hx
+  calc
+    x = c • u := hc.symm
+    _ = (α x) • u := by rw [hcoeff]
 
-/-- Uniqueness of a map that preserves normalized covectors and selected unit vectors. -/
+/-- In a one-dimensional source, the image of its normalized unit determines a linear map uniquely. -/
 theorem unique_covector_preserving_map
-    (α : L₁ →ₗ[ℝ] ℝ) (β : L₂ →ₗ[ℝ] ℝ)
+    (α : L₁ →ₗ[ℝ] ℝ)
     (u₁ : L₁) (u₂ : L₂)
-    (hαu : α u₁ = 1) (hβu : β u₂ = 1)
-    (hspan₁ : ∀ x : L₁, x = (α x) • u₁)
-    (hspan₂ : ∀ y : L₂, y = (β y) • u₂)
+    (hαu : α u₁ = 1)
+    (hfin₁ : Module.finrank ℝ L₁ = 1)
     (I J : L₁ →ₗ[ℝ] L₂)
     (hIu : I u₁ = u₂) (hJu : J u₁ = u₂) : I = J := by
+  have hspan₁ := reconstruction_from_normalized_covector α u₁ hαu hfin₁
   ext x
   rw [hspan₁ x, map_smul, map_smul, hIu, hJu]
 
@@ -993,15 +1005,15 @@ theorem normalizedClockMap_preserves_covector
     β (normalizedClockMap α u₂ x) = α x := by
   simp [normalizedClockMap, hβu]
 
-/-- If the target line is reconstructed by its normalized covector, covector preservation alone
-forces the canonical map. -/
+/-- On a one-dimensional target line, covector preservation alone forces the canonical map. -/
 theorem normalizedClockMap_unique_of_covector
     (α : L₁ →ₗ[ℝ] ℝ) (β : L₂ →ₗ[ℝ] ℝ) (u₂ : L₂)
     (hβu : β u₂ = 1)
-    (hspan₂ : ∀ y : L₂, y = (β y) • u₂)
+    (hfin₂ : Module.finrank ℝ L₂ = 1)
     (I : L₁ →ₗ[ℝ] L₂)
     (hpres : β.comp I = α) :
     I = normalizedClockMap α u₂ := by
+  have hspan₂ := reconstruction_from_normalized_covector β u₂ hβu hfin₂
   ext x
   rw [hspan₂ (I x)]
   have hx := LinearMap.congr_fun hpres x
