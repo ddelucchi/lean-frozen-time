@@ -8435,6 +8435,36 @@ theorem kerrConnectionCrossTrace_formula
   unfold Delta Sigma kerrH
   nlinarith
 
+/-! ### Diagonal polar connection identities -/
+
+/-- Radial connection coefficient entering the theta-theta Ricci component. -/
+theorem kerrChristoffel_r_thetatheta
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    kerrChristoffel r M a Q θ 1 2 2 =
+      -r * Delta r M a Q / Sigma r a θ := by
+  rw [kerrChristoffel_eq_regular r M a Q θ hsig hdel]
+  simp [kerrChristoffelRegular, kerrMetricInv,
+    kerrMetricDerivativeRegular,
+    kerrMetricRadialDerivative, kerrMetricPolarDerivative]
+  field_simp [hsig, hdel]
+  ring
+
+/-- Polar connection coefficient entering the theta-theta Ricci component. -/
+theorem kerrChristoffel_theta_thetatheta
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    kerrChristoffel r M a Q θ 2 2 2 =
+      -a^2 * Real.cos θ * Real.sin θ / Sigma r a θ := by
+  rw [kerrChristoffel_eq_regular r M a Q θ hsig hdel]
+  simp [kerrChristoffelRegular, kerrMetricInv,
+    kerrMetricDerivativeRegular,
+    kerrMetricRadialDerivative, kerrMetricPolarDerivative]
+  field_simp [hsig, hdel]
+  ring
+
 /-- Coordinate derivative of a Christoffel symbol. -/
 def kerrChristoffelPartial
     (κ : Fin 4) (r M a Q θ : ℝ)
@@ -8654,6 +8684,165 @@ theorem kerrChristoffelTracePartial_r_theta
   unfold kerrCoordPartial
   simpa using
     (kerrChristoffelTrace_theta_hasDerivAt_r
+      r M a Q θ hsig hdel hsin).deriv
+
+/-! ### Polar diagonal second-derivative transfer -/
+
+/-- Radial derivative of Gamma^r_{theta theta} on the regular chart. -/
+theorem kerrChristoffel_r_thetatheta_hasDerivAt_r
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    HasDerivAt
+      (fun x : ℝ => kerrChristoffel x M a Q θ 1 2 2)
+      (((-Delta r M a Q - 2 * r * (r - M)) * Sigma r a θ +
+          2 * r^2 * Delta r M a Q) / (Sigma r a θ)^2) r := by
+  have hnum :
+      HasDerivAt
+        (fun x : ℝ => -x * Delta x M a Q)
+        (-Delta r M a Q - 2 * r * (r - M)) r := by
+    convert ((hasDerivAt_id r).mul
+      (Delta_hasDerivAt_r r M a Q)).neg using 1 <;> ring
+  have hreg := hnum.fun_div (Sigma_hasDerivAt_r r a θ) hsig
+  have hreg' :
+      HasDerivAt
+        (fun x : ℝ => -x * Delta x M a Q / Sigma x a θ)
+        (((-Delta r M a Q - 2 * r * (r - M)) * Sigma r a θ +
+            2 * r^2 * Delta r M a Q) / (Sigma r a θ)^2) r := by
+    convert hreg using 1
+    field_simp [hsig]
+    ring
+  have hS :=
+    (Sigma_hasDerivAt_r r a θ).continuousAt.eventually_ne hsig
+  have hD :=
+    (Delta_hasDerivAt_r r M a Q).continuousAt.eventually_ne hdel
+  have heq :
+      (fun x : ℝ => kerrChristoffel x M a Q θ 1 2 2) =ᶠ[𝓝 r]
+        (fun x : ℝ => -x * Delta x M a Q / Sigma x a θ) := by
+    filter_upwards [hS, hD] with x hxS hxD
+    exact kerrChristoffel_r_thetatheta x M a Q θ hxS hxD
+  exact hreg'.congr_of_eventuallyEq heq
+
+/-- Polar derivative of Gamma^theta_{theta theta} on the regular chart. -/
+theorem kerrChristoffel_theta_thetatheta_hasDerivAt_theta
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    HasDerivAt
+      (fun x : ℝ => kerrChristoffel r M a Q x 2 2 2)
+      ((a^2 * ((Real.sin θ)^2 - (Real.cos θ)^2) * Sigma r a θ -
+          2 * a^4 * (Real.cos θ)^2 * (Real.sin θ)^2) /
+        (Sigma r a θ)^2) θ := by
+  have hcs :=
+    (Real.hasDerivAt_cos θ).mul (Real.hasDerivAt_sin θ)
+  have hnum := hcs.const_mul (-a^2)
+  have hreg := hnum.fun_div (Sigma_hasDerivAt_theta r a θ) hsig
+  have hreg' :
+      HasDerivAt
+        (fun x : ℝ =>
+          -a^2 * Real.cos x * Real.sin x / Sigma r a x)
+        ((a^2 * ((Real.sin θ)^2 - (Real.cos θ)^2) * Sigma r a θ -
+            2 * a^4 * (Real.cos θ)^2 * (Real.sin θ)^2) /
+          (Sigma r a θ)^2) θ := by
+    convert hreg using 1
+    field_simp [hsig]
+    ring
+  have hS :=
+    (Sigma_hasDerivAt_theta r a θ).continuousAt.eventually_ne hsig
+  have heq :
+      (fun x : ℝ => kerrChristoffel r M a Q x 2 2 2) =ᶠ[𝓝 θ]
+        (fun x : ℝ =>
+          -a^2 * Real.cos x * Real.sin x / Sigma r a x) := by
+    filter_upwards [hS] with x hxS
+    exact kerrChristoffel_theta_thetatheta r M a Q x hxS hdel
+  exact hreg'.congr_of_eventuallyEq heq
+
+/-- Polar derivative of the polar connection trace. -/
+theorem kerrChristoffelTrace_theta_hasDerivAt_theta
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    HasDerivAt
+      (fun x : ℝ => kerrChristoffelTrace r M a Q x 2)
+      (-1 / (Real.sin θ)^2 +
+        (2 * a^2 * ((Real.sin θ)^2 - (Real.cos θ)^2) * Sigma r a θ -
+          4 * a^4 * (Real.cos θ)^2 * (Real.sin θ)^2) /
+            (Sigma r a θ)^2) θ := by
+  have hcot :=
+    (Real.hasDerivAt_cos θ).fun_div (Real.hasDerivAt_sin θ) hsin
+  have hcs :=
+    (Real.hasDerivAt_cos θ).mul (Real.hasDerivAt_sin θ)
+  have hnum := hcs.const_mul (-2 * a^2)
+  have hfrac := hnum.fun_div (Sigma_hasDerivAt_theta r a θ) hsig
+  have hreg := hcot.add hfrac
+  have hreg' :
+      HasDerivAt
+        (fun x : ℝ =>
+          Real.cos x / Real.sin x -
+            2 * a^2 * Real.cos x * Real.sin x / Sigma r a x)
+        (-1 / (Real.sin θ)^2 +
+          (2 * a^2 * ((Real.sin θ)^2 - (Real.cos θ)^2) * Sigma r a θ -
+            4 * a^4 * (Real.cos θ)^2 * (Real.sin θ)^2) /
+              (Sigma r a θ)^2) θ := by
+    convert hreg using 1
+    · ring
+    · have htrig := Real.sin_sq_add_cos_sq θ
+      field_simp [hsig, hsin]
+      nlinarith
+  have hS :=
+    (Sigma_hasDerivAt_theta r a θ).continuousAt.eventually_ne hsig
+  have hSin :=
+    (Real.hasDerivAt_sin θ).continuousAt.eventually_ne hsin
+  have heq :
+      (fun x : ℝ => kerrChristoffelTrace r M a Q x 2) =ᶠ[𝓝 θ]
+        (fun x : ℝ =>
+          Real.cos x / Real.sin x -
+            2 * a^2 * Real.cos x * Real.sin x / Sigma r a x) := by
+    filter_upwards [hS, hSin] with x hxS hxSin
+    exact kerrChristoffelTrace_theta r M a Q x hxS hdel hxSin
+  exact hreg'.congr_of_eventuallyEq heq
+
+theorem kerrChristoffelPartial_r_thetatheta
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    kerrChristoffelPartial 1 r M a Q θ 1 2 2 =
+      ((-Delta r M a Q - 2 * r * (r - M)) * Sigma r a θ +
+        2 * r^2 * Delta r M a Q) / (Sigma r a θ)^2 := by
+  unfold kerrChristoffelPartial kerrCoordPartial
+  simpa using
+    (kerrChristoffel_r_thetatheta_hasDerivAt_r
+      r M a Q θ hsig hdel).deriv
+
+theorem kerrChristoffelPartial_theta_thetatheta
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    kerrChristoffelPartial 2 r M a Q θ 2 2 2 =
+      (a^2 * ((Real.sin θ)^2 - (Real.cos θ)^2) * Sigma r a θ -
+        2 * a^4 * (Real.cos θ)^2 * (Real.sin θ)^2) /
+          (Sigma r a θ)^2 := by
+  unfold kerrChristoffelPartial kerrCoordPartial
+  simpa using
+    (kerrChristoffel_theta_thetatheta_hasDerivAt_theta
+      r M a Q θ hsig hdel).deriv
+
+theorem kerrChristoffelTracePartial_theta_theta
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrCoordPartial 2
+      (fun rr th => kerrChristoffelTrace rr M a Q th 2)
+      r θ =
+      -1 / (Real.sin θ)^2 +
+        (2 * a^2 * ((Real.sin θ)^2 - (Real.cos θ)^2) * Sigma r a θ -
+          4 * a^4 * (Real.cos θ)^2 * (Real.sin θ)^2) /
+            (Sigma r a θ)^2 := by
+  unfold kerrCoordPartial
+  simpa using
+    (kerrChristoffelTrace_theta_hasDerivAt_theta
       r M a Q θ hsig hdel hsin).deriv
 
 /-- Coordinate derivatives of odd-parity Christoffels vanish identically as well. -/
