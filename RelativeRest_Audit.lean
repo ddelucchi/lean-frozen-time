@@ -1,4 +1,4 @@
-import RelativeRest_DeepPass23
+import RelativeRest_DeepPass24
 
 /-!
 # Referee-facing axiom audit
@@ -77,3 +77,6 @@ headline formal statements.  There are no project-local axiom declarations in th
 #print axioms RelativeRest.linearizedActionResponse_factors_relative
 #print axioms RelativeRest.linearizedActionResponse_kernel_eq_relative_kernel
 #print axioms RelativeRest.relativeActionNormalUnit_normalized
+
+#print axioms RelativeRest.canonicalClockDual_reconstruction
+#print axioms RelativeRest.relativeNormalClockDualEquiv
