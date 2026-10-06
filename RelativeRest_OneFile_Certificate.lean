@@ -14322,135 +14322,6 @@ theorem principalActionSectorVariation_forced_core_chain
     principalActionSectorVariation_current_eq_characteristicCurrent D,
     hL, hdim, hnorm⟩
 
-/-! ### Basis-forced action-Euler constraint: only common on-shellness + gravity response -/
-
-/-- A still weaker and more geometric interface than the full two-sector operator equality.
-Only two facts are supplied: the common/even action direction is on shell, and the
-gravity basis response is the metric-action-Euler response already reconstructed from
-the Einstein-Maxwell Euler derivative. Linearity forces everything else. -/
-structure PrincipalActionEulerBasisVariationCharacteristicInput where
-  carrier : PrincipalCarrierCharacteristicInput (P:=P)
-  variation : LagrangianVariationNoetherOperators
-    (L:=R2) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ))
-  commonOnShell : variation.constraint CA = 0
-  gravityFromActionEuler :
-    variation.constraint actionGravitySector = carrier.actionEulerResponse
-
-/-- The Maxwell-sector sign is forced by common-direction on-shellness. -/
-theorem PrincipalActionEulerBasisVariationCharacteristicInput.constraint_maxwell
-    (D : PrincipalActionEulerBasisVariationCharacteristicInput (P:=P)) :
-    D.variation.constraint actionMaxwellSector =
-      -D.carrier.actionEulerResponse := by
-  have hsum :
-      D.variation.constraint actionGravitySector +
-        D.variation.constraint actionMaxwellSector = 0 := by
-    rw [← D.variation.constraint.map_add, ← CA_eq_actionSectors]
-    exact D.commonOnShell
-  rw [D.gravityFromActionEuler] at hsum
-  exact eq_neg_of_add_eq_zero_right hsum
-
-/-- The entire two-sector constraint operator is therefore forced on all of R2. -/
-theorem PrincipalActionEulerBasisVariationCharacteristicInput.constraint_operator_forced
-    (D : PrincipalActionEulerBasisVariationCharacteristicInput (P:=P)) :
-    D.variation.constraint =
-      actionConstraintResponseLinear D.carrier.actionEulerResponse := by
-  ext x
-  rcases x with ⟨xG,xM⟩
-  have hx : (xG,xM) =
-      xG • actionGravitySector + xM • actionMaxwellSector := by
-    ext <;> simp [actionGravitySector, actionMaxwellSector]
-  rw [hx, map_add, map_smul, map_smul,
-      D.gravityFromActionEuler, D.constraint_maxwell]
-  simp [actionConstraintResponseLinear, actionGravitySector, actionMaxwellSector]
-  module
-
-/-- Thus the stronger sector-operator package is constructed, not assumed. -/
-def PrincipalActionEulerBasisVariationCharacteristicInput.toSectorInput
-    (D : PrincipalActionEulerBasisVariationCharacteristicInput (P:=P)) :
-    PrincipalActionEulerSectorVariationCharacteristicInput (P:=P) where
-  carrier := D.carrier
-  variation := D.variation
-  constraintFromActionEuler := D.constraint_operator_forced
-
-/-- The odd normal response is a theorem from those two basis facts. -/
-theorem PrincipalActionEulerBasisVariationCharacteristicInput.constraint_DA
-    (D : PrincipalActionEulerBasisVariationCharacteristicInput (P:=P)) :
-    D.variation.constraint DA =
-      (-2 : ℝ) • D.carrier.actionEulerResponse := by
-  exact D.toSectorInput.constraint_DA
-
-def PrincipalActionEulerBasisVariationCharacteristicInput.characteristicCurrent
-    (D : PrincipalActionEulerBasisVariationCharacteristicInput (P:=P)) :
-    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
-  D.toSectorInput.characteristicCurrent
-
-/-- The characteristic current is fixed from common on-shellness and one gravity
-Euler response, with no Maxwell sign or full operator identity supplied. -/
-theorem principalActionEulerBasisVariation_current_eq_actionEulerResponse
-    (D : PrincipalActionEulerBasisVariationCharacteristicInput (P:=P)) :
-    D.characteristicCurrent = D.carrier.actionEulerResponse :=
-  principalActionEulerSectorVariation_current_eq_actionEulerResponse D.toSectorInput
-
-theorem principalActionEulerBasisVariation_clock_chain
-    (D : PrincipalActionEulerBasisVariationCharacteristicInput (P:=P)) :
-    D.characteristicCurrent =
-        D.carrier.toCharacteristicCurrentData.current ∧
-    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
-    Module.finrank ℝ
-      (D.carrier.toCharacteristicCurrentData.K ⧸
-        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
-    (quotientClockCovector principalTOLinear).comp
-      (globalToPrincipalLocalClockMap
-        D.carrier.toCharacteristicCurrentData.Lambda) =
-      D.carrier.toCharacteristicCurrentData.clockCovector ∧
-    principalLocalLift
-      (globalToPrincipalLocalClockMap
-        D.carrier.toCharacteristicCurrentData.Lambda
-        (globalClockQuotientUnit
-          D.carrier.toCharacteristicCurrentData.Lambda
-          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
-      principalUhat :=
-  principalActionEulerSectorVariation_clock_chain D.toSectorInput
-
-/-- Strongest current action-to-clock theorem with the two-sector constraint itself
-derived from common on-shellness and the gravity action-Euler response. -/
-theorem principalActionEulerBasisVariation_forced_core_chain
-    (D : PrincipalActionEulerBasisVariationCharacteristicInput (P:=P))
-    (u s : ℝ) :
-    ((8 * Real.pi * principalFieldEnergyDensity D.carrier.E D.carrier.B =
-        8 * Real.pi *
-          maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
-          principalFieldEnergyDensity D.carrier.E D.carrier.B) ↔ s = 0) ∧
-    (∀ i j : Fin 4,
-      D.carrier.J (principalBasis j) i =
-        (16 * Real.pi / principalMetricSign i) *
-          deriv (principalScaledMetricEulerCoeffFromAction
-            D.carrier.E D.carrier.B i j) 0) ∧
-    D.variation.constraint CA = 0 ∧
-    D.variation.constraint actionGravitySector =
-      D.carrier.actionEulerResponse ∧
-    D.variation.constraint actionMaxwellSector =
-      -D.carrier.actionEulerResponse ∧
-    D.variation.constraint DA =
-      (-2 : ℝ) • D.carrier.actionEulerResponse ∧
-    D.characteristicCurrent = D.carrier.actionEulerResponse ∧
-    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
-    Module.finrank ℝ
-      (D.carrier.toCharacteristicCurrentData.K ⧸
-        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
-    principalLocalLift
-      (globalToPrincipalLocalClockMap
-        D.carrier.toCharacteristicCurrentData.Lambda
-        (globalClockQuotientUnit
-          D.carrier.toCharacteristicCurrentData.Lambda
-          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
-      principalUhat := by
-  have h := principalActionEulerSectorVariation_forced_core_chain
-    D.toSectorInput u s
-  rcases h with ⟨hrest,hJ,hCA,hDA,hcur,hL,hdim,hnorm⟩
-  exact ⟨hrest,hJ,hCA,D.gravityFromActionEuler,D.constraint_maxwell,
-    hDA,hcur,hL,hdim,hnorm⟩
-
 /-! ### Action-Euler sector operator: metric action jet to covariant clock with no stress input -/
 
 /-- Strongest finite-dimensional action-linked covariant-phase-space interface.
@@ -14633,6 +14504,136 @@ theorem principalActionEulerSectorVariation_forced_core_chain
     hL, hdim, hnorm⟩
   intro i j
   exact D.carrier.J_basis_eq_actionEulerJet i j
+
+/-! ### Basis-forced action-Euler constraint: only common on-shellness + gravity response -/
+
+/-- A still weaker and more geometric interface than the full two-sector operator equality.
+Only two facts are supplied: the common/even action direction is on shell, and the
+gravity basis response is the metric-action-Euler response already reconstructed from
+the Einstein-Maxwell Euler derivative. Linearity forces everything else. -/
+structure PrincipalActionEulerBasisVariationCharacteristicInput where
+  carrier : PrincipalCarrierCharacteristicInput (P:=P)
+  variation : LagrangianVariationNoetherOperators
+    (L:=R2) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ))
+  commonOnShell : variation.constraint CA = 0
+  gravityFromActionEuler :
+    variation.constraint actionGravitySector = carrier.actionEulerResponse
+
+/-- The Maxwell-sector sign is forced by common-direction on-shellness. -/
+theorem PrincipalActionEulerBasisVariationCharacteristicInput.constraint_maxwell
+    (D : PrincipalActionEulerBasisVariationCharacteristicInput (P:=P)) :
+    D.variation.constraint actionMaxwellSector =
+      -D.carrier.actionEulerResponse := by
+  have hsum :
+      D.variation.constraint actionGravitySector +
+        D.variation.constraint actionMaxwellSector = 0 := by
+    rw [← D.variation.constraint.map_add, ← CA_eq_actionSectors]
+    exact D.commonOnShell
+  rw [D.gravityFromActionEuler] at hsum
+  exact eq_neg_of_add_eq_zero_right hsum
+
+/-- The entire two-sector constraint operator is therefore forced on all of R2. -/
+theorem PrincipalActionEulerBasisVariationCharacteristicInput.constraint_operator_forced
+    (D : PrincipalActionEulerBasisVariationCharacteristicInput (P:=P)) :
+    D.variation.constraint =
+      actionConstraintResponseLinear D.carrier.actionEulerResponse := by
+  ext x
+  rcases x with ⟨xG,xM⟩
+  have hx : (xG,xM) =
+      xG • actionGravitySector + xM • actionMaxwellSector := by
+    ext <;> simp [actionGravitySector, actionMaxwellSector]
+  rw [hx, map_add, map_smul, map_smul,
+      D.gravityFromActionEuler, D.constraint_maxwell]
+  simp [actionConstraintResponseLinear, actionGravitySector, actionMaxwellSector]
+  module
+
+/-- Thus the stronger sector-operator package is constructed, not assumed. -/
+def PrincipalActionEulerBasisVariationCharacteristicInput.toSectorInput
+    (D : PrincipalActionEulerBasisVariationCharacteristicInput (P:=P)) :
+    PrincipalActionEulerSectorVariationCharacteristicInput (P:=P) where
+  carrier := D.carrier
+  variation := D.variation
+  constraintFromActionEuler := D.constraint_operator_forced
+
+/-- The odd normal response is a theorem from those two basis facts. -/
+theorem PrincipalActionEulerBasisVariationCharacteristicInput.constraint_DA
+    (D : PrincipalActionEulerBasisVariationCharacteristicInput (P:=P)) :
+    D.variation.constraint DA =
+      (-2 : ℝ) • D.carrier.actionEulerResponse := by
+  exact D.toSectorInput.constraint_DA
+
+def PrincipalActionEulerBasisVariationCharacteristicInput.characteristicCurrent
+    (D : PrincipalActionEulerBasisVariationCharacteristicInput (P:=P)) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
+  D.toSectorInput.characteristicCurrent
+
+/-- The characteristic current is fixed from common on-shellness and one gravity
+Euler response, with no Maxwell sign or full operator identity supplied. -/
+theorem principalActionEulerBasisVariation_current_eq_actionEulerResponse
+    (D : PrincipalActionEulerBasisVariationCharacteristicInput (P:=P)) :
+    D.characteristicCurrent = D.carrier.actionEulerResponse :=
+  principalActionEulerSectorVariation_current_eq_actionEulerResponse D.toSectorInput
+
+theorem principalActionEulerBasisVariation_clock_chain
+    (D : PrincipalActionEulerBasisVariationCharacteristicInput (P:=P)) :
+    D.characteristicCurrent =
+        D.carrier.toCharacteristicCurrentData.current ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    (quotientClockCovector principalTOLinear).comp
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda) =
+      D.carrier.toCharacteristicCurrentData.clockCovector ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat :=
+  principalActionEulerSectorVariation_clock_chain D.toSectorInput
+
+/-- Strongest current action-to-clock theorem with the two-sector constraint itself
+derived from common on-shellness and the gravity action-Euler response. -/
+theorem principalActionEulerBasisVariation_forced_core_chain
+    (D : PrincipalActionEulerBasisVariationCharacteristicInput (P:=P))
+    (u s : ℝ) :
+    ((8 * Real.pi * principalFieldEnergyDensity D.carrier.E D.carrier.B =
+        8 * Real.pi *
+          maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+          principalFieldEnergyDensity D.carrier.E D.carrier.B) ↔ s = 0) ∧
+    (∀ i j : Fin 4,
+      D.carrier.J (principalBasis j) i =
+        (16 * Real.pi / principalMetricSign i) *
+          deriv (principalScaledMetricEulerCoeffFromAction
+            D.carrier.E D.carrier.B i j) 0) ∧
+    D.variation.constraint CA = 0 ∧
+    D.variation.constraint actionGravitySector =
+      D.carrier.actionEulerResponse ∧
+    D.variation.constraint actionMaxwellSector =
+      -D.carrier.actionEulerResponse ∧
+    D.variation.constraint DA =
+      (-2 : ℝ) • D.carrier.actionEulerResponse ∧
+    D.characteristicCurrent = D.carrier.actionEulerResponse ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat := by
+  have h := principalActionEulerSectorVariation_forced_core_chain
+    D.toSectorInput u s
+  rcases h with ⟨hrest,hJ,hCA,hDA,hcur,hL,hdim,hnorm⟩
+  exact ⟨hrest,hJ,hCA,D.gravityFromActionEuler,D.constraint_maxwell,
+    hDA,hcur,hL,hdim,hnorm⟩
+
 
 /-! ### Central manuscript closure certificate -/
 
