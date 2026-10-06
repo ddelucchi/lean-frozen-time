@@ -17340,11 +17340,20 @@ theorem PrincipalLocalNoetherVariationCharacteristicInput.compensatedOperator_eq
       (D.variation.omegaXY + D.variation.dB) X =
         D.variation.omegaXY X + D.variation.dB X by rfl]
   rw [D.variation.compensated_eq_constraint]
+  have horbit :
+      ∀ s : ℝ, ∀ v : Fin 4 → ℝ,
+        relativeConstraintOrbitEval D.variation.constraint v s =
+          relativeConstraintResidual (D.carrier.metricEulerJetResponse v) s := by
+    intro s v
+    rw [D.constraintOrbit_forced s v]
+    exact D.carrier.metricEulerRelativeOrbitResponse_apply s v
   have hC :
       D.variation.constraint =
-        D.carrier.noetherConstraintOperatorFromAction :=
-    D.toDisplayedOrbitInput.constraint_eq_canonicalNoether
-  exact LinearMap.congr_fun hC X
+        actionConstraintResponseLinear D.carrier.metricEulerJetResponse :=
+    (actionConstraintOperator_eq_iff_relative_orbit
+      D.variation.constraint D.carrier.metricEulerJetResponse).2 horbit
+  simpa [PrincipalCarrierCharacteristicInput.noetherConstraintOperatorFromAction]
+    using LinearMap.congr_fun hC X
 
 /-- The actual compensated Iyer-Wald current on the full relative action orbit
 is forced directly by locality and the local diffeomorphism derivative pairing.
@@ -17383,10 +17392,23 @@ theorem PrincipalLocalNoetherVariationCharacteristicInput.compensatedNormal_forc
   have hcomp := D.variation.compensated_eq_constraint DA
   have hcompv := congrArg
     (fun F : (Fin 4 → ℝ) →ₗ[ℝ] ℝ => F v) hcomp
+  have horbit :
+      ∀ s : ℝ, ∀ w : Fin 4 → ℝ,
+        relativeConstraintOrbitEval D.variation.constraint w s =
+          relativeConstraintResidual (D.carrier.metricEulerJetResponse w) s := by
+    intro s w
+    rw [D.constraintOrbit_forced s w]
+    exact D.carrier.metricEulerRelativeOrbitResponse_apply s w
+  have hC0 :
+      D.variation.constraint =
+        actionConstraintResponseLinear D.carrier.metricEulerJetResponse :=
+    (actionConstraintOperator_eq_iff_relative_orbit
+      D.variation.constraint D.carrier.metricEulerJetResponse).2 horbit
   have hC :
       D.variation.constraint =
-        D.carrier.noetherConstraintOperatorFromAction :=
-    D.toDisplayedOrbitInput.constraint_eq_canonicalNoether
+        D.carrier.noetherConstraintOperatorFromAction := by
+    simpa [PrincipalCarrierCharacteristicInput.noetherConstraintOperatorFromAction]
+      using hC0
   have hDA :=
     D.carrier.noetherConstraintOperatorFromAction_DA
   have hDAv := congrArg
