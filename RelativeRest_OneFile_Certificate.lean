@@ -476,6 +476,28 @@ theorem sigmaStar_shift_covariance
   · rw [balance_shift_covariance]
     convert sigmaStar_balance qm qp hqm hqp using 1 <;> ring
 
+/-- Nonzero principal null components therefore admit exactly one balanced rapidity. -/
+theorem boost_balance_exists_unique
+    (qm qp : ℝ) (hqm : qm ≠ 0) (hqp : qp ≠ 0) :
+    ∃! σ : ℝ, boostDefect qm qp σ = 0 := by
+  refine ⟨sigmaStar qm qp, sigmaStar_balance qm qp hqm hqp, ?_⟩
+  intro τ hτ
+  exact boost_balance_unique qm qp τ (sigmaStar qm qp) hqm hqp
+    hτ (sigmaStar_balance qm qp hqm hqp)
+
+/-- Substituting the forced balancing rapidity makes the balanced null dyad independent
+of the initial boost representative. -/
+theorem sigmaStar_balanced_dyad_invariant
+    (km lp qm qp τ : ℝ) (hqm : qm ≠ 0) (hqp : qp ≠ 0) :
+    (Real.exp (-(sigmaStar (Real.exp (-τ) * qm) (Real.exp τ * qp))) *
+        (Real.exp (-τ) * km) =
+      Real.exp (-(sigmaStar qm qp)) * km) ∧
+    (Real.exp (sigmaStar (Real.exp (-τ) * qm) (Real.exp τ * qp)) *
+        (Real.exp τ * lp) =
+      Real.exp (sigmaStar qm qp) * lp) := by
+  rw [sigmaStar_shift_covariance qm qp τ hqm hqp]
+  exact balanced_dyad_invariant km lp (sigmaStar qm qp) τ
+
 /-! ## 7. Conformal normalization uniqueness in the stated carrier-algebraic category -/
 
 /-- Homogeneity `f(cχ)=c f(χ)` forces a one-variable conformal factor to be linear. -/
@@ -611,6 +633,22 @@ theorem actionOpticalMap_unique
     _ = actionOpticalMap (x, y) := by
           ext <;> simp [TO, RO, actionOpticalMap] <;> ring
 
+/-- Finite optical boost in the normalized time/radial basis. -/
+def opticalBoost (s : ℝ) (v : R2) : R2 :=
+  (Real.cosh s * v.1 + Real.sinh s * v.2,
+   Real.sinh s * v.1 + Real.cosh s * v.2)
+
+/-- The unique normalized identification intertwines the entire finite boost, not only
+its infinitesimal generator. -/
+theorem actionOpticalMap_intertwines_boost (s : ℝ) (v : R2) :
+    actionOpticalMap (actionBoost s v) =
+      opticalBoost s (actionOpticalMap v) := by
+  rcases v with ⟨x, y⟩
+  ext <;>
+    simp [actionOpticalMap, actionBoost, opticalBoost,
+      ← Real.cosh_add_sinh, ← Real.cosh_sub_sinh] <;>
+    ring
+
 /-! ## 9. Abstract Iyer–Wald/characteristic linear descent
 
 The physics-specific derivation of the Iyer–Wald current is deliberately not assumed globally.
@@ -666,6 +704,18 @@ noncomputable def clockQuotientEquivRange (Λ : K →ₗ[ℝ] ℝ) :
 theorem range_eq_top_of_nonzero
     (Λ : K →ₗ[ℝ] ℝ) (hΛ : Λ ≠ 0) : LinearMap.range Λ = ⊤ := by
   exact LinearMap.range_eq_top.mpr (nonzero_covector_surjective Λ hΛ)
+
+/-- Once `Λ` is quotiented by its kernel, its descended clock covector is unique. -/
+theorem quotient_clock_covector_unique
+    (Λ : K →ₗ[ℝ] ℝ)
+    (λ₁ λ₂ : (K ⧸ LinearMap.ker Λ) →ₗ[ℝ] ℝ)
+    (h₁ : λ₁.comp (LinearMap.ker Λ).mkQ = Λ)
+    (h₂ : λ₂.comp (LinearMap.ker Λ).mkQ = Λ) :
+    λ₁ = λ₂ := by
+  exact descended_covector_unique
+    (LinearMap.ker Λ).mkQ
+    (Submodule.mkQ_surjective (LinearMap.ker Λ))
+    Λ λ₁ λ₂ h₁ h₂
 
 end LinearDescent
 
@@ -1010,6 +1060,32 @@ theorem kerrNewman_chi_from_K
   rw [hsq, Real.sqrt_sq_eq_abs]
   exact abs_of_nonneg (div_nonneg (mul_nonneg (by norm_num) hq2) (le_of_lt hs2))
 
+/-- The curvature-derived clock rate in Kerr-Newman is forced by the carrier magnitude. -/
+theorem kerrNewman_clock_rate
+    (Q sig χ ω : ℝ)
+    (hsig : 0 < sig)
+    (hχ : χ = 2 * Q^2 / sig^2)
+    (hω : ω = Real.sqrt χ) :
+    ω = Real.sqrt 2 * |Q| / sig := by
+  have hsig0 : sig ≠ 0 := ne_of_gt hsig
+  have hχnonneg : 0 ≤ χ := by
+    rw [hχ]
+    positivity
+  have hωnonneg : 0 ≤ ω := by
+    rw [hω]
+    exact Real.sqrt_nonneg χ
+  have hω2 : ω^2 = χ := by
+    rw [hω, Real.sq_sqrt hχnonneg]
+  have hrhsnonneg : 0 ≤ Real.sqrt 2 * |Q| / sig := by
+    positivity
+  have hs2 : (Real.sqrt 2)^2 = 2 := by norm_num
+  have hrhs2 : (Real.sqrt 2 * |Q| / sig)^2 = χ := by
+    rw [hχ]
+    field_simp [hsig0]
+    rw [mul_pow, hs2, sq_abs]
+    ring
+  nlinarith
+
 /-- The inverse fourth-root curvature multiplier is `Σ/(√2 |Q|)` once its square is fixed. -/
 theorem kerrNewman_multiplier_squared
     (Q sig M : ℝ)
@@ -1117,6 +1193,11 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check boost_balance_exists_unique
+#check sigmaStar_balanced_dyad_invariant
+#check actionOpticalMap_intertwines_boost
+#check quotient_clock_covector_unique
+#check kerrNewman_clock_rate
 #check carrier_fixed_point_value_jet
 #check conformal_representative_product_invariant
 #check normalizedClockMap_preserves_covector
