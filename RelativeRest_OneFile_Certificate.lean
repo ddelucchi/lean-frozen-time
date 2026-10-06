@@ -3109,9 +3109,73 @@ theorem Sigma_hasDerivAt_r (r a θ : ℝ) :
   unfold Sigma
   convert ((hasDerivAt_id r).pow 2).add_const (a^2 * (Real.cos θ)^2) using 1 <;> ring
 
+/-- Principal-frame electric component of the Kerr-Newman Maxwell field. -/
+def kerrPrincipalE (Q r a θ : ℝ) : ℝ :=
+  Q * (r^2 - a^2 * (Real.cos θ)^2) / (Sigma r a θ)^2
+
+/-- Principal-frame magnetic component of the Kerr-Newman Maxwell field. -/
+def kerrPrincipalB (Q r a θ : ℝ) : ℝ :=
+  2 * Q * a * r * Real.cos θ / (Sigma r a θ)^2
+
+/-- The Kerr-Newman principal electromagnetic magnitude collapses exactly to `Q²/Σ²`.
+This is the algebraic identity behind the curvature carrier and requires no curvature tensor
+calculation once the principal Maxwell components are known. -/
+theorem kerrPrincipal_field_magnitude
+    (Q r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    (kerrPrincipalE Q r a θ)^2 + (kerrPrincipalB Q r a θ)^2 =
+      Q^2 / (Sigma r a θ)^2 := by
+  unfold kerrPrincipalE kerrPrincipalB Sigma
+  field_simp [hsig]
+  ring
+
+/-- Hence the general principal Maxwell carrier `2(E²+B²)` becomes the manuscript's
+Kerr-Newman carrier `2Q²/Σ²`. -/
+theorem kerrPrincipalChi_formula
+    (Q r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    principalChi (kerrPrincipalE Q r a θ) (kerrPrincipalB Q r a θ) =
+      2 * Q^2 / (Sigma r a θ)^2 := by
+  unfold principalChi
+  rw [kerrPrincipal_field_magnitude Q r a θ hsig]
+
 /-- Scalar Kerr-Newman carrier magnitude before introducing the full tensor geometry. -/
 def kerrChiScalar (Q r a θ : ℝ) : ℝ :=
   2 * Q^2 / (Sigma r a θ)^2
+
+/-- The named Kerr carrier is not an independent definition: it is exactly the invariant
+principal Maxwell magnitude of the explicit field components. -/
+theorem kerrChiScalar_eq_principalChi
+    (Q r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    kerrChiScalar Q r a θ =
+      principalChi (kerrPrincipalE Q r a θ) (kerrPrincipalB Q r a θ) := by
+  rw [kerrPrincipalChi_formula Q r a θ hsig]
+  rfl
+
+/-- The squared Maxwell invariants of Kerr-Newman therefore give `4Q⁴/Σ⁴` directly. -/
+theorem kerrMaxwellInvariantMagnitude
+    (Q r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    (maxwellI (kerrPrincipalE Q r a θ) (kerrPrincipalB Q r a θ))^2 +
+      (maxwellJ (kerrPrincipalE Q r a θ) (kerrPrincipalB Q r a θ))^2 =
+      4 * Q^4 / (Sigma r a θ)^4 := by
+  rw [maxwell_invariants_eq_principalChi_sq]
+  rw [kerrPrincipalChi_formula Q r a θ hsig]
+  field_simp [hsig]
+  ring
+
+/-- Therefore the Kerr-Newman Ricci-norm formula follows from the universal
+Einstein-Maxwell carrier identity `K=χ²` plus the explicit principal Maxwell field,
+without a separate Kerr curvature computation. -/
+theorem kerrRicciNorm_from_principal_EM
+    (Q r a θ K : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hKcarrier :
+      K =
+        (principalChi
+          (kerrPrincipalE Q r a θ)
+          (kerrPrincipalB Q r a θ))^2) :
+    K = 4 * Q^4 / (Sigma r a θ)^4 := by
+  rw [hKcarrier, kerrPrincipalChi_formula Q r a θ hsig]
+  field_simp [hsig]
+  ring
 
 
 /-- The Kerr-Newman electromagnetic carrier is strictly positive on the regular charged sector. -/
@@ -3237,6 +3301,52 @@ theorem kerrNewman_clock_rate
     ring
   nlinarith
 
+
+/-- Direct Kerr-Newman clock-rate theorem from the explicit principal Maxwell field and
+the universal carrier identity `K=χ²`.  No Kerr-specific curvature formula is supplied. -/
+theorem kerrNewman_clock_rate_from_principal_EM
+    (Q r a θ K ω : ℝ)
+    (hQ : Q ≠ 0)
+    (hsigpos : 0 < Sigma r a θ)
+    (hKcarrier :
+      K =
+        (principalChi
+          (kerrPrincipalE Q r a θ)
+          (kerrPrincipalB Q r a θ))^2)
+    (hω : ω = Real.sqrt (Real.sqrt K)) :
+    ω = Real.sqrt 2 * |Q| / Sigma r a θ := by
+  have hsig : Sigma r a θ ≠ 0 := ne_of_gt hsigpos
+  have hchi :
+      principalChi
+          (kerrPrincipalE Q r a θ)
+          (kerrPrincipalB Q r a θ) =
+        2 * Q^2 / (Sigma r a θ)^2 :=
+    kerrPrincipalChi_formula Q r a θ hsig
+  have hchipos :
+      0 ≤ principalChi
+          (kerrPrincipalE Q r a θ)
+          (kerrPrincipalB Q r a θ) :=
+    principalChi_nonneg _ _
+  have hsqrtK :
+      Real.sqrt K =
+        principalChi
+          (kerrPrincipalE Q r a θ)
+          (kerrPrincipalB Q r a θ) := by
+    rw [hKcarrier, Real.sqrt_sq_eq_abs, abs_of_nonneg hchipos]
+  have hω' :
+      ω =
+        Real.sqrt
+          (principalChi
+            (kerrPrincipalE Q r a θ)
+            (kerrPrincipalB Q r a θ)) := by
+    rw [hω, hsqrtK]
+  exact kerrNewman_clock_rate
+    Q (Sigma r a θ)
+    (principalChi
+      (kerrPrincipalE Q r a θ)
+      (kerrPrincipalB Q r a θ))
+    ω hsigpos hchi hω'
+
 /-- Curvature-derived Kerr-Newman separability multiplier. -/
 def kerrMultiplier (Q sig : ℝ) : ℝ :=
   sig / (Real.sqrt 2 * |Q|)
@@ -3300,6 +3410,28 @@ theorem kerrNewman_mino_clock_forced
   have hw := kerrNewman_clock_rate Q sig χ ω hsig hχform hω
   rw [hw, hmino]
   field_simp [ne_of_gt hsig]
+  ring
+
+
+/-- Mino-clock identity derived directly from the Kerr-Newman principal Maxwell field
+and the universal Einstein-Maxwell carrier identity, with no imported `K=4Q⁴/Σ⁴` premise. -/
+theorem kerrNewman_mino_clock_from_principal_EM
+    (Q r a θ K ω dt dlam : ℝ)
+    (hQ : Q ≠ 0)
+    (hsigpos : 0 < Sigma r a θ)
+    (hKcarrier :
+      K =
+        (principalChi
+          (kerrPrincipalE Q r a θ)
+          (kerrPrincipalB Q r a θ))^2)
+    (hω : ω = Real.sqrt (Real.sqrt K))
+    (hmino : dlam = dt / Sigma r a θ) :
+    ω * dt = Real.sqrt 2 * |Q| * dlam := by
+  have hw :=
+    kerrNewman_clock_rate_from_principal_EM
+      Q r a θ K ω hQ hsigpos hKcarrier hω
+  rw [hw, hmino]
+  field_simp [ne_of_gt hsigpos]
   ring
 
 /-- At zero charge the Kerr-Newman Ricci carrier vanishes identically in the scalar specialization. -/
@@ -3537,6 +3669,13 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check kerrPrincipal_field_magnitude
+#check kerrPrincipalChi_formula
+#check kerrChiScalar_eq_principalChi
+#check kerrMaxwellInvariantMagnitude
+#check kerrRicciNorm_from_principal_EM
+#check kerrNewman_clock_rate_from_principal_EM
+#check kerrNewman_mino_clock_from_principal_EM
 #check scaledResidual_odd_iteratedDeriv_eq_minus_two_ricci_from_EM
 #check scaledResidual_first_jet_eq_minus_two_ricci_from_EM
 #check maxwellStressTraceFactor_four
@@ -3774,3 +3913,4 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.causal_extended_endpoints_mono
 #print axioms RelativeRest.kerrLogChi_hasDerivAt_r
 #print axioms RelativeRest.kerrNewman_mino_clock_forced
+#print axioms RelativeRest.kerrNewman_mino_clock_from_principal_EM
