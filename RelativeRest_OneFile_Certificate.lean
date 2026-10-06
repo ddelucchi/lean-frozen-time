@@ -12255,6 +12255,105 @@ theorem kerrEinsteinTarget_frame_equation
   · rw [if_neg h,
       kerrEinsteinMaxwellFrame_offdiag Q r a θ A B h]
 
+/-- Covariant Carter-frame Ricci coefficient is exactly `8π` times the
+covariant Maxwell stress coefficient of the potential-derived principal field. -/
+theorem kerrRicciFrameCovCoeff_eq_EinsteinMaxwellCov
+    (Q r a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (A : Fin 4) :
+    kerrRicciFrameCovCoeff Q r a θ A =
+      8 * Real.pi *
+        (principalMetricSign A *
+          principalStress
+            (principalFieldEnergyDensity
+              (kerrPrincipalE Q r a θ)
+              (kerrPrincipalB Q r a θ)) A A) := by
+  rw [kerrPrincipalEnergyDensity_formula Q r a θ hsig]
+  fin_cases A <;>
+    simp [kerrRicciFrameCovCoeff, principalMetricSign,
+      principalStress, kerrRicciScale] <;>
+    field_simp [ne_of_gt Real.pi_pos] <;>
+    ring
+
+/-- Boyer-Lindquist covariant Maxwell stress obtained by pushing the
+potential-derived principal stress through the metric-selected Carter coframe. -/
+def kerrMaxwellStressCovFromPotential
+    (Q r M a θ : ℝ) (i j : Fin 4) : ℝ :=
+  ∑ A : Fin 4,
+    (principalMetricSign A *
+      principalStress
+        (principalFieldEnergyDensity
+          (kerrPrincipalE Q r a θ)
+          (kerrPrincipalB Q r a θ)) A A) *
+      kerrCoframe r M a Q θ A i *
+      kerrCoframe r M a Q θ A j
+
+/-- The coframe Ricci target is exactly `8π T_ab[F]` for that
+potential-derived Maxwell field. -/
+theorem kerrEinsteinTargetRicciCov_eq_8pi_MaxwellStress
+    (Q r M a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (i j : Fin 4) :
+    kerrEinsteinTargetRicciCov Q r M a Q θ i j =
+      8 * Real.pi *
+        kerrMaxwellStressCovFromPotential Q r M a θ i j := by
+  unfold kerrEinsteinTargetRicciCov
+    kerrMaxwellStressCovFromPotential
+  rw [Finset.mul_sum]
+  apply Finset.sum_congr rfl
+  intro A hA
+  rw [kerrRicciFrameCovCoeff_eq_EinsteinMaxwellCov
+    Q r a θ hsig A]
+  ring
+
+/-- The metric-derived Kerr-Newman scalar curvature vanishes on the regular
+Carter chart because the full Ricci tensor equals the trace-free Maxwell target. -/
+theorem kerrScalarCurvatureFromMetric_zero
+    (Q r M a θ : ℝ)
+    (hsig : 0 < Sigma r a θ)
+    (hdel : 0 < Delta r M a Q)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrScalarCurvatureFromMetric r M a Q θ = 0 := by
+  have htrace :
+      kerrScalarCurvatureFromMetric r M a Q θ =
+        kerrEinsteinTargetRicciTrace Q r M a θ := by
+    unfold kerrScalarCurvatureFromMetric kerrEinsteinTargetRicciTrace
+    apply Finset.sum_congr rfl
+    intro i hi
+    apply Finset.sum_congr rfl
+    intro j hj
+    rw [kerrRicci_full_eq_target Q r M a θ
+      (ne_of_gt hsig) (ne_of_gt hdel) hsin i j]
+    rw [← kerrEinsteinTargetRicciCov_eq_coordinate
+      Q r M a θ hsig hdel i j]
+  rw [htrace]
+  exact kerrEinsteinTargetRicci_trace_zero
+    Q r M a θ hsig hdel hsin
+
+/-- Full Einstein equation in Boyer-Lindquist coordinates: the Einstein tensor
+computed from the metric equals `8π` times the potential-derived Maxwell stress. -/
+theorem kerrEinsteinCovFromMetric_eq_8pi_MaxwellStress
+    (Q r M a θ : ℝ)
+    (hsig : 0 < Sigma r a θ)
+    (hdel : 0 < Delta r M a Q)
+    (hsin : Real.sin θ ≠ 0) :
+    ∀ i j : Fin 4,
+      kerrEinsteinCovFromMetric r M a Q θ i j =
+        8 * Real.pi *
+          kerrMaxwellStressCovFromPotential Q r M a θ i j := by
+  intro i j
+  unfold kerrEinsteinCovFromMetric
+  rw [kerrScalarCurvatureFromMetric_zero
+    Q r M a θ hsig hdel hsin]
+  simp
+  rw [kerrRicci_full_eq_target Q r M a θ
+    (ne_of_gt hsig) (ne_of_gt hdel) hsin i j]
+  rw [← kerrEinsteinTargetRicciCov_eq_coordinate
+    Q r M a θ hsig hdel i j]
+  exact kerrEinsteinTargetRicciCov_eq_8pi_MaxwellStress
+    Q r M a θ (ne_of_gt hsig) i j
+
+
 /-- The frame invariant squared Ricci norm of the target is four times q squared. -/
 def kerrEinsteinTargetRicciFrameNormSq
     (Q r a θ : ℝ) : ℝ :=
