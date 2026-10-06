@@ -3916,7 +3916,96 @@ theorem clockOmega_left_nondegenerate
     linarith
   ext <;> simp [hx, hy]
 
-/-! ## 16. Relational evolution: chain-rule form -/
+/-! ## 16. Relational evolution: characteristic-flow form -/
+
+section RelationalFlow
+
+variable {X : Type*}
+
+/-- Reduced relational observable obtained by translating the characteristic-flow
+parameter by the intrinsic clock reading. -/
+def relationalObservable
+    (flow : ℝ → X → X) (F : X → ℝ) (T : X → ℝ)
+    (θ : ℝ) (x : X) : ℝ :=
+  F (flow (θ - T x) x)
+
+/-- Generator transported along the same characteristic flow. -/
+def relationalGeneratorObservable
+    (flow : ℝ → X → X) (XF : X → ℝ) (T : X → ℝ)
+    (θ : ℝ) (x : X) : ℝ :=
+  XF (flow (θ - T x) x)
+
+/-- If `XF` is the derivative of `F` along the characteristic flow, the relational
+observable evolves with precisely that generator and no extra clock term. -/
+theorem relationalObservable_hasDerivAt
+    (flow : ℝ → X → X) (F XF : X → ℝ) (T : X → ℝ)
+    (θ : ℝ) (x : X)
+    (hgen :
+      ∀ t : ℝ, ∀ y : X,
+        HasDerivAt (fun s : ℝ => F (flow s y))
+          (XF (flow t y)) t) :
+    HasDerivAt
+      (fun ϑ : ℝ => relationalObservable flow F T ϑ x)
+      (relationalGeneratorObservable flow XF T θ x) θ := by
+  unfold relationalObservable relationalGeneratorObservable
+  exact HasDerivAt.comp_sub_const θ (T x) (hgen (θ - T x) x)
+
+/-- Derivative form of the paper's relational-evolution equation. -/
+theorem relationalObservable_deriv
+    (flow : ℝ → X → X) (F XF : X → ℝ) (T : X → ℝ)
+    (θ : ℝ) (x : X)
+    (hgen :
+      ∀ t : ℝ, ∀ y : X,
+        HasDerivAt (fun s : ℝ => F (flow s y))
+          (XF (flow t y)) t) :
+    deriv (fun ϑ : ℝ => relationalObservable flow F T ϑ x) θ =
+      relationalGeneratorObservable flow XF T θ x :=
+  (relationalObservable_hasDerivAt flow F XF T θ x hgen).deriv
+
+/-- If the clock advances by the flow parameter and the characteristic flow composes
+additively, the complete relational observable is constant along gauge orbits. -/
+theorem relationalObservable_gauge_invariant
+    (flow : ℝ → X → X) (F : X → ℝ) (T : X → ℝ)
+    (θ t : ℝ) (x : X)
+    (hflow : ∀ a b : ℝ, ∀ y : X,
+      flow a (flow b y) = flow (a + b) y)
+    (hclock : ∀ b : ℝ, ∀ y : X,
+      T (flow b y) = T y + b) :
+    relationalObservable flow F T θ (flow t x) =
+      relationalObservable flow F T θ x := by
+  unfold relationalObservable
+  rw [hclock t x, hflow]
+  congr 2
+  ring
+
+/-- At the intrinsic clock reading, the relational observable reduces to the original
+observable whenever zero flow is the identity. -/
+theorem relationalObservable_at_clock
+    (flow : ℝ → X → X) (F : X → ℝ) (T : X → ℝ)
+    (x : X)
+    (hzero : ∀ y : X, flow 0 y = y) :
+    relationalObservable flow F T (T x) x = F x := by
+  unfold relationalObservable
+  rw [sub_self, hzero]
+
+/-- The transported generator observable is gauge invariant under the same hypotheses. -/
+theorem relationalGeneratorObservable_gauge_invariant
+    (flow : ℝ → X → X) (XF : X → ℝ) (T : X → ℝ)
+    (θ t : ℝ) (x : X)
+    (hflow : ∀ a b : ℝ, ∀ y : X,
+      flow a (flow b y) = flow (a + b) y)
+    (hclock : ∀ b : ℝ, ∀ y : X,
+      T (flow b y) = T y + b) :
+    relationalGeneratorObservable flow XF T θ (flow t x) =
+      relationalGeneratorObservable flow XF T θ x := by
+  unfold relationalGeneratorObservable
+  rw [hclock t x, hflow]
+  congr 2
+  ring
+
+end RelationalFlow
+
+/-! ### Scalar translation specialization -/
 
 /-- Relational translation by a clock reading does not alter the flow derivative. -/
 theorem relational_translation_hasDerivAt
@@ -4719,6 +4808,11 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check relationalObservable_hasDerivAt
+#check relationalObservable_deriv
+#check relationalObservable_gauge_invariant
+#check relationalObservable_at_clock
+#check relationalGeneratorObservable_gauge_invariant
 #check principalJetFromFApply_eq_principalJetApply
 #check principalNormalizedJetFromFApply_eq_involution
 #check principalFieldDerived_lorentz_basis_eigen_plus
@@ -5035,6 +5129,8 @@ end RelativeRest
 /-! Kernel axiom audit. These commands are executable and are intentionally part of the build
 transcript: they expose every axiom used by representative end-to-end theorems. -/
 #print axioms RelativeRest.scalar_backbone
+#print axioms RelativeRest.relationalObservable_gauge_invariant
+#print axioms RelativeRest.relationalObservable_deriv
 #print axioms RelativeRest.primitive_relative_weights_reciprocal_iff_four
 #print axioms RelativeRest.scalar_backbone_from_einstein_maxwell
 #print axioms RelativeRest.rescaled_solution_preserving_iff
