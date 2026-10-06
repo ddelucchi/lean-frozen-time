@@ -788,6 +788,101 @@ theorem principalStress_rainich (u : ℝ) (i j : Fin 4) :
   rw [principalStress_sq, principalStress_trace_sq]
   by_cases h : i = j <;> simp [h] <;> ring
 
+
+/-! ### Explicit principal Einstein-Maxwell jet and Lorentzian plane -/
+
+/-- Standard coordinate basis in the four-dimensional principal frame. -/
+def principalBasis (i : Fin 4) : Fin 4 → ℝ :=
+  fun j => if j = i then 1 else 0
+
+/-- Minkowski quadratic form in the principal orthonormal frame. -/
+def principalMinkowskiSq (v : Fin 4 → ℝ) : ℝ :=
+  -(v 0)^2 + (v 1)^2 + (v 2)^2 + (v 3)^2
+
+/-- The fixed-point jet is minus the principal Maxwell stress endomorphism, so its
+Lorentzian principal plane carries the positive carrier eigenvalue. -/
+def principalJetApply (u : ℝ) (v : Fin 4 → ℝ) (i : Fin 4) : ℝ :=
+  if i = 0 ∨ i = 1 then u * v i else -u * v i
+
+/-- The explicit jet is exactly `-T` in the principal frame. -/
+theorem principalJetApply_eq_neg_stress
+    (u : ℝ) (v : Fin 4 → ℝ) (i : Fin 4) :
+    principalJetApply u v i =
+      ∑ j : Fin 4, (- principalStress u i j) * v j := by
+  fin_cases i <;> simp [principalJetApply, principalStress]
+
+/-- Carrier normalization removes the magnitude and leaves the canonical involution. -/
+def principalJetInvolution (v : Fin 4 → ℝ) (i : Fin 4) : ℝ :=
+  if i = 0 ∨ i = 1 then v i else -v i
+
+/-- Projection onto the time/principal-space plane. -/
+def principalLorentzPart (v : Fin 4 → ℝ) (i : Fin 4) : ℝ :=
+  if i = 0 ∨ i = 1 then v i else 0
+
+/-- Projection onto the transverse electromagnetic plane. -/
+def principalTransversePart (v : Fin 4 → ℝ) (i : Fin 4) : ℝ :=
+  if i = 0 ∨ i = 1 then 0 else v i
+
+/-- The two principal planes reconstruct every vector exactly. -/
+theorem principal_plane_decomposition (v : Fin 4 → ℝ) :
+    principalLorentzPart v + principalTransversePart v = v := by
+  funext i
+  fin_cases i <;> simp [principalLorentzPart, principalTransversePart]
+
+/-- The Lorentzian principal plane is exactly the +1 eigenspace of the normalized jet. -/
+theorem principalLorentzPart_eigen_plus (v : Fin 4 → ℝ) :
+    principalJetInvolution (principalLorentzPart v) =
+      principalLorentzPart v := by
+  funext i
+  fin_cases i <;> simp [principalJetInvolution, principalLorentzPart]
+
+/-- The transverse plane is exactly the -1 eigenspace of the normalized jet. -/
+theorem principalTransversePart_eigen_minus (v : Fin 4 → ℝ) :
+    principalJetInvolution (principalTransversePart v) =
+      - principalTransversePart v := by
+  funext i
+  fin_cases i <;> simp [principalJetInvolution, principalTransversePart]
+
+/-- The +1 plane is genuinely Lorentzian: it contains a unit timelike basis vector. -/
+@[simp] theorem principal_time_basis_norm :
+    principalMinkowskiSq (principalBasis 0) = -1 := by
+  norm_num [principalMinkowskiSq, principalBasis]
+
+/-- The same +1 plane contains an orthogonal unit spacelike principal direction. -/
+@[simp] theorem principal_space_basis_norm :
+    principalMinkowskiSq (principalBasis 1) = 1 := by
+  norm_num [principalMinkowskiSq, principalBasis]
+
+/-- Both time and principal-space basis vectors are fixed by the normalized jet. -/
+theorem principal_lorentz_basis_eigen_plus :
+    principalJetInvolution (principalBasis 0) = principalBasis 0 ∧
+    principalJetInvolution (principalBasis 1) = principalBasis 1 := by
+  constructor <;> funext i <;> fin_cases i <;>
+    simp [principalJetInvolution, principalBasis]
+
+/-- The two transverse basis vectors have eigenvalue -1. -/
+theorem principal_transverse_basis_eigen_minus :
+    principalJetInvolution (principalBasis 2) = - principalBasis 2 ∧
+    principalJetInvolution (principalBasis 3) = - principalBasis 3 := by
+  constructor <;> funext i <;> fin_cases i <;>
+    simp [principalJetInvolution, principalBasis]
+
+/-- The transverse principal plane is positive semidefinite for the Minkowski form. -/
+theorem principalTransversePart_nonneg (v : Fin 4 → ℝ) :
+    0 ≤ principalMinkowskiSq (principalTransversePart v) := by
+  simp [principalMinkowskiSq, principalTransversePart]
+  positivity
+
+/-- Thus the sign-selected +1 eigenspace is the unique principal plane carrying both
+timelike and spacelike directions in this canonical Maxwell frame. -/
+theorem principal_plus_plane_lorentzian_certificate :
+    principalJetInvolution (principalBasis 0) = principalBasis 0 ∧
+    principalJetInvolution (principalBasis 1) = principalBasis 1 ∧
+    principalMinkowskiSq (principalBasis 0) < 0 ∧
+    0 < principalMinkowskiSq (principalBasis 1) := by
+  refine ⟨principal_lorentz_basis_eigen_plus.1,
+    principal_lorentz_basis_eigen_plus.2, ?_, ?_⟩ <;> norm_num
+
 /-- The invariant Rainich magnitude `χ = 1/2 sqrt(tr J²)` recovers the positive
 principal eigenvalue exactly. -/
 theorem principalStress_chi_from_trace
@@ -3291,6 +3386,16 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check principalJetApply_eq_neg_stress
+#check principal_plane_decomposition
+#check principalLorentzPart_eigen_plus
+#check principalTransversePart_eigen_minus
+#check principal_time_basis_norm
+#check principal_space_basis_norm
+#check principal_lorentz_basis_eigen_plus
+#check principal_transverse_basis_eigen_minus
+#check principalTransversePart_nonneg
+#check principal_plus_plane_lorentzian_certificate
 #check normalizedClockUnit
 #check normalizedClockUnit_eval
 #check reeb_direction_unique
