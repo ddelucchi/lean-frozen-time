@@ -1035,6 +1035,43 @@ theorem principalMaxwellF_skew (E B : ℝ) (i j : Fin 4) :
     principalMaxwellF E B i j = - principalMaxwellF E B j i := by
   fin_cases i <;> fin_cases j <;> simp [principalMaxwellF]
 
+
+/-- Lorentzian Hodge dual of the principal Maxwell two-form:
+`⋆F = B e⁰∧e¹ - E e²∧e³`. -/
+def principalMaxwellStarF (E B : ℝ) (i j : Fin 4) : ℝ :=
+  if i = 0 ∧ j = 1 then B
+  else if i = 1 ∧ j = 0 then -B
+  else if i = 2 ∧ j = 3 then -E
+  else if i = 3 ∧ j = 2 then E
+  else 0
+
+/-- The Hodge-dual two-form is antisymmetric. -/
+theorem principalMaxwellStarF_skew (E B : ℝ) (i j : Fin 4) :
+    principalMaxwellStarF E B i j =
+      - principalMaxwellStarF E B j i := by
+  fin_cases i <;> fin_cases j <;> simp [principalMaxwellStarF]
+
+/-- On Lorentzian two-forms the principal Hodge star squares to minus the identity. -/
+theorem principalMaxwellStar_sq (E B : ℝ) :
+    principalMaxwellStarF B (-E) = - principalMaxwellF E B := by
+  funext i j
+  fin_cases i <;> fin_cases j <;>
+    simp [principalMaxwellStarF, principalMaxwellF]
+
+/-- Direct contraction `F_ab (⋆F)^ab` in the principal orthonormal frame. -/
+def principalMaxwellFStarF (E B : ℝ) : ℝ :=
+  ∑ i : Fin 4, ∑ j : Fin 4,
+    principalMetricSign i * principalMetricSign j *
+      principalMaxwellF E B i j *
+      principalMaxwellStarF E B i j
+
+/-- The explicit field/dual contraction is exactly `-4EB`. -/
+theorem principalMaxwellFStarF_eq_maxwellJ (E B : ℝ) :
+    principalMaxwellFStarF E B = maxwellJ E B := by
+  simp [principalMaxwellFStarF, principalMetricSign,
+    principalMaxwellF, principalMaxwellStarF, maxwellJ]
+  ring
+
 /-- Direct contraction `F_ab F^ab` in the principal orthonormal frame. -/
 def principalMaxwellFsq (E B : ℝ) : ℝ :=
   ∑ i : Fin 4, ∑ j : Fin 4,
@@ -1046,6 +1083,23 @@ theorem principalMaxwellFsq_eq_maxwellI (E B : ℝ) :
     principalMaxwellFsq E B = maxwellI E B := by
   simp [principalMaxwellFsq, principalMetricSign, principalMaxwellF, maxwellI]
   ring
+
+
+/-- Both scalar Maxwell invariants are therefore recovered directly from `F` and `⋆F`. -/
+theorem principalMaxwell_invariants_from_forms (E B : ℝ) :
+    principalMaxwellFsq E B = maxwellI E B ∧
+    principalMaxwellFStarF E B = maxwellJ E B :=
+  ⟨principalMaxwellFsq_eq_maxwellI E B,
+    principalMaxwellFStarF_eq_maxwellJ E B⟩
+
+/-- Their invariant magnitude is the square of the field-derived carrier. -/
+theorem principalMaxwell_form_invariant_magnitude (E B : ℝ) :
+    (principalMaxwellFsq E B)^2 +
+      (principalMaxwellFStarF E B)^2 =
+      (principalChi E B)^2 := by
+  rw [principalMaxwellFsq_eq_maxwellI,
+    principalMaxwellFStarF_eq_maxwellJ,
+    maxwell_invariants_eq_principalChi_sq]
 
 /-- Mixed Maxwell stress computed directly from the explicit two-form:
 `T^a_b=(4π)⁻¹(F^{ac}F_{bc}-(1/4)δ^a_b F²)`. -/
@@ -4591,6 +4645,11 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check principalMaxwellStarF_skew
+#check principalMaxwellStar_sq
+#check principalMaxwellFStarF_eq_maxwellJ
+#check principalMaxwell_invariants_from_forms
+#check principalMaxwell_form_invariant_magnitude
 #check principalStressFromF_trace_zero
 #check principalStressFromF_trace_sq
 #check principalStressFromF_rainich
@@ -4906,6 +4965,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalMaxwell_timelike_eigen_from_chi
 #print axioms RelativeRest.principalStressFromF_eq_principalStress
 #print axioms RelativeRest.principalJetFromF_rainich
+#print axioms RelativeRest.principalMaxwell_form_invariant_magnitude
 #print axioms RelativeRest.defect_from_on_shell_equation
 #print axioms RelativeRest.scaledResidual_first_jet_eq_minus_two_ricci_from_EM
 #print axioms RelativeRest.boost_balance_exists_unique_of_nonnull
