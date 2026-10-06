@@ -2642,6 +2642,53 @@ theorem relational_evolution_from_flow_derivative
 /-- Kerr-Newman `Σ`. -/
 def Sigma (r a θ : ℝ) : ℝ := r^2 + a^2 * (Real.cos θ)^2
 
+
+/-- Radial derivative of the Kerr-Newman separability scalar. -/
+theorem Sigma_hasDerivAt_r (r a θ : ℝ) :
+    HasDerivAt (fun x : ℝ => Sigma x a θ) (2 * r) r := by
+  unfold Sigma
+  convert ((hasDerivAt_id r).pow 2).add_const (a^2 * (Real.cos θ)^2) using 1 <;> ring
+
+/-- Scalar Kerr-Newman carrier magnitude before introducing the full tensor geometry. -/
+def kerrChiScalar (Q r a θ : ℝ) : ℝ :=
+  2 * Q^2 / (Sigma r a θ)^2
+
+/-- Its radial derivative is forced by `Σ`. -/
+theorem kerrChiScalar_hasDerivAt_r
+    (Q r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    HasDerivAt (fun x : ℝ => kerrChiScalar Q x a θ)
+      (-8 * Q^2 * r / (Sigma r a θ)^3) r := by
+  have hs := Sigma_hasDerivAt_r r a θ
+  have hd := hs.pow 2
+  have hn : HasDerivAt (fun _ : ℝ => 2 * Q^2) 0 r :=
+    hasDerivAt_const r (2 * Q^2)
+  have hraw := hn.fun_div hd (pow_ne_zero 2 hsig)
+  change HasDerivAt
+    (fun x : ℝ => 2 * Q^2 / (Sigma x a θ)^2)
+    (-8 * Q^2 * r / (Sigma r a θ)^3) r
+  convert hraw using 1
+  field_simp [hsig]
+  ring
+
+/-- The radial logarithmic derivative is exactly the formula used by the manuscript:
+`∂ᵣ log χ = -4r/Σ`. -/
+theorem kerrLogChi_hasDerivAt_r
+    (Q r a θ : ℝ)
+    (hQ : Q ≠ 0) (hsig : Sigma r a θ ≠ 0) :
+    HasDerivAt (fun x : ℝ => Real.log (kerrChiScalar Q x a θ))
+      (-4 * r / Sigma r a θ) r := by
+  have hchi := kerrChiScalar_hasDerivAt_r Q r a θ hsig
+  have hchi0 : kerrChiScalar Q r a θ ≠ 0 := by
+    unfold kerrChiScalar
+    exact div_ne_zero
+      (mul_ne_zero (by norm_num) (pow_ne_zero 2 hQ))
+      (pow_ne_zero 2 hsig)
+  have hlog := hchi.log hchi0
+  convert hlog using 1
+  unfold kerrChiScalar
+  field_simp [hQ, hsig]
+  ring
+
 /-- Kerr-Newman `Δ`. -/
 def Delta (r M a Q : ℝ) : ℝ := r^2 - 2*M*r + a^2 + Q^2
 
@@ -2855,6 +2902,9 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check Sigma_hasDerivAt_r
+#check kerrChiScalar_hasDerivAt_r
+#check kerrLogChi_hasDerivAt_r
 #check boostDefect_hasDerivAt
 #check boostDefect_derivative_negative
 #check restComponent_zero_implies_balance
