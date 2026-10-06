@@ -15763,6 +15763,163 @@ theorem principalFieldBridge_quotient_finrank_one
   clockQuotient_finrank_one
     D.Lambda (principalFieldBridge_Lambda_nonzero D)
 
+/-! ### Paper-wide downstream closure certificate -/
+
+section PaperForcedArchitecture
+
+variable {W : Type*} [AddCommGroup W] [Module ℝ W]
+
+/-- A single proof object collecting the manuscript's principal downstream claims.
+It does not conceal the genuine geometric frontier: `D` is the action-Euler/first-variation
+package and `S` is the regular Synge world-function jet. Everything recorded here is
+then forced by existing theorems in this certificate. -/
+structure PaperForcedArchitectureCertificate
+    (B : W →ₗ[ℝ] W →ₗ[ℝ] ℝ)
+    (D : PrincipalActionEulerSectorVariationCharacteristicInput (P:=P))
+    (S : SyngeEndpointJetData B)
+    (Q r M a θ dt dlam u s : ℝ) : Prop where
+  actionFixedPoint :
+    (8 * Real.pi * principalFieldEnergyDensity D.carrier.E D.carrier.B =
+      8 * Real.pi *
+        maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+        principalFieldEnergyDensity D.carrier.E D.carrier.B) ↔ s = 0
+  actionEulerCarrier :
+    ∀ i j : Fin 4,
+      D.carrier.J (principalBasis j) i =
+        (16 * Real.pi / principalMetricSign i) *
+          deriv (principalScaledMetricEulerCoeffFromAction
+            D.carrier.E D.carrier.B i j) 0
+  frozenConstraint : D.variation.constraint CA = 0
+  normalConstraint :
+    D.variation.constraint DA =
+      (-2 : ℝ) • D.carrier.actionEulerResponse
+  characteristicCurrent :
+    D.characteristicCurrent =
+      D.carrier.toCharacteristicCurrentData.current
+  quotientOneDimensional :
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1
+  normalizedClockLift :
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat
+  syngeFutureUnique :
+    ∀ eta : W,
+      S.sigmaXPlus + S.sigmaThetaPlus • eta = 0 →
+      eta = S.dThetaPlus
+  syngePastUnique :
+    ∀ eta : W,
+      S.sigmaXMinus + S.sigmaThetaMinus • eta = 0 →
+      eta = S.dThetaMinus
+  syngeOpticalClosure :
+    bil B S.clockCovector S.radialCovector = 0 ∧
+    -(bil B S.clockCovector S.clockCovector) =
+      bil B S.radialCovector S.radialCovector
+  clockCoverReebUnique :
+    ∃! v : R2, tangentToClockSection v ∧ clockLiouville 1 v = 1
+  transportClosure :
+    ∀ (ω : ℝ) (dω dlogK : Fin 4 → ℝ)
+      (du : Fin 4 → Fin 4 → ℝ),
+      ω ≠ 0 → adaptedUnitNormalization du →
+      (∀ i : Fin 3, dlogK i.succ = 4 * dω i.succ / ω) →
+      (((∀ i j : Fin 3,
+          clockTransportTwoForm ω dω du i.succ j.succ = 0) ∧
+        (∀ i : Fin 3,
+          clockTransportTwoForm ω dω du 0 i.succ = 0)) ↔
+       ((∀ i j : Fin 3, principalVorticity du i j = 0) ∧
+        (∀ i : Fin 3,
+          principalAcceleration du i = -dlogK i.succ / 4)))
+  relationalEvolution :
+    ∀ (O XF : ℝ → ℝ) (T θ : ℝ),
+      HasDerivAt O (XF (θ - T)) (θ - T) →
+      deriv (fun ϑ => O (ϑ - T)) θ = XF (θ - T)
+  causalBranchIndependence :
+    ∀ (P₁ P₂ F₁ F₂ : Set ℝ),
+      P₁ = P₂ → F₁ = F₂ →
+      pastEndpoint P₁ = pastEndpoint P₂ ∧
+      futureEndpoint F₁ = futureEndpoint F₂
+  kerrFullFieldMetricClock :
+    (∀ i j : Fin 4,
+      kerrEinsteinCovFromMetric r M a Q θ i j =
+        8 * Real.pi *
+          kerrMaxwellStressCovFromPotential Q r M a θ i j) ∧
+    kerrCoordinateField Q r a θ =
+      kerrFieldInCarterCoframe Q r M a θ ∧
+    (kerrVolumeDensity r a θ * kerrRaisedFrt Q r M a θ =
+        kerrDensitizedFrt Q r a θ ∧
+     kerrVolumeDensity r a θ * kerrRaisedFrPhi Q r M a θ =
+        kerrDensitizedFrPhi Q r a θ ∧
+     kerrVolumeDensity r a θ * kerrRaisedFthetaT Q r M a θ =
+        kerrDensitizedFthetaT Q r a θ ∧
+     kerrVolumeDensity r a θ * kerrRaisedFthetaPhi Q r M a θ =
+        kerrDensitizedFthetaPhi Q r a θ ∧
+     deriv (fun x : ℝ => kerrDensitizedFrt Q x a θ) r +
+        deriv (fun x : ℝ => kerrDensitizedFthetaT Q r a x) θ = 0 ∧
+     deriv (fun x : ℝ => kerrDensitizedFrPhi Q x a θ) r +
+        deriv (fun x : ℝ => kerrDensitizedFthetaPhi Q r a x) θ = 0) ∧
+    sigmaStar
+      (kerrResolvingQMinus r a θ)
+      (kerrResolvingQPlus r a θ) = 0 ∧
+    kerrStationaryNormSq r M a Q θ
+      (carterObserver r M a Q θ) = -1 ∧
+    kerrClockRateFromPrincipalEM Q r a θ * dt =
+      Real.sqrt 2 * |Q| * dlam
+
+/-- Constructor for the paper-wide closure object.  The only nonalgebraic hypotheses
+appearing here are the regular Synge symmetry/jet data and the stated regular
+Kerr-Newman chart conditions. -/
+theorem paper_forced_architecture_certificate
+    (B : W →ₗ[ℝ] W →ₗ[ℝ] ℝ)
+    (D : PrincipalActionEulerSectorVariationCharacteristicInput (P:=P))
+    (S : SyngeEndpointJetData B)
+    (hsym : ∀ x y : W, bil B x y = bil B y x)
+    (Q r M a θ dt dlam u s : ℝ)
+    (hQ : Q ≠ 0)
+    (hsig : 0 < Sigma r a θ)
+    (hdel : 0 < Delta r M a Q)
+    (hsin : 0 < Real.sin θ)
+    (hmino : dlam = dt / Sigma r a θ) :
+    PaperForcedArchitectureCertificate B D S Q r M a θ dt dlam u s := by
+  rcases principalActionEulerSectorVariation_forced_core_chain D u s with
+    ⟨hrest,hEuler,hCA,hDA,_hActionCurrent,_hLambda,hdim,hnorm⟩
+  refine {
+    actionFixedPoint := hrest
+    actionEulerCarrier := hEuler
+    frozenConstraint := hCA
+    normalConstraint := hDA
+    characteristicCurrent :=
+      principalActionEulerSectorVariation_current_eq_characteristicCurrent D
+    quotientOneDimensional := hdim
+    normalizedClockLift := hnorm
+    syngeFutureUnique := ?_
+    syngePastUnique := ?_
+    syngeOpticalClosure := S.optical_closure hsym
+    clockCoverReebUnique := clock_section_reeb_existsUnique
+    transportClosure := ?_
+    relationalEvolution := ?_
+    causalBranchIndependence := ?_
+    kerrFullFieldMetricClock :=
+      kerrNewman_full_field_metric_clock_certificate
+        Q r M a θ dt dlam hQ hsig hdel hsin hmino }
+  · intro eta heta
+    exact S.dThetaPlus_unique eta heta
+  · intro eta heta
+    exact S.dThetaMinus_unique eta heta
+  · intro ω dω dlogK du hω hunit hlog
+    exact clockTransport_projected_zero_iff
+      ω dω dlogK du hω hunit hlog
+  · intro O XF T θ hO
+    exact relational_evolution_from_flow_derivative O XF T θ hO
+  · intro P₁ P₂ F₁ F₂ hP hF
+    exact causal_endpoints_branch_independent hP hF
+
+end PaperForcedArchitecture
+
 end GeometricInterface
 
 /-! ## 19. End-to-end dependency record -/
