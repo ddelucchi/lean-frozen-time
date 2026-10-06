@@ -6926,6 +6926,74 @@ theorem quotient_clock_covector_forced
 
 end LinearDescent
 
+/-! ### Basic covectors and exact characteristic descent -/
+
+section BasicCovectorDescent
+
+variable {V : Type*} [AddCommGroup V] [Module ℝ V]
+
+/-- Algebraic content of a one-form being horizontal/basic for a linear
+characteristic foliation: it annihilates every characteristic direction.  For
+translation-invariant linear data, leafwise invariance is automatic, so this is
+the full descent condition. -/
+def IsBasicCovectorFor
+    (p : Submodule ℝ V) (λ : V →ₗ[ℝ] ℝ) : Prop :=
+  p ≤ LinearMap.ker λ
+
+/-- A basic covector has a canonical descendant on the characteristic quotient. -/
+noncomputable def basicCovectorDescendant
+    (p : Submodule ℝ V) (λ : V →ₗ[ℝ] ℝ)
+    (hbasic : IsBasicCovectorFor p λ) :
+    (V ⧸ p) →ₗ[ℝ] ℝ :=
+  p.liftQ λ hbasic
+
+/-- Pullback of the descended covector is exactly the original covector. -/
+theorem basicCovectorDescendant_pullback
+    (p : Submodule ℝ V) (λ : V →ₗ[ℝ] ℝ)
+    (hbasic : IsBasicCovectorFor p λ) :
+    (basicCovectorDescendant p λ hbasic).comp p.mkQ = λ := by
+  simpa [basicCovectorDescendant] using
+    (Submodule.liftQ_mkQ p λ hbasic)
+
+/-- Descent is unique.  Thus the paper's phrase “basic on the characteristic
+leaves, therefore descends uniquely” is literal in the linear characteristic
+model, with no quotient one-form left to choose. -/
+theorem basicCovector_descends_existsUnique
+    (p : Submodule ℝ V) (λ : V →ₗ[ℝ] ℝ)
+    (hbasic : IsBasicCovectorFor p λ) :
+    ∃! λbar : (V ⧸ p) →ₗ[ℝ] ℝ,
+      λbar.comp p.mkQ = λ := by
+  refine ⟨basicCovectorDescendant p λ hbasic,
+    basicCovectorDescendant_pullback p λ hbasic, ?_⟩
+  intro μ hμ
+  exact descended_covector_unique
+    p.mkQ (Submodule.mkQ_surjective p) λ μ
+    (basicCovectorDescendant p λ hbasic)
+    hμ (basicCovectorDescendant_pullback p λ hbasic)
+
+/-- Conversely, every quotient covector pulls back to a basic covector. -/
+theorem basicCovector_of_quotient_pullback
+    (p : Submodule ℝ V)
+    (λbar : (V ⧸ p) →ₗ[ℝ] ℝ) :
+    IsBasicCovectorFor p (λbar.comp p.mkQ) := by
+  intro v hv
+  change λbar (p.mkQ v) = 0
+  rw [Submodule.Quotient.mk_eq_zero.mpr hv]
+  simp
+
+/-- Quotienting a nonzero covector by its entire kernel therefore realizes the
+paper's exact characteristic descent canonically and uniquely. -/
+theorem kernelClockCovector_basic_and_unique
+    (λ : V →ₗ[ℝ] ℝ) :
+    IsBasicCovectorFor (LinearMap.ker λ) λ ∧
+    ∃! λbar : (V ⧸ LinearMap.ker λ) →ₗ[ℝ] ℝ,
+      λbar.comp (LinearMap.ker λ).mkQ = λ := by
+  refine ⟨le_rfl, ?_⟩
+  exact basicCovector_descends_existsUnique
+    (LinearMap.ker λ) λ le_rfl
+
+end BasicCovectorDescent
+
 /-! ### Principal-frame local quotient and canonical timelike lift -/
 
 /-- Canonical lift from the local stress-visible quotient to the selected timelike line. -/
