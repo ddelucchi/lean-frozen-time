@@ -3254,6 +3254,58 @@ theorem principalMetricEulerRelativeLinear_eq_smul_jet
   rw [hexp]
   ring
 
+/-! ### Finite relative Noether current from the displayed action -/
+
+/-- Literal `2E^a{}_b` Noether bulk endomorphism along the full physical
+relative action orbit, including the reciprocal gravity character. -/
+def principalMetricEulerNoetherRelativeLinear
+    (E B s : ℝ) : (Fin 4 → ℝ) →ₗ[ℝ] (Fin 4 → ℝ) where
+  toFun v := fun i =>
+    ∑ j : Fin 4,
+      (2 * principalMetricSign i * Real.exp (-s) *
+        principalScaledMetricEulerCoeffFromAction E B i j s) * v j
+  map_add' x y := by
+    funext i
+    simp [mul_add, Finset.sum_add_distrib]
+  map_smul' a x := by
+    funext i
+    simp [mul_assoc]
+
+/-- At every finite rapidity, the literal Noether bulk endomorphism is exactly
+`(8π)⁻¹` times the normalized metric-Euler relative endomorphism. -/
+theorem principalMetricEulerNoetherRelativeLinear_eq_smul_metricEulerRelative
+    (E B s : ℝ) :
+    principalMetricEulerNoetherRelativeLinear E B s =
+      (1 / (8 * Real.pi)) • principalMetricEulerRelativeLinear E B s := by
+  apply principalLinearMap_ext_on_basis
+  intro j
+  funext i
+  fin_cases i <;>
+    simp [principalMetricEulerNoetherRelativeLinear,
+      principalMetricEulerRelativeLinear, principalBasis,
+      principalMetricSign] <;>
+    field_simp [ne_of_gt Real.pi_pos] <;>
+    ring
+
+/-- At the frozen point the finite Noether endomorphism vanishes. -/
+@[simp] theorem principalMetricEulerNoetherRelativeLinear_zero
+    (E B : ℝ) :
+    principalMetricEulerNoetherRelativeLinear E B 0 = 0 := by
+  rw [principalMetricEulerNoetherRelativeLinear_eq_smul_metricEulerRelative,
+    principalMetricEulerRelativeLinear_eq_smul_jet]
+  simp
+
+/-- The entire finite Noether orbit is fixed by the surviving action-Euler jet. -/
+theorem principalMetricEulerNoetherRelativeLinear_eq_smul_noetherJet
+    (E B s : ℝ) :
+    principalMetricEulerNoetherRelativeLinear E B s =
+      ((-1 / 2 : ℝ) * (Real.exp (-s) - Real.exp s)) •
+        principalMetricEulerNoetherJetLinear E B := by
+  rw [principalMetricEulerNoetherRelativeLinear_eq_smul_metricEulerRelative,
+    principalMetricEulerRelativeLinear_eq_smul_jet,
+    principalMetricEulerNoetherJetLinear_eq_smul_carrier]
+  module
+
 /-- Action of the principal mixed Maxwell stress endomorphism on a vector. -/
 def principalStressApply (u : ℝ) (v : Fin 4 → ℝ) (i : Fin 4) : ℝ :=
   ∑ j : Fin 4, principalStress u i j * v j
@@ -18578,6 +18630,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalMetricEulerNoetherJetCoeff_eq_carrier
 #print axioms RelativeRest.principalMetricEulerNoetherJetResponse_eq_carrier
 #print axioms RelativeRest.principalMetricEulerNoetherJetLinear_eq_smul_carrier
+#print axioms RelativeRest.principalMetricEulerNoetherRelativeLinear_eq_smul_metricEulerRelative
+#print axioms RelativeRest.principalMetricEulerNoetherRelativeLinear_eq_smul_noetherJet
 #print axioms RelativeRest.carrierJetCurrent_actionEuler_eq_metricNoether
 #print axioms RelativeRest.carrierBulkResponse_actionEuler_eq_metricNoether
 #print axioms RelativeRest.principalDiffeomorphismNoether_decomposition
