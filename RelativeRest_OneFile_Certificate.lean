@@ -8964,6 +8964,124 @@ theorem NullEndpointPairData.equal_norm_forced
 
 end OpticalClosure
 
+/-! ### Actual implicit-function data canonically produces the Synge jet -/
+
+section SyngeIFTJetBridge
+
+variable {X : Type*}
+  [NormedAddCommGroup X] [NormedSpace ℝ X] [CompleteSpace X]
+
+variable
+  (Bdual :
+    (X →L[ℝ] ℝ) →ₗ[ℝ] (X →L[ℝ] ℝ) →ₗ[ℝ] ℝ)
+
+/-- One regular null endpoint stated directly in terms of an actual world-function
+map, its strict derivative, the IFT invertibility hypothesis, the null endpoint
+condition and Synge's Hamilton-Jacobi identity. -/
+structure RegularSyngeEndpointSource where
+  sigma : X × ℝ → ℝ
+  u : X × ℝ
+  Dsigma : X × ℝ →L[ℝ] ℝ
+  strictDeriv : HasStrictFDerivAt sigma Dsigma u
+  thetaInvertible :
+    (Dsigma ∘L ContinuousLinearMap.inr ℝ X ℝ).IsInvertible
+  endpoint : sigma u = 0
+  worldEikonal :
+    bil Bdual
+      (Dsigma ∘L ContinuousLinearMap.inl ℝ X ℝ)
+      (Dsigma ∘L ContinuousLinearMap.inl ℝ X ℝ) =
+        2 * sigma u
+
+/-- Spacetime covector part of the world-function derivative. -/
+def RegularSyngeEndpointSource.sigmaX
+    (D : RegularSyngeEndpointSource Bdual) :
+    X →L[ℝ] ℝ :=
+  D.Dsigma ∘L ContinuousLinearMap.inl ℝ X ℝ
+
+/-- Endpoint-parameter derivative as the scalar value of the one-dimensional
+partial derivative on the unit vector. -/
+def RegularSyngeEndpointSource.sigmaTheta
+    (D : RegularSyngeEndpointSource Bdual) : ℝ :=
+  (D.Dsigma ∘L ContinuousLinearMap.inr ℝ X ℝ) 1
+
+/-- The IFT invertibility hypothesis itself forces the endpoint derivative scalar
+to be nonzero.  It is not separate regularity data. -/
+theorem RegularSyngeEndpointSource.sigmaTheta_ne
+    (D : RegularSyngeEndpointSource Bdual) :
+    D.sigmaTheta ≠ 0 := by
+  intro hzero
+  have hinj :=
+    D.thetaInvertible.injective
+  have h10 : (1 : ℝ) = 0 := by
+    apply hinj
+    simpa [RegularSyngeEndpointSource.sigmaTheta, hzero]
+  exact one_ne_zero h10
+
+/-- The actual local endpoint map supplied by Mathlib's implicit-function theorem. -/
+noncomputable def RegularSyngeEndpointSource.endpointMap
+    (D : RegularSyngeEndpointSource Bdual) :
+    X → ℝ :=
+  syngeImplicitEndpoint D.strictDeriv D.thetaInvertible
+
+/-- That map locally solves the same world-function level equation. -/
+theorem RegularSyngeEndpointSource.endpointMap_eventually_solves
+    (D : RegularSyngeEndpointSource Bdual) :
+    ∀ᶠ x in 𝓝 D.u.1,
+      D.sigma (x, D.endpointMap x) = D.sigma D.u := by
+  exact syngeImplicitEndpoint_eventually_solves
+    D.strictDeriv D.thetaInvertible
+
+/-- And the IFT gives local graph uniqueness, not merely existence. -/
+theorem RegularSyngeEndpointSource.endpointMap_eventually_unique
+    (D : RegularSyngeEndpointSource Bdual) :
+    ∀ᶠ v in 𝓝 D.u,
+      D.sigma v = D.sigma D.u ↔
+        D.endpointMap v.1 = v.2 := by
+  exact syngeImplicitEndpoint_eventually_eq_iff
+    D.strictDeriv D.thetaInvertible
+
+/-- Pair of future/past regular world-function endpoints. -/
+structure RegularSyngeEndpointPairSource where
+  plus : RegularSyngeEndpointSource Bdual
+  minus : RegularSyngeEndpointSource Bdual
+
+/-- Actual regular IFT endpoint data canonically produces the minimal Synge first
+jet used by the optical closure.  In particular the nonzero endpoint derivatives
+are now conclusions of invertibility. -/
+def RegularSyngeEndpointPairSource.toSyngeEndpointJetData
+    (D : RegularSyngeEndpointPairSource Bdual) :
+    SyngeEndpointJetData Bdual where
+  sigmaPlus := D.plus.sigma D.plus.u
+  sigmaMinus := D.minus.sigma D.minus.u
+  sigmaXPlus := D.plus.sigmaX
+  sigmaXMinus := D.minus.sigmaX
+  sigmaThetaPlus := D.plus.sigmaTheta
+  sigmaThetaMinus := D.minus.sigmaTheta
+  endpointPlus := D.plus.endpoint
+  endpointMinus := D.minus.endpoint
+  worldEikonalPlus := D.plus.worldEikonal
+  worldEikonalMinus := D.minus.worldEikonal
+  sigmaThetaPlus_ne := D.plus.sigmaTheta_ne
+  sigmaThetaMinus_ne := D.minus.sigmaTheta_ne
+
+/-- Therefore the two endpoint eikonals and optical clock/radius closure follow
+directly from actual IFT world-function data. -/
+theorem RegularSyngeEndpointPairSource.optical_closure
+    (D : RegularSyngeEndpointPairSource Bdual)
+    (hsym : ∀ x y, bil Bdual x y = bil Bdual y x) :
+    bil Bdual
+        D.toSyngeEndpointJetData.clockCovector
+        D.toSyngeEndpointJetData.radialCovector = 0 ∧
+    -(bil Bdual
+        D.toSyngeEndpointJetData.clockCovector
+        D.toSyngeEndpointJetData.clockCovector) =
+      bil Bdual
+        D.toSyngeEndpointJetData.radialCovector
+        D.toSyngeEndpointJetData.radialCovector := by
+  exact D.toSyngeEndpointJetData.optical_closure hsym
+
+end SyngeIFTJetBridge
+
 /-! ### Exact two-dimensional optical metric reconstruction -/
 
 /-- In the `(dT,dR)` basis, the inverse optical metric has common magnitude `q=N_opt⁻²`. -/
@@ -19313,6 +19431,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.SyngeEndpointJetData.firstJet_forced_unique
 #print axioms RelativeRest.SyngeEndpointJetData.endpoint_eikonals_null
 #print axioms RelativeRest.SyngeEndpointJetData.optical_closure
+#print axioms RelativeRest.RegularSyngeEndpointSource.sigmaTheta_ne
+#print axioms RelativeRest.RegularSyngeEndpointSource.endpointMap_eventually_solves
+#print axioms RelativeRest.RegularSyngeEndpointPairSource.optical_closure
 #print axioms RelativeRest.syngeImplicitEndpoint_eventually_solves
 #print axioms RelativeRest.syngeImplicitEndpoint_hasStrictFDerivAt
 #print axioms RelativeRest.opticalMetric2_inverse
