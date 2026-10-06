@@ -1,4 +1,4 @@
-import RelativeRest_DeepPass11
+import RelativeRest_DeepPass12
 
 /-!
 # Referee-facing axiom audit
@@ -26,3 +26,9 @@ headline formal statements.  There are no project-local axiom declarations in th
 #print axioms RelativeRest.kerrNewman_curvature_to_mino
 #print axioms RelativeRest.causalRadarTime_mono
 #print axioms RelativeRest.jet_contraction_eq_minus_two_stress
+
+#print axioms RelativeRest.maxwellStress_relative_scale
+#print axioms RelativeRest.relativeResidual_onShell_eq_defect
+#print axioms RelativeRest.relativeResidual_zero_iff_fixed_point
+#print axioms RelativeRest.defect_even_iteratedDeriv_zero
+#print axioms RelativeRest.defect_odd_iteratedDeriv_carrier
