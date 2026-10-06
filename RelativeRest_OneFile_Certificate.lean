@@ -7622,6 +7622,79 @@ theorem principalCarrierCharacteristic_clock_nonzero
   characteristicCurrent_clockCovector_nonzero
     D.toCharacteristicCurrentData
 
+/-- Unique global-to-local clock equivalence for the fully field-derived characteristic datum. -/
+noncomputable def PrincipalCarrierCharacteristicInput.globalLocalClockEquiv
+    (D : PrincipalCarrierCharacteristicInput (P:=P)) :
+    (D.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.toCharacteristicCurrentData.Lambda) ≃ₗ[ℝ]
+      ((Fin 4 → ℝ) ⧸ LinearMap.ker principalTOLinear) :=
+  globalToPrincipalLocalClockEquiv
+    D.toCharacteristicCurrentData.Lambda
+    (principalCarrierCharacteristic_Lambda_nonzero D)
+
+/-- The local clock covector pulls back exactly to the field-derived global clock covector. -/
+theorem principalCarrierCharacteristic_globalLocal_pullback
+    (D : PrincipalCarrierCharacteristicInput (P:=P)) :
+    (quotientClockCovector principalTOLinear).comp
+      (globalToPrincipalLocalClockMap
+        D.toCharacteristicCurrentData.Lambda) =
+      D.toCharacteristicCurrentData.clockCovector := by
+  exact globalToPrincipalLocalClockMap_pullback
+    D.toCharacteristicCurrentData.Lambda
+
+/-- The globally normalized field-derived clock unit maps to the local principal clock unit. -/
+theorem principalCarrierCharacteristic_globalUnit_maps_local
+    (D : PrincipalCarrierCharacteristicInput (P:=P)) :
+    globalToPrincipalLocalClockMap
+      D.toCharacteristicCurrentData.Lambda
+      (globalClockQuotientUnit
+        D.toCharacteristicCurrentData.Lambda
+        (principalCarrierCharacteristic_Lambda_nonzero D)) =
+      principalLocalQuotientUnit := by
+  exact globalClockUnit_maps_to_principalUnit
+    D.toCharacteristicCurrentData.Lambda
+    (principalCarrierCharacteristic_Lambda_nonzero D)
+
+/-- Composing with the canonical local lift sends that same global unit all the way to
+the uniquely normalized principal timelike vector. -/
+theorem principalCarrierCharacteristic_normalizationBridge
+    (D : PrincipalCarrierCharacteristicInput (P:=P)) :
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D))) =
+      principalUhat := by
+  exact normalizationBridge_principal
+    D.toCharacteristicCurrentData.Lambda
+    (principalCarrierCharacteristic_Lambda_nonzero D)
+
+/-- End-to-end algebraic certificate for the manuscript's characteristic clock chain:
+field-derived nonvanishing, forced one-dimensional quotient, exact covector-preserving
+global/local identification, and normalization on `û_*`. -/
+theorem principalCarrierCharacteristic_clock_chain
+    (D : PrincipalCarrierCharacteristicInput (P:=P)) :
+    D.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.toCharacteristicCurrentData.Lambda) = 1 ∧
+    (quotientClockCovector principalTOLinear).comp
+      (globalToPrincipalLocalClockMap
+        D.toCharacteristicCurrentData.Lambda) =
+      D.toCharacteristicCurrentData.clockCovector ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D))) =
+      principalUhat := by
+  exact ⟨principalCarrierCharacteristic_Lambda_nonzero D,
+    principalCarrierCharacteristic_quotient_finrank_one D,
+    principalCarrierCharacteristic_globalLocal_pullback D,
+    principalCarrierCharacteristic_normalizationBridge D⟩
+
 end FullyFieldDerivedCharacteristic
 
 /-! ### Maxwell field-derived positivity for a current-first interface -/
@@ -7955,6 +8028,11 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check PrincipalCarrierCharacteristicInput.globalLocalClockEquiv
+#check principalCarrierCharacteristic_globalLocal_pullback
+#check principalCarrierCharacteristic_globalUnit_maps_local
+#check principalCarrierCharacteristic_normalizationBridge
+#check principalCarrierCharacteristic_clock_chain
 #check SyngeEndpointJetData.linearizedPlus
 #check SyngeEndpointJetData.linearizedMinus
 #check SyngeEndpointJetData.sigmaXPlus_null
@@ -8508,6 +8586,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.characteristicCurrentDataOfCarrier_Lambda_apply
 #print axioms RelativeRest.principalStressResponse_pos
 #print axioms RelativeRest.principalCarrierCharacteristic_quotient_finrank_one
+#print axioms RelativeRest.principalCarrierCharacteristic_clock_chain
 #print axioms RelativeRest.principalFieldCurrent_Lambda_unique
 #print axioms RelativeRest.principalFieldCurrent_quotient_finrank_one
 #print axioms RelativeRest.reeb_direction_unique
