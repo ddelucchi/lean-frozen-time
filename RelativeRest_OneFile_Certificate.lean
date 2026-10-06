@@ -1332,6 +1332,52 @@ theorem principalJetApply_eq_neg_stress
 def principalJetInvolution (v : Fin 4 → ℝ) (i : Fin 4) : ℝ :=
   if i = 0 ∨ i = 1 then v i else -v i
 
+
+/-- Action of the actual field-derived fixed-point jet on a vector. -/
+def principalJetFromFApply
+    (E B : ℝ) (v : Fin 4 → ℝ) (i : Fin 4) : ℝ :=
+  ∑ j : Fin 4, principalJetFromF E B i j * v j
+
+/-- The actual `J=-16πT[F]` action is exactly the canonical carrier action of magnitude `χ`. -/
+theorem principalJetFromFApply_eq_principalJetApply
+    (E B : ℝ) (v : Fin 4 → ℝ) :
+    principalJetFromFApply E B v =
+      principalJetApply (principalChi E B) v := by
+  funext i
+  unfold principalJetFromFApply
+  rw [show
+    (∑ j : Fin 4, principalJetFromF E B i j * v j) =
+      ∑ j : Fin 4,
+        (-principalStress (principalChi E B) i j) * v j by
+      apply Finset.sum_congr rfl
+      intro j hj
+      rw [principalJetFromF_eq_neg_principalStress]]
+  exact principalJetApply_eq_neg_stress
+    (principalChi E B) v i
+
+/-- Normalized action of the field-derived carrier. -/
+def principalNormalizedJetFromFApply
+    (E B : ℝ) (v : Fin 4 → ℝ) (i : Fin 4) : ℝ :=
+  (principalChi E B)⁻¹ * principalJetFromFApply E B v i
+
+/-- On the non-null Maxwell sector, normalizing the actual field-derived jet by its
+invariant magnitude gives exactly the canonical Rainich involution. -/
+theorem principalNormalizedJetFromFApply_eq_involution
+    (E B : ℝ)
+    (hchi : principalChi E B ≠ 0)
+    (v : Fin 4 → ℝ) :
+    principalNormalizedJetFromFApply E B v =
+      principalJetInvolution v := by
+  rw [show principalJetFromFApply E B v =
+      principalJetApply (principalChi E B) v by
+        exact principalJetFromFApply_eq_principalJetApply E B v]
+  funext i
+  fin_cases i <;>
+    simp [principalNormalizedJetFromFApply, principalJetApply,
+      principalJetInvolution, hchi] <;>
+    field_simp [hchi]
+
+
 /-- Projection onto the time/principal-space plane. -/
 def principalLorentzPart (v : Fin 4 → ℝ) (i : Fin 4) : ℝ :=
   if i = 0 ∨ i = 1 then v i else 0
@@ -1383,6 +1429,32 @@ theorem principal_transverse_basis_eigen_minus :
     principalJetInvolution (principalBasis 3) = - principalBasis 3 := by
   constructor <;> funext i <;> fin_cases i <;>
     simp [principalJetInvolution, principalBasis]
+
+
+/-- Thus the explicit Maxwell field fixes the Lorentzian principal basis directions as
+the +1 eigendirections of its normalized fixed-point jet. -/
+theorem principalFieldDerived_lorentz_basis_eigen_plus
+    (E B : ℝ)
+    (hchi : principalChi E B ≠ 0) :
+    principalNormalizedJetFromFApply E B (principalBasis 0) =
+        principalBasis 0 ∧
+    principalNormalizedJetFromFApply E B (principalBasis 1) =
+        principalBasis 1 := by
+  rw [principalNormalizedJetFromFApply_eq_involution E B hchi,
+    principalNormalizedJetFromFApply_eq_involution E B hchi]
+  exact principal_lorentz_basis_eigen_plus
+
+/-- The transverse basis directions are simultaneously fixed with eigenvalue -1. -/
+theorem principalFieldDerived_transverse_basis_eigen_minus
+    (E B : ℝ)
+    (hchi : principalChi E B ≠ 0) :
+    principalNormalizedJetFromFApply E B (principalBasis 2) =
+        - principalBasis 2 ∧
+    principalNormalizedJetFromFApply E B (principalBasis 3) =
+        - principalBasis 3 := by
+  rw [principalNormalizedJetFromFApply_eq_involution E B hchi,
+    principalNormalizedJetFromFApply_eq_involution E B hchi]
+  exact principal_transverse_basis_eigen_minus
 
 /-- The transverse principal plane is positive semidefinite for the Minkowski form. -/
 theorem principalTransversePart_nonneg (v : Fin 4 → ℝ) :
@@ -4645,6 +4717,10 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check principalJetFromFApply_eq_principalJetApply
+#check principalNormalizedJetFromFApply_eq_involution
+#check principalFieldDerived_lorentz_basis_eigen_plus
+#check principalFieldDerived_transverse_basis_eigen_minus
 #check principalMaxwellStarF_skew
 #check principalMaxwellStar_sq
 #check principalMaxwellFStarF_eq_maxwellJ
@@ -4965,6 +5041,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalMaxwell_timelike_eigen_from_chi
 #print axioms RelativeRest.principalStressFromF_eq_principalStress
 #print axioms RelativeRest.principalJetFromF_rainich
+#print axioms RelativeRest.principalNormalizedJetFromFApply_eq_involution
 #print axioms RelativeRest.principalMaxwell_form_invariant_magnitude
 #print axioms RelativeRest.defect_from_on_shell_equation
 #print axioms RelativeRest.scaledResidual_first_jet_eq_minus_two_ricci_from_EM
