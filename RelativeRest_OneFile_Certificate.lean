@@ -7957,6 +7957,101 @@ theorem kerrMetricPartial_symmetric
       rw [hfun]
     · rw [if_neg h2]
 
+/-! ### Explicit first-coordinate derivatives of the Kerr-Newman metric -/
+
+/-- Radial derivative matrix of the covariant metric. -/
+def kerrMetricRadialDerivative
+    (r M a Q θ : ℝ) (i j : Fin 4) : ℝ :=
+  if i = 0 ∧ j = 0 then
+    2 * (M * (a^2 * (Real.cos θ)^2 - r^2) + Q^2 * r) /
+      (Sigma r a θ)^2
+  else if (i = 0 ∧ j = 3) ∨ (i = 3 ∧ j = 0) then
+    -a * (Real.sin θ)^2 *
+      (2 * (M * (a^2 * (Real.cos θ)^2 - r^2) + Q^2 * r) /
+        (Sigma r a θ)^2)
+  else if i = 1 ∧ j = 1 then
+    2 * (r * Delta r M a Q -
+      (r - M) * Sigma r a θ) /
+      (Delta r M a Q)^2
+  else if i = 2 ∧ j = 2 then
+    2 * r
+  else if i = 3 ∧ j = 3 then
+    2 * r * (Real.sin θ)^2 +
+      a^2 * (Real.sin θ)^4 *
+        (2 * (M * (a^2 * (Real.cos θ)^2 - r^2) + Q^2 * r) /
+          (Sigma r a θ)^2)
+  else 0
+
+/-- Polar derivative matrix of the covariant metric. -/
+def kerrMetricPolarDerivative
+    (r M a Q θ : ℝ) (i j : Fin 4) : ℝ :=
+  if i = 0 ∧ j = 0 then
+    2 * a^2 * kerrH r M Q *
+      Real.sin θ * Real.cos θ /
+      (Sigma r a θ)^2
+  else if (i = 0 ∧ j = 3) ∨ (i = 3 ∧ j = 0) then
+    -2 * a * kerrH r M Q * (r^2 + a^2) *
+      Real.sin θ * Real.cos θ /
+      (Sigma r a θ)^2
+  else if i = 1 ∧ j = 1 then
+    -2 * a^2 * Real.cos θ * Real.sin θ /
+      Delta r M a Q
+  else if i = 2 ∧ j = 2 then
+    -2 * a^2 * Real.cos θ * Real.sin θ
+  else if i = 3 ∧ j = 3 then
+    2 * Real.sin θ * Real.cos θ * (r^2 + a^2) +
+      2 * a^2 * kerrH r M Q *
+        (Real.sin θ)^3 * Real.cos θ / Sigma r a θ +
+      2 * a^2 * kerrH r M Q * (r^2 + a^2) *
+        (Real.sin θ)^3 * Real.cos θ /
+        (Sigma r a θ)^2
+  else 0
+
+/-- The actual radial metric partial is exactly the explicit radial derivative matrix. -/
+theorem kerrMetricPartial_r
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (i j : Fin 4) :
+    kerrMetricPartial 1 r M a Q θ i j =
+      kerrMetricRadialDerivative r M a Q θ i j := by
+  fin_cases i <;> fin_cases j <;>
+    simp [kerrMetricPartial, kerrCoordPartial,
+      kerrMetricCov, kerrMetricRadialDerivative,
+      (kerrGtt_hasDerivAt_r r M a Q θ hsig).deriv,
+      (kerrGtPhi_hasDerivAt_r r M a Q θ hsig).deriv,
+      (kerrGrr_hasDerivAt_r r M a Q θ hdel).deriv,
+      (kerrGthetaTheta_hasDerivAt_r r a θ).deriv,
+      (kerrGPhiPhi_hasDerivAt_r r M a Q θ hsig).deriv]
+
+/-- The actual polar metric partial is exactly the explicit polar derivative matrix. -/
+theorem kerrMetricPartial_theta
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (i j : Fin 4) :
+    kerrMetricPartial 2 r M a Q θ i j =
+      kerrMetricPolarDerivative r M a Q θ i j := by
+  fin_cases i <;> fin_cases j <;>
+    simp [kerrMetricPartial, kerrCoordPartial,
+      kerrMetricCov, kerrMetricPolarDerivative,
+      (kerrGtt_hasDerivAt_theta r M a Q θ hsig).deriv,
+      (kerrGtPhi_hasDerivAt_theta r M a Q θ hsig).deriv,
+      (kerrGrr_hasDerivAt_theta r M a Q θ hdel).deriv,
+      (kerrGthetaTheta_hasDerivAt_theta r a θ).deriv,
+      (kerrGPhiPhi_hasDerivAt_theta r M a Q θ hsig).deriv]
+
+/-- Stationarity and axisymmetry kill the remaining coordinate metric derivatives. -/
+@[simp] theorem kerrMetricPartial_t
+    (r M a Q θ : ℝ) (i j : Fin 4) :
+    kerrMetricPartial 0 r M a Q θ i j = 0 := by
+  simp [kerrMetricPartial, kerrCoordPartial]
+
+@[simp] theorem kerrMetricPartial_phi
+    (r M a Q θ : ℝ) (i j : Fin 4) :
+    kerrMetricPartial 3 r M a Q θ i j = 0 := by
+  simp [kerrMetricPartial, kerrCoordPartial]
+
 /-- Levi-Civita Christoffel symbols constructed directly from the metric and inverse metric. -/
 def kerrChristoffel
     (r M a Q θ : ℝ)
@@ -10152,6 +10247,12 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check kerrMetricRadialDerivative
+#check kerrMetricPolarDerivative
+#check kerrMetricPartial_r
+#check kerrMetricPartial_theta
+#check kerrMetricPartial_t
+#check kerrMetricPartial_phi
 #check kerrGtt_alt
 #check kerrGtPhi_alt
 #check kerrGPhiPhi_alt
@@ -10835,6 +10936,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrGrr_hasDerivAt_r
 #print axioms RelativeRest.kerrGPhiPhi_hasDerivAt_theta
 #print axioms RelativeRest.kerrMetricPartial_symmetric
+#print axioms RelativeRest.kerrMetricPartial_r
+#print axioms RelativeRest.kerrMetricPartial_theta
 #print axioms RelativeRest.kerrChristoffel_lower_symmetric
 #print axioms RelativeRest.kerrCoframe_orthonormal
 #print axioms RelativeRest.kerrEinsteinTargetRicci_trace_zero
