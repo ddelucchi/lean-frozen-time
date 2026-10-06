@@ -2871,13 +2871,10 @@ theorem kerrClockRate_mul_multiplier
 
 /-- Equivalently the field-derived clock rate is the inverse separability multiplier. -/
 theorem kerrClockRate_eq_inv_multiplier
-    (Q sig : ℝ) (hQ : Q ≠ 0) (hsig : sig ≠ 0) :
+    (Q sig : ℝ) (_hQ : Q ≠ 0) (_hsig : sig ≠ 0) :
     kerrClockRate Q sig = (kerrMultiplier Q sig)⁻¹ := by
-  have hm : kerrMultiplier Q sig ≠ 0 := by
-    unfold kerrMultiplier
-    exact div_ne_zero hsig (mul_ne_zero (by positivity) (abs_ne_zero.mpr hQ))
-  apply (eq_inv_iff_mul_eq_one₀ hm).2
-  exact kerrClockRate_mul_multiplier Q sig hQ hsig
+  unfold kerrClockRate kerrMultiplier
+  rw [inv_div]
 
 /-- The inverse fourth-root curvature multiplier is `Σ/(√2 |Q|)` once its square is fixed. -/
 theorem kerrNewman_multiplier_squared
@@ -3244,7 +3241,13 @@ theorem scalar_backbone
 
 end RelativeRest
 
--- The following commands are intentionally left as audit hooks for a real Lean build:
--- #print axioms RelativeRest.scalar_backbone
--- #print axioms RelativeRest.boost_balance_unique
--- #print axioms RelativeRest.mino_clock_identity
+/-! Kernel axiom audit. These commands are executable and are intentionally part of the build
+transcript: they expose every axiom used by representative end-to-end theorems. -/
+#print axioms RelativeRest.scalar_backbone
+#print axioms RelativeRest.defect_from_on_shell_equation
+#print axioms RelativeRest.boost_balance_exists_unique_of_nonnull
+#print axioms RelativeRest.rapidity_forced_by_normalized_boost
+#print axioms RelativeRest.extensionalBridge_Lambda_unique
+#print axioms RelativeRest.causal_extended_endpoints_mono
+#print axioms RelativeRest.kerrLogChi_hasDerivAt_r
+#print axioms RelativeRest.kerrNewman_mino_clock_forced
