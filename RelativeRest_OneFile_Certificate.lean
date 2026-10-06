@@ -2808,6 +2808,32 @@ theorem relational_evolution_from_flow_derivative
 def Sigma (r a θ : ℝ) : ℝ := r^2 + a^2 * (Real.cos θ)^2
 
 
+/-- Kerr-Newman `Σ` is nonnegative everywhere in this scalar model. -/
+theorem Sigma_nonneg (r a θ : ℝ) :
+    0 ≤ Sigma r a θ := by
+  unfold Sigma
+  nlinarith [sq_nonneg r, sq_nonneg (a * Real.cos θ)]
+
+/-- Its zero stratum is exactly where both squared contributions vanish. -/
+theorem Sigma_eq_zero_iff (r a θ : ℝ) :
+    Sigma r a θ = 0 ↔ r = 0 ∧ a * Real.cos θ = 0 := by
+  constructor
+  · intro h
+    have hr2 : r^2 = 0 := by
+      unfold Sigma at h
+      nlinarith [sq_nonneg (a * Real.cos θ)]
+    have ha2 : (a * Real.cos θ)^2 = 0 := by
+      unfold Sigma at h
+      nlinarith [sq_nonneg r]
+    exact ⟨sq_eq_zero_iff.mp hr2, sq_eq_zero_iff.mp ha2⟩
+  · rintro ⟨rfl, ha⟩
+    unfold Sigma
+    have : a^2 * (Real.cos θ)^2 = 0 := by
+      nlinarith [sq_nonneg (a * Real.cos θ)]
+    simp [this]
+
+
+
 /-- Radial derivative of the Kerr-Newman separability scalar. -/
 theorem Sigma_hasDerivAt_r (r a θ : ℝ) :
     HasDerivAt (fun x : ℝ => Sigma x a θ) (2 * r) r := by
@@ -2817,6 +2843,34 @@ theorem Sigma_hasDerivAt_r (r a θ : ℝ) :
 /-- Scalar Kerr-Newman carrier magnitude before introducing the full tensor geometry. -/
 def kerrChiScalar (Q r a θ : ℝ) : ℝ :=
   2 * Q^2 / (Sigma r a θ)^2
+
+
+/-- The Kerr-Newman electromagnetic carrier is strictly positive on the regular charged sector. -/
+theorem kerrChiScalar_pos
+    (Q r a θ : ℝ)
+    (hQ : Q ≠ 0) (hsig : Sigma r a θ ≠ 0) :
+    0 < kerrChiScalar Q r a θ := by
+  unfold kerrChiScalar
+  have hq2 : 0 < Q^2 := sq_pos_of_ne_zero hQ
+  have hs2 : 0 < (Sigma r a θ)^2 := sq_pos_of_ne_zero hsig
+  positivity
+
+/-- Squaring the carrier gives exactly the Kerr-Newman invariant magnitude appearing in the paper. -/
+theorem kerrChiScalar_sq
+    (Q r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    (kerrChiScalar Q r a θ)^2 =
+      4 * Q^4 / (Sigma r a θ)^4 := by
+  unfold kerrChiScalar
+  field_simp [hsig]
+  ring
+
+/-- Hence if the Ricci norm is identified with `χ²`, its advertised Kerr-Newman form follows. -/
+theorem kerrRicciNorm_from_carrier
+    (Q r a θ K : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hK : K = (kerrChiScalar Q r a θ)^2) :
+    K = 4 * Q^4 / (Sigma r a θ)^4 := by
+  rw [hK, kerrChiScalar_sq Q r a θ hsig]
 
 /-- Its radial derivative is forced by `Σ`. -/
 theorem kerrChiScalar_hasDerivAt_r
@@ -2853,6 +2907,19 @@ theorem kerrLogChi_hasDerivAt_r
   unfold kerrChiScalar
   field_simp [hQ, hsig]
   ring
+
+
+/-- On a regular Kerr-Newman point the first radial carrier gradient resolves the boost
+exactly away from the `r=0` degeneracy stratum. -/
+theorem kerrRadialLogGradient_ne_zero_iff
+    (r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    (-4 * r / Sigma r a θ ≠ 0) ↔ r ≠ 0 := by
+  constructor
+  · intro h hr
+    apply h
+    simp [hr]
+  · intro hr
+    exact div_ne_zero (mul_ne_zero (by norm_num) hr) hsig
 
 /-- Kerr-Newman `Δ`. -/
 def Delta (r M a Q : ℝ) : ℝ := r^2 - 2*M*r + a^2 + Q^2
@@ -3110,6 +3177,12 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check Sigma_nonneg
+#check Sigma_eq_zero_iff
+#check kerrChiScalar_pos
+#check kerrChiScalar_sq
+#check kerrRicciNorm_from_carrier
+#check kerrRadialLogGradient_ne_zero_iff
 #check hodge_twoform_conformal_iff_four
 #check hodge_twoform_four_dimensional
 #check maxwell_hodge_exponents_agree
