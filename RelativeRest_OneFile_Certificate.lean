@@ -8200,6 +8200,78 @@ theorem kerr_relative_rest_carter_regular
     carterNumerator_angular_velocity r a,
     carterObserver_unit_timelike r M a Q θ hsig hdel⟩
 
+/-- End-to-end Kerr-Newman specialization certificate from the explicit
+Boyer-Lindquist metric and potential, stopping exactly before the still-unformalized
+Christoffel/Ricci verification of the Einstein equation. -/
+theorem kerrNewman_forced_specialization_certificate
+    (Q r M a θ dt dlam : ℝ)
+    (hQ : Q ≠ 0)
+    (hsig : 0 < Sigma r a θ)
+    (hdel : 0 < Delta r M a Q)
+    (hsin : 0 < Real.sin θ)
+    (hmino : dlam = dt / Sigma r a θ) :
+    kerrCoordinateField Q r a θ =
+      kerrFieldInCarterCoframe Q r M a θ ∧
+    (deriv
+        (fun x : ℝ =>
+          -a * Real.sin θ * kerrPrincipalB Q x a θ) r -
+      deriv
+        (fun x : ℝ =>
+          kerrPrincipalE Q r a x) θ = 0 ∧
+     deriv
+        (fun x : ℝ =>
+          (x^2 + a^2) * Real.sin θ *
+            kerrPrincipalB Q x a θ) r -
+      deriv
+        (fun x : ℝ =>
+          -a * (Real.sin x)^2 *
+            kerrPrincipalE Q r a x) θ = 0 ∧
+     deriv (fun x : ℝ => kerrDensitizedFrt Q x a θ) r +
+       deriv (fun x : ℝ => kerrDensitizedFthetaT Q r a x) θ = 0 ∧
+     deriv (fun x : ℝ => kerrDensitizedFrPhi Q x a θ) r +
+       deriv (fun x : ℝ => kerrDensitizedFthetaPhi Q r a x) θ = 0) ∧
+    (kerrVolumeDensity r a θ * kerrRaisedFrt Q r M a θ =
+        kerrDensitizedFrt Q r a θ ∧
+     kerrVolumeDensity r a θ * kerrRaisedFrPhi Q r M a θ =
+        kerrDensitizedFrPhi Q r a θ ∧
+     kerrVolumeDensity r a θ * kerrRaisedFthetaT Q r M a θ =
+        kerrDensitizedFthetaT Q r a θ ∧
+     kerrVolumeDensity r a θ * kerrRaisedFthetaPhi Q r M a θ =
+        kerrDensitizedFthetaPhi Q r a θ) ∧
+    sigmaStar
+      (kerrResolvingQMinus r a θ)
+      (kerrResolvingQPlus r a θ) = 0 ∧
+    kerrStationaryNormSq r M a Q θ
+      (carterObserver r M a Q θ) = -1 ∧
+    kerrRicciNormScalar Q r a θ =
+      4 * Q^4 / (Sigma r a θ)^4 ∧
+    kerrClockRateFromPrincipalEM Q r a θ =
+      Real.sqrt 2 * |Q| / Sigma r a θ ∧
+    kerrClockRateFromPrincipalEM Q r a θ * dt =
+      Real.sqrt 2 * |Q| * dlam := by
+  have hsig0 : Sigma r a θ ≠ 0 := ne_of_gt hsig
+  have hdel0 : Delta r M a Q ≠ 0 := ne_of_gt hdel
+  have hsin0 : Real.sin θ ≠ 0 := ne_of_gt hsin
+  have hfield :=
+    kerrPotential_to_CarterPrincipalField
+      Q r M a θ hsig hdel
+  have hmax :=
+    kerrMaxwell_equations_scalar_certificate
+      Q r a θ hsig0
+  have hdens :=
+    kerrDensitizedField_from_metric
+      Q r M a θ hsig0 hdel0 hsin0
+  exact ⟨hfield.1,
+    hmax,
+    hdens,
+    kerrResolving_balance_rapidity_zero r a θ hsig0,
+    carterObserver_unit_timelike r M a Q θ hsig hdel,
+    kerrRicciNormScalar_formula Q r a θ hsig0,
+    kerrClockRateFromPrincipalEM_formula
+      Q r a θ hQ hsig,
+    kerrMinoClockFromPrincipalEM
+      Q r a θ dt dlam hQ hsig hmino⟩
+
 /-- Reissner-Nordström specialization (`a=0`) of `Σ`. -/
 theorem sigma_reissner_nordstrom (r θ : ℝ) : Sigma r 0 θ = r^2 := by
   simp [Sigma]
@@ -9064,6 +9136,7 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check kerrNewman_forced_specialization_certificate
 #check principalField_forced_core_chain
 #check kerr_metric_det_eq_scalar
 #check kerrVolumeDensity_sq
@@ -9703,4 +9776,5 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.carterObserver_unit_timelike
 #print axioms RelativeRest.kerrMaxwell_Carter_principal_structure
 #print axioms RelativeRest.kerr_relative_rest_carter_regular
+#print axioms RelativeRest.kerrNewman_forced_specialization_certificate
 #print axioms RelativeRest.kerr_regular_first_or_second_radial_jet_resolves
