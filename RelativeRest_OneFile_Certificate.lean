@@ -16118,6 +16118,83 @@ theorem principalField_forced_core_chain
   exact principalJetFromF_rainich D.E D.B i j
 
 
+/-! ### Action-only compensated bulk clock: no CPS representative input -/
+
+/-- Any first-variation/Cartan representative canonically completed with the
+action-derived constraint has exactly the same compensated Iyer-Wald operator,
+namely the canonical action constraint itself. -/
+theorem PrincipalCarrierCharacteristicInput.anyCanonicalCompletion_compensated_eq_action
+    (D : PrincipalCarrierCharacteristicInput (P:=P))
+    (core : LagrangianFirstVariationCartanData
+      (L:=R2) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ))) :
+    (core.toNoetherOperators D.noetherConstraintOperatorFromAction).omegaXY +
+        (core.toNoetherOperators D.noetherConstraintOperatorFromAction).dB =
+      D.noetherConstraintOperatorFromAction := by
+  ext X
+  rw [show
+      ((core.toNoetherOperators D.noetherConstraintOperatorFromAction).omegaXY +
+        (core.toNoetherOperators D.noetherConstraintOperatorFromAction).dB) X =
+        (core.toNoetherOperators D.noetherConstraintOperatorFromAction).omegaXY X +
+        (core.toNoetherOperators D.noetherConstraintOperatorFromAction).dB X by rfl]
+  rw [(core.toNoetherOperators
+      D.noetherConstraintOperatorFromAction).compensated_eq_constraint]
+  exact LinearMap.congr_fun
+    (core.toNoetherOperators_constraint D.noetherConstraintOperatorFromAction) X
+
+/-- Strongest representative-free bulk action-to-clock theorem.  It starts only
+from the explicit principal Maxwell field, the characteristic map/orientation
+data, and the displayed Einstein-Maxwell action.  No symplectic-potential,
+Noether-charge, constraint, Iyer-Wald current, sector sign, or CPS core is supplied. -/
+theorem principalActionBulk_forced_core_chain
+    (D : PrincipalCarrierCharacteristicInput (P:=P))
+    (u s : ℝ) :
+    ((8 * Real.pi * principalFieldEnergyDensity D.E D.B =
+        8 * Real.pi *
+          maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+          principalFieldEnergyDensity D.E D.B) ↔ s = 0) ∧
+    (∀ i j : Fin 4,
+      D.J (principalBasis j) i =
+        (16 * Real.pi / principalMetricSign i) *
+          deriv
+            (principalScaledMetricEulerCoeffFromAction
+              D.E D.B i j) 0) ∧
+    D.noetherConstraintOperatorFromAction CA = 0 ∧
+    D.noetherConstraintOperatorFromAction DA =
+      D.iε.comp (principalMetricEulerNoetherJetLinear D.E D.B) ∧
+    (∀ τ : ℝ, ∀ v : Fin 4 → ℝ,
+      relativeConstraintOrbitEval
+          D.noetherConstraintOperatorFromAction v τ =
+        D.metricEulerRelativeOrbitResponse τ v) ∧
+    D.metricEulerJetResponse =
+      (-1 / 2 : ℝ) •
+        (D.iε.comp (principalMetricEulerNoetherJetLinear D.E D.B)) ∧
+    D.metricEulerJetResponse =
+      D.toCharacteristicCurrentData.current ∧
+    D.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.toCharacteristicCurrentData.Lambda) = 1 ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D))) =
+      principalUhat := by
+  have hclock := principalCarrierCharacteristic_clock_chain D
+  rcases hclock with ⟨hL,hdim,_hpull,hnorm⟩
+  refine ⟨
+    principalField_solution_preserving_iff
+      u s D.E D.B D.field_nonzero,
+    D.J_basis_eq_actionEulerJet,
+    D.noetherConstraintOperatorFromAction_CA,
+    D.noetherConstraintOperatorFromAction_DA,
+    D.noetherConstraintOperatorFromAction_relativeOrbit,
+    D.metricEulerJetResponse_eq_neg_half_noetherIntegral,
+    ?_,hL,hdim,hnorm⟩
+  rw [D.metricEulerJetResponse_eq_stress,
+    principalCarrierCharacteristic_current D]
+
 /-! ### Lagrangian-backed characteristic clock: covariant phase space to the normalized line -/
 
 section LagrangianBackedCharacteristic
@@ -20175,6 +20252,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalLagrangianCharacteristic_iwCurrent_nonzero
 #print axioms RelativeRest.principalLagrangianCharacteristic_clock_chain
 #print axioms RelativeRest.principalField_forced_core_chain
+#print axioms RelativeRest.PrincipalCarrierCharacteristicInput.anyCanonicalCompletion_compensated_eq_action
+#print axioms RelativeRest.principalActionBulk_forced_core_chain
 #print axioms RelativeRest.principalFieldCurrent_Lambda_unique
 #print axioms RelativeRest.principalFieldCurrent_quotient_finrank_one
 #print axioms RelativeRest.reeb_direction_unique
