@@ -2365,6 +2365,45 @@ def pastEndpoint (S : Set ℝ) : ℝ := sSup S
 /-- Abstract future endpoint used by the global causal-order construction. -/
 def futureEndpoint (S : Set ℝ) : ℝ := sInf S
 
+
+/-- Extended-real past endpoint, including the paper's empty-set convention automatically. -/
+def pastEndpointE (S : Set ℝ) : EReal :=
+  sSup ((fun θ : ℝ => (θ : EReal)) '' S)
+
+/-- Extended-real future endpoint, including the paper's empty-set convention automatically. -/
+def futureEndpointE (S : Set ℝ) : EReal :=
+  sInf ((fun θ : ℝ => (θ : EReal)) '' S)
+
+@[simp] theorem pastEndpointE_empty :
+    pastEndpointE (∅ : Set ℝ) = (⊥ : EReal) := by
+  simp [pastEndpointE]
+
+@[simp] theorem futureEndpointE_empty :
+    futureEndpointE (∅ : Set ℝ) = (⊤ : EReal) := by
+  simp [futureEndpointE]
+
+/-- Causal past enlargement is monotone even when an endpoint is infinite. -/
+theorem pastEndpointE_mono
+    {S T : Set ℝ} (h : S ⊆ T) :
+    pastEndpointE S ≤ pastEndpointE T := by
+  unfold pastEndpointE
+  exact sSup_le_sSup (Set.image_mono h)
+
+/-- Future-set shrinkage is monotone even through horizon/endpoint loss. -/
+theorem futureEndpointE_mono_of_reverse_inclusion
+    {S T : Set ℝ} (h : T ⊆ S) :
+    futureEndpointE S ≤ futureEndpointE T := by
+  unfold futureEndpointE
+  exact sInf_le_sInf (Set.image_mono h)
+
+/-- Thus causal push-up orders both extended endpoints without any finiteness hypothesis. -/
+theorem causal_extended_endpoints_mono
+    {P₁ P₂ F₁ F₂ : Set ℝ}
+    (hP : P₁ ⊆ P₂) (hF : F₂ ⊆ F₁) :
+    pastEndpointE P₁ ≤ pastEndpointE P₂ ∧
+    futureEndpointE F₁ ≤ futureEndpointE F₂ :=
+  ⟨pastEndpointE_mono hP, futureEndpointE_mono_of_reverse_inclusion hF⟩
+
 /-- Enlargement of a nonempty bounded-above chronological past can only increase its endpoint. -/
 theorem pastEndpoint_mono
     {S T : Set ℝ}
@@ -2968,6 +3007,11 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check pastEndpointE_empty
+#check futureEndpointE_empty
+#check pastEndpointE_mono
+#check futureEndpointE_mono_of_reverse_inclusion
+#check causal_extended_endpoints_mono
 #check opposite_null_components_balance_iff_zero
 #check sigmaStar_opposite_components
 #check kerrClockRate_mul_multiplier
