@@ -3828,6 +3828,79 @@ theorem chronometric_invariant_chain
     exact hcarrier.trans henergy
   · exact maxwell_clock_fourth_power E B ω hcarrier
 
+
+/-- Intrinsic positive clock rate constructed directly from the principal Maxwell field. -/
+def principalClockRate (E B : ℝ) : ℝ :=
+  Real.sqrt (principalChi E B)
+
+@[simp] theorem principalClockRate_nonneg (E B : ℝ) :
+    0 ≤ principalClockRate E B :=
+  Real.sqrt_nonneg _
+
+/-- Its square is exactly the Rainich carrier. -/
+theorem principalClockRate_sq (E B : ℝ) :
+    (principalClockRate E B)^2 = principalChi E B := by
+  unfold principalClockRate
+  exact Real.sq_sqrt (principalChi_nonneg E B)
+
+/-- The positive fourth root of the two Maxwell invariants is exactly the same clock rate. -/
+theorem principalClockRate_eq_invariant_fourth_root
+    (E B : ℝ) :
+    principalClockRate E B =
+      Real.sqrt
+        (Real.sqrt
+          ((maxwellI E B)^2 + (maxwellJ E B)^2)) := by
+  rw [maxwell_invariants_eq_principalChi_sq,
+    Real.sqrt_sq_eq_abs,
+    abs_of_nonneg (principalChi_nonneg E B)]
+  rfl
+
+/-- The same rate is fixed by the explicit principal electromagnetic energy density. -/
+theorem principalClockRate_eq_energy_density
+    (E B : ℝ) :
+    principalClockRate E B =
+      4 * Real.sqrt
+        (Real.pi * principalFieldEnergyDensity E B) := by
+  apply energy_density_clock_rate_value
+  · unfold principalFieldEnergyDensity
+    positivity
+  · exact principalClockRate_nonneg E B
+  · rw [principalClockRate_sq,
+      principalFieldEnergyDensity_eq_chi]
+    field_simp [ne_of_gt Real.pi_pos]
+
+/-- The Ricci-norm construction from the same carrier gives the identical positive rate. -/
+theorem principalClockRate_eq_ricci_fourth_root
+    (E B : ℝ) :
+    principalClockRate E B =
+      Real.sqrt
+        (Real.sqrt
+          (principalRicciNormFromCarrier
+            (principalChi E B))) := by
+  rw [principalRicciNormFromCarrier_eq,
+    Real.sqrt_sq_eq_abs,
+    abs_of_nonneg (principalChi_nonneg E B)]
+  rfl
+
+/-- All three manuscript clock normalizations coincide without an independent scale choice. -/
+theorem principalClockRate_three_way
+    (E B : ℝ) :
+    principalClockRate E B =
+        4 * Real.sqrt
+          (Real.pi * principalFieldEnergyDensity E B) ∧
+    principalClockRate E B =
+        Real.sqrt
+          (Real.sqrt
+            ((maxwellI E B)^2 + (maxwellJ E B)^2)) ∧
+    principalClockRate E B =
+        Real.sqrt
+          (Real.sqrt
+            (principalRicciNormFromCarrier
+              (principalChi E B))) := by
+  exact ⟨principalClockRate_eq_energy_density E B,
+    principalClockRate_eq_invariant_fourth_root E B,
+    principalClockRate_eq_ricci_fourth_root E B⟩
+
 /-- The local optical covector has background norm `-ω²=-sqrt K` once the unit timelike norm
 and `K=ω⁴` are supplied. -/
 theorem optical_covector_norm_scalar
@@ -5980,6 +6053,11 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check principalClockRate_sq
+#check principalClockRate_eq_invariant_fourth_root
+#check principalClockRate_eq_energy_density
+#check principalClockRate_eq_ricci_fourth_root
+#check principalClockRate_three_way
 #check principalPointResponse_formula
 #check principalPointResponse_unit
 #check principalPointResponse_factor
@@ -6389,6 +6467,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.characteristic_half_contraction_from_relative_scaling
 #print axioms RelativeRest.principalLocalClockRatio_forced
 #print axioms RelativeRest.principalPointResponse_ratio_forced
+#print axioms RelativeRest.principalClockRate_three_way
 #print axioms RelativeRest.principalLocalLift_section
 #print axioms RelativeRest.globalToPrincipalLocalClockMap_pullback
 #print axioms RelativeRest.normalizationBridge_principal
