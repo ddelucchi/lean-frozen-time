@@ -14447,6 +14447,123 @@ theorem principalActionEulerSectorVariation_forced_core_chain
   intro i j
   exact D.carrier.J_basis_eq_actionEulerJet i j
 
+/-! ### Central manuscript closure certificate -/
+
+/-- A single closure theorem assembling the manuscript's central forced chain.
+The only inputs beyond the explicit regular-sector hypotheses are the actual
+first-variation/Cartan/Noether package encoded in `D.variation` and the smooth
+regular Synge endpoint jet `S`; Iyer-Wald, sector signs, carrier normalization,
+clock quotient, Kerr curvature, Carter rest, and Mino scaling are all conclusions. -/
+theorem centralPaper_forced_closure_certificate
+    {W : Type*} [AddCommGroup W] [Module ℝ W]
+    (Bform : W →ₗ[ℝ] W →ₗ[ℝ] ℝ)
+    (S : SyngeEndpointJetData Bform)
+    (hsym : ∀ x y, bil Bform x y = bil Bform y x)
+    (D : PrincipalActionSectorVariationCharacteristicInput (P:=P))
+    (u s Q r M a θ dt dlam : ℝ)
+    (hQ : Q ≠ 0)
+    (hsig : 0 < Sigma r a θ)
+    (hdel : 0 < Delta r M a Q)
+    (hsin : 0 < Real.sin θ)
+    (hmino : dlam = dt / Sigma r a θ) :
+    ((8 * Real.pi * principalFieldEnergyDensity D.carrier.E D.carrier.B =
+        8 * Real.pi *
+          maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+          principalFieldEnergyDensity D.carrier.E D.carrier.B) ↔ s = 0) ∧
+    (∀ i j : Fin 4,
+      D.carrier.J (principalBasis j) i =
+        (16 * Real.pi / principalMetricSign i) *
+          deriv (principalScaledMetricEulerCoeffFromAction
+            D.carrier.E D.carrier.B i j) 0) ∧
+    (∀ i j : Fin 4,
+      (∑ k : Fin 4,
+        principalJetFromF D.carrier.E D.carrier.B i k *
+          principalJetFromF D.carrier.E D.carrier.B k j) =
+        (principalChi D.carrier.E D.carrier.B)^2 *
+          (if i = j then 1 else 0)) ∧
+    D.variation.constraint CA = 0 ∧
+    D.variation.constraint DA =
+      (-2 : ℝ) • D.carrier.actionEulerResponse ∧
+    D.characteristicCurrent = D.carrier.actionEulerResponse ∧
+    D.characteristicCurrent =
+      D.carrier.toCharacteristicCurrentData.current ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat ∧
+    (bil Bform S.dThetaPlus S.dThetaPlus = 0 ∧
+     bil Bform S.dThetaMinus S.dThetaMinus = 0) ∧
+    (bil Bform S.clockCovector S.radialCovector = 0 ∧
+     -(bil Bform S.clockCovector S.clockCovector) =
+       bil Bform S.radialCovector S.radialCovector) ∧
+    (∀ dPlus dMinus T R : W,
+      S.sigmaXPlus + S.sigmaThetaPlus • dPlus = 0 →
+      S.sigmaXMinus + S.sigmaThetaMinus • dMinus = 0 →
+      T + R = dPlus → T - R = dMinus →
+      dPlus = S.dThetaPlus ∧
+      dMinus = S.dThetaMinus ∧
+      T = S.clockCovector ∧ R = S.radialCovector) ∧
+    (∃! v : R2,
+      tangentToClockSection v ∧ clockLiouville 1 v = 1) ∧
+    (∀ i j : Fin 4,
+      kerrEinsteinCovFromMetric r M a Q θ i j =
+        8 * Real.pi *
+          kerrMaxwellStressCovFromPotential Q r M a θ i j) ∧
+    (deriv (fun x : ℝ => kerrDensitizedFrt Q x a θ) r +
+        deriv (fun x : ℝ => kerrDensitizedFthetaT Q r a x) θ = 0 ∧
+     deriv (fun x : ℝ => kerrDensitizedFrPhi Q x a θ) r +
+        deriv (fun x : ℝ => kerrDensitizedFthetaPhi Q r a x) θ = 0) ∧
+    sigmaStar
+      (kerrResolvingQMinus r a θ)
+      (kerrResolvingQPlus r a θ) = 0 ∧
+    kerrStationaryNormSq r M a Q θ
+      (carterObserver r M a Q θ) = -1 ∧
+    kerrClockRateFromPrincipalEM Q r a θ * dt =
+      Real.sqrt 2 * |Q| * dlam := by
+  rcases principalActionSectorVariation_forced_core_chain D u s with
+    ⟨hrest, _hjet, hrainich, hCA, hDA, hcurEuler, hcurChar,
+      hLambda, hdim, hnorm⟩
+  have hJ : ∀ i j : Fin 4,
+      D.carrier.J (principalBasis j) i =
+        (16 * Real.pi / principalMetricSign i) *
+          deriv (principalScaledMetricEulerCoeffFromAction
+            D.carrier.E D.carrier.B i j) 0 := by
+    intro i j
+    exact D.carrier.J_basis_eq_actionEulerJet i j
+  have hnull := S.endpoint_eikonals_null
+  have hopt := S.optical_closure hsym
+  have hunique :
+      ∀ dPlus dMinus T R : W,
+        S.sigmaXPlus + S.sigmaThetaPlus • dPlus = 0 →
+        S.sigmaXMinus + S.sigmaThetaMinus • dMinus = 0 →
+        T + R = dPlus → T - R = dMinus →
+        dPlus = S.dThetaPlus ∧
+        dMinus = S.dThetaMinus ∧
+        T = S.clockCovector ∧ R = S.radialCovector := by
+    intro dPlus dMinus T R hp hm hplus hminus
+    exact S.firstJet_forced_unique dPlus dMinus T R hp hm hplus hminus
+  have hsin0 : Real.sin θ ≠ 0 := ne_of_gt hsin
+  have hEin := kerrEinsteinCovFromMetric_eq_8pi_MaxwellStress
+    Q r M a θ hsig hdel hsin0
+  have hMaxT := kerrMaxwell_divergence_t
+    Q r a θ (ne_of_gt hsig)
+  have hMaxP := kerrMaxwell_divergence_phi
+    Q r a θ (ne_of_gt hsig)
+  have hRest := kerr_relative_rest_carter_regular
+    r M a Q θ hsig hdel
+  exact ⟨hrest, hJ, hrainich, hCA, hDA, hcurEuler, hcurChar,
+    hLambda, hdim, hnorm, hnull, hopt, hunique,
+    clock_section_reeb_existsUnique, hEin, ⟨hMaxT, hMaxP⟩,
+    hRest.1, hRest.2.2,
+    kerrMinoClockFromPrincipalEM Q r a θ dt dlam hQ hsig hmino⟩
+
 /-! ### On-shell Lagrangian first variation: total field equation to clock line -/
 
 /-- Strongest non-manifold covariant-phase-space interface: the total Einstein-Maxwell
