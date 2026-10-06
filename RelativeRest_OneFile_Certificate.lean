@@ -831,6 +831,25 @@ theorem nullCovectorNormSq_ne_zero_components
     apply hnonnull
     simp [nullCovectorNormSq, hqp]
 
+
+/-- The principal-plane norm is invariant under the residual null boost. -/
+theorem nullCovectorNormSq_boost_invariant
+    (qm qp τ : ℝ) :
+    nullCovectorNormSq (Real.exp (-τ) * qm) (Real.exp τ * qp) =
+      nullCovectorNormSq qm qp := by
+  unfold nullCovectorNormSq
+  rw [← mul_assoc, ← mul_assoc, ← Real.exp_add]
+  have hz : -τ + τ = 0 := by ring
+  rw [hz, Real.exp_zero]
+  ring
+
+/-- Therefore the geometric non-null condition does not depend on the starting null dyad. -/
+theorem nullCovector_nonnull_boost_iff
+    (qm qp τ : ℝ) :
+    nullCovectorNormSq (Real.exp (-τ) * qm) (Real.exp τ * qp) ≠ 0 ↔
+      nullCovectorNormSq qm qp ≠ 0 := by
+  rw [nullCovectorNormSq_boost_invariant]
+
 /-- Scalar boost defect. -/
 def boostDefect (qminus qplus σ : ℝ) : ℝ :=
   Real.exp (-2 * σ) * qminus^2 - Real.exp (2 * σ) * qplus^2
@@ -838,6 +857,26 @@ def boostDefect (qminus qplus σ : ℝ) : ℝ :=
 /-- The advertised balance rapidity. -/
 def sigmaStar (qminus qplus : ℝ) : ℝ :=
   (1 / 2 : ℝ) * Real.log (|qminus / qplus|)
+
+
+/-- Exchanging the two principal null directions reverses the balancing orientation. -/
+theorem sigmaStar_exchange
+    (qm qp : ℝ) (hqm : qm ≠ 0) (hqp : qp ≠ 0) :
+    sigmaStar qp qm = - sigmaStar qm qp := by
+  unfold sigmaStar
+  have hr : |qm / qp| ≠ 0 := abs_ne_zero.mpr (div_ne_zero hqm hqp)
+  have hinv : |qp / qm| = (|qm / qp|)⁻¹ := by
+    rw [abs_div, abs_div]
+    field_simp [abs_ne_zero.mpr hqm, abs_ne_zero.mpr hqp]
+  rw [hinv, Real.log_inv]
+  ring
+
+/-- Exchange reverses the boost defect together with rapidity orientation. -/
+theorem boostDefect_exchange (qm qp σ : ℝ) :
+    boostDefect qp qm (-σ) = - boostDefect qm qp σ := by
+  unfold boostDefect
+  ring_nf
+  ring
 
 /-- Squared null components transform with opposite exponential weights. -/
 theorem boosted_component_squares
@@ -1047,6 +1086,24 @@ theorem conformal_representative_product_invariant
     (χ Ω : ℝ) (hΩ : Ω ≠ 0) :
     (χ / Ω^2) * Ω^2 = χ := by
   field_simp [hΩ]
+
+
+/-- Multiplication of the carrier by a positive constant leaves its logarithmic differential
+coefficient unchanged.  This is the scalar algebra behind `d log(cχ)=d log χ`. -/
+theorem logarithmic_differential_scale_invariant
+    (c χ dχ : ℝ) (hc : c ≠ 0) (hχ : χ ≠ 0) :
+    (c * dχ) / (c * χ) = dχ / χ := by
+  field_simp [hc, hχ]
+  ring
+
+/-- In particular, the carrier gradient used to balance the residual boost is independent
+of the common Einstein-Maxwell representative. -/
+theorem logarithmic_differential_homothety_invariant
+    (ρ χ dχ : ℝ) (hρ : ρ ≠ 0) (hχ : χ ≠ 0) :
+    ((ρ⁻²) * dχ) / ((ρ⁻²) * χ) = dχ / χ := by
+  apply logarithmic_differential_scale_invariant
+  · exact inv_ne_zero (pow_ne_zero 2 hρ)
+  · exact hχ
 
 /-- Homogeneity and unit-involution normalization together force the conformal factor itself:
 there is no residual positive multiplicative constant. -/
@@ -2536,6 +2593,12 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check nullCovectorNormSq_boost_invariant
+#check nullCovector_nonnull_boost_iff
+#check sigmaStar_exchange
+#check boostDefect_exchange
+#check logarithmic_differential_scale_invariant
+#check logarithmic_differential_homothety_invariant
 #check pastEndpoint_mono
 #check futureEndpoint_mono_of_reverse_inclusion
 #check causal_radar_clock_mono
