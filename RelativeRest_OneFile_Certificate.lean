@@ -2360,7 +2360,7 @@ theorem unit_involution_fixes_conformal_constant
 /-- Squared carrier contraction under a constant common metric homothety.
 Two raised indices contribute the factor `ρ⁻⁴`. -/
 def carrierContractionUnderScale (ρ Jsq : ℝ) : ℝ :=
-  ρ⁻4 * Jsq
+  (ρ⁻¹)^4 * Jsq
 
 /-- The positive Rainich magnitude built from the squared contraction. -/
 def carrierMagnitudeFromContraction (Jsq : ℝ) : ℝ :=
@@ -2374,12 +2374,12 @@ theorem carrierMagnitude_common_scale
     (hJ : 0 ≤ Jsq) :
     carrierMagnitudeFromContraction
       (carrierContractionUnderScale ρ Jsq) =
-      ρ⁻2 * carrierMagnitudeFromContraction Jsq := by
+      (ρ⁻¹)^2 * carrierMagnitudeFromContraction Jsq := by
   have hρ0 : ρ ≠ 0 := ne_of_gt hρ
-  have hcpos : 0 < ρ⁻2 := by positivity
-  have hc : 0 ≤ ρ⁻2 := le_of_lt hcpos
+  have hcpos : 0 < (ρ⁻¹)^2 := by positivity
+  have hc : 0 ≤ (ρ⁻¹)^2 := le_of_lt hcpos
   have hscale :
-      ρ⁻4 = (ρ⁻2)^2 := by
+      (ρ⁻¹)^4 = ((ρ⁻¹)^2)^2 := by
     field_simp [hρ0]
     ring
   have hscaled :
@@ -2392,7 +2392,7 @@ theorem carrierMagnitude_common_scale
         carrierContractionUnderScale ρ Jsq :=
     Real.sq_sqrt hscaled
   have hrightsq :
-      ((ρ⁻2) * Real.sqrt Jsq)^2 =
+      (((ρ⁻¹)^2) * Real.sqrt Jsq)^2 =
         carrierContractionUnderScale ρ Jsq := by
     rw [mul_pow, Real.sq_sqrt hJ]
     unfold carrierContractionUnderScale
@@ -2403,11 +2403,11 @@ theorem carrierMagnitude_common_scale
         (carrierContractionUnderScale ρ Jsq) :=
     Real.sqrt_nonneg _
   have hrightnonneg :
-      0 ≤ (ρ⁻2) * Real.sqrt Jsq :=
+      0 ≤ ((ρ⁻¹)^2) * Real.sqrt Jsq :=
     mul_nonneg hc (Real.sqrt_nonneg _)
   have hsqrt :
       Real.sqrt (carrierContractionUnderScale ρ Jsq) =
-        (ρ⁻2) * Real.sqrt Jsq := by
+        ((ρ⁻¹)^2) * Real.sqrt Jsq := by
     nlinarith
   unfold carrierMagnitudeFromContraction
   rw [hsqrt]
@@ -2422,7 +2422,7 @@ theorem carrier_chi_common_scale
     (hχ : χ = carrierMagnitudeFromContraction Jsq) :
     carrierMagnitudeFromContraction
       (carrierContractionUnderScale ρ Jsq) =
-      ρ⁻2 * χ := by
+      (ρ⁻¹)^2 * χ := by
   rw [hχ]
   exact carrierMagnitude_common_scale ρ Jsq hρ hJ
 
