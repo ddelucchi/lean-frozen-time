@@ -8005,6 +8005,78 @@ theorem kerrEinsteinTargetRicci_trace_zero
     kerrRicciFrameCovCoeff, principalMetricSign]
   ring
 
+/-- Mixed Ricci eigenvalue obtained by raising the first Carter-frame index. -/
+def kerrRicciFrameMixedCoeff
+    (Q r a θ : ℝ) (A : Fin 4) : ℝ :=
+  principalMetricSign A *
+    kerrRicciFrameCovCoeff Q r a θ A
+
+/-- The potential-derived Maxwell energy density is exactly q/(8π). -/
+theorem kerrPrincipalEnergyDensity_formula
+    (Q r a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0) :
+    principalFieldEnergyDensity
+        (kerrPrincipalE Q r a θ)
+        (kerrPrincipalB Q r a θ) =
+      kerrRicciScale Q r a θ / (8 * Real.pi) := by
+  unfold principalFieldEnergyDensity kerrRicciScale
+  rw [kerrPrincipal_field_magnitude Q r a θ hsig]
+  rfl
+
+/-- Every mixed Carter-frame Ricci target eigenvalue is exactly the
+Einstein-Maxwell source 8π T^A_A of the explicit field. -/
+theorem kerrRicciFrameMixedCoeff_eq_EinsteinMaxwell
+    (Q r a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (A : Fin 4) :
+    kerrRicciFrameMixedCoeff Q r a θ A =
+      8 * Real.pi *
+        principalStress
+          (principalFieldEnergyDensity
+            (kerrPrincipalE Q r a θ)
+            (kerrPrincipalB Q r a θ))
+          A A := by
+  rw [kerrPrincipalEnergyDensity_formula Q r a θ hsig]
+  fin_cases A <;>
+    simp [kerrRicciFrameMixedCoeff,
+      kerrRicciFrameCovCoeff,
+      principalMetricSign, principalStress] <;>
+    field_simp [ne_of_gt Real.pi_pos] <;>
+    ring
+
+/-- Off-diagonal Carter-frame Einstein-Maxwell source components vanish. -/
+theorem kerrEinsteinMaxwellFrame_offdiag
+    (Q r a θ : ℝ)
+    (A B : Fin 4)
+    (hAB : A ≠ B) :
+    8 * Real.pi *
+      principalStress
+        (principalFieldEnergyDensity
+          (kerrPrincipalE Q r a θ)
+          (kerrPrincipalB Q r a θ))
+        A B = 0 := by
+  simp [principalStress, hAB]
+
+/-- Thus the field-forced mixed Ricci target is exactly the full diagonal
+Einstein-Maxwell source in the metric-selected Carter frame. -/
+theorem kerrEinsteinTarget_frame_equation
+    (Q r a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (A B : Fin 4) :
+    (if A = B then kerrRicciFrameMixedCoeff Q r a θ A else 0) =
+      8 * Real.pi *
+        principalStress
+          (principalFieldEnergyDensity
+            (kerrPrincipalE Q r a θ)
+            (kerrPrincipalB Q r a θ))
+          A B := by
+  by_cases h : A = B
+  · subst B
+    simp [kerrRicciFrameMixedCoeff_eq_EinsteinMaxwell
+      Q r a θ hsig A]
+  · rw [if_neg h,
+      kerrEinsteinMaxwellFrame_offdiag Q r a θ A B h]
+
 /-- The frame invariant squared Ricci norm of the target is four times q squared. -/
 def kerrEinsteinTargetRicciFrameNormSq
     (Q r a θ : ℝ) : ℝ :=
@@ -9690,6 +9762,9 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check kerrPrincipalEnergyDensity_formula
+#check kerrRicciFrameMixedCoeff_eq_EinsteinMaxwell
+#check kerrEinsteinTarget_frame_equation
 #check kerrEinsteinTargetRicciTrace_eq_frame_sum
 #check kerrEinsteinTargetRicci_trace_zero
 #check kerrEinsteinTargetRicci_frame_norm
@@ -10345,6 +10420,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrCoframe_orthonormal
 #print axioms RelativeRest.kerrEinsteinTargetRicci_trace_zero
 #print axioms RelativeRest.kerrEinsteinTargetRicci_frame_norm_formula
+#print axioms RelativeRest.kerrEinsteinTarget_frame_equation
 #print axioms RelativeRest.kerrVolumeDensity_eq_sqrt_neg_det
 #print axioms RelativeRest.kerr_metric_det
 #print axioms RelativeRest.kerrMaxwell_divergence_t
