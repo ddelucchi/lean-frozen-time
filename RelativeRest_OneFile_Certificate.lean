@@ -47,15 +47,20 @@ This file is intentionally adversarial about assumptions.
   through caustics is claimed by the manuscript or required here.
 * The characteristic quotient is globally simple in the linear model, basic covectors descend
   uniquely, and the homogeneous clock cover/Reeb normalization is explicit.
-* The remaining first-principles boundary is therefore narrower and genuinely
-  differential-geometric: identify the abstract first-variation/Cartan core with the actual
-  Lorentzian Einstein-Maxwell covariant symplectic potential and geometric Noether charge
-  (including the exact surface-charge representative).  The bulk Noether coefficient,
-  its normalization, its relative orbit, and every clock consequence are already derived.
+* The remaining representative-level boundary is now confined to constructing a
+  preferred global Lorentzian symplectic-potential/Noether-charge representative if one wants
+  the separate surface term itself.  It is no longer an input to the bulk clock theorem:
+  Lean proves that every canonical completion, and every independently constructed local
+  Noether realization satisfying locality plus the action-forced diffeomorphism pairing,
+  has the same compensated operator `omega+dB`.  It also proves that any change of
+  presymplectic representative is cancelled exactly by the opposite boundary-term change.
+  Thus the bulk Noether coefficient, normalization, relative orbit, characteristic quotient,
+  and clock consequences are representative-independent theorems of the displayed action.
 
 Consequently this file is a kernel-oriented logical certificate of the manuscript's forced
-action, bulk-Noether, quotient, optical, transport, relational, and Kerr structure while
-keeping that final geometric identification visible.
+action, compensated bulk-Noether, quotient, optical, transport, relational, and Kerr
+structure.  A preferred separate surface-charge representative is optional boundary data,
+not a freedom in the clock-producing bulk current.
 -/
 
 noncomputable section
@@ -6036,6 +6041,19 @@ theorem LagrangianVariationNoetherOperators.compensated_current_invariant_of_con
     D₁.omegaXY X + D₁.dB X =
       D₂.omegaXY X + D₂.dB X := by
   rw [D₁.compensated_eq_constraint, D₂.compensated_eq_constraint, hC]
+
+/-- Exact ambiguity cancellation: for two Noether representatives with the same
+bulk constraint, the change in the boundary term is the negative of the change in
+the reversed presymplectic current.  Hence the surface/presymplectic split can move,
+but their compensated sum cannot. -/
+theorem LagrangianVariationNoetherOperators.boundary_shift_cancels_presymplectic_shift
+    (D₁ D₂ : LagrangianVariationNoetherOperators (L:=L) (C:=C))
+    (hC : D₁.constraint = D₂.constraint) :
+    D₁.dB - D₂.dB = -(D₁.omegaXY - D₂.omegaXY) := by
+  ext X
+  have h := D₁.compensated_current_invariant_of_constraint D₂ hC X
+  simp only [LinearMap.sub_apply, LinearMap.neg_apply]
+  module
 
 /-- Operator form of boundary-representative invariance.  The compensated map itself
 depends only on the Noether constraint, not on the representative symplectic
@@ -20395,6 +20413,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.LagrangianVariationNoetherOperators.deltaConstraint_forced
 #print axioms RelativeRest.LagrangianVariationNoetherOperators.dDeltaCharge_forced
 #print axioms RelativeRest.LagrangianVariationNoetherOperators.compensated_current_invariant_of_constraint
+#print axioms RelativeRest.LagrangianVariationNoetherOperators.boundary_shift_cancels_presymplectic_shift
 #print axioms RelativeRest.LagrangianVariationNoetherOperators.compensated_operator_invariant_of_constraint
 #print axioms RelativeRest.LagrangianFirstVariationCartanData.dTheta_forced
 #print axioms RelativeRest.LagrangianFirstVariationCartanData.cartan_difference_forced
