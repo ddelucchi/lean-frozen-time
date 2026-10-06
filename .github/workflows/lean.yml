@@ -11,6 +11,20 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Runner preflight
+        shell: bash
+        run: |
+          echo "runner-started" > runner-probe.txt
+          uname -a >> runner-probe.txt
+          date -u >> runner-probe.txt
+
+      - name: Upload runner probe
+        uses: actions/upload-artifact@v4
+        with:
+          name: runner-probe
+          path: runner-probe.txt
+          if-no-files-found: error
+
       - name: Checkout
         uses: actions/checkout@v4
 
