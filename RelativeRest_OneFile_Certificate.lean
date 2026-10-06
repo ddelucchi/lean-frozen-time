@@ -7479,8 +7479,11 @@ theorem kerrGPhiPhi_alt
 /-- Radial derivative of `H`. -/
 theorem kerrH_hasDerivAt_r (r M Q : ℝ) :
     HasDerivAt (fun x : ℝ => kerrH x M Q) (2 * M) r := by
+  have hlin :=
+    (hasDerivAt_id r).const_mul (2 * M)
+  have hsub := hlin.sub_const (Q^2)
   unfold kerrH
-  convert (hasDerivAt_id r).const_mul (2 * M) |>.sub_const (Q^2) using 1 <;> ring
+  convert hsub using 1 <;> ring
 
 /-- Radial derivative of `g_tt`. -/
 theorem kerrGtt_hasDerivAt_r
@@ -7519,7 +7522,9 @@ theorem kerrGtt_hasDerivAt_theta
           -Delta r M a Q + a^2 * (Real.sin x)^2)
         (2 * a^2 * Real.sin θ * Real.cos θ) θ := by
     have hs := (Real.hasDerivAt_sin θ).pow 2
-    convert hs.const_mul (a^2) |>.const_add (-Delta r M a Q) using 1 <;> ring
+    have hmul := hs.const_mul (a^2)
+    have hadd := hmul.const_add (-Delta r M a Q)
+    convert hadd using 1 <;> ring
   have hraw :=
     hn.fun_div (Sigma_hasDerivAt_theta r a θ) hsig
   unfold kerrGtt
@@ -7566,7 +7571,9 @@ theorem kerrGtPhi_hasDerivAt_theta
       HasDerivAt
         (fun x : ℝ => a * (Real.sin x)^2)
         (2 * a * Real.sin θ * Real.cos θ) θ := by
-    convert (Real.hasDerivAt_sin θ).pow 2 |>.const_mul a using 1 <;> ring
+    have hs2 := (Real.hasDerivAt_sin θ).pow 2
+    have hmul := hs2.const_mul a
+    convert hmul using 1 <;> ring
   have hconst :
       HasDerivAt
         (fun _ : ℝ =>
