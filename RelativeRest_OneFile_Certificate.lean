@@ -8864,17 +8864,6 @@ theorem kerrRicci_rtheta_zero
   unfold Sigma
   nlinarith
 
-/-- This closes the `rθ` Einstein-Maxwell component because the field-forced target is zero. -/
-theorem kerrRicci_rtheta_eq_target
-    (Q r M a θ : ℝ)
-    (hsig : Sigma r a θ ≠ 0)
-    (hdel : Delta r M a Q ≠ 0)
-    (hsin : Real.sin θ ≠ 0) :
-    kerrRicciCovFromMetric r M a Q θ 1 2 =
-      kerrEinsteinTargetRicciCoordinate Q r M a θ 1 2 := by
-  rw [kerrRicci_rtheta_zero r M a Q θ hsig hdel hsin]
-  simp [kerrEinsteinTargetRicciCoordinate]
-
 /-- Reverse-order mixed meridional Ricci component has the analogous reduction. -/
 theorem kerrRicci_thetar_reduction
     (r M a Q θ : ℝ) :
@@ -8916,16 +8905,6 @@ theorem kerrRicci_thetar_zero
   have htrig := Real.sin_sq_add_cos_sq θ
   unfold Sigma
   nlinarith
-
-theorem kerrRicci_thetar_eq_target
-    (Q r M a θ : ℝ)
-    (hsig : Sigma r a θ ≠ 0)
-    (hdel : Delta r M a Q ≠ 0)
-    (hsin : Real.sin θ ≠ 0) :
-    kerrRicciCovFromMetric r M a Q θ 2 1 =
-      kerrEinsteinTargetRicciCoordinate Q r M a θ 2 1 := by
-  rw [kerrRicci_thetar_zero r M a Q θ hsig hdel hsin]
-  simp [kerrEinsteinTargetRicciCoordinate]
 
 /-! ### Einstein equations already closed by stationary-reflection parity -/
 
@@ -9297,6 +9276,29 @@ def kerrEinsteinTargetRicciCoordinate
         (r^2 + a^2)^2) /
       Sigma r a θ
   else 0
+
+
+/-- This closes the `rθ` Einstein-Maxwell component because the field-forced target is zero. -/
+theorem kerrRicci_rtheta_eq_target
+    (Q r M a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrRicciCovFromMetric r M a Q θ 1 2 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 1 2 := by
+  rw [kerrRicci_rtheta_zero r M a Q θ hsig hdel hsin]
+  simp [kerrEinsteinTargetRicciCoordinate]
+
+theorem kerrRicci_thetar_eq_target
+    (Q r M a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrRicciCovFromMetric r M a Q θ 2 1 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 2 1 := by
+  rw [kerrRicci_thetar_zero r M a Q θ hsig hdel hsin]
+  simp [kerrEinsteinTargetRicciCoordinate]
+
 
 /-- The explicit coordinate Einstein-Maxwell Ricci target is symmetric. -/
 theorem kerrEinsteinTargetRicciCoordinate_symmetric
