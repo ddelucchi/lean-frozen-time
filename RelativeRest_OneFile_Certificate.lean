@@ -7908,6 +7908,17 @@ def kerrGrr (r M a Q θ : ℝ) : ℝ :=
 def kerrGthetaTheta (r a θ : ℝ) : ℝ :=
   Sigma r a θ
 
+/-- The stationary square-form metric makes g_phiphi algebraically dependent on g_tphi
+plus the flat oblate angular factor. -/
+theorem kerrGPhiPhi_from_tphi
+    (r M a Q θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    kerrGPhiPhi r M a Q θ =
+      -a * (Real.sin θ)^2 * kerrGtPhi r M a Q θ +
+        (Real.sin θ)^2 * (r^2 + a^2) := by
+  unfold kerrGPhiPhi kerrGtPhi
+  field_simp [hsig]
+  ring
+
 /-- Compact Kerr-Newman mass/charge factor `H=2Mr-Q²`. -/
 def kerrH (r M Q : ℝ) : ℝ :=
   2 * M * r - Q^2
@@ -8776,6 +8787,56 @@ theorem kerrStationaryA_hasDerivAt_r
     (hasDerivAt_const r (M * a^2 * (Real.cos θ)^2))).sub
     ((hasDerivAt_id r).const_mul (Q^2))) using 1 <;> ring
 
+/-! ### Final phi-phi connection remainders -/
+
+def kerrPhiPhiRadialRemainder
+    (r M a Q θ : ℝ) : ℝ :=
+  -r * Delta r M a Q * (Real.sin θ)^2 / Sigma r a θ
+
+def kerrPhiPhiPolarRemainder
+    (r M a Q θ : ℝ) : ℝ :=
+  -a^2 * Real.cos θ * (Real.sin θ)^3 * kerrH r M Q /
+      (Sigma r a θ)^2 -
+    Real.cos θ * Real.sin θ * (r^2 + a^2) / Sigma r a θ
+
+/-- The radial phi-phi connection is forced by the t-phi connection plus one
+elementary square-form remainder. -/
+theorem kerrChristoffel_r_phiphi_relation
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    kerrChristoffel r M a Q θ 1 3 3 =
+      -a * (Real.sin θ)^2 *
+        kerrChristoffel r M a Q θ 1 0 3 +
+      kerrPhiPhiRadialRemainder r M a Q θ := by
+  rw [kerrChristoffel_eq_regular r M a Q θ hsig hdel,
+      kerrChristoffel_r_tphi r M a Q θ hsig hdel]
+  simp [kerrChristoffelRegular, kerrMetricInv,
+    kerrMetricDerivativeRegular, kerrMetricRadialDerivative,
+    kerrMetricPolarDerivative, kerrPhiPhiRadialRemainder,
+    kerrStationaryA]
+  field_simp [hsig, hdel]
+  ring
+
+/-- The polar phi-phi connection has the analogous forced decomposition. -/
+theorem kerrChristoffel_theta_phiphi_relation
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    kerrChristoffel r M a Q θ 2 3 3 =
+      -a * (Real.sin θ)^2 *
+        kerrChristoffel r M a Q θ 2 0 3 +
+      kerrPhiPhiPolarRemainder r M a Q θ := by
+  rw [kerrChristoffel_eq_regular r M a Q θ hsig hdel,
+      kerrChristoffel_theta_tphi r M a Q θ hsig hdel]
+  simp [kerrChristoffelRegular, kerrMetricInv,
+    kerrMetricDerivativeRegular, kerrMetricRadialDerivative,
+    kerrMetricPolarDerivative, kerrPhiPhiPolarRemainder, kerrH]
+  field_simp [hsig, hdel]
+  have htrig := Real.sin_sq_add_cos_sq θ
+  unfold Sigma
+  nlinarith
+
 /-! ### Stationary t-phi connection identities -/
 
 theorem kerrChristoffel_r_tphi
@@ -8907,6 +8968,45 @@ def kerrConnectionProductTrace
   ∑ ρ : Fin 4, ∑ σ : Fin 4,
     kerrChristoffel r M a Q θ σ μ ρ *
       kerrChristoffel r M a Q θ ρ ν σ
+
+/-- Numerator of the quadratic connection correction relating the phi-phi and t-phi
+Ricci blocks. -/
+def kerrConnectionProductTracePhiCorrectionNumerator
+    (r M a Q θ : ℝ) : ℝ :=
+  -M * a^4 * (Real.cos θ)^6 * r -
+    2 * M * a^4 * (Real.cos θ)^4 * r +
+    3 * M * a^4 * (Real.cos θ)^2 * r -
+    3 * M * a^2 * (Real.cos θ)^4 * r^3 +
+    4 * M * a^2 * (Real.cos θ)^2 * r^3 - M * a^2 * r^3 +
+    2 * M * (Real.cos θ)^2 * r^5 - 2 * M * r^5 +
+    Q^2 * a^4 * (Real.cos θ)^6 - Q^2 * a^4 * (Real.cos θ)^2 +
+    2 * Q^2 * a^2 * (Real.cos θ)^4 * r^2 -
+    3 * Q^2 * a^2 * (Real.cos θ)^2 * r^2 + Q^2 * a^2 * r^2 -
+    Q^2 * (Real.cos θ)^2 * r^4 + Q^2 * r^4 +
+    a^6 * (Real.cos θ)^6 + 3 * a^4 * (Real.cos θ)^4 * r^2 +
+    3 * a^2 * (Real.cos θ)^2 * r^4 + r^6
+
+/-- The quadratic phi-phi contraction is not independent of the t-phi contraction. -/
+theorem kerrConnectionProductTrace_phiphi_tphi_relation
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrConnectionProductTrace r M a Q θ 3 3 +
+        a * (Real.sin θ)^2 *
+          kerrConnectionProductTrace r M a Q θ 0 3 =
+      -2 * kerrConnectionProductTracePhiCorrectionNumerator r M a Q θ /
+        (Sigma r a θ)^3 := by
+  unfold kerrConnectionProductTrace
+  simp_rw [kerrChristoffel_eq_regular r M a Q θ hsig hdel]
+  simp [kerrChristoffelRegular, kerrMetricInv,
+    kerrMetricDerivativeRegular, kerrMetricRadialDerivative,
+    kerrMetricPolarDerivative]
+  unfold kerrConnectionProductTracePhiCorrectionNumerator
+  field_simp [hsig, hdel, hsin]
+  have htrig := Real.sin_sq_add_cos_sq θ
+  unfold Delta Sigma kerrH
+  nlinarith
 
 /-- Polynomial numerator of the quadratic connection contraction in R_tphi. -/
 def kerrConnectionProductTraceTPhiNumerator
@@ -9255,6 +9355,116 @@ theorem kerrChristoffelTracePartial_r_theta
   simpa using
     (kerrChristoffelTrace_theta_hasDerivAt_r
       r M a Q θ hsig hdel hsin).deriv
+
+/-! ### Final phi-phi derivative transfer -/
+
+theorem kerrPhiPhiRadialRemainder_hasDerivAt_r
+    (r M a Q θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    HasDerivAt
+      (fun x : ℝ => kerrPhiPhiRadialRemainder x M a Q θ)
+      ((Real.sin θ)^2 *
+        (-(Delta r M a Q + 2 * r * (r - M)) * Sigma r a θ +
+          2 * r^2 * Delta r M a Q) / (Sigma r a θ)^2) r := by
+  unfold kerrPhiPhiRadialRemainder
+  have hnum :
+      HasDerivAt
+        (fun x : ℝ => -x * Delta x M a Q * (Real.sin θ)^2)
+        (-(Delta r M a Q + 2 * r * (r - M)) * (Real.sin θ)^2) r := by
+    convert (((hasDerivAt_id r).mul
+      (Delta_hasDerivAt_r r M a Q)).neg.const_mul
+        ((Real.sin θ)^2)) using 1 <;> ring
+  have hreg := hnum.fun_div (Sigma_hasDerivAt_r r a θ) hsig
+  convert hreg using 1 <;> field_simp [hsig] <;> ring
+
+theorem kerrPhiPhiPolarRemainder_hasDerivAt_theta
+    (r M a Q θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    HasDerivAt
+      (fun x : ℝ => kerrPhiPhiPolarRemainder r M a Q x)
+      ((a^2 * kerrH r M Q * (Real.sin θ)^2 *
+          ((Real.sin θ)^2 - 3 * (Real.cos θ)^2) * Sigma r a θ -
+        4 * a^4 * kerrH r M Q * (Real.cos θ)^2 *
+          (Real.sin θ)^4) / (Sigma r a θ)^3 +
+       ((r^2 + a^2) * ((Real.sin θ)^2 - (Real.cos θ)^2) *
+          Sigma r a θ -
+        2 * a^2 * (r^2 + a^2) * (Real.cos θ)^2 *
+          (Real.sin θ)^2) / (Sigma r a θ)^2) θ := by
+  unfold kerrPhiPhiPolarRemainder
+  have hcs3 := (Real.hasDerivAt_cos θ).mul
+    ((Real.hasDerivAt_sin θ).pow 3)
+  have hnum1 := hcs3.const_mul (-a^2 * kerrH r M Q)
+  have hden2 := (Sigma_hasDerivAt_theta r a θ).pow 2
+  have hterm1 := hnum1.fun_div hden2 (pow_ne_zero 2 hsig)
+  have hcs := (Real.hasDerivAt_cos θ).mul (Real.hasDerivAt_sin θ)
+  have hnum2 := hcs.const_mul (-(r^2 + a^2))
+  have hterm2 := hnum2.fun_div (Sigma_hasDerivAt_theta r a θ) hsig
+  have hreg := hterm1.add hterm2
+  convert hreg using 1 <;> field_simp [hsig] <;> ring
+
+/-- Radial derivative relation for the last stationary connection coefficient. -/
+theorem kerrChristoffelPartial_r_phiphi_relation
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    kerrChristoffelPartial 1 r M a Q θ 1 3 3 =
+      -a * (Real.sin θ)^2 *
+        kerrChristoffelPartial 1 r M a Q θ 1 0 3 +
+      (Real.sin θ)^2 *
+        (-(Delta r M a Q + 2 * r * (r - M)) * Sigma r a θ +
+          2 * r^2 * Delta r M a Q) / (Sigma r a θ)^2 := by
+  have hbase := (kerrChristoffel_r_tphi_hasDerivAt_r
+    r M a Q θ hsig hdel).const_mul (-a * (Real.sin θ)^2)
+  have hrem := kerrPhiPhiRadialRemainder_hasDerivAt_r
+    r M a Q θ hsig
+  have hsum := hbase.add hrem
+  have hS := (Sigma_hasDerivAt_r r a θ).continuousAt.eventually_ne hsig
+  have hD := (Delta_hasDerivAt_r r M a Q).continuousAt.eventually_ne hdel
+  have heq :
+      (fun x : ℝ => kerrChristoffel x M a Q θ 1 3 3) =ᶠ[𝓝 r]
+        (fun x : ℝ => -a * (Real.sin θ)^2 *
+          kerrChristoffel x M a Q θ 1 0 3 +
+          kerrPhiPhiRadialRemainder x M a Q θ) := by
+    filter_upwards [hS, hD] with x hxS hxD
+    exact kerrChristoffel_r_phiphi_relation x M a Q θ hxS hxD
+  have hfinal := hsum.congr_of_eventuallyEq heq.symm
+  unfold kerrChristoffelPartial kerrCoordPartial
+  simpa using hfinal.deriv
+
+/-- Polar derivative relation for the last stationary connection coefficient. -/
+theorem kerrChristoffelPartial_theta_phiphi_relation
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    kerrChristoffelPartial 2 r M a Q θ 2 3 3 =
+      -a * (Real.sin θ)^2 *
+        kerrChristoffelPartial 2 r M a Q θ 2 0 3 -
+      2 * a * Real.sin θ * Real.cos θ *
+        kerrChristoffel r M a Q θ 2 0 3 +
+      ((a^2 * kerrH r M Q * (Real.sin θ)^2 *
+          ((Real.sin θ)^2 - 3 * (Real.cos θ)^2) * Sigma r a θ -
+        4 * a^4 * kerrH r M Q * (Real.cos θ)^2 *
+          (Real.sin θ)^4) / (Sigma r a θ)^3 +
+       ((r^2 + a^2) * ((Real.sin θ)^2 - (Real.cos θ)^2) *
+          Sigma r a θ -
+        2 * a^2 * (r^2 + a^2) * (Real.cos θ)^2 *
+          (Real.sin θ)^2) / (Sigma r a θ)^2) := by
+  have hf := ((Real.hasDerivAt_sin θ).pow 2).const_mul (-a)
+  have hg := kerrChristoffel_theta_tphi_hasDerivAt_theta
+    r M a Q θ hsig hdel
+  have hprod := hf.mul hg
+  have hrem := kerrPhiPhiPolarRemainder_hasDerivAt_theta
+    r M a Q θ hsig
+  have hsum := hprod.add hrem
+  have hS := (Sigma_hasDerivAt_theta r a θ).continuousAt.eventually_ne hsig
+  have heq :
+      (fun x : ℝ => kerrChristoffel r M a Q x 2 3 3) =ᶠ[𝓝 θ]
+        (fun x : ℝ => -a * (Real.sin x)^2 *
+          kerrChristoffel r M a Q x 2 0 3 +
+          kerrPhiPhiPolarRemainder r M a Q x) := by
+    filter_upwards [hS] with x hxS
+    exact kerrChristoffel_theta_phiphi_relation r M a Q x hxS hdel
+  have hfinal := hsum.congr_of_eventuallyEq heq.symm
+  unfold kerrChristoffelPartial kerrCoordPartial
+  convert hfinal.deriv using 1 <;> ring
 
 /-! ### Stationary t-phi second-derivative transfer -/
 
@@ -9902,6 +10112,39 @@ theorem kerrRicci_stationary_reduction
     simp [kerrCoordPartial, kerrStationarySign,
       kerrChristoffel_zero_of_odd_stationary] <;> ring
 
+/-- The final stationary Ricci component is algebraically tied to the already-closed
+t-phi component by the square-form metric. -/
+theorem kerrRicci_phiphi_plus_scaled_tphi
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrRicciCovFromMetric r M a Q θ 3 3 +
+        a * (Real.sin θ)^2 *
+          kerrRicciCovFromMetric r M a Q θ 0 3 =
+      Q^2 * (Real.sin θ)^2 * (r^2 + a^2) / (Sigma r a θ)^2 := by
+  rw [kerrRicci_stationary_reduction r M a Q θ 3 3
+        (Or.inr rfl) (Or.inr rfl),
+      kerrRicci_stationary_reduction r M a Q θ 0 3
+        (Or.inl rfl) (Or.inr rfl),
+      kerrChristoffelPartial_r_phiphi_relation r M a Q θ hsig hdel,
+      kerrChristoffelPartial_theta_phiphi_relation r M a Q θ hsig hdel,
+      kerrChristoffel_r_phiphi_relation r M a Q θ hsig hdel,
+      kerrChristoffel_theta_phiphi_relation r M a Q θ hsig hdel,
+      kerrChristoffelPartial_r_tphi r M a Q θ hsig hdel,
+      kerrChristoffelPartial_theta_tphi r M a Q θ hsig hdel,
+      kerrChristoffel_theta_tphi r M a Q θ hsig hdel,
+      kerrChristoffelTrace_r r M a Q θ hsig hdel hsin,
+      kerrChristoffelTrace_theta r M a Q θ hsig hdel hsin,
+      kerrConnectionProductTrace_phiphi_tphi_relation
+        r M a Q θ hsig hdel hsin]
+  unfold kerrPhiPhiRadialRemainder kerrPhiPhiPolarRemainder
+    kerrConnectionProductTracePhiCorrectionNumerator kerrStationaryA kerrH
+  field_simp [hsig, hdel, hsin]
+  have htrig := Real.sin_sq_add_cos_sq θ
+  unfold Delta Sigma
+  nlinarith
+
 theorem kerrRicci_tphi_reduction
     (r M a Q θ : ℝ) :
     kerrRicciCovFromMetric r M a Q θ 0 3 =
@@ -10424,6 +10667,38 @@ def kerrEinsteinTargetRicciCoordinate
       Sigma r a θ
   else 0
 
+
+/-- The last Kerr-Newman Ricci component is forced by the square-form relation and the
+already-derived t-phi equation. -/
+theorem kerrRicci_phiphi_eq_target
+    (Q r M a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrRicciCovFromMetric r M a Q θ 3 3 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 3 3 := by
+  have hrel := kerrRicci_phiphi_plus_scaled_tphi
+    r M a Q θ hsig hdel hsin
+  rw [kerrRicci_tphi_eq_target Q r M a θ hsig hdel hsin] at hrel
+  simp [kerrEinsteinTargetRicciCoordinate, kerrRicciScale] at hrel ⊢
+  field_simp [hsig] at hrel ⊢
+  have htrig := Real.sin_sq_add_cos_sq θ
+  unfold Delta Sigma at hrel ⊢
+  nlinarith
+
+/-- The full Boyer-Lindquist Ricci tensor is now machine-reduced to the
+Einstein-Maxwell target on the regular chart. -/
+theorem kerrRicci_full_eq_target
+    (Q r M a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    ∀ i j : Fin 4,
+      kerrRicciCovFromMetric r M a Q θ i j =
+        kerrEinsteinTargetRicciCoordinate Q r M a θ i j := by
+  apply (kerrFullRicciEquation_iff_one_obligation
+    Q r M a θ hsig hdel hsin).2
+  exact kerrRicci_phiphi_eq_target Q r M a θ hsig hdel hsin
 
 /-- The t-phi Ricci component is derived directly from the metric and equals the
 Maxwell-forced Einstein target. -/
