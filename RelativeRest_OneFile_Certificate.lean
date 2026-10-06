@@ -8673,6 +8673,64 @@ theorem principalCarrierCharacteristic_clock_chain
     principalCarrierCharacteristic_globalLocal_pullback D,
     principalCarrierCharacteristic_normalizationBridge D⟩
 
+
+/-- Strongest single theorem currently available for the field-derived core:
+the nonzero Maxwell field fixes the unique relative solution point, its first normal
+derivative is the field jet, that jet obeys Rainich, all intrinsic clock rates coincide,
+and the characteristic clock descends uniquely to the normalized principal timelike line. -/
+theorem principalField_forced_core_chain
+    (D : PrincipalCarrierCharacteristicInput (P:=P))
+    (u s : ℝ) :
+    ((8 * Real.pi * principalFieldEnergyDensity D.E D.B =
+        8 * Real.pi *
+          maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+          principalFieldEnergyDensity D.E D.B) ↔
+        s = 0) ∧
+    deriv (principalScaledResidualFromF D.E D.B 0 0) 0 =
+      principalJetFromF D.E D.B 0 0 ∧
+    (∀ i j : Fin 4,
+      (∑ k : Fin 4,
+        principalJetFromF D.E D.B i k *
+          principalJetFromF D.E D.B k j) =
+        (principalChi D.E D.B)^2 *
+          (if i = j then 1 else 0)) ∧
+    (principalClockRate D.E D.B =
+        4 * Real.sqrt
+          (Real.pi * principalFieldEnergyDensity D.E D.B) ∧
+     principalClockRate D.E D.B =
+        Real.sqrt
+          (Real.sqrt
+            ((maxwellI D.E D.B)^2 +
+              (maxwellJ D.E D.B)^2)) ∧
+     principalClockRate D.E D.B =
+        Real.sqrt
+          (Real.sqrt
+            (principalRicciNormFromCarrier
+              (principalChi D.E D.B)))) ∧
+    (D.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+     Module.finrank ℝ
+       (D.toCharacteristicCurrentData.K ⧸
+         LinearMap.ker D.toCharacteristicCurrentData.Lambda) = 1 ∧
+     (quotientClockCovector principalTOLinear).comp
+       (globalToPrincipalLocalClockMap
+         D.toCharacteristicCurrentData.Lambda) =
+       D.toCharacteristicCurrentData.clockCovector ∧
+     principalLocalLift
+       (globalToPrincipalLocalClockMap
+         D.toCharacteristicCurrentData.Lambda
+         (globalClockQuotientUnit
+           D.toCharacteristicCurrentData.Lambda
+           (principalCarrierCharacteristic_Lambda_nonzero D))) =
+       principalUhat) := by
+  refine ⟨principalField_solution_preserving_iff
+      u s D.E D.B D.field_nonzero,
+    principalScaledResidualFromF_deriv_zero D.E D.B 0 0,
+    ?_,
+    principalClockRate_three_way D.E D.B,
+    principalCarrierCharacteristic_clock_chain D⟩
+  intro i j
+  exact principalJetFromF_rainich D.E D.B i j
+
 end FullyFieldDerivedCharacteristic
 
 /-! ### Maxwell field-derived positivity for a current-first interface -/
@@ -9006,6 +9064,7 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check principalField_forced_core_chain
 #check kerr_metric_det_eq_scalar
 #check kerrVolumeDensity_sq
 #check kerrVolumeDensity_eq_sqrt_neg_det
@@ -9613,6 +9672,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalStressResponse_pos
 #print axioms RelativeRest.principalCarrierCharacteristic_quotient_finrank_one
 #print axioms RelativeRest.principalCarrierCharacteristic_clock_chain
+#print axioms RelativeRest.principalField_forced_core_chain
 #print axioms RelativeRest.principalFieldCurrent_Lambda_unique
 #print axioms RelativeRest.principalFieldCurrent_quotient_finrank_one
 #print axioms RelativeRest.reeb_direction_unique
