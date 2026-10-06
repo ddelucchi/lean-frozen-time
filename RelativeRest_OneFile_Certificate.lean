@@ -1029,6 +1029,51 @@ theorem principalStress_sq (u : ℝ) (i j : Fin 4) :
   fin_cases i <;> fin_cases j <;>
     simp [principalStress] <;> ring
 
+
+/-- Action of the principal mixed Maxwell stress endomorphism on a vector. -/
+def principalStressApply (u : ℝ) (v : Fin 4 → ℝ) (i : Fin 4) : ℝ :=
+  ∑ j : Fin 4, principalStress u i j * v j
+
+/-- The principal timelike direction is an eigenvector with eigenvalue `-u`. -/
+theorem principalStress_time_eigen (u : ℝ) :
+    principalStressApply u (principalBasis 0) =
+      (-u) • principalBasis 0 := by
+  funext i
+  fin_cases i <;> simp [principalStressApply, principalStress, principalBasis]
+
+/-- The principal longitudinal spacelike direction carries the same mixed eigenvalue. -/
+theorem principalStress_space_eigen (u : ℝ) :
+    principalStressApply u (principalBasis 1) =
+      (-u) • principalBasis 1 := by
+  funext i
+  fin_cases i <;> simp [principalStressApply, principalStress, principalBasis]
+
+/-- Einstein-Maxwell identifies the positive principal stress magnitude with `χ/(16π)`. -/
+def principalEnergyDensity (χ : ℝ) : ℝ :=
+  χ / (16 * Real.pi)
+
+/-- The timelike principal Maxwell eigenvalue is therefore exactly `-χ/(16π)`. -/
+theorem principalMaxwell_timelike_eigen_from_chi (χ : ℝ) :
+    principalStressApply (principalEnergyDensity χ) (principalBasis 0) =
+      (-χ / (16 * Real.pi)) • principalBasis 0 := by
+  rw [principalStress_time_eigen]
+  congr 1
+  unfold principalEnergyDensity
+  ring
+
+/-- Positive carrier magnitude forces positive principal electromagnetic energy density. -/
+theorem principalEnergyDensity_pos
+    (χ : ℝ) (hχ : 0 < χ) :
+    0 < principalEnergyDensity χ := by
+  unfold principalEnergyDensity
+  positivity
+
+/-- And the carrier is recovered exactly from that energy density. -/
+theorem principalEnergyDensity_recovers_chi (χ : ℝ) :
+    16 * Real.pi * principalEnergyDensity χ = χ := by
+  unfold principalEnergyDensity
+  field_simp [ne_of_gt Real.pi_pos]
+
 /-- Trace of the squared principal endomorphism. -/
 def principalStressTraceSq (u : ℝ) : ℝ :=
   ∑ i : Fin 4, ∑ k : Fin 4,
@@ -4401,6 +4446,11 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check principalStress_time_eigen
+#check principalStress_space_eigen
+#check principalMaxwell_timelike_eigen_from_chi
+#check principalEnergyDensity_pos
+#check principalEnergyDensity_recovers_chi
 #check principalRicciNormFromCarrier_eq
 #check kerrRicciNormScalar
 #check kerrRicciNormScalar_formula
@@ -4698,6 +4748,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.rescaled_solution_preserving_iff
 #print axioms RelativeRest.characteristic_half_contraction_from_relative_scaling
 #print axioms RelativeRest.principalLocalClockRatio_forced
+#print axioms RelativeRest.principalMaxwell_timelike_eigen_from_chi
 #print axioms RelativeRest.defect_from_on_shell_equation
 #print axioms RelativeRest.scaledResidual_first_jet_eq_minus_two_ricci_from_EM
 #print axioms RelativeRest.boost_balance_exists_unique_of_nonnull
