@@ -13329,6 +13329,136 @@ theorem principalLagrangianCharacteristic_clock_chain
     principalLagrangianCharacteristic_iwCurrent_eq_characteristicCurrent D,
     hL, hdim, hpull, hnorm⟩
 
+/-! ### First-variation-backed characteristic clock: no primitive Iyer-Wald identity -/
+
+/-- Stronger covariant-phase-space input.  The Iyer-Wald operator identity is not
+supplied: it is derived from the first-variation/Cartan/Noether data in `variation`. -/
+structure PrincipalFirstVariationCharacteristicInput where
+  carrier : PrincipalCarrierCharacteristicInput (P:=P)
+  LG : L
+  LM : L
+  variation : FirstVariationNoetherOperators
+    (L:=L) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ))
+  constraintGravity :
+    variation.constraint LG =
+      stressResponse LinearMap.id carrier.T carrier.iε
+  constraintMaxwell :
+    variation.constraint LM =
+      -(stressResponse LinearMap.id carrier.T carrier.iε)
+
+/-- The older Lagrangian/Iyer-Wald package is reconstructed canonically from the
+first-variation data. -/
+def PrincipalFirstVariationCharacteristicInput.toLagrangianInput
+    (D : PrincipalFirstVariationCharacteristicInput (P:=P) (L:=L)) :
+    PrincipalLagrangianCharacteristicInput (P:=P) (L:=L) where
+  carrier := D.carrier
+  LG := D.LG
+  LM := D.LM
+  iw := D.variation.toLagrangianIyerWaldOperators
+  constraintGravity := by
+    simpa [FirstVariationNoetherOperators.toLagrangianIyerWaldOperators] using
+      D.constraintGravity
+  constraintMaxwell := by
+    simpa [FirstVariationNoetherOperators.toLagrangianIyerWaldOperators] using
+      D.constraintMaxwell
+
+/-- Characteristic current obtained directly from the first-variation-derived
+covariant-phase-space operator. -/
+def PrincipalFirstVariationCharacteristicInput.characteristicCurrent
+    (D : PrincipalFirstVariationCharacteristicInput (P:=P) (L:=L)) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
+  D.toLagrangianInput.iwCharacteristicCurrent
+
+/-- The current is forced to be the explicit Maxwell stress response without an
+independent Iyer-Wald identity hypothesis. -/
+theorem principalFirstVariationCharacteristic_current_eq_stress
+    (D : PrincipalFirstVariationCharacteristicInput (P:=P) (L:=L)) :
+    D.characteristicCurrent =
+      stressResponse LinearMap.id D.carrier.T D.carrier.iε := by
+  exact principalLagrangianCharacteristic_iwCurrent_eq_stress
+    D.toLagrangianInput
+
+/-- Hence it is exactly the field-derived current defining the characteristic
+quotient and clock covector. -/
+theorem principalFirstVariationCharacteristic_current_eq_characteristicCurrent
+    (D : PrincipalFirstVariationCharacteristicInput (P:=P) (L:=L)) :
+    D.characteristicCurrent =
+      D.carrier.toCharacteristicCurrentData.current := by
+  exact principalLagrangianCharacteristic_iwCurrent_eq_characteristicCurrent
+    D.toLagrangianInput
+
+/-- The derived current is nonzero by the explicit Maxwell positivity witness. -/
+theorem principalFirstVariationCharacteristic_current_nonzero
+    (D : PrincipalFirstVariationCharacteristicInput (P:=P) (L:=L)) :
+    D.characteristicCurrent ≠ 0 := by
+  exact principalLagrangianCharacteristic_iwCurrent_nonzero
+    D.toLagrangianInput
+
+/-- End-to-end covariant-phase-space clock certificate sourced one logical layer
+earlier than Iyer-Wald: first variation + Cartan + Noether decomposition imply the
+unique compensated current, which equals the Maxwell current and forces the same
+one-dimensional normalized clock line. -/
+theorem principalFirstVariationCharacteristic_clock_chain
+    (D : PrincipalFirstVariationCharacteristicInput (P:=P) (L:=L)) :
+    D.characteristicCurrent =
+        D.carrier.toCharacteristicCurrentData.current ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    (quotientClockCovector principalTOLinear).comp
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda) =
+      D.carrier.toCharacteristicCurrentData.clockCovector ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat := by
+  exact principalLagrangianCharacteristic_clock_chain
+    D.toLagrangianInput
+
+/-- Strongest combined field/current statement with no primitive Iyer-Wald identity:
+the Maxwell field fixes the relative solution, carrier, Rainich structure, clock rate,
+and the first-variation-derived characteristic current fixes the normalized clock line. -/
+theorem principalFirstVariation_forced_core_chain
+    (D : PrincipalFirstVariationCharacteristicInput (P:=P) (L:=L))
+    (u s : ℝ) :
+    ((8 * Real.pi * principalFieldEnergyDensity D.carrier.E D.carrier.B =
+        8 * Real.pi *
+          maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+          principalFieldEnergyDensity D.carrier.E D.carrier.B) ↔ s = 0) ∧
+    deriv (principalScaledResidualFromF
+      D.carrier.E D.carrier.B 0 0) 0 =
+      principalJetFromF D.carrier.E D.carrier.B 0 0 ∧
+    (∀ i j : Fin 4,
+      (∑ k : Fin 4,
+        principalJetFromF D.carrier.E D.carrier.B i k *
+          principalJetFromF D.carrier.E D.carrier.B k j) =
+        (principalChi D.carrier.E D.carrier.B)^2 *
+          (if i = j then 1 else 0)) ∧
+    D.characteristicCurrent =
+      D.carrier.toCharacteristicCurrentData.current ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat := by
+  rcases principalField_forced_core_chain D.carrier u s with
+    ⟨hrest, hjet, hrainich, _hrates, hclock⟩
+  rcases hclock with ⟨hL, hdim, _hpull, hnorm⟩
+  exact ⟨hrest, hjet, hrainich,
+    principalFirstVariationCharacteristic_current_eq_characteristicCurrent D,
+    hL, hdim, hnorm⟩
+
 end LagrangianBackedCharacteristic
 
 end FullyFieldDerivedCharacteristic
