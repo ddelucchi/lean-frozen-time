@@ -803,6 +803,177 @@ theorem mino_clock_identity
 theorem sigma_reissner_nordstrom (r θ : ℝ) : Sigma r 0 θ = r^2 := by
   simp [Sigma]
 
+
+/-! ## 17A. Deepening pass: remove algebraic interface assumptions -/
+
+/-- Tensor/module version of the solution-preserving fixed-point argument. -/
+theorem solution_preserving_fixed_point_module
+    {V : Type*} [AddCommGroup V] [Module ℝ V] [NoZeroSMulDivisors ℝ V]
+    (T : V) (s : ℝ) (hT : T ≠ 0)
+    (h : T = Real.exp (2 * s) • T) : s = 0 := by
+  have hz : (1 - Real.exp (2 * s)) • T = 0 := by
+    rw [sub_smul, one_smul, h]
+    simp
+  have hscalar : (1 : ℝ) - Real.exp (2 * s) = 0 := by
+    exact (smul_eq_zero.mp hz).resolve_right hT
+  have hexp : Real.exp (2 * s) = 1 := by linarith
+  exact (exp_two_eq_one_iff s).mp hexp
+
+/-- The advertised balancing rapidity is an actual root whenever both null components are nonzero. -/
+theorem sigmaStar_is_root
+    (qm qp : ℝ) (hqm : qm ≠ 0) (hqp : qp ≠ 0) :
+    boostDefect qm qp (sigmaStar qm qp) = 0 := by
+  have hdiv : qm / qp ≠ 0 := div_ne_zero hqm hqp
+  have habs : 0 < |qm / qp| := abs_pos.mpr hdiv
+  have hexp : Real.exp (2 * sigmaStar qm qp) = |qm / qp| := by
+    unfold sigmaStar
+    rw [show 2 * ((1 / 2 : ℝ) * Real.log |qm / qp|) = Real.log |qm / qp| by ring]
+    exact Real.exp_log habs
+  have hexpn : Real.exp (-2 * sigmaStar qm qp) = (|qm / qp|)⁻¹ := by
+    rw [Real.exp_neg, hexp]
+  unfold boostDefect
+  rw [hexp, hexpn]
+  have habs0 : |qm / qp| ≠ 0 := ne_of_gt habs
+  field_simp [habs0]
+  rw [sq_abs, div_pow]
+  field_simp [hqp]
+  ring
+
+/-- Existence and uniqueness of the balanced rapidity. -/
+theorem boost_balance_exists_unique
+    (qm qp : ℝ) (hqm : qm ≠ 0) (hqp : qp ≠ 0) :
+    ∃! σ : ℝ, boostDefect qm qp σ = 0 := by
+  refine ⟨sigmaStar qm qp, sigmaStar_is_root qm qp hqm hqp, ?_⟩
+  intro τ hτ
+  exact boost_balance_unique qm qp τ (sigmaStar qm qp) hqm hqp hτ
+    (sigmaStar_is_root qm qp hqm hqp)
+
+/-- Full uniqueness of the carrier-algebraic conformal factor in the stated zeroth-order category. -/
+theorem unique_carrier_algebraic_conformal_factor
+    (f : ℝ → ℝ)
+    (hhom : ∀ c χ : ℝ, 0 < c → 0 < χ → f (c * χ) = c * f χ)
+    (hpos : ∀ χ : ℝ, 0 < χ → 0 < f χ)
+    (χ : ℝ) (hχ : 0 < χ)
+    (hunit : χ^2 / (f χ)^2 = 1) :
+    f χ = χ := by
+  have hlin : f χ = f 1 * χ :=
+    homogeneous_conformal_factor f hhom χ hχ
+  have hCpos : 0 < f 1 := hpos 1 (by norm_num)
+  have hunit' : χ^2 / (f 1 * χ)^2 = 1 := by
+    simpa [hlin] using hunit
+  have hC : f 1 = 1 :=
+    unit_involution_fixes_conformal_constant (f 1) χ hCpos hχ hunit'
+  rw [hlin, hC, one_mul]
+
+section StrongQuotient
+variable {K : Type*} [AddCommGroup K] [Module ℝ K]
+
+/-- A nonzero real covector canonically identifies the quotient by its kernel with the real line. -/
+noncomputable def clockQuotientEquivReal
+    (Λ : K →ₗ[ℝ] ℝ) (hΛ : Λ ≠ 0) :
+    (K ⧸ LinearMap.ker Λ) ≃ₗ[ℝ] ℝ :=
+  clockQuotientEquivRange Λ ≪≫ₗ
+    LinearEquiv.ofEq _ _ (range_eq_top_of_nonzero Λ hΛ) ≪≫ₗ
+    Submodule.topEquiv
+end StrongQuotient
+
+/-! ### General Maxwell Rainich identity, without first choosing a principal frame -/
+
+def emEnergy (e1 e2 e3 b1 b2 b3 : ℝ) : ℝ :=
+  (e1^2 + e2^2 + e3^2 + b1^2 + b2^2 + b3^2) / 2
+
+def emPoynting1 (e1 e2 e3 b1 b2 b3 : ℝ) : ℝ := e2*b3 - e3*b2
+def emPoynting2 (e1 e2 e3 b1 b2 b3 : ℝ) : ℝ := e3*b1 - e1*b3
+def emPoynting3 (e1 e2 e3 b1 b2 b3 : ℝ) : ℝ := e1*b2 - e2*b1
+
+/-- Mixed Maxwell stress endomorphism with the conventional overall 1/(4 pi) removed. -/
+def emMixed
+    (e1 e2 e3 b1 b2 b3 : ℝ) (i j : Fin 4) : ℝ :=
+  let u := emEnergy e1 e2 e3 b1 b2 b3
+  let s1 := emPoynting1 e1 e2 e3 b1 b2 b3
+  let s2 := emPoynting2 e1 e2 e3 b1 b2 b3
+  let s3 := emPoynting3 e1 e2 e3 b1 b2 b3
+  if i = 0 then
+    if j = 0 then -u else
+    if j = 1 then s1 else
+    if j = 2 then s2 else s3
+  else if i = 1 then
+    if j = 0 then -s1 else
+    if j = 1 then u - e1^2 - b1^2 else
+    if j = 2 then -e1*e2 - b1*b2 else -e1*e3 - b1*b3
+  else if i = 2 then
+    if j = 0 then -s2 else
+    if j = 1 then -e2*e1 - b2*b1 else
+    if j = 2 then u - e2^2 - b2^2 else -e2*e3 - b2*b3
+  else
+    if j = 0 then -s3 else
+    if j = 1 then -e3*e1 - b3*b1 else
+    if j = 2 then -e3*e2 - b3*b2 else u - e3^2 - b3^2
+
+def emRainichScalar (e1 e2 e3 b1 b2 b3 : ℝ) : ℝ :=
+  ((b1^2 + b2^2 + b3^2 - (e1^2 + e2^2 + e3^2))^2 +
+    4 * (e1*b1 + e2*b2 + e3*b3)^2) / 4
+
+/-- Full Maxwell Rainich identity in arbitrary orthonormal-frame electric/magnetic components. -/
+theorem emMixed_rainich_square
+    (e1 e2 e3 b1 b2 b3 : ℝ) (i j : Fin 4) :
+    (∑ k : Fin 4,
+      emMixed e1 e2 e3 b1 b2 b3 i k *
+      emMixed e1 e2 e3 b1 b2 b3 k j) =
+      (if i = j then emRainichScalar e1 e2 e3 b1 b2 b3 else 0) := by
+  fin_cases i <;> fin_cases j <;>
+    simp [emMixed, emEnergy, emPoynting1, emPoynting2, emPoynting3,
+      emRainichScalar] <;> ring
+
+theorem emRainichScalar_nonneg
+    (e1 e2 e3 b1 b2 b3 : ℝ) :
+    0 ≤ emRainichScalar e1 e2 e3 b1 b2 b3 := by
+  unfold emRainichScalar
+  positivity
+
+/-- The Rainich scalar vanishes exactly on the null electromagnetic invariant locus. -/
+theorem emRainichScalar_eq_zero_iff
+    (e1 e2 e3 b1 b2 b3 : ℝ) :
+    emRainichScalar e1 e2 e3 b1 b2 b3 = 0 ↔
+      (b1^2 + b2^2 + b3^2 = e1^2 + e2^2 + e3^2 ∧
+       e1*b1 + e2*b2 + e3*b3 = 0) := by
+  unfold emRainichScalar
+  constructor
+  · intro h
+    have h1 : 0 ≤
+        (b1^2 + b2^2 + b3^2 - (e1^2 + e2^2 + e3^2))^2 :=
+      sq_nonneg _
+    have h2 : 0 ≤ (e1*b1 + e2*b2 + e3*b3)^2 := sq_nonneg _
+    constructor <;> nlinarith
+  · rintro ⟨h1,h2⟩
+    rw [h1, h2]
+    ring
+
+/-- A non-null electromagnetic field has strictly positive Rainich scalar. -/
+theorem emRainichScalar_pos_of_nonnull
+    (e1 e2 e3 b1 b2 b3 : ℝ)
+    (hn : ¬ (b1^2 + b2^2 + b3^2 = e1^2 + e2^2 + e3^2 ∧
+      e1*b1 + e2*b2 + e3*b3 = 0)) :
+    0 < emRainichScalar e1 e2 e3 b1 b2 b3 := by
+  have hnonneg := emRainichScalar_nonneg e1 e2 e3 b1 b2 b3
+  have hne : emRainichScalar e1 e2 e3 b1 b2 b3 ≠ 0 := by
+    intro hz
+    exact hn ((emRainichScalar_eq_zero_iff e1 e2 e3 b1 b2 b3).mp hz)
+  exact lt_of_le_of_ne hnonneg (Ne.symm hne)
+
+/-- Clock translation leaves the derivative generator unchanged. -/
+theorem relational_evolution_translation
+    (F : ℝ → ℝ) (T θ v : ℝ)
+    (hF : HasDerivAt F v (θ - T)) :
+    HasDerivAt (fun ϑ : ℝ => F (ϑ - T)) v θ := by
+  simpa using hF.comp_sub_const θ T
+
+theorem relational_evolution_deriv
+    (F : ℝ → ℝ) (T θ v : ℝ)
+    (hF : HasDerivAt F v (θ - T)) :
+    deriv (fun ϑ : ℝ => F (ϑ - T)) θ = v :=
+  (relational_evolution_translation F T θ v hF).deriv
+
 /-! ## 18. Explicit hypothesis interfaces for the still-unformalized geometric layers
 
 These are *not axioms*. They are structures passed explicitly to theorems.  The final first-principles
