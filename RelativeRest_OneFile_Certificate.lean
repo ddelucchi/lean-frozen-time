@@ -8460,6 +8460,66 @@ def kerrEinsteinTargetRicciCov
       kerrCoframe r M a Q θ A i *
       kerrCoframe r M a Q θ A j
 
+/-- Explicit Boyer-Lindquist components of the field-forced Ricci target. -/
+def kerrEinsteinTargetRicciCoordinate
+    (Q r M a θ : ℝ) (i j : Fin 4) : ℝ :=
+  if i = 0 ∧ j = 0 then
+    kerrRicciScale Q r a θ *
+      (Delta r M a Q + a^2 * (Real.sin θ)^2) /
+      Sigma r a θ
+  else if (i = 0 ∧ j = 3) ∨ (i = 3 ∧ j = 0) then
+    -kerrRicciScale Q r a θ * a * (Real.sin θ)^2 *
+      (Delta r M a Q + (r^2 + a^2)) /
+      Sigma r a θ
+  else if i = 1 ∧ j = 1 then
+    -kerrRicciScale Q r a θ *
+      Sigma r a θ / Delta r M a Q
+  else if i = 2 ∧ j = 2 then
+    kerrRicciScale Q r a θ * Sigma r a θ
+  else if i = 3 ∧ j = 3 then
+    kerrRicciScale Q r a θ * (Real.sin θ)^2 *
+      (a^2 * Delta r M a Q * (Real.sin θ)^2 +
+        (r^2 + a^2)^2) /
+      Sigma r a θ
+  else 0
+
+/-- The coframe-defined Einstein-Maxwell Ricci target is exactly the explicit coordinate tensor. -/
+theorem kerrEinsteinTargetRicciCov_eq_coordinate
+    (Q r M a θ : ℝ)
+    (hsig : 0 < Sigma r a θ)
+    (hdel : 0 < Delta r M a Q)
+    (i j : Fin 4) :
+    kerrEinsteinTargetRicciCov Q r M a θ i j =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ i j := by
+  have hS0 : Sigma r a θ ≠ 0 := ne_of_gt hsig
+  have hD0 : Delta r M a Q ≠ 0 := ne_of_gt hdel
+  have hSD : 0 < Sigma r a θ * Delta r M a Q :=
+    mul_pos hsig hdel
+  have hSD0 :
+      Real.sqrt (Sigma r a θ * Delta r M a Q) ≠ 0 :=
+    ne_of_gt (Real.sqrt_pos.2 hSD)
+  have hSqrtS0 :
+      Real.sqrt (Sigma r a θ) ≠ 0 :=
+    ne_of_gt (Real.sqrt_pos.2 hsig)
+  have hSDsq :
+      (Real.sqrt (Sigma r a θ * Delta r M a Q))^2 =
+        Sigma r a θ * Delta r M a Q :=
+    Real.sq_sqrt (le_of_lt hSD)
+  have hSsq :
+      (Real.sqrt (Sigma r a θ))^2 =
+        Sigma r a θ :=
+    Real.sq_sqrt (le_of_lt hsig)
+  fin_cases i <;> fin_cases j <;>
+    simp [kerrEinsteinTargetRicciCov,
+      kerrEinsteinTargetRicciCoordinate,
+      kerrRicciFrameCovCoeff, kerrCoframe,
+      kerrCoframe0, kerrCoframe1, kerrCoframe2, kerrCoframe3,
+      stationaryCovectorLift, kerrTemporalOneFormCoeffs,
+      kerrAxialOneFormCoeffs, principalBasis,
+      hS0, hD0, hSD0, hSqrtS0] <;>
+    field_simp [hS0, hD0, hSD0, hSqrtS0] <;>
+    nlinarith
+
 /-- Coordinate trace of the field-forced Ricci target. -/
 def kerrEinsteinTargetRicciTrace
     (Q r M a θ : ℝ) : ℝ :=
@@ -10300,6 +10360,8 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check kerrEinsteinTargetRicciCoordinate
+#check kerrEinsteinTargetRicciCov_eq_coordinate
 #check kerrMetricDerivativeRegular
 #check kerrMetricPartial_eq_regular
 #check kerrChristoffelRegular
@@ -11000,6 +11062,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrChristoffel_lower_symmetric
 #print axioms RelativeRest.kerrCoframe_orthonormal
 #print axioms RelativeRest.kerrEinsteinTargetRicci_trace_zero
+#print axioms RelativeRest.kerrEinsteinTargetRicciCov_eq_coordinate
 #print axioms RelativeRest.kerrEinsteinTargetRicci_frame_norm_formula
 #print axioms RelativeRest.kerrEinsteinTarget_frame_equation
 #print axioms RelativeRest.kerrVolumeDensity_eq_sqrt_neg_det
