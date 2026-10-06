@@ -2753,6 +2753,86 @@ and its stress response are supplied.  These theorems are directly reusable when
 Einstein–Maxwell current is formalized.
 -/
 
+/-! ### Carrier-current bridge forced by the Einstein-Maxwell jet -/
+
+section CarrierCurrentBridge
+
+variable {V W : Type*}
+  [AddCommGroup V] [Module ℝ V]
+  [AddCommGroup W] [Module ℝ W]
+
+/-- Pointwise compensated current constructed from the fixed-point carrier:
+`w_Y=(8π)⁻¹ i_{J(v)} ε`.  The map `iε` abstracts contraction with the oriented volume form. -/
+def carrierJetCurrent
+    (J : V →ₗ[ℝ] V)
+    (iε : V →ₗ[ℝ] W) :
+    V →ₗ[ℝ] W :=
+  (1 / (8 * Real.pi)) • (iε.comp J)
+
+/-- Stress-current form appearing on the other side of the bridge. -/
+def stressBridgeCurrent
+    (T : V →ₗ[ℝ] V)
+    (iε : V →ₗ[ℝ] W) :
+    V →ₗ[ℝ] W :=
+  (-2 : ℝ) • (iε.comp T)
+
+/-- The field-equation jet `J=-16πT` forces the two pointwise current formulas to be
+identical.  No independent normalization or sign remains. -/
+theorem carrierJetCurrent_eq_stressBridgeCurrent
+    (J T : V →ₗ[ℝ] V)
+    (iε : V →ₗ[ℝ] W)
+    (hJ : J = (-16 * Real.pi) • T) :
+    carrierJetCurrent J iε =
+      stressBridgeCurrent T iε := by
+  ext v
+  rw [hJ]
+  simp [carrierJetCurrent, stressBridgeCurrent]
+  field_simp [ne_of_gt Real.pi_pos]
+  ring
+
+/-- Abstract hypersurface integral of the unscaled stress current. -/
+def stressResponse
+    (integrate : W →ₗ[ℝ] ℝ)
+    (T : V →ₗ[ℝ] V)
+    (iε : V →ₗ[ℝ] W) :
+    V →ₗ[ℝ] ℝ :=
+  integrate.comp (iε.comp T)
+
+/-- Integrated compensated carrier current. -/
+def carrierBulkResponse
+    (integrate : W →ₗ[ℝ] ℝ)
+    (J : V →ₗ[ℝ] V)
+    (iε : V →ₗ[ℝ] W) :
+    V →ₗ[ℝ] ℝ :=
+  integrate.comp (carrierJetCurrent J iε)
+
+/-- Hypersurface integration preserves the forced bridge:
+`∫W_Y=-2 ell`. -/
+theorem carrierBulkResponse_eq_minus_two_stressResponse
+    (integrate : W →ₗ[ℝ] ℝ)
+    (J T : V →ₗ[ℝ] V)
+    (iε : V →ₗ[ℝ] W)
+    (hJ : J = (-16 * Real.pi) • T) :
+    carrierBulkResponse integrate J iε =
+      (-2 : ℝ) • stressResponse integrate T iε := by
+  ext v
+  unfold carrierBulkResponse stressResponse
+  rw [carrierJetCurrent_eq_stressBridgeCurrent J T iε hJ]
+  simp [stressBridgeCurrent]
+
+/-- Scalar evaluation version of the pointwise bridge, useful for direct comparison with
+the manuscript's component formula. -/
+theorem carrier_bridge_scalar
+    (J T volumeCoeff ξCoeff : ℝ)
+    (hJ : J = -16 * Real.pi * T) :
+    (1 / (8 * Real.pi)) * volumeCoeff * J * ξCoeff =
+      -2 * volumeCoeff * T * ξCoeff := by
+  rw [hJ]
+  field_simp [ne_of_gt Real.pi_pos]
+  ring
+
+end CarrierCurrentBridge
+
 /-! ### Boundary-compensated Iyer-Wald sign algebra -/
 
 /-- Common-character-removed relative constraint residual when the gravity and Maxwell
@@ -6505,6 +6585,9 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check carrierJetCurrent_eq_stressBridgeCurrent
+#check carrierBulkResponse_eq_minus_two_stressResponse
+#check carrier_bridge_scalar
 #check covectorWedge4_smul_smul
 #check kerrCoordinateField_components
 #check kerrCoordinateField_eq_CarterCoframe
@@ -6937,6 +7020,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.scalar_backbone_from_einstein_maxwell
 #print axioms RelativeRest.rescaled_solution_preserving_iff
 #print axioms RelativeRest.characteristic_half_contraction_from_relative_scaling
+#print axioms RelativeRest.carrierJetCurrent_eq_stressBridgeCurrent
+#print axioms RelativeRest.carrierBulkResponse_eq_minus_two_stressResponse
 #print axioms RelativeRest.principalLocalClockRatio_forced
 #print axioms RelativeRest.principalPointResponse_ratio_forced
 #print axioms RelativeRest.principalBridgeSpatialCoeff_ratio_forced
