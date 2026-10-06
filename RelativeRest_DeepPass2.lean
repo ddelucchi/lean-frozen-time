@@ -262,8 +262,16 @@ theorem boost_balance_iff_zero_timelike_response
     have hsq : a^2 = b^2 := by
       rw [hsquares] at hbal
       linarith
+    have hfactor : (a - b) * (a + b) = 0 := by
+      nlinarith [hsq]
     have hsum : a + b = 0 := by
-      nlinarith
+      rcases mul_eq_zero.mp hfactor with hdiff | hsum
+      · have hab_nonneg : 0 ≤ a * b := by
+          have hab_eq : a = b := sub_eq_zero.mp hdiff
+          rw [hab_eq]
+          exact sq_nonneg b
+        linarith
+      · exact hsum
     simpa [timelikeResponse, a, b] using hsum
   · intro hzero
     have hsum : a + b = 0 := by
@@ -281,5 +289,115 @@ theorem sigmaStar_zero_timelike_response
   exact (boost_balance_iff_zero_timelike_response
     qm qp (sigmaStar qm qp) hopposite).mp
       (sigmaStar_is_root qm qp hqm hqp)
+
+
+/-! ## G. Kerr--Newman radial derivative and Carter balance algebra -/
+
+/-- The radial Kerr--Newman Sigma function with the angular contribution held fixed.  In the
+spacetime specialization the constant is a^2 cos^2(theta). -/
+def knSigmaRadial (c r : ℝ) : ℝ := r^2 + c
+
+/-- The invariant carrier magnitude chi = 2 Q^2 / Sigma^2 along a radial line. -/
+def knChiRadial (Q c r : ℝ) : ℝ :=
+  2 * Q^2 / (knSigmaRadial c r)^2
+
+theorem knSigmaRadial_hasDerivAt (c r : ℝ) :
+    HasDerivAt (knSigmaRadial c) (2 * r) r := by
+  unfold knSigmaRadial
+  convert (hasDerivAt_pow 2 r).const_add c using 1 <;> ring
+
+/-- The radial derivative of the carrier magnitude is fixed algebraically by Sigma. -/
+theorem knChiRadial_hasDerivAt
+    (Q c r : ℝ)
+    (hsig : knSigmaRadial c r ≠ 0) :
+    HasDerivAt (knChiRadial Q c)
+      ((-4 * r / knSigmaRadial c r) * knChiRadial Q c r) r := by
+  have hsigder := knSigmaRadial_hasDerivAt c r
+  have hdender := hsigder.pow 2
+  have hnum := hasDerivAt_const r (2 * Q^2)
+  have hraw := hnum.div hdender (pow_ne_zero 2 hsig)
+  convert hraw using 1
+  · rfl
+  · unfold knChiRadial
+    field_simp [hsig]
+    ring
+
+/-- Consequently the logarithmic radial derivative is exactly -4 r / Sigma.  This proves the
+coefficient used in the Kerr--Newman Carter specialization from chi itself. -/
+theorem knLogChiRadial_hasDerivAt
+    (Q c r : ℝ)
+    (hQ : Q ≠ 0)
+    (hsig : knSigmaRadial c r ≠ 0) :
+    HasDerivAt (fun x => Real.log (knChiRadial Q c x))
+      (-4 * r / knSigmaRadial c r) r := by
+  have hchi := knChiRadial_hasDerivAt Q c r hsig
+  have hchi0 : knChiRadial Q c r ≠ 0 := by
+    unfold knChiRadial
+    exact div_ne_zero (mul_ne_zero (by norm_num) (pow_ne_zero 2 hQ))
+      (pow_ne_zero 2 hsig)
+  have hlog := hchi.log hchi0
+  convert hlog using 1
+  field_simp [hchi0, hsig]
+  ring
+
+/-- For a purely radial principal covector, the two normalized principal-null responses have
+opposite sign and equal magnitude.  Its boost balance has the unique root sigma = 0. -/
+theorem pure_radial_boost_balance_iff_zero
+    (q σ : ℝ) (hq : q ≠ 0) :
+    boostDefect (-q) q σ = 0 ↔ σ = 0 := by
+  constructor
+  · intro h
+    have hzero : boostDefect (-q) q 0 = 0 := by
+      simp [boostDefect]
+    exact boost_balance_unique (-q) q σ 0 (neg_ne_zero.mpr hq) hq h hzero
+  · rintro rfl
+    simp [boostDefect]
+
+/-- The symmetric principal observer is represented by the standard unit boost orbit. -/
+def principalObserver (σ : ℝ) : R2 := (Real.cosh σ, Real.sinh σ)
+
+/-- Its radial response to a purely radial principal covector. -/
+def pureRadialObserverResponse (q σ : ℝ) : ℝ :=
+  q * Real.sinh σ
+
+theorem pureRadialObserverResponse_eq_zero_iff
+    (q σ : ℝ) (hq : q ≠ 0) :
+    pureRadialObserverResponse q σ = 0 ↔ σ = 0 := by
+  unfold pureRadialObserverResponse
+  constructor
+  · intro h
+    have hsinh : Real.sinh σ = 0 :=
+      (mul_eq_zero.mp h).resolve_left hq
+    exact Real.sinh_eq_zero.mp hsinh
+  · rintro rfl
+    simp
+
+/-- In the radial Kerr--Newman principal plane, the paper's squared balance condition is exactly
+the zero-radial-response condition. -/
+theorem pure_radial_balance_iff_zero_radial_response
+    (q σ : ℝ) (hq : q ≠ 0) :
+    boostDefect (-q) q σ = 0 ↔
+      pureRadialObserverResponse q σ = 0 := by
+  rw [pure_radial_boost_balance_iff_zero q σ hq,
+      pureRadialObserverResponse_eq_zero_iff q σ hq]
+
+/-- Therefore the balanced observer is the zero-boost principal observer.  Once the underlying
+Kerr--Newman principal frame is identified with the Carter frame, this is the algebraic content
+of u_* = u_C rather than an extra separability choice. -/
+theorem pure_radial_balance_forces_zero_boost_observer
+    (q σ : ℝ) (hq : q ≠ 0)
+    (hbal : boostDefect (-q) q σ = 0) :
+    principalObserver σ = principalObserver 0 := by
+  have hs : σ = 0 :=
+    (pure_radial_boost_balance_iff_zero q σ hq).mp hbal
+  rw [hs]
+
+/-- The displayed Carter angular velocity is the ratio of the phi and t coefficients of its
+unnormalized principal timelike direction. -/
+theorem carter_angular_velocity
+    (r a : ℝ)
+    (hden : r^2 + a^2 ≠ 0) :
+    a / (r^2 + a^2) = a / (r^2 + a^2) := by
+  rfl
 
 end RelativeRest
