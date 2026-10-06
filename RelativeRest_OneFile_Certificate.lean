@@ -6926,6 +6926,47 @@ theorem quotient_clock_covector_forced
 
 end LinearDescent
 
+/-! ### Linear characteristic leaves are globally simple -/
+
+section LinearCharacteristicFoliation
+
+variable {V : Type*} [AddCommGroup V] [Module ℝ V]
+
+/-- Two points lie on the same affine characteristic leaf exactly when their
+difference is a characteristic direction. -/
+def SameLinearCharacteristicLeaf
+    (p : Submodule ℝ V) (x y : V) : Prop :=
+  x - y ∈ p
+
+/-- The canonical quotient map has precisely the affine characteristic leaves as
+its fibers.  Thus the linear characteristic foliation used in the formal model is
+not merely locally simple: it is globally simple. -/
+theorem linearCharacteristicLeaf_iff_same_quotient
+    (p : Submodule ℝ V) (x y : V) :
+    SameLinearCharacteristicLeaf p x y ↔
+      (Submodule.Quotient.mk x : V ⧸ p) =
+        Submodule.Quotient.mk y := by
+  unfold SameLinearCharacteristicLeaf
+  exact (Submodule.Quotient.eq p).symm
+
+/-- Every quotient point has a representative, so the global leaf-space projection
+is surjective. -/
+theorem linearCharacteristicQuotient_surjective
+    (p : Submodule ℝ V) :
+    Function.Surjective (p.mkQ : V →ₗ[ℝ] V ⧸ p) :=
+  Submodule.mkQ_surjective p
+
+/-- Fiber statement in the exact form used for characteristic descent. -/
+theorem linearCharacteristicQuotient_fiber
+    (p : Submodule ℝ V) (x : V) :
+    {y : V | p.mkQ y = p.mkQ x} =
+      {y : V | SameLinearCharacteristicLeaf p y x} := by
+  ext y
+  simp only [Set.mem_setOf_eq]
+  exact (linearCharacteristicLeaf_iff_same_quotient p y x).symm
+
+end LinearCharacteristicFoliation
+
 /-! ### Basic covectors and exact characteristic descent -/
 
 section BasicCovectorDescent
