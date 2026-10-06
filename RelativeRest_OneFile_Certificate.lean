@@ -7302,6 +7302,199 @@ theorem characteristicCurrentDataOfCarrier_Lambda_apply
 
 end CarrierCharacteristicConstruction
 
+/-! ### Fully field-derived principal characteristic current and positivity -/
+
+/-- Principal Maxwell stress as a genuine linear endomorphism of the tangent model. -/
+def principalStressLinear
+    (u : ℝ) : (Fin 4 → ℝ) →ₗ[ℝ] (Fin 4 → ℝ) where
+  toFun := principalStressApply u
+  map_add' := by
+    intro x y
+    funext i
+    fin_cases i <;>
+      simp [principalStressApply, principalStress] <;>
+      ring
+  map_smul' := by
+    intro c x
+    funext i
+    fin_cases i <;>
+      simp [principalStressApply, principalStress] <;>
+      ring
+
+/-- Stress endomorphism reconstructed from the explicit principal Maxwell field. -/
+def principalStressLinearFromF
+    (E B : ℝ) : (Fin 4 → ℝ) →ₗ[ℝ] (Fin 4 → ℝ) :=
+  principalStressLinear (principalFieldEnergyDensity E B)
+
+/-- This linear endomorphism is exactly the matrix obtained from the explicit two-form. -/
+theorem principalStressLinearFromF_apply
+    (E B : ℝ) (v : Fin 4 → ℝ) (i : Fin 4) :
+    principalStressLinearFromF E B v i =
+      ∑ j : Fin 4, principalStressFromF E B i j * v j := by
+  unfold principalStressLinearFromF principalStressLinear principalStressApply
+  apply Finset.sum_congr rfl
+  intro j hj
+  rw [principalStressFromF_eq_principalStress]
+
+/-- Future-oriented hypersurface contraction in the adapted principal frame. -/
+def principalFutureFlux
+    (vol : ℝ) : (Fin 4 → ℝ) →ₗ[ℝ] ℝ where
+  toFun v := -vol * v 0
+  map_add' := by
+    intro x y
+    simp
+    ring
+  map_smul' := by
+    intro c x
+    simp
+    ring
+
+/-- The unit principal observer sees exactly the Maxwell energy density. -/
+theorem principalStressLinearFromF_time_eigen
+    (E B : ℝ) :
+    principalStressLinearFromF E B principalUhat =
+      (-principalFieldEnergyDensity E B) • principalUhat := by
+  unfold principalStressLinearFromF principalStressLinear
+  simpa [principalUhat] using
+    principalStress_time_eigen (principalFieldEnergyDensity E B)
+
+/-- A smeared future principal observer therefore has the exact positive flux
+`f ε_EM vol`. -/
+theorem principalStressResponse_formula
+    (f E B vol : ℝ) :
+    stressResponse
+        LinearMap.id
+        (principalStressLinearFromF E B)
+        (principalFutureFlux vol)
+        (f • principalUhat) =
+      f * principalFieldEnergyDensity E B * vol := by
+  unfold stressResponse
+  simp only [LinearMap.comp_apply, LinearMap.id_coe, id_eq]
+  rw [map_smul, principalStressLinearFromF_time_eigen]
+  simp [principalFutureFlux, principalUhat, principalBasis]
+  ring
+
+/-- Nonzero Maxwell field makes its principal energy density strictly positive. -/
+theorem principalFieldEnergyDensity_pos
+    (E B : ℝ) (hfield : E ≠ 0 ∨ B ≠ 0) :
+    0 < principalFieldEnergyDensity E B := by
+  rw [principalFieldEnergyDensity_eq_chi]
+  exact div_pos
+    (principalChi_pos E B hfield)
+    (mul_pos (by norm_num) Real.pi_pos)
+
+/-- Hence positive smearing and positive hypersurface orientation force a positive
+integrated stress response directly from the field. -/
+theorem principalStressResponse_pos
+    (f E B vol : ℝ)
+    (hf : 0 < f)
+    (hfield : E ≠ 0 ∨ B ≠ 0)
+    (hvol : 0 < vol) :
+    0 <
+      stressResponse
+        LinearMap.id
+        (principalStressLinearFromF E B)
+        (principalFutureFlux vol)
+        (f • principalUhat) := by
+  rw [principalStressResponse_formula]
+  exact mul_pos (mul_pos hf
+    (principalFieldEnergyDensity_pos E B hfield)) hvol
+
+section FullyFieldDerivedCharacteristic
+
+variable {P : Type*} [AddCommGroup P] [Module ℝ P]
+
+/-- Data needed only to say which gauge parameter produces a positive multiple of the
+already selected principal timelike direction.  No current or positivity statement is input. -/
+structure PrincipalCarrierCharacteristicInput where
+  beta : P →ₗ[ℝ] (Fin 4 → ℝ)
+  positiveWitness : P
+  smear : ℝ
+  E : ℝ
+  B : ℝ
+  volume : ℝ
+  smear_pos : 0 < smear
+  field_nonzero : E ≠ 0 ∨ B ≠ 0
+  volume_pos : 0 < volume
+  witness_image :
+    beta positiveWitness = smear • principalUhat
+
+/-- Field-derived Maxwell stress endomorphism attached to the input. -/
+def PrincipalCarrierCharacteristicInput.T
+    (D : PrincipalCarrierCharacteristicInput (P:=P)) :
+    (Fin 4 → ℝ) →ₗ[ℝ] (Fin 4 → ℝ) :=
+  principalStressLinearFromF D.E D.B
+
+/-- Fixed-point jet endomorphism `J=-16πT`, now a definition rather than a premise. -/
+def PrincipalCarrierCharacteristicInput.J
+    (D : PrincipalCarrierCharacteristicInput (P:=P)) :
+    (Fin 4 → ℝ) →ₗ[ℝ] (Fin 4 → ℝ) :=
+  (-16 * Real.pi) • D.T
+
+/-- Future-oriented contraction with the chosen positive hypersurface density. -/
+def PrincipalCarrierCharacteristicInput.iε
+    (D : PrincipalCarrierCharacteristicInput (P:=P)) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
+  principalFutureFlux D.volume
+
+/-- The distinguished parameter has strictly positive integrated stress response,
+derived entirely from the explicit Maxwell field and orientation data. -/
+theorem PrincipalCarrierCharacteristicInput.response_positive
+    (D : PrincipalCarrierCharacteristicInput (P:=P)) :
+    0 <
+      stressResponse
+        LinearMap.id D.T D.iε
+        (D.beta D.positiveWitness) := by
+  rw [D.witness_image]
+  exact principalStressResponse_pos
+    D.smear D.E D.B D.volume
+    D.smear_pos D.field_nonzero D.volume_pos
+
+/-- The characteristic-current datum is now constructed from the explicit Maxwell field,
+the fixed-point jet relation, and the characteristic map. -/
+def PrincipalCarrierCharacteristicInput.toCharacteristicCurrentData
+    (D : PrincipalCarrierCharacteristicInput (P:=P)) :
+    CharacteristicCurrentData
+      (P:=P) (KSpace:=(Fin 4 → ℝ)) :=
+  characteristicCurrentDataOfCarrier
+    D.beta D.J D.T D.iε LinearMap.id
+    rfl D.positiveWitness D.response_positive
+
+/-- Its current is exactly the integrated Maxwell stress response. -/
+theorem principalCarrierCharacteristic_current
+    (D : PrincipalCarrierCharacteristicInput (P:=P)) :
+    D.toCharacteristicCurrentData.current =
+      stressResponse LinearMap.id D.T D.iε := by
+  exact characteristicCurrentDataOfCarrier_current
+    D.beta D.J D.T D.iε LinearMap.id
+    rfl D.positiveWitness D.response_positive
+
+/-- Its characteristic covector is forced and nonzero. -/
+theorem principalCarrierCharacteristic_Lambda_nonzero
+    (D : PrincipalCarrierCharacteristicInput (P:=P)) :
+    D.toCharacteristicCurrentData.Lambda ≠ 0 :=
+  characteristicCurrent_Lambda_nonzero
+    D.toCharacteristicCurrentData
+
+/-- The resulting stress-visible characteristic quotient is therefore exactly one-dimensional. -/
+theorem principalCarrierCharacteristic_quotient_finrank_one
+    (D : PrincipalCarrierCharacteristicInput (P:=P)) :
+    Module.finrank ℝ
+      (D.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.toCharacteristicCurrentData.Lambda) = 1 :=
+  characteristicCurrent_quotient_finrank_one
+    D.toCharacteristicCurrentData
+
+/-- The descended clock covector is canonical and nonzero, with no independently supplied
+response or normalization. -/
+theorem principalCarrierCharacteristic_clock_nonzero
+    (D : PrincipalCarrierCharacteristicInput (P:=P)) :
+    D.toCharacteristicCurrentData.clockCovector ≠ 0 :=
+  characteristicCurrent_clockCovector_nonzero
+    D.toCharacteristicCurrentData
+
+end FullyFieldDerivedCharacteristic
+
 /-! ### Maxwell field-derived positivity for a current-first interface -/
 
 /-- Strong current-first Maxwell interface.  The current is the only covariant-phase-space
@@ -7633,6 +7826,17 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check principalStressLinearFromF_apply
+#check principalStressLinearFromF_time_eigen
+#check principalStressResponse_formula
+#check principalFieldEnergyDensity_pos
+#check principalStressResponse_pos
+#check PrincipalCarrierCharacteristicInput.response_positive
+#check PrincipalCarrierCharacteristicInput.toCharacteristicCurrentData
+#check principalCarrierCharacteristic_current
+#check principalCarrierCharacteristic_Lambda_nonzero
+#check principalCarrierCharacteristic_quotient_finrank_one
+#check principalCarrierCharacteristic_clock_nonzero
 #check principalNullPair_normalized
 #check principalUhat_from_null_pair
 #check principalEhat_from_null_pair
@@ -8165,6 +8369,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.characteristicCurrent_Lambda_unique
 #print axioms RelativeRest.characteristicCurrent_quotient_finrank_one
 #print axioms RelativeRest.characteristicCurrentDataOfCarrier_Lambda_apply
+#print axioms RelativeRest.principalStressResponse_pos
+#print axioms RelativeRest.principalCarrierCharacteristic_quotient_finrank_one
 #print axioms RelativeRest.principalFieldCurrent_Lambda_unique
 #print axioms RelativeRest.principalFieldCurrent_quotient_finrank_one
 #print axioms RelativeRest.reeb_direction_unique
