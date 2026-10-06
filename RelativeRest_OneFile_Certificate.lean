@@ -7627,6 +7627,113 @@ theorem kerrVolumeDensity_eq_sqrt_neg_det
     Real.sqrt_sq_eq_abs,
     abs_of_nonneg hvol]
 
+/-! ### Coordinate Levi-Civita and Ricci tensors from the certified metric -/
+
+/-- Boyer-Lindquist coordinate derivative of a stationary/axisymmetric scalar.
+Coordinates are ordered `(t,r,θ,φ)=(0,1,2,3)`; only `r` and `θ` derivatives survive. -/
+def kerrCoordPartial
+    (μ : Fin 4) (f : ℝ → ℝ → ℝ) (r θ : ℝ) : ℝ :=
+  if μ = 1 then deriv (fun x : ℝ => f x θ) r
+  else if μ = 2 then deriv (fun x : ℝ => f r x) θ
+  else 0
+
+@[simp] theorem kerrCoordPartial_time
+    (f : ℝ → ℝ → ℝ) (r θ : ℝ) :
+    kerrCoordPartial 0 f r θ = 0 := by
+  simp [kerrCoordPartial]
+
+@[simp] theorem kerrCoordPartial_phi
+    (f : ℝ → ℝ → ℝ) (r θ : ℝ) :
+    kerrCoordPartial 3 f r θ = 0 := by
+  simp [kerrCoordPartial]
+
+/-- Genuine coordinate derivative of the covariant Kerr-Newman metric. -/
+def kerrMetricPartial
+    (μ : Fin 4) (r M a Q θ : ℝ)
+    (i j : Fin 4) : ℝ :=
+  kerrCoordPartial μ
+    (fun rr th => kerrMetricCov rr M a Q th i j) r θ
+
+/-- Metric symmetry survives coordinate differentiation. -/
+theorem kerrMetricPartial_symmetric
+    (μ : Fin 4) (r M a Q θ : ℝ)
+    (i j : Fin 4) :
+    kerrMetricPartial μ r M a Q θ i j =
+      kerrMetricPartial μ r M a Q θ j i := by
+  unfold kerrMetricPartial kerrCoordPartial
+  by_cases h1 : μ = 1
+  · rw [if_pos h1]
+    congr 1
+    funext x
+    exact kerrMetricCov_symmetric x M a Q θ i j
+  · rw [if_neg h1]
+    by_cases h2 : μ = 2
+    · rw [if_pos h2]
+      congr 1
+      funext x
+      exact kerrMetricCov_symmetric r M a Q x i j
+    · rw [if_neg h2]
+
+/-- Levi-Civita Christoffel symbols constructed directly from the metric and inverse metric. -/
+def kerrChristoffel
+    (r M a Q θ : ℝ)
+    (ρ μ ν : Fin 4) : ℝ :=
+  (1 / 2 : ℝ) *
+    ∑ σ : Fin 4,
+      kerrMetricInv r M a Q θ ρ σ *
+        (kerrMetricPartial μ r M a Q θ σ ν +
+         kerrMetricPartial ν r M a Q θ σ μ -
+         kerrMetricPartial σ r M a Q θ μ ν)
+
+/-- The coordinate Levi-Civita connection is torsion-free by construction. -/
+theorem kerrChristoffel_lower_symmetric
+    (r M a Q θ : ℝ)
+    (ρ μ ν : Fin 4) :
+    kerrChristoffel r M a Q θ ρ μ ν =
+      kerrChristoffel r M a Q θ ρ ν μ := by
+  unfold kerrChristoffel
+  congr 1
+  apply Finset.sum_congr rfl
+  intro σ hσ
+  rw [kerrMetricPartial_symmetric σ r M a Q θ μ ν]
+  ring
+
+/-- Coordinate derivative of a Christoffel symbol. -/
+def kerrChristoffelPartial
+    (κ : Fin 4) (r M a Q θ : ℝ)
+    (ρ μ ν : Fin 4) : ℝ :=
+  kerrCoordPartial κ
+    (fun rr th => kerrChristoffel rr M a Q th ρ μ ν) r θ
+
+/-- Ricci tensor obtained by contracting the standard coordinate Riemann formula. -/
+def kerrRicciCovFromMetric
+    (r M a Q θ : ℝ)
+    (μ ν : Fin 4) : ℝ :=
+  ∑ ρ : Fin 4,
+    (kerrChristoffelPartial ρ r M a Q θ ρ μ ν -
+     kerrChristoffelPartial ν r M a Q θ ρ μ ρ +
+     ∑ σ : Fin 4,
+       (kerrChristoffel r M a Q θ ρ μ ν *
+          kerrChristoffel r M a Q θ σ ρ σ -
+        kerrChristoffel r M a Q θ σ μ ρ *
+          kerrChristoffel r M a Q θ ρ ν σ))
+
+/-- Scalar curvature computed from the metric-derived Ricci tensor. -/
+def kerrScalarCurvatureFromMetric
+    (r M a Q θ : ℝ) : ℝ :=
+  ∑ μ : Fin 4, ∑ ν : Fin 4,
+    kerrMetricInv r M a Q θ μ ν *
+      kerrRicciCovFromMetric r M a Q θ μ ν
+
+/-- Einstein tensor computed entirely from the Boyer-Lindquist metric. -/
+def kerrEinsteinCovFromMetric
+    (r M a Q θ : ℝ)
+    (μ ν : Fin 4) : ℝ :=
+  kerrRicciCovFromMetric r M a Q θ μ ν -
+    (1 / 2 : ℝ) *
+      kerrMetricCov r M a Q θ μ ν *
+      kerrScalarCurvatureFromMetric r M a Q θ
+
 /-! ### Full coordinate-to-Carter-coframe Maxwell specialization -/
 
 /-- Embed a stationary `(dt,dφ)` covector into Boyer-Lindquist
@@ -9762,6 +9869,15 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check kerrCoordPartial
+#check kerrMetricPartial
+#check kerrMetricPartial_symmetric
+#check kerrChristoffel
+#check kerrChristoffel_lower_symmetric
+#check kerrChristoffelPartial
+#check kerrRicciCovFromMetric
+#check kerrScalarCurvatureFromMetric
+#check kerrEinsteinCovFromMetric
 #check kerrPrincipalEnergyDensity_formula
 #check kerrRicciFrameMixedCoeff_eq_EinsteinMaxwell
 #check kerrEinsteinTarget_frame_equation
@@ -10417,6 +10533,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrPotential_field_factorization
 #print axioms RelativeRest.kerr_stationary_inverse_block
 #print axioms RelativeRest.kerrMetric_inverse_certificate
+#print axioms RelativeRest.kerrMetricPartial_symmetric
+#print axioms RelativeRest.kerrChristoffel_lower_symmetric
 #print axioms RelativeRest.kerrCoframe_orthonormal
 #print axioms RelativeRest.kerrEinsteinTargetRicci_trace_zero
 #print axioms RelativeRest.kerrEinsteinTargetRicci_frame_norm_formula
