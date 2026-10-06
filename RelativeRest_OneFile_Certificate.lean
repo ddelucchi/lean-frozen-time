@@ -17521,6 +17521,129 @@ theorem principalCanonicalCompleted_forced_core_chain
   exact principalCanonicalNoether_forced_core_chain
     D.toCanonicalNoetherInput u s
 
+/-! ### Fully constructed local Noether model from the action and variational core -/
+
+/-- Strongest finite-dimensional CPS object in the file.  No Noether constraint,
+charge descendant, bulk coefficient, relative orbit, or Iyer-Wald identity is supplied.
+The local coefficient is the literal `2E^a{}_b(s)` coefficient of the displayed
+Einstein-Maxwell action, and the complete Noether package is the canonical completion
+of the first-variation/Cartan core. -/
+structure PrincipalActionLocalCompletedCharacteristicInput where
+  carrier : PrincipalCarrierCharacteristicInput (P:=P)
+  core : LagrangianFirstVariationCartanData
+    (L:=R2) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ))
+
+def PrincipalActionLocalCompletedCharacteristicInput.variation
+    (D : PrincipalActionLocalCompletedCharacteristicInput (P:=P)) :
+    LagrangianVariationNoetherOperators
+      (L:=R2) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ)) :=
+  D.core.toNoetherOperators
+    D.carrier.noetherConstraintOperatorFromAction
+
+def PrincipalActionLocalCompletedCharacteristicInput.bulkCoeff
+    (D : PrincipalActionLocalCompletedCharacteristicInput (P:=P))
+    (s : ℝ) (i j : Fin 4) : ℝ :=
+  2 * principalMetricSign i * Real.exp (-s) *
+    principalScaledMetricEulerCoeffFromAction
+      D.carrier.E D.carrier.B i j s
+
+/-- The canonically completed constraint is exactly the hypersurface integral of
+the constructed local Noether current at every finite relative rapidity. -/
+theorem PrincipalActionLocalCompletedCharacteristicInput.constraint_is_bulk_integral
+    (D : PrincipalActionLocalCompletedCharacteristicInput (P:=P))
+    (s : ℝ) (v : Fin 4 → ℝ) :
+    relativeConstraintOrbitEval D.variation.constraint v s =
+      D.carrier.iε
+        (fun i : Fin 4 =>
+          ∑ j : Fin 4, D.bulkCoeff s i j * v j) := by
+  have hC :
+      D.variation.constraint =
+        D.carrier.noetherConstraintOperatorFromAction := by
+    exact
+      D.core.toNoetherOperators_constraint
+        D.carrier.noetherConstraintOperatorFromAction
+  rw [hC,
+    D.carrier.noetherConstraintOperatorFromAction_relativeOrbit s v]
+  have hNoether :=
+    LinearMap.congr_fun
+      (D.carrier.metricEulerRelativeOrbitResponse_eq_noetherIntegral s) v
+  rw [hNoether]
+  apply congrArg D.carrier.iε
+  funext i
+  unfold PrincipalActionLocalCompletedCharacteristicInput.bulkCoeff
+    principalMetricEulerNoetherRelativeLinear
+  rfl
+
+/-- The derivative-of-diffeomorphism pairing required by Noether's second theorem
+is an identity for the constructed local coefficient. -/
+theorem PrincipalActionLocalCompletedCharacteristicInput.local_diffeomorphism_derivative_pairing
+    (D : PrincipalActionLocalCompletedCharacteristicInput (P:=P))
+    (s : ℝ) (nablaXi : Fin 4 → Fin 4 → ℝ) :
+    (∑ i : Fin 4, ∑ j : Fin 4,
+      D.bulkCoeff s i j * nablaXi i j) =
+      principalMetricDiffeomorphismEulerPairing
+        (fun i j =>
+          principalMetricSign i * Real.exp (-s) *
+            principalScaledMetricEulerCoeffFromAction
+              D.carrier.E D.carrier.B i j s)
+        nablaXi := by
+  unfold PrincipalActionLocalCompletedCharacteristicInput.bulkCoeff
+    principalMetricDiffeomorphismEulerPairing
+  ring
+
+/-- Hence the fully constructed object canonically satisfies the sharper local
+Noether interface. -/
+def PrincipalActionLocalCompletedCharacteristicInput.toLocalNoetherInput
+    (D : PrincipalActionLocalCompletedCharacteristicInput (P:=P)) :
+    PrincipalLocalNoetherVariationCharacteristicInput (P:=P) where
+  carrier := D.carrier
+  variation := D.variation
+  bulkCoeff := D.bulkCoeff
+  constraint_is_bulk_integral := D.constraint_is_bulk_integral
+  local_diffeomorphism_derivative_pairing :=
+    D.local_diffeomorphism_derivative_pairing
+
+def PrincipalActionLocalCompletedCharacteristicInput.characteristicCurrent
+    (D : PrincipalActionLocalCompletedCharacteristicInput (P:=P)) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
+  D.toLocalNoetherInput.characteristicCurrent
+
+/-- Fully constructed finite-dimensional action-to-clock theorem.  Within the
+formalized local model, every object from the displayed action through the
+Noether bulk current, compensated Iyer-Wald current, characteristic quotient, and
+normalized clock line is a construction or theorem. -/
+theorem principalActionLocalCompleted_forced_core_chain
+    (D : PrincipalActionLocalCompletedCharacteristicInput (P:=P))
+    (u s : ℝ) :
+    ((8 * Real.pi * principalFieldEnergyDensity D.carrier.E D.carrier.B =
+        8 * Real.pi *
+          maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+          principalFieldEnergyDensity D.carrier.E D.carrier.B) ↔ s = 0) ∧
+    (∀ i j : Fin 4,
+      D.bulkCoeff s i j =
+        2 * principalMetricSign i * Real.exp (-s) *
+          principalScaledMetricEulerCoeffFromAction
+            D.carrier.E D.carrier.B i j s) ∧
+    D.variation.constraint =
+      D.carrier.noetherConstraintOperatorFromAction ∧
+    D.characteristicCurrent = D.carrier.metricEulerJetResponse ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat := by
+  have h := principalLocalNoether_forced_core_chain
+    D.toLocalNoetherInput u s
+  rcases h with
+    ⟨hrest,hbulk,_horbit,hconstraint,hcur,hL,hdim,hnorm⟩
+  exact ⟨hrest,hbulk,hconstraint,hcur,hL,hdim,hnorm⟩
+
 /-! ### Central manuscript closure certificate -/
 
 /-- A single closure theorem assembling the manuscript's central forced chain.
@@ -19522,6 +19645,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalLocalNoether_forced_core_chain
 #print axioms RelativeRest.principalCanonicalNoether_forced_core_chain
 #print axioms RelativeRest.principalCanonicalCompleted_forced_core_chain
+#print axioms RelativeRest.PrincipalActionLocalCompletedCharacteristicInput.constraint_is_bulk_integral
+#print axioms RelativeRest.PrincipalActionLocalCompletedCharacteristicInput.local_diffeomorphism_derivative_pairing
+#print axioms RelativeRest.principalActionLocalCompleted_forced_core_chain
 #print axioms RelativeRest.principalDiffeomorphismNoether_decomposition
 #print axioms RelativeRest.principalNoetherBulkCoeff_eq_twoEuler_of_derivative_pairing
 #print axioms RelativeRest.principalNoetherBulkCoeff_eq_twoEuler_of_local_identity
