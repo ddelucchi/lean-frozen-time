@@ -8435,6 +8435,37 @@ theorem kerrConnectionCrossTrace_formula
   unfold Delta Sigma kerrH
   nlinarith
 
+/-! ### Diagonal radial connection identities -/
+
+/-- Radial connection coefficient entering the rr Ricci component. -/
+theorem kerrChristoffel_r_rr
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    kerrChristoffel r M a Q θ 1 1 1 =
+      r / Sigma r a θ - (r - M) / Delta r M a Q := by
+  rw [kerrChristoffel_eq_regular r M a Q θ hsig hdel]
+  simp [kerrChristoffelRegular, kerrMetricInv,
+    kerrMetricDerivativeRegular,
+    kerrMetricRadialDerivative, kerrMetricPolarDerivative]
+  field_simp [hsig, hdel]
+  ring
+
+/-- Polar connection coefficient entering the rr Ricci component. -/
+theorem kerrChristoffel_theta_rr
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    kerrChristoffel r M a Q θ 2 1 1 =
+      a^2 * Real.cos θ * Real.sin θ /
+        (Sigma r a θ * Delta r M a Q) := by
+  rw [kerrChristoffel_eq_regular r M a Q θ hsig hdel]
+  simp [kerrChristoffelRegular, kerrMetricInv,
+    kerrMetricDerivativeRegular,
+    kerrMetricRadialDerivative, kerrMetricPolarDerivative]
+  field_simp [hsig, hdel]
+  ring
+
 /-! ### Diagonal polar connection identities -/
 
 /-- Radial connection coefficient entering the theta-theta Ricci component. -/
@@ -8464,6 +8495,42 @@ theorem kerrChristoffel_theta_thetatheta
     kerrMetricRadialDerivative, kerrMetricPolarDerivative]
   field_simp [hsig, hdel]
   ring
+
+/-- Polynomial numerator of the quadratic connection contraction in R_rr. -/
+def kerrConnectionProductTraceRRNumerator
+    (r M a Q θ : ℝ) : ℝ :=
+  M^2 * a^4 * (Real.cos θ)^4 -
+    2 * M^2 * a^2 * (Real.cos θ)^2 * r^2 + 5 * M^2 * r^4 +
+    2 * M * Q^2 * a^2 * (Real.cos θ)^2 * r - 6 * M * Q^2 * r^3 -
+    4 * M * a^4 * (Real.cos θ)^4 * r +
+    4 * M * a^4 * (Real.cos θ)^2 * r - 4 * M * a^2 * r^3 -
+    4 * M * r^5 + 2 * Q^4 * r^2 +
+    Q^2 * a^4 * (Real.cos θ)^4 - Q^2 * a^4 * (Real.cos θ)^2 -
+    Q^2 * a^2 * (Real.cos θ)^2 * r^2 + 3 * Q^2 * a^2 * r^2 +
+    2 * Q^2 * r^4 + a^6 * (Real.cos θ)^4 -
+    a^6 * (Real.cos θ)^2 + 2 * a^4 * (Real.cos θ)^4 * r^2 -
+    2 * a^4 * (Real.cos θ)^2 * r^2 + a^4 * r^2 +
+    a^2 * (Real.cos θ)^2 * r^4 + a^2 * r^4 + r^6
+
+/-- Full quadratic connection contraction in the radial diagonal Ricci component. -/
+theorem kerrConnectionProductTrace_rr_formula
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrConnectionProductTrace r M a Q θ 1 1 =
+      2 * kerrConnectionProductTraceRRNumerator r M a Q θ /
+        ((Sigma r a θ)^2 * (Delta r M a Q)^2) := by
+  unfold kerrConnectionProductTrace
+  simp_rw [kerrChristoffel_eq_regular r M a Q θ hsig hdel]
+  simp [kerrChristoffelRegular, kerrMetricInv,
+    kerrMetricDerivativeRegular,
+    kerrMetricRadialDerivative, kerrMetricPolarDerivative]
+  unfold kerrConnectionProductTraceRRNumerator
+  field_simp [hsig, hdel, hsin]
+  have htrig := Real.sin_sq_add_cos_sq θ
+  unfold Delta Sigma kerrH
+  nlinarith
 
 /-- Full quadratic connection contraction in the polar diagonal Ricci component. -/
 theorem kerrConnectionProductTrace_thetatheta_formula
@@ -8714,6 +8781,127 @@ theorem kerrChristoffelTracePartial_r_theta
   simpa using
     (kerrChristoffelTrace_theta_hasDerivAt_r
       r M a Q θ hsig hdel hsin).deriv
+
+/-! ### Radial diagonal second-derivative transfer -/
+
+/-- Radial derivative of Gamma^r_rr on the regular chart. -/
+theorem kerrChristoffel_r_rr_hasDerivAt_r
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    HasDerivAt
+      (fun x : ℝ => kerrChristoffel x M a Q θ 1 1 1)
+      ((Sigma r a θ - 2 * r^2) / (Sigma r a θ)^2 -
+        (Delta r M a Q - 2 * (r - M)^2) /
+          (Delta r M a Q)^2) r := by
+  have hleft := (hasDerivAt_id r).fun_div
+    (Sigma_hasDerivAt_r r a θ) hsig
+  have hnum : HasDerivAt (fun x : ℝ => x - M) 1 r := by
+    simpa using (hasDerivAt_id r).sub_const M
+  have hright := hnum.fun_div (Delta_hasDerivAt_r r M a Q) hdel
+  have hreg := hleft.sub hright
+  have hreg' :
+      HasDerivAt
+        (fun x : ℝ => x / Sigma x a θ - (x - M) / Delta x M a Q)
+        ((Sigma r a θ - 2 * r^2) / (Sigma r a θ)^2 -
+          (Delta r M a Q - 2 * (r - M)^2) /
+            (Delta r M a Q)^2) r := by
+    convert hreg using 1 <;> field_simp [hsig, hdel] <;> ring
+  have hS := (Sigma_hasDerivAt_r r a θ).continuousAt.eventually_ne hsig
+  have hD := (Delta_hasDerivAt_r r M a Q).continuousAt.eventually_ne hdel
+  have heq :
+      (fun x : ℝ => kerrChristoffel x M a Q θ 1 1 1) =ᶠ[𝓝 r]
+        (fun x : ℝ => x / Sigma x a θ - (x - M) / Delta x M a Q) := by
+    filter_upwards [hS, hD] with x hxS hxD
+    exact kerrChristoffel_r_rr x M a Q θ hxS hxD
+  exact hreg'.congr_of_eventuallyEq heq
+
+/-- Polar derivative of Gamma^theta_rr on the regular chart. -/
+theorem kerrChristoffel_theta_rr_hasDerivAt_theta
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    HasDerivAt
+      (fun x : ℝ => kerrChristoffel r M a Q x 2 1 1)
+      ((a^2 * ((Real.cos θ)^2 - (Real.sin θ)^2) * Sigma r a θ +
+          2 * a^4 * (Real.cos θ)^2 * (Real.sin θ)^2) /
+        ((Sigma r a θ)^2 * Delta r M a Q)) θ := by
+  have hcs := (Real.hasDerivAt_cos θ).mul (Real.hasDerivAt_sin θ)
+  have hnum := hcs.const_mul (a^2)
+  have hfrac := hnum.fun_div (Sigma_hasDerivAt_theta r a θ) hsig
+  have hreg := hfrac.const_mul (Delta r M a Q)⁻¹
+  have hreg' :
+      HasDerivAt
+        (fun x : ℝ =>
+          a^2 * Real.cos x * Real.sin x /
+            (Sigma r a x * Delta r M a Q))
+        ((a^2 * ((Real.cos θ)^2 - (Real.sin θ)^2) * Sigma r a θ +
+            2 * a^4 * (Real.cos θ)^2 * (Real.sin θ)^2) /
+          ((Sigma r a θ)^2 * Delta r M a Q)) θ := by
+    convert hreg using 1 <;> field_simp [hsig, hdel] <;> ring
+  have hS := (Sigma_hasDerivAt_theta r a θ).continuousAt.eventually_ne hsig
+  have heq :
+      (fun x : ℝ => kerrChristoffel r M a Q x 2 1 1) =ᶠ[𝓝 θ]
+        (fun x : ℝ =>
+          a^2 * Real.cos x * Real.sin x /
+            (Sigma r a x * Delta r M a Q)) := by
+    filter_upwards [hS] with x hxS
+    exact kerrChristoffel_theta_rr r M a Q x hxS hdel
+  exact hreg'.congr_of_eventuallyEq heq
+
+/-- Radial derivative of the radial connection trace. -/
+theorem kerrChristoffelTrace_r_hasDerivAt_r
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    HasDerivAt
+      (fun x : ℝ => kerrChristoffelTrace x M a Q θ 1)
+      ((2 * Sigma r a θ - 4 * r^2) / (Sigma r a θ)^2) r := by
+  have hnum := (hasDerivAt_id r).const_mul 2
+  have hreg := hnum.fun_div (Sigma_hasDerivAt_r r a θ) hsig
+  have hreg' :
+      HasDerivAt (fun x : ℝ => 2 * x / Sigma x a θ)
+        ((2 * Sigma r a θ - 4 * r^2) / (Sigma r a θ)^2) r := by
+    convert hreg using 1 <;> field_simp [hsig] <;> ring
+  have hS := (Sigma_hasDerivAt_r r a θ).continuousAt.eventually_ne hsig
+  have hD := (Delta_hasDerivAt_r r M a Q).continuousAt.eventually_ne hdel
+  have heq :
+      (fun x : ℝ => kerrChristoffelTrace x M a Q θ 1) =ᶠ[𝓝 r]
+        (fun x : ℝ => 2 * x / Sigma x a θ) := by
+    filter_upwards [hS, hD] with x hxS hxD
+    exact kerrChristoffelTrace_r x M a Q θ hxS hxD hsin
+  exact hreg'.congr_of_eventuallyEq heq
+
+theorem kerrChristoffelPartial_r_rr
+    (r M a Q θ : ℝ) (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    kerrChristoffelPartial 1 r M a Q θ 1 1 1 =
+      (Sigma r a θ - 2 * r^2) / (Sigma r a θ)^2 -
+      (Delta r M a Q - 2 * (r - M)^2) / (Delta r M a Q)^2 := by
+  unfold kerrChristoffelPartial kerrCoordPartial
+  simpa using (kerrChristoffel_r_rr_hasDerivAt_r r M a Q θ hsig hdel).deriv
+
+theorem kerrChristoffelPartial_theta_rr
+    (r M a Q θ : ℝ) (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) :
+    kerrChristoffelPartial 2 r M a Q θ 2 1 1 =
+      (a^2 * ((Real.cos θ)^2 - (Real.sin θ)^2) * Sigma r a θ +
+        2 * a^4 * (Real.cos θ)^2 * (Real.sin θ)^2) /
+        ((Sigma r a θ)^2 * Delta r M a Q) := by
+  unfold kerrChristoffelPartial kerrCoordPartial
+  simpa using
+    (kerrChristoffel_theta_rr_hasDerivAt_theta r M a Q θ hsig hdel).deriv
+
+theorem kerrChristoffelTracePartial_r_r
+    (r M a Q θ : ℝ) (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0) (hsin : Real.sin θ ≠ 0) :
+    kerrCoordPartial 1
+      (fun rr th => kerrChristoffelTrace rr M a Q th 1) r θ =
+      (2 * Sigma r a θ - 4 * r^2) / (Sigma r a θ)^2 := by
+  unfold kerrCoordPartial
+  simpa using
+    (kerrChristoffelTrace_r_hasDerivAt_r r M a Q θ hsig hdel hsin).deriv
 
 /-! ### Polar diagonal second-derivative transfer -/
 
@@ -9038,6 +9226,25 @@ theorem kerrRicciCovFromMetric_zero_of_odd_stationary
       r M a Q θ μ ν
   rw [hodd] at hp
   linarith
+
+/-! ### Radial diagonal Ricci equation -/
+
+theorem kerrRicci_rr_reduction
+    (r M a Q θ : ℝ) :
+    kerrRicciCovFromMetric r M a Q θ 1 1 =
+      kerrChristoffelPartial 1 r M a Q θ 1 1 1 +
+      kerrChristoffelPartial 2 r M a Q θ 2 1 1 -
+      kerrCoordPartial 1
+        (fun rr th => kerrChristoffelTrace rr M a Q th 1) r θ +
+      kerrChristoffel r M a Q θ 1 1 1 *
+        kerrChristoffelTrace r M a Q θ 1 +
+      kerrChristoffel r M a Q θ 2 1 1 *
+        kerrChristoffelTrace r M a Q θ 2 -
+      kerrConnectionProductTrace r M a Q θ 1 1 := by
+  unfold kerrRicciCovFromMetric kerrConnectionProductTrace
+  simp [kerrStationarySign,
+    kerrChristoffel_zero_of_odd_stationary, kerrCoordPartial]
+  ring
 
 /-! ### Polar diagonal Ricci equation -/
 
@@ -9516,6 +9723,31 @@ def kerrEinsteinTargetRicciCoordinate
       Sigma r a θ
   else 0
 
+
+/-- The radial diagonal Ricci tensor is derived from the metric and equals the
+Maxwell-forced Einstein target. -/
+theorem kerrRicci_rr_eq_target
+    (Q r M a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrRicciCovFromMetric r M a Q θ 1 1 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 1 1 := by
+  rw [kerrRicci_rr_reduction,
+    kerrChristoffelPartial_r_rr r M a Q θ hsig hdel,
+    kerrChristoffelPartial_theta_rr r M a Q θ hsig hdel,
+    kerrChristoffelTracePartial_r_r r M a Q θ hsig hdel hsin,
+    kerrChristoffel_r_rr r M a Q θ hsig hdel,
+    kerrChristoffel_theta_rr r M a Q θ hsig hdel,
+    kerrChristoffelTrace_r r M a Q θ hsig hdel hsin,
+    kerrChristoffelTrace_theta r M a Q θ hsig hdel hsin,
+    kerrConnectionProductTrace_rr_formula r M a Q θ hsig hdel hsin]
+  simp [kerrEinsteinTargetRicciCoordinate, kerrRicciScale]
+  unfold kerrConnectionProductTraceRRNumerator
+  field_simp [hsig, hdel, hsin]
+  have htrig := Real.sin_sq_add_cos_sq θ
+  unfold Delta Sigma
+  nlinarith
 
 /-- The polar diagonal Ricci tensor is derived from the Boyer-Lindquist metric and equals
 the Maxwell-forced Einstein target, with no imported curvature scalar. -/
@@ -10054,6 +10286,47 @@ theorem kerrFullRicciEquation_iff_four_obligations
   exact (kerrFullRicciEquation_iff_five_obligations
     Q r M a θ hsig hdel hsin).trans
       (kerrFiveRicciObligations_iff_four
+        Q r M a θ hsig hdel hsin)
+
+/-- With both meridional diagonal equations closed, only the stationary 2x2 Ricci block
+remains: tt, tφ, and φφ. -/
+def kerrThreeRicciObligations
+    (Q r M a θ : ℝ) : Prop :=
+  kerrRicciCovFromMetric r M a Q θ 0 0 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 0 0 ∧
+  kerrRicciCovFromMetric r M a Q θ 0 3 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 0 3 ∧
+  kerrRicciCovFromMetric r M a Q θ 3 3 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 3 3
+
+theorem kerrFourRicciObligations_iff_three
+    (Q r M a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrFourRicciObligations Q r M a θ ↔
+      kerrThreeRicciObligations Q r M a θ := by
+  constructor
+  · rintro ⟨h00,h03,_h11,h33⟩
+    exact ⟨h00,h03,h33⟩
+  · rintro ⟨h00,h03,h33⟩
+    exact ⟨h00,h03,
+      kerrRicci_rr_eq_target Q r M a θ hsig hdel hsin, h33⟩
+
+/-- The entire Kerr-Newman Ricci calculation is therefore reduced to the stationary
+two-by-two block alone. -/
+theorem kerrFullRicciEquation_iff_three_obligations
+    (Q r M a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    (∀ i j : Fin 4,
+      kerrRicciCovFromMetric r M a Q θ i j =
+        kerrEinsteinTargetRicciCoordinate Q r M a θ i j) ↔
+      kerrThreeRicciObligations Q r M a θ := by
+  exact (kerrFullRicciEquation_iff_four_obligations
+    Q r M a θ hsig hdel hsin).trans
+      (kerrFourRicciObligations_iff_three
         Q r M a θ hsig hdel hsin)
 
 /-- Mixed Ricci eigenvalue obtained by raising the first Carter-frame index. -/
