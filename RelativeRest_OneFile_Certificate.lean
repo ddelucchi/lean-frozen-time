@@ -4672,6 +4672,54 @@ theorem kerr_regular_first_or_second_radial_jet_resolves
     unfold kerrRadialGradient
     exact (kerrRadialLogGradient_ne_zero_iff r a θ hsig).2 hr
 
+
+/-- First finite radial carrier jet that actually resolves the residual boost. -/
+def kerrResolvingQMinus (r a θ : ℝ) : ℝ :=
+  if r = 0 then -4 / Sigma 0 a θ
+  else kerrRadialGradient r a θ
+
+def kerrResolvingQPlus (r a θ : ℝ) : ℝ :=
+  - kerrResolvingQMinus r a θ
+
+/-- The resolving component is nonzero at every regular Kerr-Newman point. -/
+theorem kerrResolvingQMinus_ne_zero
+    (r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    kerrResolvingQMinus r a θ ≠ 0 := by
+  by_cases hr : r = 0
+  · subst r
+    simp [kerrResolvingQMinus,
+      kerrRadialGradient_second_at_zero_ne a θ hsig]
+  · simp [kerrResolvingQMinus, hr,
+      (kerrRadialLogGradient_ne_zero_iff r a θ hsig).2 hr]
+
+/-- The first finite resolving jet always has equal-and-opposite null components. -/
+theorem kerrResolvingQPlus_eq_neg (r a θ : ℝ) :
+    kerrResolvingQPlus r a θ =
+      - kerrResolvingQMinus r a θ := rfl
+
+/-- Hence the unique carrier-selected residual boost is zero on the entire regular stratum,
+including the `r=0` points resolved by the second jet. -/
+theorem kerrResolving_balance_rapidity_zero
+    (r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    sigmaStar
+      (kerrResolvingQMinus r a θ)
+      (kerrResolvingQPlus r a θ) = 0 := by
+  rw [kerrResolvingQPlus_eq_neg]
+  exact sigmaStar_opposite_components
+    (kerrResolvingQMinus r a θ)
+    (kerrResolvingQMinus_ne_zero r a θ hsig)
+
+/-- The corresponding balanced optical observer is therefore the unboosted principal one
+at every regular point. -/
+theorem kerrResolving_balanced_observer_unboosted
+    (r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    opticalObserver
+      (sigmaStar
+        (kerrResolvingQMinus r a θ)
+        (kerrResolvingQPlus r a θ)) = TO := by
+  rw [kerrResolving_balance_rapidity_zero r a θ hsig]
+  ext <;> norm_num [opticalObserver, TO]
+
 /-- Kerr-Newman `Δ`. -/
 def Delta (r M a Q : ℝ) : ℝ := r^2 - 2*M*r + a^2 + Q^2
 
@@ -5029,6 +5077,26 @@ theorem kerr_relative_rest_carter_certificate
   exact ⟨kerrCarrier_balance_rapidity_zero r a θ hsig hr,
     carterNumerator_angular_velocity r a⟩
 
+
+/-- Full regular-exterior Carter certificate using the first finite resolving carrier jet:
+the selected boost is zero, the stationary angular velocity is Carter's, and the resulting
+metric-normalized observer is unit timelike. -/
+theorem kerr_relative_rest_carter_regular
+    (r M a Q θ : ℝ)
+    (hsig : 0 < Sigma r a θ)
+    (hdel : 0 < Delta r M a Q) :
+    sigmaStar
+      (kerrResolvingQMinus r a θ)
+      (kerrResolvingQPlus r a θ) = 0 ∧
+    (carterNumerator r a).2 / (carterNumerator r a).1 =
+      carterOmega r a ∧
+    kerrStationaryNormSq r M a Q θ
+      (carterObserver r M a Q θ) = -1 := by
+  exact ⟨kerrResolving_balance_rapidity_zero
+      r a θ (ne_of_gt hsig),
+    carterNumerator_angular_velocity r a,
+    carterObserver_unit_timelike r M a Q θ hsig hdel⟩
+
 /-- Reissner-Nordström specialization (`a=0`) of `Σ`. -/
 theorem sigma_reissner_nordstrom (r θ : ℝ) : Sigma r 0 θ = r^2 := by
   simp [Sigma]
@@ -5304,6 +5372,10 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check kerrResolvingQMinus_ne_zero
+#check kerrResolving_balance_rapidity_zero
+#check kerrResolving_balanced_observer_unboosted
+#check kerr_relative_rest_carter_regular
 #check carterNumerator_time_leg
 #check carterNumerator_axial_leg
 #check kerrStationaryNormSq_smul
@@ -5693,4 +5765,5 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrPotential_field_factorization
 #print axioms RelativeRest.kerr_relative_rest_carter_certificate
 #print axioms RelativeRest.carterObserver_unit_timelike
+#print axioms RelativeRest.kerr_relative_rest_carter_regular
 #print axioms RelativeRest.kerr_regular_first_or_second_radial_jet_resolves
