@@ -6061,9 +6061,9 @@ theorem LagrangianVariationNoetherOperators.compensated_eq_canonicalCompletion
       (D.toFirstVariationCartanData.toNoetherOperators
         canonicalConstraint).dB := by
   apply D.compensated_operator_invariant_of_constraint
-  exact
+  exact hC.trans
     (D.toFirstVariationCartanData.toNoetherOperators_constraint
-      canonicalConstraint).symm.trans hC.symm
+      canonicalConstraint).symm
 
 /-- Existence and uniqueness of the compensated current already follows at this
 first-variation level. -/
