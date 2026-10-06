@@ -7663,15 +7663,21 @@ theorem kerrMetricPartial_symmetric
   unfold kerrMetricPartial kerrCoordPartial
   by_cases h1 : μ = 1
   · rw [if_pos h1]
-    congr 1
-    funext x
-    exact kerrMetricCov_symmetric x M a Q θ i j
+    have hfun :
+        (fun x : ℝ => kerrMetricCov x M a Q θ i j) =
+          (fun x : ℝ => kerrMetricCov x M a Q θ j i) := by
+      funext x
+      exact kerrMetricCov_symmetric x M a Q θ i j
+    rw [hfun]
   · rw [if_neg h1]
     by_cases h2 : μ = 2
     · rw [if_pos h2]
-      congr 1
-      funext x
-      exact kerrMetricCov_symmetric r M a Q x i j
+      have hfun :
+          (fun x : ℝ => kerrMetricCov r M a Q x i j) =
+            (fun x : ℝ => kerrMetricCov r M a Q x j i) := by
+        funext x
+        exact kerrMetricCov_symmetric r M a Q x i j
+      rw [hfun]
     · rw [if_neg h2]
 
 /-- Levi-Civita Christoffel symbols constructed directly from the metric and inverse metric. -/
