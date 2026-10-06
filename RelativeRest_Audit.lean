@@ -1,4 +1,4 @@
-import RelativeRest_DeepPass19
+import RelativeRest_DeepPass20
 
 /-!
 # Referee-facing axiom audit
@@ -61,3 +61,7 @@ headline formal statements.  There are no project-local axiom declarations in th
 #print axioms RelativeRest.electromagnetic_clock_full_chain
 
 #print axioms RelativeRest.kerrNewman_field_forces_Carter_Mino
+
+#print axioms RelativeRest.action_rest_iff_optical_weight_rest
+#print axioms RelativeRest.action_rest_iff_zero_relative_velocity
+#print axioms RelativeRest.relative_rest_complete_certificate
