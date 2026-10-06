@@ -3909,11 +3909,10 @@ theorem carterNumerator_factorization
 /-- The stationary angular velocity of the canonical principal Kerr-Newman direction is
 therefore exactly Carter's `Ω_C`. -/
 theorem carterNumerator_angular_velocity
-    (r a : ℝ) (h : r^2 + a^2 ≠ 0) :
+    (r a : ℝ) :
     (carterNumerator r a).2 / (carterNumerator r a).1 =
       carterOmega r a := by
-  simp [carterNumerator, carterOmega]
-  field_simp [h]
+  rfl
 
 /-- Combining the carrier-gradient balance with the canonical Kerr-Newman principal
 stationary direction gives the algebraic Carter-rest certificate: no residual boost is
@@ -3921,15 +3920,14 @@ applied, and the selected stationary direction has angular velocity `Ω_C`. -/
 theorem kerr_relative_rest_carter_certificate
     (r a θ : ℝ)
     (hsig : Sigma r a θ ≠ 0)
-    (hr : r ≠ 0)
-    (hden : r^2 + a^2 ≠ 0) :
+    (hr : r ≠ 0) :
     sigmaStar
       (kerrGradientQMinus r a θ)
       (kerrGradientQPlus r a θ) = 0 ∧
     (carterNumerator r a).2 / (carterNumerator r a).1 =
       carterOmega r a := by
   exact ⟨kerrCarrier_balance_rapidity_zero r a θ hsig hr,
-    carterNumerator_angular_velocity r a hden⟩
+    carterNumerator_angular_velocity r a⟩
 
 /-- Reissner-Nordström specialization (`a=0`) of `Σ`. -/
 theorem sigma_reissner_nordstrom (r θ : ℝ) : Sigma r 0 θ = r^2 := by
