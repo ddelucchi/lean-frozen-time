@@ -1287,6 +1287,85 @@ theorem principalJetFromF_eq_neg_principalStress
       ring
   · simp [principalStress, hij]
 
+/-- Invariant squared trace of the actual field-derived fixed-point jet. -/
+def principalJetFromFTraceSq (E B : ℝ) : ℝ :=
+  ∑ i : Fin 4, ∑ k : Fin 4,
+    principalJetFromF E B i k * principalJetFromF E B k i
+
+/-- The actual jet has squared trace `4χ²`. -/
+theorem principalJetFromF_trace_sq (E B : ℝ) :
+    principalJetFromFTraceSq E B =
+      4 * (principalChi E B)^2 := by
+  unfold principalJetFromFTraceSq
+  simp_rw [principalJetFromF_eq_neg_principalStress]
+  have h :=
+    principalStress_trace_sq (principalChi E B)
+  unfold principalStressTraceSq at h
+  simpa only [neg_mul_neg] using h
+
+/-- Hence the invariant definition
+`χ=(1/2)sqrt(tr J²)` recovers the field-derived Maxwell carrier exactly. -/
+theorem principalJetFromF_chi_from_trace (E B : ℝ) :
+    (1 / 2 : ℝ) *
+        Real.sqrt (principalJetFromFTraceSq E B) =
+      principalChi E B := by
+  rw [principalJetFromF_trace_sq]
+  have hχ : 0 ≤ principalChi E B :=
+    principalChi_nonneg E B
+  have hsq :
+      4 * (principalChi E B)^2 =
+        (2 * principalChi E B)^2 := by ring
+  rw [hsq, Real.sqrt_sq_eq_abs,
+    abs_of_nonneg (by positivity : 0 ≤ 2 * principalChi E B)]
+  ring
+
+/-- Ricci endomorphism reconstructed pointwise from the field-equation identity
+`J=-2R`. -/
+def principalRicciFromF (E B : ℝ) (i j : Fin 4) : ℝ :=
+  (-1 / 2 : ℝ) * principalJetFromF E B i j
+
+/-- Squared Ricci norm of the reconstructed principal Ricci endomorphism. -/
+def principalRicciFromFTraceSq (E B : ℝ) : ℝ :=
+  ∑ i : Fin 4, ∑ k : Fin 4,
+    principalRicciFromF E B i k *
+      principalRicciFromF E B k i
+
+/-- The field-derived Ricci norm is exactly `χ²`. -/
+theorem principalRicciFromF_trace_sq (E B : ℝ) :
+    principalRicciFromFTraceSq E B =
+      (principalChi E B)^2 := by
+  unfold principalRicciFromFTraceSq principalRicciFromF
+  have hJ := principalJetFromF_trace_sq E B
+  unfold principalJetFromFTraceSq at hJ
+  calc
+    (∑ i : Fin 4, ∑ k : Fin 4,
+      ((-1 / 2 : ℝ) * principalJetFromF E B i k) *
+        ((-1 / 2 : ℝ) * principalJetFromF E B k i))
+        =
+      (1 / 4 : ℝ) *
+        (∑ i : Fin 4, ∑ k : Fin 4,
+          principalJetFromF E B i k *
+            principalJetFromF E B k i) := by
+              simp_rw [← Finset.mul_sum]
+              ring
+    _ = (1 / 4 : ℝ) *
+        (4 * (principalChi E B)^2) := by rw [hJ]
+    _ = (principalChi E B)^2 := by ring
+
+/-- Therefore the two invariant definitions in `chiS` agree directly for the explicit field:
+`(1/2)sqrt(tr J²)=sqrt(tr R²)=χ`. -/
+theorem principalField_chiS_invariants (E B : ℝ) :
+    (1 / 2 : ℝ) *
+        Real.sqrt (principalJetFromFTraceSq E B) =
+      principalChi E B ∧
+    Real.sqrt (principalRicciFromFTraceSq E B) =
+      principalChi E B := by
+  constructor
+  · exact principalJetFromF_chi_from_trace E B
+  · rw [principalRicciFromF_trace_sq,
+      Real.sqrt_sq_eq_abs,
+      abs_of_nonneg (principalChi_nonneg E B)]
+
 /-- The field-derived fixed-point jet satisfies `J²=χ² I` directly. -/
 theorem principalJetFromF_sq
     (E B : ℝ) (i j : Fin 4) :
@@ -7407,6 +7486,10 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check principalJetFromF_trace_sq
+#check principalJetFromF_chi_from_trace
+#check principalRicciFromF_trace_sq
+#check principalField_chiS_invariants
 #check normalizedCarrierEndomorphism_scale_invariant
 #check normalizedCarrierEndomorphism_common_scale
 #check involution_projectors_scale_invariant
@@ -7914,6 +7997,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalMaxwell_timelike_eigen_from_chi
 #print axioms RelativeRest.principalStressFromF_eq_principalStress
 #print axioms RelativeRest.principalJetFromF_rainich
+#print axioms RelativeRest.principalField_chiS_invariants
 #print axioms RelativeRest.principalJetFromF_neg
 #print axioms RelativeRest.principalNormalizedJetFromFApply_eq_involution
 #print axioms RelativeRest.principalMaxwell_form_invariant_magnitude
