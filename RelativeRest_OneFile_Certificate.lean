@@ -643,6 +643,20 @@ theorem principalChi_pos
   · nlinarith [sq_pos_of_ne_zero hE, sq_nonneg B]
   · nlinarith [sq_nonneg E, sq_pos_of_ne_zero hB]
 
+
+/-- The principal Maxwell carrier vanishes exactly in the vacuum principal frame. -/
+theorem principalChi_eq_zero_iff (E B : ℝ) :
+    principalChi E B = 0 ↔ E = 0 ∧ B = 0 := by
+  constructor
+  · intro h
+    unfold principalChi at h
+    have hs : E^2 + B^2 = 0 := by nlinarith
+    constructor
+    · nlinarith [sq_nonneg E, sq_nonneg B]
+    · nlinarith [sq_nonneg E, sq_nonneg B]
+  · rintro ⟨rfl, rfl⟩
+    norm_num [principalChi]
+
 /-- The two Maxwell invariants square exactly to the square of the principal carrier. -/
 theorem maxwell_invariants_eq_principalChi_sq (E B : ℝ) :
     (maxwellI E B)^2 + (maxwellJ E B)^2 = (principalChi E B)^2 := by
@@ -740,6 +754,17 @@ theorem normalized_involution
   rw [hs, one_smul]
   simp
 
+
+/-- At the zero-carrier boundary the same Rainich square law becomes nilpotence. -/
+theorem rainich_square_nilpotent_at_zero
+    {V : Type*} [AddCommGroup V] [Module ℝ V]
+    (J : V →ₗ[ℝ] V) (χ : ℝ)
+    (hRainich : J.comp J = (χ^2) • LinearMap.id)
+    (hχ : χ = 0) :
+    J.comp J = 0 := by
+  rw [hχ] at hRainich
+  simpa using hRainich
+
 /-- The canonical ± eigenspace projectors of an involution. -/
 def involutionProjPlus
     {V : Type*} [AddCommGroup V] [Module ℝ V]
@@ -810,6 +835,45 @@ theorem involution_eigenspaces_orthogonal
       _ = B x (-y) := by rw [hy]
       _ = - B x y := by simp
   linarith
+
+/-! ### Full-jet residual stabilizer logic -/
+
+variable {G : Type*}
+
+/-- Exact residual symmetry of the complete fixed-point jet is the intersection of all
+finite-order stabilizers. -/
+def fullJetStabilizer (H : ℕ → Set G) : Set G :=
+  ⋂ n, H n
+
+theorem fullJetStabilizer_subset (H : ℕ → Set G) (n : ℕ) :
+    fullJetStabilizer H ⊆ H n := by
+  intro g hg
+  exact Set.mem_iInter.mp hg n
+
+/-- If any finite jet order has only the identity stabilizer, then the full jet has only
+that identity as well. -/
+theorem fullJetStabilizer_eq_singleton_of_finite_break
+    (H : ℕ → Set G) (e : G)
+    (he : ∀ n, e ∈ H n)
+    (m : ℕ) (hm : H m = {e}) :
+    fullJetStabilizer H = {e} := by
+  ext g
+  constructor
+  · intro hg
+    have hgm : g ∈ H m := fullJetStabilizer_subset H m hg
+    rw [hm] at hgm
+    exact hgm
+  · intro hg
+    have hge : g = e := by simpa using hg
+    subst g
+    exact Set.mem_iInter.mpr he
+
+/-- If no finite jet kills a transformation but it stabilizes every finite jet, then it
+survives exactly as a full-jet residual symmetry. -/
+theorem mem_fullJetStabilizer_iff
+    (H : ℕ → Set G) (g : G) :
+    g ∈ fullJetStabilizer H ↔ ∀ n, g ∈ H n := by
+  simp [fullJetStabilizer]
 
 /-! ## 6. Unique residual boost balance -/
 
@@ -1421,6 +1485,36 @@ Instead, this section proves the *forced linear algebra* once a parameter-to-cha
 and its stress response are supplied.  These theorems are directly reusable when the full
 Einstein–Maxwell current is formalized.
 -/
+
+/-! ### Boundary-compensated Iyer-Wald sign algebra -/
+
+/-- Antisymmetry plus the off-shell Iyer-Wald identity forces the boundary-compensated
+current to equal the constraint response. -/
+theorem iyerWald_boundary_compensation
+    (omegaYX omegaXY dB deltaC : ℝ)
+    (hanti : omegaXY = -omegaYX)
+    (hIW : omegaYX = dB - deltaC) :
+    omegaXY + dB = deltaC := by
+  rw [hanti, hIW]
+  ring
+
+/-- With the Einstein-Maxwell relative response `δC=-2ℓ`, the compensated current is
+therefore exactly the bulk stress response `-2ℓ`. -/
+theorem iyerWald_bulk_response
+    (omegaYX omegaXY dB deltaC ell : ℝ)
+    (hanti : omegaXY = -omegaYX)
+    (hIW : omegaYX = dB - deltaC)
+    (hC : deltaC = -2 * ell) :
+    omegaXY + dB = -2 * ell := by
+  rw [iyerWald_boundary_compensation omegaYX omegaXY dB deltaC hanti hIW, hC]
+
+/-- The manuscript's characteristic covector sign is then forced algebraically. -/
+theorem characteristic_half_contraction
+    (OmegaXY ell : ℝ)
+    (hOmega : OmegaXY = -2 * ell) :
+    -(1 / 2 : ℝ) * OmegaXY = ell := by
+  rw [hOmega]
+  ring
 
 section LinearDescent
 
@@ -2153,6 +2247,30 @@ theorem causal_radar_clock_mono
   unfold radarTime
   linarith
 
+
+/-- Endpoint values depend only on the causal-order sets, not on any choice of connecting
+null-geodesic branch used to describe their boundaries. -/
+theorem causal_endpoints_branch_independent
+    {P₁ P₂ F₁ F₂ : Set ℝ}
+    (hP : P₁ = P₂) (hF : F₁ = F₂) :
+    pastEndpoint P₁ = pastEndpoint P₂ ∧
+    futureEndpoint F₁ = futureEndpoint F₂ := by
+  subst P₂
+  subst F₂
+  exact ⟨rfl, rfl⟩
+
+/-- On the finite endpoint domain, endpoint ordering forces a nonnegative radar radius and
+places the midpoint between the two endpoints. -/
+theorem radar_order_geometry
+    (θminus θplus : ℝ) (h : θminus ≤ θplus) :
+    0 ≤ radarRadius θplus θminus ∧
+    θminus ≤ radarTime θplus θminus ∧
+    radarTime θplus θminus ≤ θplus := by
+  unfold radarRadius radarTime
+  constructor
+  · linarith
+  · constructor <;> linarith
+
 /-- Algebraic certificate of the paper's radial-jet statement: coincident endpoint
 values have zero odd radar defect, while their principal half-difference is the
 nonzero radial covector `R_O`. -/
@@ -2323,6 +2441,21 @@ theorem clockLiouville_eq_contraction (κ : ℝ) (v : R2) :
 theorem clockLiouville_homogeneous (c κ : ℝ) (v : R2) :
     clockLiouville (c * κ) v = c * clockLiouville κ v := by
   simp [clockLiouville]
+  ring
+
+
+/-- Tangent action of positive common-scale dilation on the clock cover. -/
+def clockDilationTangent (c : ℝ) (v : R2) : R2 :=
+  (v.1, c * v.2)
+
+/-- The exact clock-cover symplectic form is homogeneous of degree one under common scale. -/
+theorem clockOmega_dilation_homogeneous
+    (c : ℝ) (v w : R2) :
+    clockOmega (clockDilationTangent c v) (clockDilationTangent c w) =
+      c * clockOmega v w := by
+  rcases v with ⟨vΘ, vκ⟩
+  rcases w with ⟨wΘ, wκ⟩
+  simp [clockOmega, clockDilationTangent]
   ring
 
 /-- The clock-cover two-form is skew. -/
@@ -2592,6 +2725,16 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check principalChi_eq_zero_iff
+#check rainich_square_nilpotent_at_zero
+#check fullJetStabilizer_eq_singleton_of_finite_break
+#check mem_fullJetStabilizer_iff
+#check iyerWald_boundary_compensation
+#check iyerWald_bulk_response
+#check characteristic_half_contraction
+#check clockOmega_dilation_homogeneous
+#check causal_endpoints_branch_independent
+#check radar_order_geometry
 #check nullCovectorNormSq_boost_invariant
 #check nullCovector_nonnull_boost_iff
 #check sigmaStar_exchange
