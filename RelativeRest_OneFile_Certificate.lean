@@ -11052,38 +11052,6 @@ def kerrEinsteinTargetRicciCoordinate
   else 0
 
 
-/-- The last Kerr-Newman Ricci component is forced by the square-form relation and the
-already-derived t-phi equation. -/
-theorem kerrRicci_phiphi_eq_target
-    (Q r M a θ : ℝ)
-    (hsig : Sigma r a θ ≠ 0)
-    (hdel : Delta r M a Q ≠ 0)
-    (hsin : Real.sin θ ≠ 0) :
-    kerrRicciCovFromMetric r M a Q θ 3 3 =
-      kerrEinsteinTargetRicciCoordinate Q r M a θ 3 3 := by
-  have hrel := kerrRicci_phiphi_plus_scaled_tphi
-    r M a Q θ hsig hdel hsin
-  rw [kerrRicci_tphi_eq_target Q r M a θ hsig hdel hsin] at hrel
-  simp [kerrEinsteinTargetRicciCoordinate, kerrRicciScale] at hrel ⊢
-  field_simp [hsig] at hrel ⊢
-  have htrig := Real.sin_sq_add_cos_sq θ
-  unfold Delta Sigma at hrel ⊢
-  nlinarith
-
-/-- The full Boyer-Lindquist Ricci tensor is now machine-reduced to the
-Einstein-Maxwell target on the regular chart. -/
-theorem kerrRicci_full_eq_target
-    (Q r M a θ : ℝ)
-    (hsig : Sigma r a θ ≠ 0)
-    (hdel : Delta r M a Q ≠ 0)
-    (hsin : Real.sin θ ≠ 0) :
-    ∀ i j : Fin 4,
-      kerrRicciCovFromMetric r M a Q θ i j =
-        kerrEinsteinTargetRicciCoordinate Q r M a θ i j := by
-  apply (kerrFullRicciEquation_iff_one_obligation
-    Q r M a θ hsig hdel hsin).2
-  exact kerrRicci_phiphi_eq_target Q r M a θ hsig hdel hsin
-
 /-- The t-phi Ricci component is derived directly from the metric and equals the
 Maxwell-forced Einstein target. -/
 theorem kerrRicci_tphi_eq_target
@@ -11106,6 +11074,24 @@ theorem kerrRicci_tphi_eq_target
   field_simp [hsig, hdel, hsin]
   have htrig := Real.sin_sq_add_cos_sq θ
   unfold Delta Sigma
+  nlinarith
+
+/-- The last Kerr-Newman Ricci component is forced by the square-form relation and the
+already-derived t-phi equation. -/
+theorem kerrRicci_phiphi_eq_target
+    (Q r M a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrRicciCovFromMetric r M a Q θ 3 3 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 3 3 := by
+  have hrel := kerrRicci_phiphi_plus_scaled_tphi
+    r M a Q θ hsig hdel hsin
+  rw [kerrRicci_tphi_eq_target Q r M a θ hsig hdel hsin] at hrel
+  simp [kerrEinsteinTargetRicciCoordinate, kerrRicciScale] at hrel ⊢
+  field_simp [hsig] at hrel ⊢
+  have htrig := Real.sin_sq_add_cos_sq θ
+  unfold Delta Sigma at hrel ⊢
   nlinarith
 
 /-- The tt Ricci component is derived directly from the Boyer-Lindquist metric and
@@ -11278,6 +11264,57 @@ theorem kerrRicci_stationary_meridional_eq_target
             (And.intro h10
               (And.intro h20
                 (And.intro h13 h23))))))
+
+/-- All sixteen Boyer-Lindquist Ricci components now equal the explicit
+Einstein-Maxwell target.  This proof uses only the component theorems already
+derived from the metric plus stationary-reflection parity and tensor symmetry. -/
+theorem kerrRicci_full_eq_target_direct
+    (Q r M a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    ∀ i j : Fin 4,
+      kerrRicciCovFromMetric r M a Q θ i j =
+        kerrEinsteinTargetRicciCoordinate Q r M a θ i j := by
+  intro i j
+  fin_cases i <;> fin_cases j
+  · exact kerrRicci_tt_eq_target Q r M a θ hsig hdel hsin
+  · apply kerrRicciCovFromMetric_eq_target_of_odd_stationary
+    norm_num [kerrStationarySign]
+  · apply kerrRicciCovFromMetric_eq_target_of_odd_stationary
+    norm_num [kerrStationarySign]
+  · exact kerrRicci_tphi_eq_target Q r M a θ hsig hdel hsin
+  · apply kerrRicciCovFromMetric_eq_target_of_odd_stationary
+    norm_num [kerrStationarySign]
+  · exact kerrRicci_rr_eq_target Q r M a θ hsig hdel hsin
+  · exact kerrRicci_rtheta_eq_target Q r M a θ hsig hdel hsin
+  · apply kerrRicciCovFromMetric_eq_target_of_odd_stationary
+    norm_num [kerrStationarySign]
+  · apply kerrRicciCovFromMetric_eq_target_of_odd_stationary
+    norm_num [kerrStationarySign]
+  · exact kerrRicci_thetar_eq_target Q r M a θ hsig hdel hsin
+  · exact kerrRicci_thetatheta_eq_target Q r M a θ hsig hdel hsin
+  · apply kerrRicciCovFromMetric_eq_target_of_odd_stationary
+    norm_num [kerrStationarySign]
+  · rw [← kerrRicci_tphi_symmetric r M a Q θ,
+        ← kerrEinsteinTargetRicciCoordinate_symmetric Q r M a θ 0 3]
+    exact kerrRicci_tphi_eq_target Q r M a θ hsig hdel hsin
+  · apply kerrRicciCovFromMetric_eq_target_of_odd_stationary
+    norm_num [kerrStationarySign]
+  · apply kerrRicciCovFromMetric_eq_target_of_odd_stationary
+    norm_num [kerrStationarySign]
+  · exact kerrRicci_phiphi_eq_target Q r M a θ hsig hdel hsin
+
+/-- Backward-compatible name for the completed metric-derived Ricci theorem. -/
+theorem kerrRicci_full_eq_target
+    (Q r M a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    ∀ i j : Fin 4,
+      kerrRicciCovFromMetric r M a Q θ i j =
+        kerrEinsteinTargetRicciCoordinate Q r M a θ i j :=
+  kerrRicci_full_eq_target_direct Q r M a θ hsig hdel hsin
 
 /-- The coframe-defined Einstein-Maxwell Ricci target is exactly the explicit coordinate tensor. -/
 theorem kerrEinsteinTargetRicciCov_eq_coordinate
