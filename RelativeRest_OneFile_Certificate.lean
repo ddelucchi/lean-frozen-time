@@ -1153,6 +1153,107 @@ theorem principalFieldEnergyDensity_eq_chi
   ring
 
 
+/-- A nonzero principal Maxwell field has strictly positive energy density. -/
+theorem principalFieldEnergyDensity_pos_of_nonzero
+    (E B : ℝ) (hfield : E ≠ 0 ∨ B ≠ 0) :
+    0 < principalFieldEnergyDensity E B := by
+  rw [principalFieldEnergyDensity_eq_chi]
+  exact div_pos
+    (principalChi_pos E B hfield)
+    (mul_pos (by norm_num) Real.pi_pos)
+
+/-- The explicit timelike mixed stress component is the negative energy density. -/
+theorem principalStressFromF_00
+    (E B : ℝ) :
+    principalStressFromF E B 0 0 =
+      - principalFieldEnergyDensity E B := by
+  rw [principalStressFromF_eq_principalStress]
+  simp [principalStress]
+
+/-- Componentwise common-character-removed Einstein-Maxwell residual for the explicit field. -/
+def principalScaledResidualFromF
+    (E B : ℝ) (i j : Fin 4) (s : ℝ) : ℝ :=
+  8 * Real.pi * principalStressFromF E B i j -
+    8 * Real.pi * Real.exp (2 * s) *
+      principalStressFromF E B i j
+
+/-- Every explicit field component lies on the relative fixed point at `s=0`. -/
+@[simp] theorem principalScaledResidualFromF_zero
+    (E B : ℝ) (i j : Fin 4) :
+    principalScaledResidualFromF E B i j 0 = 0 := by
+  simp [principalScaledResidualFromF]
+
+/-- The first normal derivative of the explicit residual is exactly the fixed-point jet
+`J[F]=-16πT[F]`. -/
+theorem principalScaledResidualFromF_hasDerivAt_zero
+    (E B : ℝ) (i j : Fin 4) :
+    HasDerivAt
+      (principalScaledResidualFromF E B i j)
+      (principalJetFromF E B i j) 0 := by
+  have hexp :
+      HasDerivAt (fun s : ℝ => Real.exp (2 * s)) 2 0 := by
+    have hlin : HasDerivAt (fun s : ℝ => 2 * s) 2 0 :=
+      (hasDerivAt_id 0).const_mul 2
+    simpa using (Real.hasDerivAt_exp 0).comp 0 hlin
+  have hscaled :=
+    hexp.const_mul
+      (8 * Real.pi * principalStressFromF E B i j)
+  have hconst :
+      HasDerivAt
+        (fun _ : ℝ =>
+          8 * Real.pi * principalStressFromF E B i j)
+        0 0 :=
+    hasDerivAt_const 0 _
+  unfold principalScaledResidualFromF principalJetFromF
+  convert hconst.sub hscaled using 1 <;> ring
+
+/-- Derivative form of the explicit fixed-point jet identity. -/
+theorem principalScaledResidualFromF_deriv_zero
+    (E B : ℝ) (i j : Fin 4) :
+    deriv (principalScaledResidualFromF E B i j) 0 =
+      principalJetFromF E B i j :=
+  (principalScaledResidualFromF_hasDerivAt_zero E B i j).deriv
+
+/-- On the nonzero Maxwell sector the timelike Einstein-Maxwell component preserves the
+field equation under relative scaling if and only if `s=0`. -/
+theorem principalField_solution_preserving_iff
+    (u s E B : ℝ)
+    (hfield : E ≠ 0 ∨ B ≠ 0) :
+    (8 * Real.pi * principalFieldEnergyDensity E B =
+      8 * Real.pi *
+        maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+        principalFieldEnergyDensity E B) ↔
+      s = 0 := by
+  exact rescaled_solution_preserving_iff
+    u s (principalFieldEnergyDensity E B)
+    (ne_of_gt (principalFieldEnergyDensity_pos_of_nonzero E B hfield))
+
+/-- Equivalently the actual `00` residual has a unique zero at the relative fixed point. -/
+theorem principalScaledResidualFromF_00_zero_iff
+    (E B s : ℝ)
+    (hfield : E ≠ 0 ∨ B ≠ 0) :
+    principalScaledResidualFromF E B 0 0 s = 0 ↔ s = 0 := by
+  unfold principalScaledResidualFromF
+  rw [principalStressFromF_00]
+  have hε :
+      principalFieldEnergyDensity E B ≠ 0 :=
+    ne_of_gt (principalFieldEnergyDensity_pos_of_nonzero E B hfield)
+  have hcoef :
+      8 * Real.pi * (-principalFieldEnergyDensity E B) ≠ 0 := by
+    exact mul_ne_zero
+      (mul_ne_zero (by norm_num) (ne_of_gt Real.pi_pos))
+      (neg_ne_zero.mpr hε)
+  constructor
+  · intro h
+    have hscale :
+        Real.exp (2 * s) = 1 := by
+      apply (mul_left_cancel₀ hcoef)
+      simpa [mul_assoc, mul_left_comm, mul_comm] using h
+    exact (exp_two_eq_one_iff s).mp hscale
+  · rintro rfl
+    simp
+
+
 /-- Overall Maxwell-field orientation reversal does not change the principal energy density. -/
 @[simp] theorem principalFieldEnergyDensity_neg
     (E B : ℝ) :
@@ -8792,6 +8893,13 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check principalFieldEnergyDensity_pos_of_nonzero
+#check principalStressFromF_00
+#check principalScaledResidualFromF_zero
+#check principalScaledResidualFromF_hasDerivAt_zero
+#check principalScaledResidualFromF_deriv_zero
+#check principalField_solution_preserving_iff
+#check principalScaledResidualFromF_00_zero_iff
 #check principalTO_physicalU
 #check principalTOLinear_physicalU
 #check principalPhysicalU_background_unit
@@ -9362,6 +9470,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.normalizationBridge_principal
 #print axioms RelativeRest.principalMaxwell_timelike_eigen_from_chi
 #print axioms RelativeRest.principalStressFromF_eq_principalStress
+#print axioms RelativeRest.principalScaledResidualFromF_deriv_zero
+#print axioms RelativeRest.principalScaledResidualFromF_00_zero_iff
 #print axioms RelativeRest.principalJetFromF_rainich
 #print axioms RelativeRest.principalEinsteinTensorFromF_eq_stress
 #print axioms RelativeRest.principalJetFromF_eq_minus_two_EinsteinRicci
