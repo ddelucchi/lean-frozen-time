@@ -4009,6 +4009,144 @@ theorem relativeConstraintResidual_deriv_zero (ell : ℝ) :
     deriv (relativeConstraintResidual ell) 0 = -2 * ell :=
   (relativeConstraintResidual_hasDerivAt_zero ell).deriv
 
+/-! ### Lagrangian-level Iyer-Wald operator identity -/
+
+section LagrangianIyerWaldOperator
+
+variable {L C : Type*}
+  [AddCommGroup L] [Module ℝ L]
+  [AddCommGroup C] [Module ℝ C]
+
+/-- Covariant-phase-space operators viewed as linear descendants of the Lagrangian.
+The sole geometric identity retained here is the operator-level off-shell Iyer-Wald
+identity.  All relative scaling, compensation, signs, and normalizations below are
+derived from this one equality and the reciprocal Lagrangian jet. -/
+structure LagrangianIyerWaldOperators where
+  omegaYX : L →ₗ[ℝ] C
+  dB : L →ₗ[ℝ] C
+  constraint : L →ₗ[ℝ] C
+  iw_operator_identity : omegaYX = dB - constraint
+
+/-- Antisymmetry fixes the reversed presymplectic ordering rather than supplying
+another independent current. -/
+def LagrangianIyerWaldOperators.omegaXY
+    (D : LagrangianIyerWaldOperators (L:=L) (C:=C)) :
+    L →ₗ[ℝ] C :=
+  -D.omegaYX
+
+@[simp] theorem LagrangianIyerWaldOperators.omegaXY_apply
+    (D : LagrangianIyerWaldOperators (L:=L) (C:=C))
+    (X : L) :
+    D.omegaXY X = -D.omegaYX X := by
+  simp [LagrangianIyerWaldOperators.omegaXY]
+
+/-- Pointwise form of the single operator-level Iyer-Wald identity. -/
+theorem LagrangianIyerWaldOperators.identity_apply
+    (D : LagrangianIyerWaldOperators (L:=L) (C:=C))
+    (X : L) :
+    D.omegaYX X = D.dB X - D.constraint X := by
+  exact LinearMap.congr_fun D.iw_operator_identity X
+
+/-- The boundary-compensated reversed current is therefore definitionally forced
+to equal the constraint descendant for every Lagrangian variation. -/
+theorem LagrangianIyerWaldOperators.compensated_eq_constraint
+    (D : LagrangianIyerWaldOperators (L:=L) (C:=C))
+    (X : L) :
+    D.omegaXY X + D.dB X = D.constraint X := by
+  rw [D.omegaXY_apply, D.identity_apply]
+  module
+
+/-- No second compensated current can satisfy the same Lagrangian Iyer-Wald identity. -/
+theorem LagrangianIyerWaldOperators.omegaXY_unique
+    (D : LagrangianIyerWaldOperators (L:=L) (C:=C))
+    (W : L →ₗ[ℝ] C)
+    (hW : ∀ X : L, W X + D.dB X = D.constraint X) :
+    W = D.omegaXY := by
+  ext X
+  apply add_right_cancel (b := D.dB X)
+  exact (hW X).trans (D.compensated_eq_constraint X).symm
+
+/-- Opposite gravity/Maxwell constraint descendants force the relative normal
+constraint to be exactly `-2 ell`. -/
+theorem LagrangianIyerWaldOperators.constraint_normalJet_of_opposite
+    (D : LagrangianIyerWaldOperators (L:=L) (C:=C))
+    (LG LM : L) (ell : C)
+    (hG : D.constraint LG = ell)
+    (hM : D.constraint LM = -ell) :
+    D.constraint (reciprocalLagrangianNormalJet LG LM) =
+      (-2 : ℝ) • ell :=
+  linearDescendant_normalJet_of_opposite
+    D.constraint LG LM ell hG hM
+
+/-- The complete compensated relative-normal Iyer-Wald current follows from the
+Lagrangian operator identity and opposite sector constraint values. -/
+theorem LagrangianIyerWaldOperators.compensated_relative_normal
+    (D : LagrangianIyerWaldOperators (L:=L) (C:=C))
+    (LG LM : L) (ell : C)
+    (hG : D.constraint LG = ell)
+    (hM : D.constraint LM = -ell) :
+    D.omegaXY (reciprocalLagrangianNormalJet LG LM) +
+        D.dB (reciprocalLagrangianNormalJet LG LM) =
+      (-2 : ℝ) • ell := by
+  rw [D.compensated_eq_constraint]
+  exact D.constraint_normalJet_of_opposite LG LM ell hG hM
+
+end LagrangianIyerWaldOperator
+
+/-! ### Lagrangian operator identity to Maxwell carrier current -/
+
+section LagrangianIyerWaldCarrierBridge
+
+variable {L V W : Type*}
+  [AddCommGroup L] [Module ℝ L]
+  [AddCommGroup V] [Module ℝ V]
+  [AddCommGroup W] [Module ℝ W]
+
+/-- Once the Einstein-Maxwell constraint descendant has the opposite sector values
+forced by the reciprocal Lagrangian, the Lagrangian Iyer-Wald operator identity
+produces the carrier bulk current with no separate `hIW` or antisymmetry hypothesis. -/
+theorem lagrangianIyerWald_compensated_eq_carrierBulkResponse
+    (D : LagrangianIyerWaldOperators
+      (L:=L) (C:=(V →ₗ[ℝ] ℝ)))
+    (LG LM : L)
+    (integrate : W →ₗ[ℝ] ℝ)
+    (J T : V →ₗ[ℝ] V)
+    (iε : V →ₗ[ℝ] W)
+    (hJ : J = (-16 * Real.pi) • T)
+    (hG : D.constraint LG = stressResponse integrate T iε)
+    (hM : D.constraint LM = -(stressResponse integrate T iε)) :
+    D.omegaXY (reciprocalLagrangianNormalJet LG LM) +
+        D.dB (reciprocalLagrangianNormalJet LG LM) =
+      carrierBulkResponse integrate J iε := by
+  rw [D.compensated_relative_normal
+      LG LM (stressResponse integrate T iε) hG hM,
+    carrierBulkResponse_eq_minus_two_stressResponse
+      integrate J T iε hJ]
+
+/-- Therefore the characteristic negative-half contraction is forced directly from
+the Lagrangian-level Iyer-Wald identity and the Einstein-Maxwell field-equation jet. -/
+theorem lagrangianIyerWald_half_compensated_eq_stressResponse
+    (D : LagrangianIyerWaldOperators
+      (L:=L) (C:=(V →ₗ[ℝ] ℝ)))
+    (LG LM : L)
+    (integrate : W →ₗ[ℝ] ℝ)
+    (J T : V →ₗ[ℝ] V)
+    (iε : V →ₗ[ℝ] W)
+    (hJ : J = (-16 * Real.pi) • T)
+    (hG : D.constraint LG = stressResponse integrate T iε)
+    (hM : D.constraint LM = -(stressResponse integrate T iε)) :
+    (-1 / 2 : ℝ) •
+      (D.omegaXY (reciprocalLagrangianNormalJet LG LM) +
+        D.dB (reciprocalLagrangianNormalJet LG LM)) =
+      stressResponse integrate T iε := by
+  rw [lagrangianIyerWald_compensated_eq_carrierBulkResponse
+      D LG LM integrate J T iε hJ hG hM]
+  simpa [halfCarrierBulkCurrent] using
+    (halfCarrierBulkCurrent_eq_stressResponse
+      integrate J T iε hJ)
+
+end LagrangianIyerWaldCarrierBridge
+
 /-- Antisymmetry plus the off-shell Iyer-Wald identity forces the boundary-compensated
 current to equal the constraint response. -/
 theorem iyerWald_boundary_compensation
