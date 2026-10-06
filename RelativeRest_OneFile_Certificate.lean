@@ -1008,6 +1008,18 @@ theorem covector_pullback_injective
   obtain ⟨p, rfl⟩ := hβ k
   exact LinearMap.congr_fun h p
 
+/-- When the characteristic space is literally `im β`, uniqueness of the descended
+covector needs no separately supplied surjectivity hypothesis. -/
+theorem characteristic_range_covector_unique
+    (β : P →ₗ[ℝ] K)
+    (ℓ : P →ₗ[ℝ] ℝ)
+    (Λ₁ Λ₂ : LinearMap.range β →ₗ[ℝ] ℝ)
+    (h₁ : Λ₁.comp β.rangeRestrict = ℓ)
+    (h₂ : Λ₂.comp β.rangeRestrict = ℓ) :
+    Λ₁ = Λ₂ := by
+  exact covector_pullback_injective β.rangeRestrict
+    (LinearMap.surjective_rangeRestrict β) (h₁.trans h₂.symm)
+
 /-- A covector with a prescribed pullback is unique. -/
 theorem descended_covector_unique
     (β : P →ₗ[ℝ] K) (hβ : Function.Surjective β)
@@ -1063,6 +1075,24 @@ theorem nonzero_covector_surjective
 noncomputable def clockQuotientEquivRange (Λ : K →ₗ[ℝ] ℝ) :
     (K ⧸ LinearMap.ker Λ) ≃ₗ[ℝ] LinearMap.range Λ :=
   LinearMap.quotKerEquivRange Λ
+
+/-- A nonzero clock covector makes its kernel quotient canonically equivalent to `ℝ`. -/
+noncomputable def clockQuotientEquivReal
+    (Λ : K →ₗ[ℝ] ℝ) (hΛ : Λ ≠ 0) :
+    (K ⧸ LinearMap.ker Λ) ≃ₗ[ℝ] ℝ :=
+  (LinearMap.quotKerEquivRange Λ).trans
+    ((LinearEquiv.ofEq (LinearMap.range Λ) ⊤
+      (LinearMap.range_eq_top.mpr (LinearMap.surjective hΛ))).trans
+      Submodule.topEquiv)
+
+/-- Therefore the stress-visible quotient has exactly one real dimension. -/
+theorem clockQuotient_finrank_one
+    (Λ : K →ₗ[ℝ] ℝ) (hΛ : Λ ≠ 0) :
+    Module.finrank ℝ (K ⧸ LinearMap.ker Λ) = 1 := by
+  calc
+    Module.finrank ℝ (K ⧸ LinearMap.ker Λ)
+        = Module.finrank ℝ ℝ := LinearEquiv.finrank_eq (clockQuotientEquivReal Λ hΛ)
+    _ = 1 := CommSemiring.finrank_self ℝ
 
 /-- A nonzero covector's range is all of `ℝ`. -/
 theorem range_eq_top_of_nonzero
@@ -1696,6 +1726,9 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check characteristic_range_covector_unique
+#check clockQuotientEquivReal
+#check clockQuotient_finrank_one
 #check delta_eq_zero_iff_one
 #check character_rest_iff_zero
 #check conformal_factor_forced
