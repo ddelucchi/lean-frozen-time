@@ -6065,6 +6065,41 @@ theorem LagrangianVariationNoetherOperators.compensated_eq_canonicalCompletion
     (D.toFirstVariationCartanData.toNoetherOperators_constraint
       canonicalConstraint).symm
 
+/-- The first-variation equation itself leaves no freedom in the boundary
+divergence once `δL` and the Euler term are fixed. -/
+theorem LagrangianFirstVariationCartanData.dTheta_forced
+    (D : LagrangianFirstVariationCartanData (L:=L) (C:=C)) :
+    D.dTheta = D.deltaL - D.euler := by
+  ext X
+  have h := LinearMap.congr_fun D.first_variation X
+  simp only [LinearMap.add_apply, LinearMap.sub_apply] at h ⊢
+  module
+
+/-- Cartan fixes the combination that enters the Iyer-Wald derivation; splitting it
+between a Lie derivative and an exact contraction term is only representative data. -/
+theorem LagrangianFirstVariationCartanData.cartan_difference_forced
+    (D : LagrangianFirstVariationCartanData (L:=L) (C:=C)) :
+    D.lieTheta - D.dContractTheta =
+      D.contractGauge.comp D.dTheta := by
+  exact D.cartan_on_dTheta.symm
+
+/-- Most importantly, after canonical Noether completion the compensated Iyer-Wald
+operator is completely independent of the chosen first-variation/Cartan representative.
+The action-derived constraint alone fixes the bulk observable used by the clock. -/
+theorem LagrangianFirstVariationCartanData.canonicalCompletion_compensated_independent_of_core
+    (D₁ D₂ : LagrangianFirstVariationCartanData (L:=L) (C:=C))
+    (canonicalConstraint : L →ₗ[ℝ] C) :
+    (D₁.toNoetherOperators canonicalConstraint).omegaXY +
+        (D₁.toNoetherOperators canonicalConstraint).dB =
+      (D₂.toNoetherOperators canonicalConstraint).omegaXY +
+        (D₂.toNoetherOperators canonicalConstraint).dB := by
+  apply
+    (D₁.toNoetherOperators canonicalConstraint).
+      compensated_operator_invariant_of_constraint
+        (D₂.toNoetherOperators canonicalConstraint)
+  rw [D₁.toNoetherOperators_constraint,
+    D₂.toNoetherOperators_constraint]
+
 /-- Existence and uniqueness of the compensated current already follows at this
 first-variation level. -/
 theorem LagrangianVariationNoetherOperators.omegaXY_existsUnique
@@ -20041,6 +20076,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.LagrangianVariationNoetherOperators.dDeltaCharge_forced
 #print axioms RelativeRest.LagrangianVariationNoetherOperators.compensated_current_invariant_of_constraint
 #print axioms RelativeRest.LagrangianVariationNoetherOperators.compensated_operator_invariant_of_constraint
+#print axioms RelativeRest.LagrangianFirstVariationCartanData.dTheta_forced
+#print axioms RelativeRest.LagrangianFirstVariationCartanData.cartan_difference_forced
+#print axioms RelativeRest.LagrangianFirstVariationCartanData.canonicalCompletion_compensated_independent_of_core
 #print axioms RelativeRest.LagrangianVariationNoetherOperators_eq_canonical_completion
 #print axioms RelativeRest.LagrangianVariationNoetherOperators_unique_of_core_and_constraint
 #print axioms RelativeRest.principalMetricEulerDivergence_zero_of_generalizedBianchi_onMaxwellShell
