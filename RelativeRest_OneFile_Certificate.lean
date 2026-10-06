@@ -9432,6 +9432,75 @@ theorem kerrEinsteinEquation_from_evenRicciObligations
   simp
   exact hRicCov i j
 
+/-- After the two mixed meridional equations are also derived, only these six ordered
+even-parity Ricci components remain to close the Kerr-Newman Einstein equation. -/
+def kerrSixRicciObligations
+    (Q r M a θ : ℝ) : Prop :=
+  kerrRicciCovFromMetric r M a Q θ 0 0 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 0 0 ∧
+  kerrRicciCovFromMetric r M a Q θ 0 3 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 0 3 ∧
+  kerrRicciCovFromMetric r M a Q θ 1 1 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 1 1 ∧
+  kerrRicciCovFromMetric r M a Q θ 2 2 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 2 2 ∧
+  kerrRicciCovFromMetric r M a Q θ 3 0 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 3 0 ∧
+  kerrRicciCovFromMetric r M a Q θ 3 3 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 3 3
+
+/-- On the regular Boyer-Lindquist chart, the former eight-component closure condition
+is equivalent to the six genuinely unproved components because both r-theta orders
+have now been derived from the metric. -/
+theorem kerrEvenRicciObligations_iff_six
+    (Q r M a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrEvenRicciObligations Q r M a θ ↔
+      kerrSixRicciObligations Q r M a θ := by
+  constructor
+  · rintro ⟨h00,h03,h11,_h12,_h21,h22,h30,h33⟩
+    exact ⟨h00,h03,h11,h22,h30,h33⟩
+  · rintro ⟨h00,h03,h11,h22,h30,h33⟩
+    exact ⟨h00,h03,h11,
+      kerrRicci_rtheta_eq_target Q r M a θ hsig hdel hsin,
+      kerrRicci_thetar_eq_target Q r M a θ hsig hdel hsin,
+      h22,h30,h33⟩
+
+/-- Therefore the full sixteen-component Ricci equation is equivalent, on the regular
+chart, to exactly six remaining scalar identities. -/
+theorem kerrFullRicciEquation_iff_six_obligations
+    (Q r M a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    (∀ i j : Fin 4,
+      kerrRicciCovFromMetric r M a Q θ i j =
+        kerrEinsteinTargetRicciCoordinate Q r M a θ i j) ↔
+      kerrSixRicciObligations Q r M a θ := by
+  exact (kerrFullRicciEquation_iff_even_obligations
+    Q r M a θ).trans
+      (kerrEvenRicciObligations_iff_six
+        Q r M a θ hsig hdel hsin)
+
+/-- Six scalar curvature identities are now sufficient for the complete metric-derived
+Einstein tensor, including the forced trace-free reduction. -/
+theorem kerrEinsteinEquation_from_sixRicciObligations
+    (Q r M a θ : ℝ)
+    (hsig : 0 < Sigma r a θ)
+    (hdel : 0 < Delta r M a Q)
+    (hsin : Real.sin θ ≠ 0)
+    (hSix : kerrSixRicciObligations Q r M a θ) :
+    kerrScalarCurvatureFromMetric r M a Q θ = 0 ∧
+    (∀ i j : Fin 4,
+      kerrEinsteinCovFromMetric r M a Q θ i j =
+        kerrEinsteinTargetRicciCov Q r M a θ i j) := by
+  apply kerrEinsteinEquation_from_evenRicciObligations
+    Q r M a θ hsig hdel hsin
+  exact (kerrEvenRicciObligations_iff_six
+    Q r M a θ (ne_of_gt hsig) (ne_of_gt hdel) hsin).2 hSix
+
 /-- Mixed Ricci eigenvalue obtained by raising the first Carter-frame index. -/
 def kerrRicciFrameMixedCoeff
     (Q r a θ : ℝ) (A : Fin 4) : ℝ :=
@@ -11264,6 +11333,10 @@ theorem scalar_backbone_from_einstein_maxwell
 #check kerrEvenRicciObligations
 #check kerrFullRicciEquation_iff_even_obligations
 #check kerrEinsteinEquation_from_evenRicciObligations
+#check kerrSixRicciObligations
+#check kerrEvenRicciObligations_iff_six
+#check kerrFullRicciEquation_iff_six_obligations
+#check kerrEinsteinEquation_from_sixRicciObligations
 #check kerrEinsteinTargetRicci_frame_norm
 #check kerrEinsteinTargetRicci_frame_norm_formula
 #check kerrCoframe0_norm
@@ -11957,6 +12030,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrEinsteinTargetRicci_trace_zero
 #print axioms RelativeRest.kerrFullRicciEquation_iff_even_obligations
 #print axioms RelativeRest.kerrEinsteinEquation_from_evenRicciObligations
+#print axioms RelativeRest.kerrFullRicciEquation_iff_six_obligations
+#print axioms RelativeRest.kerrEinsteinEquation_from_sixRicciObligations
 #print axioms RelativeRest.kerrEinsteinTargetRicciCov_eq_coordinate
 #print axioms RelativeRest.kerrEinsteinTargetRicci_frame_norm_formula
 #print axioms RelativeRest.kerrEinsteinTarget_frame_equation
