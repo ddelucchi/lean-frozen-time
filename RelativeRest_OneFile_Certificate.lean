@@ -1507,6 +1507,94 @@ theorem principalMaxwell_form_invariant_magnitude (E B : ℝ) :
 
 /-! ### Maxwell potential first variation and symplectic potential -/
 
+/-! #### Potential variation really gives the factor four -/
+
+/-- Contravariant principal Maxwell tensor, obtained by raising both indices of
+the explicit covariant two-form. -/
+def principalMaxwellFUp
+    (E B : ℝ) (i j : Fin 4) : ℝ :=
+  principalMetricSign i * principalMetricSign j *
+    principalMaxwellF E B i j
+
+/-- Raising both indices preserves Maxwell antisymmetry. -/
+theorem principalMaxwellFUp_skew
+    (E B : ℝ) (i j : Fin 4) :
+    principalMaxwellFUp E B i j =
+      -principalMaxwellFUp E B j i := by
+  unfold principalMaxwellFUp
+  rw [principalMaxwellF_skew E B i j]
+  ring
+
+/-- Potential variation `δF_ab = ∇_a δA_b - ∇_b δA_a`. -/
+def principalPotentialDeltaF
+    (nablaDeltaA : Fin 4 → Fin 4 → ℝ)
+    (a b : Fin 4) : ℝ :=
+  nablaDeltaA a b - nablaDeltaA b a
+
+/-- Literal variation `δ(F²)=2 F^{ab}δF_ab` before using antisymmetry. -/
+def principalMaxwellFsqVariationFromDeltaF
+    (Fup nablaDeltaA : Fin 4 → Fin 4 → ℝ) : ℝ :=
+  2 * ∑ a : Fin 4, ∑ b : Fin 4,
+    Fup a b * principalPotentialDeltaF nablaDeltaA a b
+
+/-- Antisymmetry forces
+`2F^{ab}(∇_aδA_b-∇_bδA_a)=4F^{ab}∇_aδA_b`.
+Thus the factor four in the potential first variation is derived, not stipulated. -/
+theorem principalMaxwellFsqVariationFromDeltaF_eq_factor_four
+    (Fup nablaDeltaA : Fin 4 → Fin 4 → ℝ)
+    (hskew : ∀ a b : Fin 4, Fup a b = -Fup b a) :
+    principalMaxwellFsqVariationFromDeltaF Fup nablaDeltaA =
+      principalMaxwellPotentialFsqDerivative Fup nablaDeltaA := by
+  let S : ℝ :=
+    ∑ a : Fin 4, ∑ b : Fin 4,
+      Fup a b * nablaDeltaA a b
+  let T : ℝ :=
+    ∑ a : Fin 4, ∑ b : Fin 4,
+      Fup a b * nablaDeltaA b a
+  have hT : T = -S := by
+    unfold T S
+    calc
+      (∑ a : Fin 4, ∑ b : Fin 4,
+          Fup a b * nablaDeltaA b a) =
+          ∑ b : Fin 4, ∑ a : Fin 4,
+            Fup b a * nablaDeltaA a b := by
+              rw [Finset.sum_comm]
+      _ = ∑ b : Fin 4, ∑ a : Fin 4,
+            (-Fup a b) * nablaDeltaA a b := by
+              apply Finset.sum_congr rfl
+              intro b hb
+              apply Finset.sum_congr rfl
+              intro a ha
+              rw [hskew b a]
+      _ = -(∑ b : Fin 4, ∑ a : Fin 4,
+            Fup a b * nablaDeltaA a b) := by
+              simp_rw [neg_mul, Finset.sum_neg_distrib]
+      _ = -(∑ a : Fin 4, ∑ b : Fin 4,
+            Fup a b * nablaDeltaA a b) := by
+              rw [Finset.sum_comm]
+  unfold principalMaxwellFsqVariationFromDeltaF
+    principalPotentialDeltaF
+    principalMaxwellPotentialFsqDerivative
+  simp_rw [mul_sub, Finset.sum_sub_distrib]
+  change 2 * (S - T) = 4 * S
+  rw [hT]
+  ring
+
+/-- For the actual principal Maxwell field the factor-four identity follows
+without any antisymmetry hypothesis. -/
+theorem principalMaxwellFsqVariationFromDeltaF_principal
+    (E B : ℝ)
+    (nablaDeltaA : Fin 4 → Fin 4 → ℝ) :
+    principalMaxwellFsqVariationFromDeltaF
+        (principalMaxwellFUp E B) nablaDeltaA =
+      principalMaxwellPotentialFsqDerivative
+        (principalMaxwellFUp E B) nablaDeltaA := by
+  exact principalMaxwellFsqVariationFromDeltaF_eq_factor_four
+    (principalMaxwellFUp E B) nablaDeltaA
+    (principalMaxwellFUp_skew E B)
+
+
+
 /-- Fixed-metric derivative of `F_ab F^ab` induced by a potential variation.
 Antisymmetry gives the universal factor four:
 `δ(F²)=4 F^{ab} ∇_a δA_b`. -/
@@ -18128,6 +18216,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.scalar_backbone
 #print axioms RelativeRest.relativeAction_fixed_point_jet
 #print axioms RelativeRest.einsteinMaxwellLagrangianDensity_decomposition
+#print axioms RelativeRest.principalMaxwellFUp_skew
+#print axioms RelativeRest.principalMaxwellFsqVariationFromDeltaF_eq_factor_four
+#print axioms RelativeRest.principalMaxwellFsqVariationFromDeltaF_principal
 #print axioms RelativeRest.principalMaxwellPotentialLagrangianLine_hasDerivAt_zero
 #print axioms RelativeRest.principalMaxwellPotential_first_variation
 #print axioms RelativeRest.principalMaxwellPotential_onShell_first_variation
