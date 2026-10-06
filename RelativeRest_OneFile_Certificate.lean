@@ -3477,6 +3477,105 @@ theorem characteristic_half_contraction
   rw [hOmega]
   ring
 
+/-! ### Covector-level Iyer-Wald compensation and carrier bridge -/
+
+section IyerWaldLinearBridge
+
+variable {V W : Type*}
+  [AddCommGroup V] [Module ℝ V]
+  [AddCommGroup W] [Module ℝ W]
+
+/-- Linear relative constraint response forced by the reciprocal fixed-point character. -/
+def relativeConstraintVariation
+    (ell : V →ₗ[ℝ] ℝ) : V →ₗ[ℝ] ℝ :=
+  (-2 : ℝ) • ell
+
+@[simp] theorem relativeConstraintVariation_apply
+    (ell : V →ₗ[ℝ] ℝ) (v : V) :
+    relativeConstraintVariation ell v = -2 * ell v := by
+  simp [relativeConstraintVariation]
+  ring
+
+/-- Pointwise, this covector is exactly the normal derivative of the reciprocal
+constraint residual already proved above. -/
+theorem relativeConstraintVariation_eq_residual_deriv
+    (ell : V →ₗ[ℝ] ℝ) (v : V) :
+    relativeConstraintVariation ell v =
+      deriv (relativeConstraintResidual (ell v)) 0 := by
+  rw [relativeConstraintVariation_apply,
+    relativeConstraintResidual_deriv_zero]
+
+/-- Antisymmetry and the off-shell Iyer-Wald identity force the compensated
+bulk current as an equality of covectors, not merely pointwise scalars. -/
+theorem iyerWald_boundary_compensation_linear
+    (omegaYX omegaXY dB deltaC : V →ₗ[ℝ] ℝ)
+    (hanti : omegaXY = -omegaYX)
+    (hIW : omegaYX = dB - deltaC) :
+    omegaXY + dB = deltaC := by
+  rw [hanti, hIW]
+  module
+
+/-- If the off-shell constraint variation is the reciprocal Einstein-Maxwell response,
+the compensated Iyer-Wald current is exactly `-2 ell` as a covector. -/
+theorem iyerWald_bulk_response_linear
+    (omegaYX omegaXY dB ell : V →ₗ[ℝ] ℝ)
+    (hanti : omegaXY = -omegaYX)
+    (hIW :
+      omegaYX =
+        dB - relativeConstraintVariation ell) :
+    omegaXY + dB = relativeConstraintVariation ell := by
+  exact iyerWald_boundary_compensation_linear
+    omegaYX omegaXY dB
+    (relativeConstraintVariation ell) hanti hIW
+
+/-- Combining the off-shell Iyer-Wald identity with the field-equation jet
+`J=-16πT` forces the compensated current to be the carrier current itself. -/
+theorem iyerWald_compensated_eq_carrierBulkResponse
+    (omegaYX omegaXY dB : V →ₗ[ℝ] ℝ)
+    (integrate : W →ₗ[ℝ] ℝ)
+    (J T : V →ₗ[ℝ] V)
+    (iε : V →ₗ[ℝ] W)
+    (hJ : J = (-16 * Real.pi) • T)
+    (hanti : omegaXY = -omegaYX)
+    (hIW :
+      omegaYX =
+        dB -
+          relativeConstraintVariation
+            (stressResponse integrate T iε)) :
+    omegaXY + dB =
+      carrierBulkResponse integrate J iε := by
+  rw [iyerWald_bulk_response_linear
+      omegaYX omegaXY dB
+      (stressResponse integrate T iε)
+      hanti hIW,
+    relativeConstraintVariation,
+    carrierBulkResponse_eq_minus_two_stressResponse
+      integrate J T iε hJ]
+
+/-- Therefore the manuscript's characteristic half-contraction is exactly the
+integrated Maxwell stress covector, with the sign and factor fixed. -/
+theorem iyerWald_half_compensated_eq_stressResponse
+    (omegaYX omegaXY dB : V →ₗ[ℝ] ℝ)
+    (integrate : W →ₗ[ℝ] ℝ)
+    (J T : V →ₗ[ℝ] V)
+    (iε : V →ₗ[ℝ] W)
+    (hJ : J = (-16 * Real.pi) • T)
+    (hanti : omegaXY = -omegaYX)
+    (hIW :
+      omegaYX =
+        dB -
+          relativeConstraintVariation
+            (stressResponse integrate T iε)) :
+    (-1 / 2 : ℝ) • (omegaXY + dB) =
+      stressResponse integrate T iε := by
+  rw [iyerWald_compensated_eq_carrierBulkResponse
+      omegaYX omegaXY dB integrate J T iε
+      hJ hanti hIW]
+  exact halfCarrierBulkCurrent_eq_stressResponse
+    integrate J T iε hJ
+
+end IyerWaldLinearBridge
+
 section LinearDescent
 
 variable {P K : Type*} [AddCommGroup P] [Module ℝ P] [AddCommGroup K] [Module ℝ K]
@@ -8028,6 +8127,11 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check relativeConstraintVariation_eq_residual_deriv
+#check iyerWald_boundary_compensation_linear
+#check iyerWald_bulk_response_linear
+#check iyerWald_compensated_eq_carrierBulkResponse
+#check iyerWald_half_compensated_eq_stressResponse
 #check PrincipalCarrierCharacteristicInput.globalLocalClockEquiv
 #check principalCarrierCharacteristic_globalLocal_pullback
 #check principalCarrierCharacteristic_globalUnit_maps_local
@@ -8554,6 +8658,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.scalar_backbone_from_einstein_maxwell
 #print axioms RelativeRest.rescaled_solution_preserving_iff
 #print axioms RelativeRest.characteristic_half_contraction_from_relative_scaling
+#print axioms RelativeRest.iyerWald_compensated_eq_carrierBulkResponse
+#print axioms RelativeRest.iyerWald_half_compensated_eq_stressResponse
 #print axioms RelativeRest.relativeSymplecticMinus_eq_half_derivative
 #print axioms RelativeRest.carrierJetCurrent_eq_stressBridgeCurrent
 #print axioms RelativeRest.carrierBulkResponse_eq_minus_two_stressResponse
