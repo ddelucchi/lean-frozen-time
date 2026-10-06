@@ -2,8 +2,6 @@ name: Lean verification
 
 on:
   push:
-    branches:
-      - "formalization/**"
   pull_request:
   workflow_dispatch:
 
@@ -14,8 +12,46 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: leanprover/lean-action@v1
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install elan
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Select pinned Lean
+        shell: bash
+        run: |
+          set -euo pipefail
+          elan default "$(cat lean-toolchain)"
+          lean --version
+          lake --version
+      - name: Resolve dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          lake update
+      - name: Get mathlib cache
+        shell: bash
+        run: |
+          set -euo pipefail
+          lake exe cache get
+      - name: Build certificate
+        id: build
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          lake --no-ansi build 2>&1 | tee build.log
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          build: true
-          use-mathlib-cache: true
+          name: lean-build-log
+          path: build.log
+          if-no-files-found: warn
+      - name: Fail if Lean build failed
+        if: steps.build.outcome != 'success'
+        shell: bash
+        run: exit 1
