@@ -982,6 +982,51 @@ theorem einsteinMaxwellLagrangianDensity_decomposition
     einsteinHilbertLagrangianDensity maxwellLagrangianDensity
   ring
 
+/-- Literal directional first variation of the displayed Einstein-Maxwell density.
+This is the pointwise algebraic part of the action variation; the curvature boundary
+decomposition is handled separately by the covariant first-variation interface below. -/
+theorem einsteinMaxwellLagrangianDensity_hasDerivAt_line_zero
+    (volumeCoeff scalarR Fsq dVolume dR dFsq : ℝ) :
+    HasDerivAt
+      (fun s : ℝ => einsteinMaxwellLagrangianDensity
+        (volumeCoeff + s * dVolume)
+        (scalarR + s * dR)
+        (Fsq + s * dFsq))
+      ((1 / (16 * Real.pi)) *
+        (dVolume * (scalarR - Fsq) +
+          volumeCoeff * (dR - dFsq))) 0 := by
+  have hV :
+      HasDerivAt (fun s : ℝ => volumeCoeff + s * dVolume)
+        dVolume 0 := by
+    convert (hasDerivAt_const 0 volumeCoeff).add
+      ((hasDerivAt_id 0).mul_const dVolume) using 1 <;> ring
+  have hRF :
+      HasDerivAt
+        (fun s : ℝ => (scalarR + s * dR) - (Fsq + s * dFsq))
+        (dR - dFsq) 0 := by
+    convert ((hasDerivAt_const 0 scalarR).add
+      ((hasDerivAt_id 0).mul_const dR)).sub
+      ((hasDerivAt_const 0 Fsq).add
+        ((hasDerivAt_id 0).mul_const dFsq)) using 1 <;> ring
+  have h := (hV.mul hRF).const_mul (1 / (16 * Real.pi))
+  unfold einsteinMaxwellLagrangianDensity
+  convert h using 1 <;> ring
+
+/-- The derivative of the displayed density is therefore fixed uniquely by its three
+primitive scalar variations; no extra density-level normalization survives. -/
+theorem einsteinMaxwellLagrangianDensity_line_deriv_zero
+    (volumeCoeff scalarR Fsq dVolume dR dFsq : ℝ) :
+    deriv
+      (fun s : ℝ => einsteinMaxwellLagrangianDensity
+        (volumeCoeff + s * dVolume)
+        (scalarR + s * dR)
+        (Fsq + s * dFsq)) 0 =
+      (1 / (16 * Real.pi)) *
+        (dVolume * (scalarR - Fsq) +
+          volumeCoeff * (dR - dFsq)) :=
+  (einsteinMaxwellLagrangianDensity_hasDerivAt_line_zero
+    volumeCoeff scalarR Fsq dVolume dR dFsq).deriv
+
 section LagrangianFunctoriality
 
 variable {L O : Type*}
@@ -4291,6 +4336,141 @@ variable {L C : Type*}
   [AddCommGroup L] [Module ℝ L]
   [AddCommGroup C] [Module ℝ C]
 
+/-- Covariant first-variation data one logical layer closer to the Lagrangian itself.
+`deltaL = euler + dTheta` is the actual first-variation decomposition; Cartan is
+imposed only on the boundary-potential derivative; and the varied Noether-current
+decomposition is stated before any Iyer-Wald current is defined. -/
+structure LagrangianVariationNoetherOperators where
+  deltaL : L →ₗ[ℝ] C
+  euler : L →ₗ[ℝ] C
+  dTheta : L →ₗ[ℝ] C
+  contractGauge : C →ₗ[ℝ] C
+  deltaThetaGauge : L →ₗ[ℝ] C
+  lieTheta : L →ₗ[ℝ] C
+  dContractTheta : L →ₗ[ℝ] C
+  deltaConstraint : L →ₗ[ℝ] C
+  dDeltaCharge : L →ₗ[ℝ] C
+  first_variation : deltaL = euler + dTheta
+  cartan_on_dTheta :
+    contractGauge.comp dTheta = lieTheta - dContractTheta
+  noether_decomposition_variation :
+    deltaThetaGauge - contractGauge.comp deltaL =
+      deltaConstraint + dDeltaCharge
+
+/-- Ordered presymplectic current derived from the potential variation. -/
+def LagrangianVariationNoetherOperators.omegaYX
+    (D : LagrangianVariationNoetherOperators (L:=L) (C:=C)) :
+    L →ₗ[ℝ] C :=
+  D.deltaThetaGauge - D.lieTheta
+
+/-- Boundary variation `delta Q_xi - i_xi theta`. -/
+def LagrangianVariationNoetherOperators.dB
+    (D : LagrangianVariationNoetherOperators (L:=L) (C:=C)) :
+    L →ₗ[ℝ] C :=
+  D.dDeltaCharge - D.dContractTheta
+
+/-- Off-shell constraint descendant with the manuscript sign convention. -/
+def LagrangianVariationNoetherOperators.constraint
+    (D : LagrangianVariationNoetherOperators (L:=L) (C:=C)) :
+    L →ₗ[ℝ] C :=
+  -(D.deltaConstraint + D.contractGauge.comp D.euler)
+
+/-- Reversed presymplectic ordering is fixed by antisymmetry. -/
+def LagrangianVariationNoetherOperators.omegaXY
+    (D : LagrangianVariationNoetherOperators (L:=L) (C:=C)) :
+    L →ₗ[ℝ] C :=
+  -D.omegaYX
+
+/-- Contracting the actual first-variation equation and using Cartan forces the
+contracted variation formula used in the Noether calculation. -/
+theorem LagrangianVariationNoetherOperators.contracted_first_variation
+    (D : LagrangianVariationNoetherOperators (L:=L) (C:=C)) :
+    D.contractGauge.comp D.deltaL =
+      D.contractGauge.comp D.euler + D.lieTheta - D.dContractTheta := by
+  ext X
+  have hFV := LinearMap.congr_fun D.first_variation X
+  have hC := LinearMap.congr_fun D.cartan_on_dTheta X
+  simp only [LinearMap.comp_apply, LinearMap.add_apply, LinearMap.sub_apply] at hC ⊢
+  calc
+    D.contractGauge (D.deltaL X)
+        = D.contractGauge (D.euler X + D.dTheta X) := by rw [hFV]
+    _ = D.contractGauge (D.euler X) + D.contractGauge (D.dTheta X) := by
+      rw [map_add]
+    _ = D.contractGauge (D.euler X) +
+          (D.lieTheta X - D.dContractTheta X) := by rw [hC]
+    _ = D.contractGauge (D.euler X) + D.lieTheta X -
+          D.dContractTheta X := by module
+
+/-- Off-shell Iyer-Wald is now a theorem of the Lagrangian first variation, Cartan,
+and varied Noether decomposition. It is not stored as a premise. -/
+theorem LagrangianVariationNoetherOperators.iyerWald_operator_identity
+    (D : LagrangianVariationNoetherOperators (L:=L) (C:=C)) :
+    D.omegaYX = D.dB - D.constraint := by
+  ext X
+  have hN := LinearMap.congr_fun D.noether_decomposition_variation X
+  have hFV := LinearMap.congr_fun D.contracted_first_variation X
+  simp only [LagrangianVariationNoetherOperators.omegaYX,
+    LagrangianVariationNoetherOperators.dB,
+    LagrangianVariationNoetherOperators.constraint,
+    LinearMap.comp_apply, LinearMap.sub_apply, LinearMap.add_apply,
+    LinearMap.neg_apply] at hN hFV ⊢
+  rw [hFV] at hN
+  module
+
+theorem LagrangianVariationNoetherOperators.iyerWald_identity_apply
+    (D : LagrangianVariationNoetherOperators (L:=L) (C:=C))
+    (X : L) :
+    D.omegaYX X = D.dB X - D.constraint X := by
+  exact LinearMap.congr_fun D.iyerWald_operator_identity X
+
+/-- The compensated reversed current equals the constraint descendant and hence has
+no independent sign or normalization freedom. -/
+theorem LagrangianVariationNoetherOperators.compensated_eq_constraint
+    (D : LagrangianVariationNoetherOperators (L:=L) (C:=C))
+    (X : L) :
+    D.omegaXY X + D.dB X = D.constraint X := by
+  unfold LagrangianVariationNoetherOperators.omegaXY
+  rw [D.iyerWald_identity_apply]
+  module
+
+/-- Existence and uniqueness of the compensated current already follows at this
+first-variation level. -/
+theorem LagrangianVariationNoetherOperators.omegaXY_existsUnique
+    (D : LagrangianVariationNoetherOperators (L:=L) (C:=C)) :
+    ∃! W : L →ₗ[ℝ] C,
+      ∀ X : L, W X + D.dB X = D.constraint X := by
+  refine ⟨D.omegaXY, D.compensated_eq_constraint, ?_⟩
+  intro W hW
+  ext X
+  have hEq : W X + D.dB X = D.omegaXY X + D.dB X :=
+    (hW X).trans (D.compensated_eq_constraint X).symm
+  exact add_right_cancel hEq
+
+/-- Reciprocal gravity/Maxwell sector values force the complete relative-normal
+constraint response from the Lagrangian first-variation package. -/
+theorem LagrangianVariationNoetherOperators.constraint_normalJet_of_opposite
+    (D : LagrangianVariationNoetherOperators (L:=L) (C:=C))
+    (LG LM : L) (ell : C)
+    (hG : D.constraint LG = ell)
+    (hM : D.constraint LM = -ell) :
+    D.constraint (reciprocalLagrangianNormalJet LG LM) =
+      (-2 : ℝ) • ell :=
+  linearDescendant_normalJet_of_opposite
+    D.constraint LG LM ell hG hM
+
+/-- The full boundary-compensated relative-normal current is therefore fixed before
+introducing any Iyer-Wald operator package. -/
+theorem LagrangianVariationNoetherOperators.compensated_relative_normal
+    (D : LagrangianVariationNoetherOperators (L:=L) (C:=C))
+    (LG LM : L) (ell : C)
+    (hG : D.constraint LG = ell)
+    (hM : D.constraint LM = -ell) :
+    D.omegaXY (reciprocalLagrangianNormalJet LG LM) +
+        D.dB (reciprocalLagrangianNormalJet LG LM) =
+      (-2 : ℝ) • ell := by
+  rw [D.compensated_eq_constraint]
+  exact D.constraint_normalJet_of_opposite LG LM ell hG hM
+
 /-- Primitive covariant-phase-space descendants. At this level no Iyer-Wald,
 Cartan-first-variation, or Noether-decomposition identity is supplied as a premise;
 the composite operators are defined from these primitive descendants. -/
@@ -4335,6 +4515,30 @@ structure FirstVariationNoetherOperators where
     contractDeltaL = contractEuler + lieTheta - dContractTheta
   noether_decomposition_variation :
     deltaNoether = deltaConstraint + dDeltaCharge
+
+/-- Forgetting the explicit `deltaL = E deltaPhi + dTheta` layer recovers the older
+first-variation package. -/
+def LagrangianVariationNoetherOperators.toFirstVariationNoetherOperators
+    (D : LagrangianVariationNoetherOperators (L:=L) (C:=C)) :
+    FirstVariationNoetherOperators (L:=L) (C:=C) where
+  deltaThetaGauge := D.deltaThetaGauge
+  lieTheta := D.lieTheta
+  contractDeltaL := D.contractGauge.comp D.deltaL
+  contractEuler := D.contractGauge.comp D.euler
+  dContractTheta := D.dContractTheta
+  deltaNoether := D.deltaThetaGauge - D.contractGauge.comp D.deltaL
+  deltaConstraint := D.deltaConstraint
+  dDeltaCharge := D.dDeltaCharge
+  noether_current_variation := by rfl
+  first_variation_cartan := D.contracted_first_variation
+  noether_decomposition_variation := D.noether_decomposition_variation
+
+/-- The Iyer-Wald current derived after forgetting is exactly the current derived
+directly from the Lagrangian first variation. -/
+@[simp] theorem LagrangianVariationNoetherOperators.toFirstVariation_omegaYX
+    (D : LagrangianVariationNoetherOperators (L:=L) (C:=C)) :
+    D.toFirstVariationNoetherOperators.omegaYX = D.omegaYX := by
+  rfl
 
 /-- The three first-variation/Noether identities are now consequences of definitions. -/
 def PrimitiveNoetherOperators.toFirstVariationNoetherOperators
@@ -4569,6 +4773,59 @@ the same current already forced at first-variation level. -/
     FirstVariationNoetherOperators.omegaXY]
 
 
+
+/-! ### Actual first variation to Maxwell carrier current -/
+
+section LagrangianVariationCarrierBridge
+
+variable {L V W : Type*}
+  [AddCommGroup L] [Module ℝ L]
+  [AddCommGroup V] [Module ℝ V]
+  [AddCommGroup W] [Module ℝ W]
+
+/-- The current bridge now follows from the Lagrangian first-variation equations,
+without an Iyer-Wald identity premise or an intermediate Iyer-Wald structure. -/
+theorem lagrangianVariation_compensated_eq_carrierBulkResponse
+    (D : LagrangianVariationNoetherOperators
+      (L:=L) (C:=(V →ₗ[ℝ] ℝ)))
+    (LG LM : L)
+    (integrate : W →ₗ[ℝ] ℝ)
+    (J T : V →ₗ[ℝ] V)
+    (iε : V →ₗ[ℝ] W)
+    (hJ : J = (-16 * Real.pi) • T)
+    (hG : D.constraint LG = stressResponse integrate T iε)
+    (hM : D.constraint LM = -(stressResponse integrate T iε)) :
+    D.omegaXY (reciprocalLagrangianNormalJet LG LM) +
+        D.dB (reciprocalLagrangianNormalJet LG LM) =
+      carrierBulkResponse integrate J iε := by
+  rw [D.compensated_relative_normal
+      LG LM (stressResponse integrate T iε) hG hM,
+    carrierBulkResponse_eq_minus_two_stressResponse
+      integrate J T iε hJ]
+
+/-- Consequently the manuscript's negative-half normalization is fixed directly
+from first variation and the Einstein-Maxwell carrier jet. -/
+theorem lagrangianVariation_half_compensated_eq_stressResponse
+    (D : LagrangianVariationNoetherOperators
+      (L:=L) (C:=(V →ₗ[ℝ] ℝ)))
+    (LG LM : L)
+    (integrate : W →ₗ[ℝ] ℝ)
+    (J T : V →ₗ[ℝ] V)
+    (iε : V →ₗ[ℝ] W)
+    (hJ : J = (-16 * Real.pi) • T)
+    (hG : D.constraint LG = stressResponse integrate T iε)
+    (hM : D.constraint LM = -(stressResponse integrate T iε)) :
+    (-1 / 2 : ℝ) •
+      (D.omegaXY (reciprocalLagrangianNormalJet LG LM) +
+        D.dB (reciprocalLagrangianNormalJet LG LM)) =
+      stressResponse integrate T iε := by
+  rw [lagrangianVariation_compensated_eq_carrierBulkResponse
+      D LG LM integrate J T iε hJ hG hM]
+  simpa [halfCarrierBulkCurrent] using
+    (halfCarrierBulkCurrent_eq_stressResponse
+      integrate J T iε hJ)
+
+end LagrangianVariationCarrierBridge
 
 /-! ### Lagrangian operator identity to Maxwell carrier current -/
 
@@ -13488,6 +13745,130 @@ theorem principalLagrangianCharacteristic_clock_chain
     principalLagrangianCharacteristic_iwCurrent_eq_characteristicCurrent D,
     hL, hdim, hpull, hnorm⟩
 
+/-! ### Lagrangian-first-variation-backed clock: deltaL to normalized clock line -/
+
+/-- Strongest covariant-phase-space input in the file. The primitive datum contains
+the actual first-variation equation `deltaL = E deltaPhi + dTheta`; Iyer-Wald is a
+derived theorem. -/
+structure PrincipalLagrangianVariationCharacteristicInput where
+  carrier : PrincipalCarrierCharacteristicInput (P:=P)
+  LG : L
+  LM : L
+  variation : LagrangianVariationNoetherOperators
+    (L:=L) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ))
+  constraintGravity :
+    variation.constraint LG =
+      stressResponse LinearMap.id carrier.T carrier.iε
+  constraintMaxwell :
+    variation.constraint LM =
+      -(stressResponse LinearMap.id carrier.T carrier.iε)
+
+def PrincipalLagrangianVariationCharacteristicInput.relativeNormalJet
+    (D : PrincipalLagrangianVariationCharacteristicInput (P:=P) (L:=L)) : L :=
+  reciprocalLagrangianNormalJet D.LG D.LM
+
+def PrincipalLagrangianVariationCharacteristicInput.characteristicCurrent
+    (D : PrincipalLagrangianVariationCharacteristicInput (P:=P) (L:=L)) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
+  (-1 / 2 : ℝ) •
+    (D.variation.omegaXY D.relativeNormalJet +
+      D.variation.dB D.relativeNormalJet)
+
+/-- The first-variation-derived current equals the explicit Maxwell stress response. -/
+theorem principalLagrangianVariation_current_eq_stress
+    (D : PrincipalLagrangianVariationCharacteristicInput (P:=P) (L:=L)) :
+    D.characteristicCurrent =
+      stressResponse LinearMap.id D.carrier.T D.carrier.iε := by
+  unfold PrincipalLagrangianVariationCharacteristicInput.characteristicCurrent
+    PrincipalLagrangianVariationCharacteristicInput.relativeNormalJet
+  exact lagrangianVariation_half_compensated_eq_stressResponse
+    D.variation D.LG D.LM LinearMap.id
+    D.carrier.J D.carrier.T D.carrier.iε rfl
+    D.constraintGravity D.constraintMaxwell
+
+/-- Hence the current is exactly the one that defines the characteristic quotient. -/
+theorem principalLagrangianVariation_current_eq_characteristicCurrent
+    (D : PrincipalLagrangianVariationCharacteristicInput (P:=P) (L:=L)) :
+    D.characteristicCurrent =
+      D.carrier.toCharacteristicCurrentData.current := by
+  rw [principalLagrangianVariation_current_eq_stress D,
+    principalCarrierCharacteristic_current D.carrier]
+
+/-- Positivity of the field-derived Maxwell response makes this derived current nonzero. -/
+theorem principalLagrangianVariation_current_nonzero
+    (D : PrincipalLagrangianVariationCharacteristicInput (P:=P) (L:=L)) :
+    D.characteristicCurrent ≠ 0 := by
+  rw [principalLagrangianVariation_current_eq_characteristicCurrent D]
+  intro hzero
+  have hp := D.carrier.toCharacteristicCurrentData.current_positive
+  rw [hzero] at hp
+  simp at hp
+
+/-- End-to-end clock theorem sourced at the actual Lagrangian first variation. -/
+theorem principalLagrangianVariation_clock_chain
+    (D : PrincipalLagrangianVariationCharacteristicInput (P:=P) (L:=L)) :
+    D.characteristicCurrent =
+        D.carrier.toCharacteristicCurrentData.current ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    (quotientClockCovector principalTOLinear).comp
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda) =
+      D.carrier.toCharacteristicCurrentData.clockCovector ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat := by
+  rcases principalCarrierCharacteristic_clock_chain D.carrier with
+    ⟨hL, hdim, hpull, hnorm⟩
+  exact ⟨principalLagrangianVariation_current_eq_characteristicCurrent D,
+    hL, hdim, hpull, hnorm⟩
+
+/-- Strongest forced-core theorem: the explicit Maxwell field fixes relative rest,
+the surviving carrier jet and Rainich involution; the actual Lagrangian first
+variation derives the compensated covariant-phase-space current; and that current
+forces the one-dimensional normalized clock line. -/
+theorem principalLagrangianVariation_forced_core_chain
+    (D : PrincipalLagrangianVariationCharacteristicInput (P:=P) (L:=L))
+    (u s : ℝ) :
+    ((8 * Real.pi * principalFieldEnergyDensity D.carrier.E D.carrier.B =
+        8 * Real.pi *
+          maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+          principalFieldEnergyDensity D.carrier.E D.carrier.B) ↔ s = 0) ∧
+    deriv (principalScaledResidualFromF
+      D.carrier.E D.carrier.B 0 0) 0 =
+      principalJetFromF D.carrier.E D.carrier.B 0 0 ∧
+    (∀ i j : Fin 4,
+      (∑ k : Fin 4,
+        principalJetFromF D.carrier.E D.carrier.B i k *
+          principalJetFromF D.carrier.E D.carrier.B k j) =
+        (principalChi D.carrier.E D.carrier.B)^2 *
+          (if i = j then 1 else 0)) ∧
+    D.characteristicCurrent =
+      D.carrier.toCharacteristicCurrentData.current ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat := by
+  rcases principalField_forced_core_chain D.carrier u s with
+    ⟨hrest, hjet, hrainich, _hrates, hclock⟩
+  rcases hclock with ⟨hL, hdim, _hpull, hnorm⟩
+  exact ⟨hrest, hjet, hrainich,
+    principalLagrangianVariation_current_eq_characteristicCurrent D,
+    hL, hdim, hnorm⟩
+
 /-! ### First-variation-backed characteristic clock: no primitive Iyer-Wald identity -/
 
 /-- Stronger covariant-phase-space input.  The Iyer-Wald operator identity is not
@@ -14179,6 +14560,8 @@ theorem scalar_backbone_from_einstein_maxwell
 #check relativeActionDefect_hasDerivAt_zero
 #check relativeAction_fixed_point_jet
 #check einsteinMaxwellLagrangianDensity_decomposition
+#check einsteinMaxwellLagrangianDensity_hasDerivAt_line_zero
+#check einsteinMaxwellLagrangianDensity_line_deriv_zero
 #check reciprocalLagrangian
 #check reciprocalLagrangian_exchange
 #check reciprocalLagrangianNormalJet
