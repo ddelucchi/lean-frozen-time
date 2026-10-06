@@ -6504,6 +6504,103 @@ variable {V P KSpace : Type*}
   [AddCommGroup P] [Module ℝ P]
   [AddCommGroup KSpace] [Module ℝ KSpace]
 
+
+/-! ### Minimal current-first characteristic interface -/
+
+/-- Current-first form of the remaining covariant-phase-space datum.  Here `current`
+is already a covector on the characteristic space, exactly as
+`X ↦ -(1/2) Ω_can^bulk(X,Y)` in the manuscript.  No parameter response, factorization,
+kernel statement, or quotient dimension is supplied independently. -/
+structure CharacteristicCurrentData where
+  beta : P →ₗ[ℝ] KSpace
+  current : KSpace →ₗ[ℝ] ℝ
+  positiveWitness : P
+  current_positive : 0 < current (beta positiveWitness)
+
+/-- Parameter-space stress response is forced to be the pullback of the characteristic current. -/
+def CharacteristicCurrentData.ell
+    (D : CharacteristicCurrentData (P:=P) (KSpace:=KSpace)) :
+    P →ₗ[ℝ] ℝ :=
+  D.current.comp D.beta
+
+/-- The actual characteristic space used by the manuscript is the image of `beta`. -/
+def CharacteristicCurrentData.K
+    (D : CharacteristicCurrentData (P:=P) (KSpace:=KSpace)) :
+    Submodule ℝ KSpace :=
+  LinearMap.range D.beta
+
+/-- Restriction of the physical current to the stress-visible characteristic image. -/
+def CharacteristicCurrentData.Lambda
+    (D : CharacteristicCurrentData (P:=P) (KSpace:=KSpace)) :
+    D.K →ₗ[ℝ] ℝ :=
+  D.current.domRestrict D.K
+
+/-- The factorization `ell = beta* Lambda` is definitional once the bulk current lives
+on characteristic space. -/
+theorem characteristicCurrent_factorization
+    (D : CharacteristicCurrentData (P:=P) (KSpace:=KSpace)) :
+    D.Lambda.comp D.beta.rangeRestrict = D.ell := by
+  ext p
+  rfl
+
+/-- Parameter directions invisible to the characteristic variation are automatically
+invisible to the response. -/
+theorem CharacteristicCurrentData.kernel_invisible
+    (D : CharacteristicCurrentData (P:=P) (KSpace:=KSpace)) :
+    LinearMap.ker D.beta ≤ LinearMap.ker D.ell := by
+  intro p hp
+  change D.ell p = 0
+  simp [CharacteristicCurrentData.ell, hp]
+
+/-- Positivity is inherited by the parameter response without a new hypothesis. -/
+theorem CharacteristicCurrentData.ell_positive
+    (D : CharacteristicCurrentData (P:=P) (KSpace:=KSpace)) :
+    0 < D.ell D.positiveWitness := by
+  simpa [CharacteristicCurrentData.ell] using D.current_positive
+
+/-- Therefore the restricted characteristic covector is nonzero. -/
+theorem characteristicCurrent_Lambda_nonzero
+    (D : CharacteristicCurrentData (P:=P) (KSpace:=KSpace)) :
+    D.Lambda ≠ 0 := by
+  intro hzero
+  have hfac := characteristicCurrent_factorization D
+  rw [hzero] at hfac
+  have hell : D.ell = 0 := by simpa using hfac.symm
+  have hp := D.ell_positive
+  rw [hell] at hp
+  simp at hp
+
+/-- Surjectivity of `beta.rangeRestrict` makes the current restriction the unique
+covector with the required pullback. -/
+theorem characteristicCurrent_Lambda_unique
+    (D : CharacteristicCurrentData (P:=P) (KSpace:=KSpace))
+    (Λ' : D.K →ₗ[ℝ] ℝ)
+    (hΛ' : Λ'.comp D.beta.rangeRestrict = D.ell) :
+    Λ' = D.Lambda := by
+  exact characteristic_range_covector_unique
+    D.beta D.ell Λ' D.Lambda hΛ'
+    (characteristicCurrent_factorization D)
+
+/-- The stress-visible characteristic quotient is consequently forced to be one real dimension. -/
+theorem characteristicCurrent_quotient_finrank_one
+    (D : CharacteristicCurrentData (P:=P) (KSpace:=KSpace)) :
+    Module.finrank ℝ
+      (D.K ⧸ LinearMap.ker D.Lambda) = 1 :=
+  clockQuotient_finrank_one D.Lambda
+    (characteristicCurrent_Lambda_nonzero D)
+
+/-- Its descended clock covector is therefore canonical and nonzero. -/
+noncomputable def CharacteristicCurrentData.clockCovector
+    (D : CharacteristicCurrentData (P:=P) (KSpace:=KSpace)) :
+    (D.K ⧸ LinearMap.ker D.Lambda) →ₗ[ℝ] ℝ :=
+  quotientClockCovector D.Lambda
+
+theorem characteristicCurrent_clockCovector_nonzero
+    (D : CharacteristicCurrentData (P:=P) (KSpace:=KSpace)) :
+    D.clockCovector ≠ 0 :=
+  quotientClockCovector_nonzero D.Lambda
+    (characteristicCurrent_Lambda_nonzero D)
+
 /-- Minimal remaining algebraic interface to the still-unformalized Iyer-Wald layer.
 The response covector is not supplied, its factorization is not supplied, and kernel invisibility
 is not supplied.  The only structural premise is the physical statement that the integrated
@@ -6761,6 +6858,13 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check characteristicCurrent_factorization
+#check CharacteristicCurrentData.kernel_invisible
+#check CharacteristicCurrentData.ell_positive
+#check characteristicCurrent_Lambda_nonzero
+#check characteristicCurrent_Lambda_unique
+#check characteristicCurrent_quotient_finrank_one
+#check characteristicCurrent_clockCovector_nonzero
 #check principalFieldEnergyDensity_neg
 #check principalChi_neg
 #check principalStressFromF_neg
@@ -7233,6 +7337,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.extensionalBridge_Lambda_unique
 #print axioms RelativeRest.maxwellBridge_Lambda_unique
 #print axioms RelativeRest.principalFieldBridge_Lambda_unique
+#print axioms RelativeRest.characteristicCurrent_Lambda_unique
+#print axioms RelativeRest.characteristicCurrent_quotient_finrank_one
 #print axioms RelativeRest.reeb_direction_unique
 #print axioms RelativeRest.clock_section_reeb_existsUnique
 #print axioms RelativeRest.clockLiouville_unique_of_homogeneity
