@@ -1129,6 +1129,84 @@ theorem principalStress_rainich (u : ℝ) (i j : Fin 4) :
   by_cases h : i = j <;> simp [h] <;> ring
 
 
+/-! ### Rainich carrier derived directly from the explicit Maxwell two-form -/
+
+/-- Mixed trace of the Maxwell stress computed from the explicit principal two-form. -/
+def principalStressFromFTrace (E B : ℝ) : ℝ :=
+  ∑ i : Fin 4, principalStressFromF E B i i
+
+/-- Maxwell stress is trace-free directly at the explicit field level. -/
+theorem principalStressFromF_trace_zero (E B : ℝ) :
+    principalStressFromFTrace E B = 0 := by
+  unfold principalStressFromFTrace
+  simp_rw [principalStressFromF_eq_principalStress]
+  simp [principalStress, principalFieldEnergyDensity]
+
+/-- Squared trace of the explicit Maxwell stress endomorphism. -/
+def principalStressFromFTraceSq (E B : ℝ) : ℝ :=
+  ∑ i : Fin 4, ∑ k : Fin 4,
+    principalStressFromF E B i k * principalStressFromF E B k i
+
+/-- Its squared trace is fixed by the principal field energy density. -/
+theorem principalStressFromF_trace_sq (E B : ℝ) :
+    principalStressFromFTraceSq E B =
+      4 * (principalFieldEnergyDensity E B)^2 := by
+  unfold principalStressFromFTraceSq
+  simp_rw [principalStressFromF_eq_principalStress]
+  exact principalStress_trace_sq (principalFieldEnergyDensity E B)
+
+/-- The Rainich square identity is therefore a theorem of the explicit Maxwell two-form. -/
+theorem principalStressFromF_rainich
+    (E B : ℝ) (i j : Fin 4) :
+    (∑ k : Fin 4,
+      principalStressFromF E B i k * principalStressFromF E B k j) =
+      (1 / 4 : ℝ) * principalStressFromFTraceSq E B *
+        (if i = j then 1 else 0) := by
+  simp_rw [principalStressFromF_eq_principalStress]
+  rw [principalStressFromF_trace_sq]
+  rw [principalStress_sq]
+  by_cases h : i = j <;> simp [h] <;> ring
+
+/-- Fixed-point jet matrix obtained from the field equation survivor
+`J=-16π T^{EM}`. -/
+def principalJetFromF (E B : ℝ) (i j : Fin 4) : ℝ :=
+  -16 * Real.pi * principalStressFromF E B i j
+
+/-- The explicit field-derived jet is the sign-reversed canonical carrier of magnitude `χ`. -/
+theorem principalJetFromF_eq_neg_principalStress
+    (E B : ℝ) (i j : Fin 4) :
+    principalJetFromF E B i j =
+      - principalStress (principalChi E B) i j := by
+  rw [principalJetFromF, principalStressFromF_eq_principalStress,
+    principalFieldEnergyDensity_eq_chi]
+  by_cases hij : i = j
+  · subst j
+    fin_cases i <;>
+      simp [principalStress] <;>
+      field_simp [ne_of_gt Real.pi_pos] <;>
+      ring
+  · simp [principalStress, hij]
+
+/-- The field-derived fixed-point jet satisfies `J²=χ² I` directly. -/
+theorem principalJetFromF_sq
+    (E B : ℝ) (i j : Fin 4) :
+    (∑ k : Fin 4,
+      principalJetFromF E B i k * principalJetFromF E B k j) =
+      (if i = j then (principalChi E B)^2 else 0) := by
+  simp_rw [principalJetFromF_eq_neg_principalStress]
+  simpa using principalStress_sq (principalChi E B) i j
+
+/-- Equivalently, the invariant Rainich normalization of the actual fixed-point jet is
+the principal Maxwell carrier `χ=2(E²+B²)`. -/
+theorem principalJetFromF_rainich
+    (E B : ℝ) (i j : Fin 4) :
+    (∑ k : Fin 4,
+      principalJetFromF E B i k * principalJetFromF E B k j) =
+      (principalChi E B)^2 * (if i = j then 1 else 0) := by
+  rw [principalJetFromF_sq]
+  by_cases h : i = j <;> simp [h]
+
+
 /-! ### Explicit principal Einstein-Maxwell jet and Lorentzian plane -/
 
 /-- Standard coordinate basis in the four-dimensional principal frame. -/
@@ -4513,6 +4591,12 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check principalStressFromF_trace_zero
+#check principalStressFromF_trace_sq
+#check principalStressFromF_rainich
+#check principalJetFromF_eq_neg_principalStress
+#check principalJetFromF_sq
+#check principalJetFromF_rainich
 #check principalMaxwellF_skew
 #check principalMaxwellFsq_eq_maxwellI
 #check principalStressFromF_eq_principalStress
@@ -4821,6 +4905,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalLocalClockRatio_forced
 #print axioms RelativeRest.principalMaxwell_timelike_eigen_from_chi
 #print axioms RelativeRest.principalStressFromF_eq_principalStress
+#print axioms RelativeRest.principalJetFromF_rainich
 #print axioms RelativeRest.defect_from_on_shell_equation
 #print axioms RelativeRest.scaledResidual_first_jet_eq_minus_two_ricci_from_EM
 #print axioms RelativeRest.boost_balance_exists_unique_of_nonnull
