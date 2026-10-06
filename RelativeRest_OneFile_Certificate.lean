@@ -170,6 +170,70 @@ theorem relative_exponent_algebra (D : ℝ) :
   · unfold wM
     ring
 
+/-- Positive common/relative parametrization used in the manuscript. -/
+def rhoUS (u s : ℝ) : ℝ := Real.exp ((u - s) / 2)
+
+def lambdaUS (u s : ℝ) : ℝ := Real.exp ((u + s) / 2)
+
+def XiGUS (u s : ℝ) : ℝ := (rhoUS u s)^2
+
+def XiMUS (u s : ℝ) : ℝ := (lambdaUS u s)^2
+
+def kappaUS (u : ℝ) : ℝ := Real.exp u
+
+@[simp] theorem rhoUS_pos (u s : ℝ) : 0 < rhoUS u s :=
+  Real.exp_pos _
+
+@[simp] theorem lambdaUS_pos (u s : ℝ) : 0 < lambdaUS u s :=
+  Real.exp_pos _
+
+/-- Squaring the gravity scale gives exactly the common character times the negative
+relative character. -/
+theorem XiGUS_factorization (u s : ℝ) :
+    XiGUS u s = kappaUS u * Real.exp (-s) := by
+  unfold XiGUS rhoUS kappaUS
+  rw [pow_two, ← Real.exp_add, ← Real.exp_add]
+  congr 1
+  ring
+
+/-- Squaring the Maxwell scale gives exactly the common character times the positive
+relative character. -/
+theorem XiMUS_factorization (u s : ℝ) :
+    XiMUS u s = kappaUS u * Real.exp s := by
+  unfold XiMUS lambdaUS kappaUS
+  rw [pow_two, ← Real.exp_add, ← Real.exp_add]
+  congr 1
+  ring
+
+/-- The common positive character is literally `ρ λ=e^u`. -/
+theorem rho_mul_lambda_eq_kappa (u s : ℝ) :
+    rhoUS u s * lambdaUS u s = kappaUS u := by
+  unfold rhoUS lambdaUS kappaUS
+  rw [← Real.exp_add]
+  congr 1
+  ring
+
+/-- The common character cancels completely from the relative ratio. -/
+theorem character_ratio_eq_exp_two (u s : ℝ) :
+    XiMUS u s / XiGUS u s = Real.exp (2 * s) := by
+  rw [XiMUS_factorization, XiGUS_factorization]
+  have hku : kappaUS u ≠ 0 := ne_of_gt (Real.exp_pos u)
+  have hem : Real.exp (-s) ≠ 0 := ne_of_gt (Real.exp_pos (-s))
+  rw [mul_div_mul_left _ _ hku]
+  exact master_ratio s
+
+/-- The logarithmic character ratio recovers the relative coordinate exactly. -/
+theorem relative_coordinate_recovered (u s : ℝ) :
+    (1 / 2 : ℝ) * Real.log (XiMUS u s / XiGUS u s) = s := by
+  rw [character_ratio_eq_exp_two, Real.log_exp]
+  ring
+
+/-- The projective defect of the actual sector characters is exactly `tanh s`. -/
+theorem character_defect_is_tanh (u s : ℝ) :
+    delta (XiMUS u s / XiGUS u s) = Real.tanh s := by
+  rw [character_ratio_eq_exp_two]
+  exact delta_exp_two s
+
 /-! ## 3. Dynamic fixed point and the defect jet -/
 
 /-- A nonzero tensor component cannot remain a solution under relative Maxwell weight unless `s=0`. -/
@@ -1551,6 +1615,12 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check XiGUS_factorization
+#check XiMUS_factorization
+#check rho_mul_lambda_eq_kappa
+#check character_ratio_eq_exp_two
+#check relative_coordinate_recovered
+#check character_defect_is_tanh
 #check solution_preserving_fixed_point_iff
 #check defect_eq_zero_iff
 #check defect_odd_iteratedDeriv_eq_minus_two_ricci
