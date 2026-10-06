@@ -1,4 +1,4 @@
-import RelativeRest_DeepPass30
+import RelativeRest_DeepPass31
 
 /-!
 # Referee-facing axiom audit
@@ -105,3 +105,8 @@ headline formal statements.  There are no project-local axiom declarations in th
 #print axioms RelativeRest.chronometricMetric_unit_observer
 #print axioms RelativeRest.chronometricMetric_dual_eq_metricClockCovector
 #print axioms RelativeRest.local_chronometric_data_forced
+
+#print axioms RelativeRest.jet_contraction_eq_four_curvature
+#print axioms RelativeRest.carrierMagnitude_eq_sqrt_curvature
+#print axioms RelativeRest.curvature_forces_clock_rate
+#print axioms RelativeRest.curvature_forces_clock_fourth_power
