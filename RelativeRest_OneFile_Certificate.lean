@@ -5866,6 +5866,86 @@ theorem null_pair_closure_iff
   · rintro ⟨ho, hn⟩
     exact orthogonal_equal_opposite_implies_null_pair B hsym T R ho hn
 
+/-! ### Regular Synge endpoint maps from the implicit-function theorem -/
+
+section SyngeImplicitEndpoint
+
+variable {X : Type*}
+  [NormedAddCommGroup X] [NormedSpace ℝ X] [CompleteSpace X]
+
+/-- The regular null-endpoint map is not chosen: it is the implicit function attached
+to the world-function equation near a point where the endpoint partial derivative is invertible. -/
+noncomputable def syngeImplicitEndpoint
+    {σ : X × ℝ → ℝ}
+    {u : X × ℝ}
+    {Dσ : X × ℝ →L[ℝ] ℝ}
+    (hσ : HasStrictFDerivAt σ Dσ u)
+    (hθ : (Dσ ∘L ContinuousLinearMap.inr ℝ X ℝ).IsInvertible) :
+    X → ℝ :=
+  hσ.implicitFunctionOfProdDomain hθ
+
+/-- Near the regular endpoint, solving the world-function level equation is equivalent
+to lying on the constructed endpoint graph.  This is local uniqueness. -/
+theorem syngeImplicitEndpoint_eventually_eq_iff
+    {σ : X × ℝ → ℝ}
+    {u : X × ℝ}
+    {Dσ : X × ℝ →L[ℝ] ℝ}
+    (hσ : HasStrictFDerivAt σ Dσ u)
+    (hθ : (Dσ ∘L ContinuousLinearMap.inr ℝ X ℝ).IsInvertible) :
+    ∀ᶠ v in 𝓝 u,
+      σ v = σ u ↔
+        syngeImplicitEndpoint hσ hθ v.1 = v.2 := by
+  exact hσ.eventually_apply_eq_iff_implicitFunctionOfProdDomain hθ
+
+/-- The constructed endpoint graph actually solves the same world-function level
+equation in a neighborhood of the base spacetime point. -/
+theorem syngeImplicitEndpoint_eventually_solves
+    {σ : X × ℝ → ℝ}
+    {u : X × ℝ}
+    {Dσ : X × ℝ →L[ℝ] ℝ}
+    (hσ : HasStrictFDerivAt σ Dσ u)
+    (hθ : (Dσ ∘L ContinuousLinearMap.inr ℝ X ℝ).IsInvertible) :
+    ∀ᶠ x in 𝓝 u.1,
+      σ (x, syngeImplicitEndpoint hσ hθ x) = σ u := by
+  exact hσ.eventually_apply_implicitFunctionOfProdDomain hθ
+
+/-- Its derivative is forced by the implicit-function theorem:
+`Dθ = -(D_θσ)⁻¹ ∘ D_xσ`. -/
+theorem syngeImplicitEndpoint_hasStrictFDerivAt
+    {σ : X × ℝ → ℝ}
+    {u : X × ℝ}
+    {Dσ : X × ℝ →L[ℝ] ℝ}
+    (hσ : HasStrictFDerivAt σ Dσ u)
+    (hθ : (Dσ ∘L ContinuousLinearMap.inr ℝ X ℝ).IsInvertible) :
+    HasStrictFDerivAt
+      (syngeImplicitEndpoint hσ hθ)
+      (-((Dσ ∘L ContinuousLinearMap.inr ℝ X ℝ).inverse) ∘L
+        (Dσ ∘L ContinuousLinearMap.inl ℝ X ℝ))
+      u.1 := by
+  exact hσ.hasStrictFDerivAt_implicitFunctionOfProdDomain hθ
+
+/-- In particular the regular endpoint map is continuous at the base point. -/
+theorem syngeImplicitEndpoint_continuousAt
+    {σ : X × ℝ → ℝ}
+    {u : X × ℝ}
+    {Dσ : X × ℝ →L[ℝ] ℝ}
+    (hσ : HasStrictFDerivAt σ Dσ u)
+    (hθ : (Dσ ∘L ContinuousLinearMap.inr ℝ X ℝ).IsInvertible) :
+    ContinuousAt (syngeImplicitEndpoint hσ hθ) u.1 :=
+  (syngeImplicitEndpoint_hasStrictFDerivAt hσ hθ).continuousAt
+
+/-- The endpoint map tends to the distinguished endpoint value itself. -/
+theorem syngeImplicitEndpoint_tendsto
+    {σ : X × ℝ → ℝ}
+    {u : X × ℝ}
+    {Dσ : X × ℝ →L[ℝ] ℝ}
+    (hσ : HasStrictFDerivAt σ Dσ u)
+    (hθ : (Dσ ∘L ContinuousLinearMap.inr ℝ X ℝ).IsInvertible) :
+    Tendsto (syngeImplicitEndpoint hσ hθ) (𝓝 u.1) (𝓝 u.2) := by
+  exact hσ.tendsto_implicitFunctionOfProdDomain hθ
+
+end SyngeImplicitEndpoint
+
 /-! ### Minimal Synge endpoint interface and forced optical closure -/
 
 /-- Minimal first-jet Synge data at the two null endpoints.  The endpoint covectors
@@ -11258,6 +11338,12 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check syngeImplicitEndpoint
+#check syngeImplicitEndpoint_eventually_eq_iff
+#check syngeImplicitEndpoint_eventually_solves
+#check syngeImplicitEndpoint_hasStrictFDerivAt
+#check syngeImplicitEndpoint_continuousAt
+#check syngeImplicitEndpoint_tendsto
 #check kerrChristoffelTrace_theta_hasDerivAt_r
 #check kerrChristoffelTracePartial_r_theta
 #check kerrRicci_thetar_reduction
@@ -11921,6 +12007,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.SyngeEndpointJetData.firstJet_forced_unique
 #print axioms RelativeRest.SyngeEndpointJetData.endpoint_eikonals_null
 #print axioms RelativeRest.SyngeEndpointJetData.optical_closure
+#print axioms RelativeRest.syngeImplicitEndpoint_eventually_solves
+#print axioms RelativeRest.syngeImplicitEndpoint_hasStrictFDerivAt
 #print axioms RelativeRest.opticalMetric2_inverse
 #print axioms RelativeRest.opticalMetric2_lapse_form
 #print axioms RelativeRest.clockAccumulation_hasDerivAt
