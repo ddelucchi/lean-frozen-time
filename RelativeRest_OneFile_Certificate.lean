@@ -2589,7 +2589,6 @@ theorem scalar_backbone
 #check covector_pullback_injective
 #check characteristic_range_restriction_surjective
 #check descended_covector_unique
-#check bridgeQuotientEquivReal
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
