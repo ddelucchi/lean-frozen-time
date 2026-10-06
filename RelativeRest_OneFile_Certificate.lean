@@ -20,20 +20,23 @@ This file is intentionally adversarial about assumptions.
   and source-free Maxwell equations in the regular Boyer–Lindquist chart.  It also derives the
   metric-normalized Carter observer and its carrier-selected rest condition, including the
   higher-jet `r=0` stratum.
-* The action side is now pushed back to explicit Einstein-Hilbert/Maxwell density pieces
-  and a reciprocal Lagrangian object.  Every linear covariant descendant is proved to inherit
-  the same characters, so the odd presymplectic sector and the `-2` constraint jet are no
-  longer independent scaling inputs.  A single Lagrangian-level Iyer-Wald operator identity
-  then uniquely fixes the compensated current and connects it to the explicit Maxwell stress,
-  characteristic covector, one-dimensional quotient, and normalized principal clock line.
-* What is not yet reconstructed from first principles is concentrated in the remaining
-  manifold-level differential-geometric infrastructure: the genuine tensor/differential-form
-  variation theorem for the Einstein-Maxwell Lagrangian (including construction of its
-  symplectic potential/Noether charge and proof of the operator-level Iyer-Wald identity),
-  the remaining stationary `(t,phi)` Kerr-Newman Ricci block, and global smooth
-  Synge-world-function endpoint existence across caustics.  Once those geometric inputs are
-  available, their algebraic, quotient, transport, clock, optical, and Kerr consequences are
-  already forced by the theorems below.
+* The action side is pushed back to explicit Einstein-Hilbert/Maxwell density pieces,
+  explicit principal-frame metric variations, and the reciprocal two-sector Lagrangian.  The
+  Maxwell stress normalization is derived from the Maxwell action variation; the full metric
+  Euler coefficient factors by `G-8πT`; its relative normal derivative uniquely fixes the
+  carrier.  A first-variation/Cartan/Noether package then derives the Iyer-Wald operator
+  identity rather than assuming it, and the normalized two-sector constraint operator fixes
+  the compensated current, characteristic quotient, and principal clock line.
+* The Kerr-Newman specialization now includes the full Christoffel/Ricci calculation: the
+  metric-derived Einstein tensor is proved equal to `8πT[F]` for the potential-derived
+  Maxwell field on the regular Carter chart.
+* What is not yet reconstructed from first principles is concentrated in genuinely
+  manifold-level infrastructure: construction of the full Einstein-Hilbert symplectic
+  potential/Noether charge and proof that the abstract first-variation/Noether operators used
+  below are exactly those of the Lorentzian Einstein-Maxwell action, together with global
+  smooth Synge-world-function endpoint existence across caustics/conjugate points.  Once those
+  geometric inputs are supplied, the downstream algebraic, quotient, transport, clock,
+  optical, relational, and Kerr consequences are forced by the theorems below.
 
 Consequently this file is a kernel-oriented logical certificate of the manuscript's forced
 algebraic and quotient structure while keeping the remaining geometric boundary visible.
@@ -13278,8 +13281,8 @@ theorem kerr_relative_rest_carter_regular
     carterObserver_unit_timelike r M a Q θ hsig hdel⟩
 
 /-- End-to-end Kerr-Newman specialization certificate from the explicit
-Boyer-Lindquist metric and potential, stopping exactly before the still-unformalized
-Christoffel/Ricci verification of the Einstein equation. -/
+Boyer-Lindquist metric and potential.  The full metric Einstein equation is proved
+separately below and is combined with this chain in the full specialization theorem. -/
 theorem kerrNewman_forced_specialization_certificate
     (Q r M a θ dt dlam : ℝ)
     (hQ : Q ≠ 0)
@@ -13348,6 +13351,54 @@ theorem kerrNewman_forced_specialization_certificate
       Q r a θ hQ hsig,
     kerrMinoClockFromPrincipalEM
       Q r a θ dt dlam hQ hsig hmino⟩
+
+/-- Full Kerr-Newman field/metric/clock certificate on the regular Carter chart:
+the Boyer-Lindquist metric satisfies the Einstein equation with the potential-derived
+Maxwell stress, the Maxwell field is source free, the Carter frame is the selected
+relative-rest frame, and the intrinsic clock obeys the Mino relation. -/
+theorem kerrNewman_full_field_metric_clock_certificate
+    (Q r M a θ dt dlam : ℝ)
+    (hQ : Q ≠ 0)
+    (hsig : 0 < Sigma r a θ)
+    (hdel : 0 < Delta r M a Q)
+    (hsin : 0 < Real.sin θ)
+    (hmino : dlam = dt / Sigma r a θ) :
+    (∀ i j : Fin 4,
+      kerrEinsteinCovFromMetric r M a Q θ i j =
+        8 * Real.pi *
+          kerrMaxwellStressCovFromPotential Q r M a θ i j) ∧
+    kerrCoordinateField Q r a θ =
+      kerrFieldInCarterCoframe Q r M a θ ∧
+    (kerrVolumeDensity r a θ * kerrRaisedFrt Q r M a θ =
+        kerrDensitizedFrt Q r a θ ∧
+     kerrVolumeDensity r a θ * kerrRaisedFrPhi Q r M a θ =
+        kerrDensitizedFrPhi Q r a θ ∧
+     kerrVolumeDensity r a θ * kerrRaisedFthetaT Q r M a θ =
+        kerrDensitizedFthetaT Q r a θ ∧
+     kerrVolumeDensity r a θ * kerrRaisedFthetaPhi Q r M a θ =
+        kerrDensitizedFthetaPhi Q r a θ ∧
+     deriv (fun x : ℝ => kerrDensitizedFrt Q x a θ) r +
+        deriv (fun x : ℝ => kerrDensitizedFthetaT Q r a x) θ = 0 ∧
+     deriv (fun x : ℝ => kerrDensitizedFrPhi Q x a θ) r +
+        deriv (fun x : ℝ => kerrDensitizedFthetaPhi Q r a x) θ = 0) ∧
+    sigmaStar
+      (kerrResolvingQMinus r a θ)
+      (kerrResolvingQPlus r a θ) = 0 ∧
+    kerrStationaryNormSq r M a Q θ
+      (carterObserver r M a Q θ) = -1 ∧
+    kerrClockRateFromPrincipalEM Q r a θ * dt =
+      Real.sqrt 2 * |Q| * dlam := by
+  have hsin0 : Real.sin θ ≠ 0 := ne_of_gt hsin
+  have hEin := kerrEinsteinCovFromMetric_eq_8pi_MaxwellStress
+    Q r M a θ hsig hdel hsin0
+  have hField := kerrCoordinateField_eq_CarterCoframe
+    Q r M a θ hsig hdel
+  have hMax := kerrMaxwell_source_free_certificate
+    Q r M a θ (ne_of_gt hsig) (ne_of_gt hdel) hsin0
+  have hRest := kerr_relative_rest_carter_regular
+    r M a Q θ hsig hdel
+  exact ⟨hEin, hField, hMax, hRest.1, hRest.2.2,
+    kerrMinoClockFromPrincipalEM Q r a θ dt dlam hQ hsig hmino⟩
 
 /-- Reissner-Nordström specialization (`a=0`) of `Σ`. -/
 theorem sigma_reissner_nordstrom (r θ : ℝ) : Sigma r 0 θ = r^2 := by
@@ -15475,6 +15526,7 @@ theorem scalar_backbone_from_einstein_maxwell
 #check relativeSymplecticMinus_skew
 #check relativeLiouvilleCovector_horizontal
 #check kerrNewman_forced_specialization_certificate
+#check kerrNewman_full_field_metric_clock_certificate
 #check principalField_forced_core_chain
 #check kerr_metric_det_eq_scalar
 #check kerrVolumeDensity_sq
@@ -16209,4 +16261,5 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrMaxwell_Carter_principal_structure
 #print axioms RelativeRest.kerr_relative_rest_carter_regular
 #print axioms RelativeRest.kerrNewman_forced_specialization_certificate
+#print axioms RelativeRest.kerrNewman_full_field_metric_clock_certificate
 #print axioms RelativeRest.kerr_regular_first_or_second_radial_jet_resolves
