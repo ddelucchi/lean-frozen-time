@@ -755,6 +755,13 @@ theorem kernel_inclusion_of_factorization
   simp [hbp] at this
   exact this.symm
 
+/-- When the characteristic space is defined, as in the manuscript, to be the image of
+the parameter-to-characteristic map, surjectivity is automatic rather than an extra hypothesis. -/
+theorem characteristic_range_restriction_surjective
+    (β : P →ₗ[ℝ] K) :
+    Function.Surjective β.rangeRestrict :=
+  LinearMap.surjective_rangeRestrict β
+
 /-- A strictly positive response on one vector forces a real covector to be nonzero. -/
 theorem covector_nonzero_of_positive
     (ℓ : P →ₗ[ℝ] ℝ) (p : P) (hp : 0 < ℓ p) :
@@ -1346,6 +1353,7 @@ theorem scalar_backbone
 #check actionOpticalMap_intertwines_generator
 #check homogeneous_conformal_factor
 #check covector_pullback_injective
+#check characteristic_range_restriction_surjective
 #check descended_covector_unique
 #check bridge_ell_nonzero
 #check bridge_Lambda_nonzero
