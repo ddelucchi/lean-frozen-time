@@ -21,6 +21,7 @@ lean_lib RelativeRest_DeepPass11
 lean_lib RelativeRest_DeepPass12
 lean_lib RelativeRest_DeepPass13
 lean_lib RelativeRest_DeepPass14
+lean_lib RelativeRest_DeepPass15
 
 @[default_target]
 lean_lib RelativeRest_Audit
