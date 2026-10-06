@@ -1371,6 +1371,19 @@ theorem kernel_inclusion_of_factorization
   simp [hbp] at this
   exact this.symm
 
+
+/-- If the integrated response depends only on the characteristic variation, kernel invisibility
+is itself forced rather than assumed. -/
+theorem kernel_invisible_of_response_extensional
+    (β : P →ₗ[ℝ] K) (ℓ : P →ₗ[ℝ] ℝ)
+    (hext : ∀ p q : P, β p = β q → ℓ p = ℓ q) :
+    LinearMap.ker β ≤ LinearMap.ker ℓ := by
+  intro p hp
+  change ℓ p = 0
+  have h := hext p 0
+  simp [hp] at h
+  exact h
+
 /-- When the characteristic space is defined, as in the manuscript, to be the image of
 the parameter-to-characteristic map, surjectivity is automatic rather than an extra hypothesis. -/
 theorem characteristic_range_restriction_surjective
@@ -1567,6 +1580,21 @@ theorem normalized_unit_existsUnique
   have hspan := reconstruction_from_normalized_covector α u hu hfin
   exact normalized_unit_unique α u v hu hspan hv
 
+
+/-- Every alternating bilinear two-form vanishes on a one-dimensional clock line.
+This is the algebraic content of the manuscript's statement that the descended one-form is closed. -/
+theorem alternating_bilinear_zero_on_clock_line
+    (α : L₁ →ₗ[ℝ] ℝ) (u : L₁)
+    (hu : α u = 1)
+    (hfin : Module.finrank ℝ L₁ = 1)
+    (B : L₁ →ₗ[ℝ] L₁ →ₗ[ℝ] ℝ)
+    (halt : ∀ x : L₁, B x x = 0) :
+    ∀ x y : L₁, B x y = 0 := by
+  have hspan := reconstruction_from_normalized_covector α u hu hfin
+  intro x y
+  rw [hspan x, hspan y]
+  simp [halt u]
+
 /-- Explicit normalized map between two one-dimensional clock lines. -/
 def normalizedClockMap
     (α : L₁ →ₗ[ℝ] ℝ) (u₂ : L₂) : L₁ →ₗ[ℝ] L₂ where
@@ -1635,6 +1663,53 @@ noncomputable def normalizedClockEquiv
     (normalizedClockMap_bijective α β u₁ u₂ hαu hβu hfin₁ hfin₂)
 
 end OneDimensional
+
+/-! ### Exact affine primitive of the descended clock covector -/
+
+section AffineClockPrimitive
+
+variable {L : Type*} [AddCommGroup L] [Module ℝ L]
+
+/-- A descended linear clock covector has an explicit affine primitive. -/
+def clockPotential (λ : L →ₗ[ℝ] ℝ) (C : ℝ) (x : L) : ℝ :=
+  λ x + C
+
+/-- Its increment is exactly the clock covector, globally on the quotient vector space. -/
+theorem clockPotential_increment
+    (λ : L →ₗ[ℝ] ℝ) (C : ℝ) (x v : L) :
+    clockPotential λ C (x + v) - clockPotential λ C x = λ v := by
+  simp [clockPotential]
+  ring
+
+/-- Changing the integration constant changes only the clock origin. -/
+theorem clockPotential_origin_shift
+    (λ : L →ₗ[ℝ] ℝ) (C₁ C₂ : ℝ) (x : L) :
+    clockPotential λ C₂ x - clockPotential λ C₁ x = C₂ - C₁ := by
+  simp [clockPotential]
+  ring
+
+/-- Any two functions with the same translation differential differ by one global constant.
+This is the precise affine version of `[Θ] ∈ C∞(L)/ℝ` on the linear clock quotient. -/
+theorem clockPotential_unique_up_to_constant
+    (λ : L →ₗ[ℝ] ℝ) (Θ₁ Θ₂ : L → ℝ)
+    (h₁ : ∀ x v : L, Θ₁ (x + v) - Θ₁ x = λ v)
+    (h₂ : ∀ x v : L, Θ₂ (x + v) - Θ₂ x = λ v) :
+    ∀ x : L, Θ₁ x - Θ₂ x = Θ₁ 0 - Θ₂ 0 := by
+  intro x
+  have h1 := h₁ 0 x
+  have h2 := h₂ 0 x
+  simp at h1 h2
+  linarith
+
+/-- Along a normalized unit direction, the affine clock advances by exactly the parameter. -/
+theorem clockPotential_normalized_flow
+    (λ : L →ₗ[ℝ] ℝ) (u : L) (hu : λ u = 1)
+    (C t : ℝ) (x : L) :
+    clockPotential λ C (x + t • u) = clockPotential λ C x + t := by
+  simp [clockPotential, hu]
+  ring
+
+end AffineClockPrimitive
 
 /-! ## 11. Pointwise local clock algebra -/
 
@@ -2308,6 +2383,54 @@ theorem forcedBridge_quotient_finrank_one
       ((LinearMap.range D.beta) ⧸ LinearMap.ker D.Lambda) = 1 := by
   exact clockQuotient_finrank_one D.Lambda (forcedBridge_Lambda_nonzero D)
 
+/-- Even stronger interface: only extensionality of the response with respect to the
+characteristic variation and positivity are retained.  Kernel-invisibility and Λ are derived. -/
+structure ExtensionalBridgeData where
+  beta : P →ₗ[ℝ] KSpace
+  ell : P →ₗ[ℝ] ℝ
+  response_extensional : ∀ p q : P, beta p = beta q → ell p = ell q
+  positiveWitness : P
+  response_positive : 0 < ell positiveWitness
+
+theorem ExtensionalBridgeData.kernel_invisible
+    (D : ExtensionalBridgeData (P:=P) (KSpace:=KSpace)) :
+    LinearMap.ker D.beta ≤ LinearMap.ker D.ell :=
+  kernel_invisible_of_response_extensional
+    D.beta D.ell D.response_extensional
+
+noncomputable def ExtensionalBridgeData.Lambda
+    (D : ExtensionalBridgeData (P:=P) (KSpace:=KSpace)) :
+    LinearMap.range D.beta →ₗ[ℝ] ℝ :=
+  characteristicCovectorOfKernel D.beta D.ell D.kernel_invisible
+
+theorem extensionalBridge_factorization
+    (D : ExtensionalBridgeData (P:=P) (KSpace:=KSpace)) :
+    D.Lambda.comp D.beta.rangeRestrict = D.ell :=
+  characteristicCovectorOfKernel_factorization
+    D.beta D.ell D.kernel_invisible
+
+theorem extensionalBridge_Lambda_nonzero
+    (D : ExtensionalBridgeData (P:=P) (KSpace:=KSpace)) :
+    D.Lambda ≠ 0 := by
+  exact descended_covector_nonzero
+    D.beta.rangeRestrict D.Lambda D.ell
+    (extensionalBridge_factorization D)
+    (covector_nonzero_of_positive D.ell D.positiveWitness D.response_positive)
+
+theorem extensionalBridge_Lambda_unique
+    (D : ExtensionalBridgeData (P:=P) (KSpace:=KSpace))
+    (Λ' : LinearMap.range D.beta →ₗ[ℝ] ℝ)
+    (hΛ' : Λ'.comp D.beta.rangeRestrict = D.ell) :
+    Λ' = D.Lambda :=
+  characteristicCovectorOfKernel_unique
+    D.beta D.ell D.kernel_invisible Λ' hΛ'
+
+theorem extensionalBridge_quotient_finrank_one
+    (D : ExtensionalBridgeData (P:=P) (KSpace:=KSpace)) :
+    Module.finrank ℝ
+      ((LinearMap.range D.beta) ⧸ LinearMap.ker D.Lambda) = 1 :=
+  clockQuotient_finrank_one D.Lambda (extensionalBridge_Lambda_nonzero D)
+
 end GeometricInterface
 
 /-! ## 19. End-to-end dependency record -/
@@ -2358,6 +2481,16 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check kernel_invisible_of_response_extensional
+#check alternating_bilinear_zero_on_clock_line
+#check clockPotential_increment
+#check clockPotential_unique_up_to_constant
+#check clockPotential_normalized_flow
+#check ExtensionalBridgeData.kernel_invisible
+#check ExtensionalBridgeData.Lambda
+#check extensionalBridge_factorization
+#check extensionalBridge_Lambda_unique
+#check extensionalBridge_quotient_finrank_one
 #check radar_decomposition_unique
 #check frobeniusObstruction_zero_iff
 #check principal_endpoint_split
