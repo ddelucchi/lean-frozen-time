@@ -8465,6 +8465,35 @@ theorem kerrChristoffel_theta_thetatheta
   field_simp [hsig, hdel]
   ring
 
+/-- Full quadratic connection contraction in the polar diagonal Ricci component. -/
+theorem kerrConnectionProductTrace_thetatheta_formula
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrConnectionProductTrace r M a Q θ 2 2 =
+      (-4 * M * a^2 * (Real.cos θ)^4 * r +
+        4 * M * a^2 * (Real.cos θ)^2 * r -
+        4 * M * (Real.cos θ)^2 * r^3 + 4 * M * r^3 +
+        2 * Q^2 * a^2 * (Real.cos θ)^4 -
+        2 * Q^2 * a^2 * (Real.cos θ)^2 +
+        2 * Q^2 * (Real.cos θ)^2 * r^2 - 2 * Q^2 * r^2 +
+        3 * a^4 * (Real.cos θ)^6 - 4 * a^4 * (Real.cos θ)^4 +
+        2 * a^4 * (Real.cos θ)^2 +
+        2 * a^2 * (Real.cos θ)^4 * r^2 +
+        2 * a^2 * (Real.cos θ)^2 * r^2 - 2 * a^2 * r^2 +
+        3 * (Real.cos θ)^2 * r^4 - 2 * r^4) /
+      ((Real.sin θ)^2 * (Sigma r a θ)^2) := by
+  unfold kerrConnectionProductTrace
+  simp_rw [kerrChristoffel_eq_regular r M a Q θ hsig hdel]
+  simp [kerrChristoffelRegular, kerrMetricInv,
+    kerrMetricDerivativeRegular,
+    kerrMetricRadialDerivative, kerrMetricPolarDerivative]
+  field_simp [hsig, hdel, hsin]
+  have htrig := Real.sin_sq_add_cos_sq θ
+  unfold Delta Sigma kerrH
+  nlinarith
+
 /-- Coordinate derivative of a Christoffel symbol. -/
 def kerrChristoffelPartial
     (κ : Fin 4) (r M a Q θ : ℝ)
@@ -9010,6 +9039,27 @@ theorem kerrRicciCovFromMetric_zero_of_odd_stationary
   rw [hodd] at hp
   linarith
 
+/-! ### Polar diagonal Ricci equation -/
+
+/-- Structural reduction of the polar diagonal Ricci component to two explicit
+connection derivatives, the polar trace derivative, and the quadratic contraction. -/
+theorem kerrRicci_thetatheta_reduction
+    (r M a Q θ : ℝ) :
+    kerrRicciCovFromMetric r M a Q θ 2 2 =
+      kerrChristoffelPartial 1 r M a Q θ 1 2 2 +
+      kerrChristoffelPartial 2 r M a Q θ 2 2 2 -
+      kerrCoordPartial 2
+        (fun rr th => kerrChristoffelTrace rr M a Q th 2) r θ +
+      kerrChristoffel r M a Q θ 1 2 2 *
+        kerrChristoffelTrace r M a Q θ 1 +
+      kerrChristoffel r M a Q θ 2 2 2 *
+        kerrChristoffelTrace r M a Q θ 2 -
+      kerrConnectionProductTrace r M a Q θ 2 2 := by
+  unfold kerrRicciCovFromMetric kerrConnectionProductTrace
+  simp [kerrStationarySign,
+    kerrChristoffel_zero_of_odd_stationary, kerrCoordPartial]
+  ring
+
 /-! ### Mixed meridional Ricci equation -/
 
 /-- Structural reduction of `R_{rθ}` to the two meridional Christoffels, the two
@@ -9466,6 +9516,32 @@ def kerrEinsteinTargetRicciCoordinate
       Sigma r a θ
   else 0
 
+
+/-- The polar diagonal Ricci tensor is derived from the Boyer-Lindquist metric and equals
+the Maxwell-forced Einstein target, with no imported curvature scalar. -/
+theorem kerrRicci_thetatheta_eq_target
+    (Q r M a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrRicciCovFromMetric r M a Q θ 2 2 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 2 2 := by
+  rw [kerrRicci_thetatheta_reduction,
+    kerrChristoffelPartial_r_thetatheta r M a Q θ hsig hdel,
+    kerrChristoffelPartial_theta_thetatheta r M a Q θ hsig hdel,
+    kerrChristoffelTracePartial_theta_theta
+      r M a Q θ hsig hdel hsin,
+    kerrChristoffel_r_thetatheta r M a Q θ hsig hdel,
+    kerrChristoffel_theta_thetatheta r M a Q θ hsig hdel,
+    kerrChristoffelTrace_r r M a Q θ hsig hdel hsin,
+    kerrChristoffelTrace_theta r M a Q θ hsig hdel hsin,
+    kerrConnectionProductTrace_thetatheta_formula
+      r M a Q θ hsig hdel hsin]
+  simp [kerrEinsteinTargetRicciCoordinate, kerrRicciScale]
+  field_simp [hsig, hdel, hsin]
+  have htrig := Real.sin_sq_add_cos_sq θ
+  unfold Delta Sigma
+  nlinarith
 
 /-- This closes the `rθ` Einstein-Maxwell component because the field-forced target is zero. -/
 theorem kerrRicci_rtheta_eq_target
@@ -9933,6 +10009,52 @@ theorem kerrEinsteinEquation_from_fiveRicciObligations
   apply kerrEinsteinEquation_from_sixRicciObligations
     Q r M a θ hsig hdel hsin
   exact (kerrSixRicciObligations_iff_five Q r M a θ).2 hFive
+
+/-- With the polar diagonal equation now metric-derived, only four scalar curvature
+identities remain: tt, tφ, rr, and φφ. -/
+def kerrFourRicciObligations
+    (Q r M a θ : ℝ) : Prop :=
+  kerrRicciCovFromMetric r M a Q θ 0 0 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 0 0 ∧
+  kerrRicciCovFromMetric r M a Q θ 0 3 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 0 3 ∧
+  kerrRicciCovFromMetric r M a Q θ 1 1 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 1 1 ∧
+  kerrRicciCovFromMetric r M a Q θ 3 3 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 3 3
+
+/-- On the regular chart, the five-component closure condition is equivalent to the
+four components not already discharged by the polar Ricci calculation. -/
+theorem kerrFiveRicciObligations_iff_four
+    (Q r M a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrFiveRicciObligations Q r M a θ ↔
+      kerrFourRicciObligations Q r M a θ := by
+  constructor
+  · rintro ⟨h00,h03,h11,_h22,h33⟩
+    exact ⟨h00,h03,h11,h33⟩
+  · rintro ⟨h00,h03,h11,h33⟩
+    exact ⟨h00,h03,h11,
+      kerrRicci_thetatheta_eq_target Q r M a θ hsig hdel hsin,
+      h33⟩
+
+/-- Thus the full metric Ricci equation is equivalent to four explicit remaining
+component identities on the regular Boyer-Lindquist chart. -/
+theorem kerrFullRicciEquation_iff_four_obligations
+    (Q r M a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    (∀ i j : Fin 4,
+      kerrRicciCovFromMetric r M a Q θ i j =
+        kerrEinsteinTargetRicciCoordinate Q r M a θ i j) ↔
+      kerrFourRicciObligations Q r M a θ := by
+  exact (kerrFullRicciEquation_iff_five_obligations
+    Q r M a θ hsig hdel hsin).trans
+      (kerrFiveRicciObligations_iff_four
+        Q r M a θ hsig hdel hsin)
 
 /-- Mixed Ricci eigenvalue obtained by raising the first Carter-frame index. -/
 def kerrRicciFrameMixedCoeff
@@ -11782,6 +11904,9 @@ theorem scalar_backbone_from_einstein_maxwell
 #check kerrEinsteinEquation_from_sixRicciObligations
 #check kerrEinsteinTargetRicciCoordinate_symmetric
 #check kerrFiveRicciObligations
+#check kerrFourRicciObligations
+#check kerrFiveRicciObligations_iff_four
+#check kerrFullRicciEquation_iff_four_obligations
 #check kerrSixRicciObligations_iff_five
 #check kerrFullRicciEquation_iff_five_obligations
 #check kerrEinsteinEquation_from_fiveRicciObligations
