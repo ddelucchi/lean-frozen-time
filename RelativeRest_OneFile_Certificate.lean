@@ -16865,6 +16865,84 @@ theorem principalMetricEulerRelativeOrbitVariation_forced_core_chain
   intro i j
   exact principalActionEulerJetLinear_basis D.carrier.E D.carrier.B i j
 
+/-! ### Local Noether bridge: locality + diffeomorphism derivative pairing -/
+
+/-- A geometrically sharper interface than the global orbit equality.  The
+covariant constraint is represented as the hypersurface integral of a local bulk
+coefficient, and only the derivative-of-diffeomorphism-parameter part of the
+local Noether identity is imposed.  That derivative pairing will force the local
+coefficient itself. -/
+structure PrincipalLocalNoetherVariationCharacteristicInput where
+  carrier : PrincipalCarrierCharacteristicInput (P:=P)
+  variation : LagrangianVariationNoetherOperators
+    (L:=R2) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ))
+  bulkCoeff : ℝ → Fin 4 → Fin 4 → ℝ
+  constraint_is_bulk_integral :
+    ∀ s : ℝ, ∀ v : Fin 4 → ℝ,
+      relativeConstraintOrbitEval variation.constraint v s =
+        carrier.iε
+          (fun i : Fin 4 =>
+            ∑ j : Fin 4, bulkCoeff s i j * v j)
+  local_diffeomorphism_derivative_pairing :
+    ∀ s : ℝ, ∀ nablaXi : Fin 4 → Fin 4 → ℝ,
+      (∑ i : Fin 4, ∑ j : Fin 4,
+        bulkCoeff s i j * nablaXi i j) =
+      principalMetricDiffeomorphismEulerPairing
+        (fun i j =>
+          principalMetricSign i * Real.exp (-s) *
+            principalScaledMetricEulerCoeffFromAction
+              carrier.E carrier.B i j s)
+        nablaXi
+
+/-- Local covariance forces every component of the candidate bulk coefficient to
+be the literal `2E^a{}_b` coefficient derived from the displayed action. -/
+theorem PrincipalLocalNoetherVariationCharacteristicInput.bulkCoeff_forced
+    (D : PrincipalLocalNoetherVariationCharacteristicInput (P:=P))
+    (s : ℝ) (i j : Fin 4) :
+    D.bulkCoeff s i j =
+      2 * principalMetricSign i * Real.exp (-s) *
+        principalScaledMetricEulerCoeffFromAction
+          D.carrier.E D.carrier.B i j s := by
+  have h :=
+    principalNoetherBulkCoeff_eq_twoEuler_of_derivative_pairing
+      (fun a b =>
+        principalMetricSign a * Real.exp (-s) *
+          principalScaledMetricEulerCoeffFromAction
+            D.carrier.E D.carrier.B a b s)
+      (D.bulkCoeff s)
+      (D.local_diffeomorphism_derivative_pairing s)
+      i j
+  simpa [mul_assoc] using h
+
+/-- Therefore the local candidate current acting on any characteristic vector is
+exactly the finite-rapidity action-derived Noether endomorphism. -/
+theorem PrincipalLocalNoetherVariationCharacteristicInput.bulkCurrent_forced
+    (D : PrincipalLocalNoetherVariationCharacteristicInput (P:=P))
+    (s : ℝ) (v : Fin 4 → ℝ) :
+    (fun i : Fin 4 =>
+      ∑ j : Fin 4, D.bulkCoeff s i j * v j) =
+      principalMetricEulerNoetherRelativeLinear
+        D.carrier.E D.carrier.B s v := by
+  funext i
+  unfold principalMetricEulerNoetherRelativeLinear
+  apply Finset.sum_congr rfl
+  intro j hj
+  rw [D.bulkCoeff_forced s i j]
+  ring
+
+/-- Locality plus the derivative Noether identity imply the full finite relative
+constraint orbit used by the downstream clock proof. -/
+theorem PrincipalLocalNoetherVariationCharacteristicInput.constraintOrbit_forced
+    (D : PrincipalLocalNoetherVariationCharacteristicInput (P:=P))
+    (s : ℝ) (v : Fin 4 → ℝ) :
+    relativeConstraintOrbitEval D.variation.constraint v s =
+      D.carrier.metricEulerRelativeOrbitResponse s v := by
+  rw [D.constraint_is_bulk_integral s v,
+    D.bulkCurrent_forced s v]
+  have h := LinearMap.congr_fun
+    (D.carrier.metricEulerRelativeOrbitResponse_eq_noetherIntegral s) v
+  simpa using h.symm
+
 /-! ### Single geometric bridge: Iyer-Wald constraint equals the canonical action Noether operator -/
 
 /-- The remaining covariant-phase-space geometry is isolated to one operator
@@ -16893,6 +16971,14 @@ structure PrincipalDisplayedMetricEulerOrbitVariationCharacteristicInput where
     ∀ s : ℝ, ∀ v : Fin 4 → ℝ,
       relativeConstraintOrbitEval variation.constraint v s =
         carrier.metricEulerRelativeOrbitResponse s v
+
+/-- The local Noether data canonically imply the previous global orbit interface. -/
+def PrincipalLocalNoetherVariationCharacteristicInput.toDisplayedOrbitInput
+    (D : PrincipalLocalNoetherVariationCharacteristicInput (P:=P)) :
+    PrincipalDisplayedMetricEulerOrbitVariationCharacteristicInput (P:=P) where
+  carrier := D.carrier
+  variation := D.variation
+  noetherConstraintOrbitFromMetricEuler := D.constraintOrbit_forced
 
 /-- The single canonical-constraint identity implies the previous finite-orbit
 bridge with no additional sector, sign, jet, or normalization hypothesis. -/
@@ -19144,6 +19230,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.PrincipalCarrierCharacteristicInput.noetherConstraintOperatorFromAction_DA
 #print axioms RelativeRest.PrincipalCarrierCharacteristicInput.noetherConstraintOperatorFromAction_relativeOrbit
 #print axioms RelativeRest.PrincipalDisplayedMetricEulerOrbitVariationCharacteristicInput.constraint_eq_canonicalNoether
+#print axioms RelativeRest.PrincipalLocalNoetherVariationCharacteristicInput.bulkCoeff_forced
+#print axioms RelativeRest.PrincipalLocalNoetherVariationCharacteristicInput.constraintOrbit_forced
 #print axioms RelativeRest.principalCanonicalNoether_forced_core_chain
 #print axioms RelativeRest.principalCanonicalCompleted_forced_core_chain
 #print axioms RelativeRest.principalDiffeomorphismNoether_decomposition
