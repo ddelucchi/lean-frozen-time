@@ -2755,22 +2755,6 @@ theorem principalMetricEulerNoetherJetCoeff_eq_carrier
     field_simp [ne_of_gt Real.pi_pos] <;>
     ring
 
-/-- Contracting the forced Noether coefficient with an arbitrary characteristic
-vector gives exactly `(8π)⁻¹ J(v)`, the pointwise coefficient in the paper's
-compensated Iyer-Wald current. -/
-theorem principalMetricEulerNoetherJetResponse_eq_carrier
-    (E B : ℝ) (v : Fin 4 → ℝ) (i : Fin 4) :
-    (∑ j : Fin 4,
-      principalMetricEulerNoetherJetCoeff E B i j * v j) =
-      (1 / (8 * Real.pi)) *
-        principalActionEulerJetLinear E B v i := by
-  unfold principalActionEulerJetLinear
-  simp_rw [principalMetricEulerNoetherJetCoeff_eq_carrier]
-  rw [Finset.mul_sum]
-  apply Finset.sum_congr rfl
-  intro j hj
-  ring
-
 /-- Consequently the fixed-point carrier jet is orientation-independent under
 the overall Maxwell-field sign reversal induced by coframe orientation. -/
 theorem principalJetFromF_neg
@@ -3029,6 +3013,23 @@ theorem principalActionEulerJetLinear_eq_principalJetFromF
   apply Finset.sum_congr rfl
   intro j hj
   rw [← principalJetFromF_forced_from_actionEulerJet E B i j]
+
+
+/-- Contracting the forced Noether coefficient with an arbitrary characteristic
+vector gives exactly `(8π)⁻¹ J(v)`, the pointwise coefficient in the paper's
+compensated Iyer-Wald current. -/
+theorem principalMetricEulerNoetherJetResponse_eq_carrier
+    (E B : ℝ) (v : Fin 4 → ℝ) (i : Fin 4) :
+    (∑ j : Fin 4,
+      principalMetricEulerNoetherJetCoeff E B i j * v j) =
+      (1 / (8 * Real.pi)) *
+        principalActionEulerJetLinear E B v i := by
+  unfold principalActionEulerJetLinear
+  simp_rw [principalMetricEulerNoetherJetCoeff_eq_carrier]
+  rw [Finset.mul_sum]
+  apply Finset.sum_congr rfl
+  intro j hj
+  ring
 
 /-- Full normalized metric-Euler endomorphism along the physical relative orbit.
 Unlike `principalActionEulerJetLinear`, this uses the displayed action Euler
