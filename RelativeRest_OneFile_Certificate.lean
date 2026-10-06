@@ -9119,8 +9119,10 @@ theorem RegularSyngeEndpointSource.implicitDerivative_eq_explicit
         (D.Dsigma ∘L ContinuousLinearMap.inl ℝ X ℝ) =
       (-D.sigmaTheta⁻¹) • D.sigmaX := by
   ext x
-  simp only [ContinuousLinearMap.neg_apply, ContinuousLinearMap.comp_apply,
-    ContinuousLinearMap.smul_apply]
+  change
+    -((D.Dsigma ∘L ContinuousLinearMap.inr ℝ X ℝ).inverse
+        ((D.Dsigma ∘L ContinuousLinearMap.inl ℝ X ℝ) x)) =
+      (-D.sigmaTheta⁻¹) * D.sigmaX x
   rw [D.thetaInverse_apply]
   unfold RegularSyngeEndpointSource.sigmaX
   ring
