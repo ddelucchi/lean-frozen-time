@@ -1507,6 +1507,17 @@ theorem principalMaxwell_form_invariant_magnitude (E B : ℝ) :
 
 /-! ### Maxwell potential first variation and symplectic potential -/
 
+
+
+
+/-- Fixed-metric derivative of `F_ab F^ab` induced by a potential variation.
+Antisymmetry gives the universal factor four:
+`δ(F²)=4 F^{ab} ∇_a δA_b`. -/
+def principalMaxwellPotentialFsqDerivative
+    (Fup nablaDeltaA : Fin 4 → Fin 4 → ℝ) : ℝ :=
+  4 * ∑ a : Fin 4, ∑ b : Fin 4,
+    Fup a b * nablaDeltaA a b
+
 /-! #### Potential variation really gives the factor four -/
 
 /-- Contravariant principal Maxwell tensor, obtained by raising both indices of
@@ -1593,15 +1604,6 @@ theorem principalMaxwellFsqVariationFromDeltaF_principal
     (principalMaxwellFUp E B) nablaDeltaA
     (principalMaxwellFUp_skew E B)
 
-
-
-/-- Fixed-metric derivative of `F_ab F^ab` induced by a potential variation.
-Antisymmetry gives the universal factor four:
-`δ(F²)=4 F^{ab} ∇_a δA_b`. -/
-def principalMaxwellPotentialFsqDerivative
-    (Fup nablaDeltaA : Fin 4 → Fin 4 → ℝ) : ℝ :=
-  4 * ∑ a : Fin 4, ∑ b : Fin 4,
-    Fup a b * nablaDeltaA a b
 
 /-- Literal fixed-metric Maxwell-potential variation line through the displayed
 Einstein-Maxwell density. -/
