@@ -2062,6 +2062,28 @@ def principalBasis (i : Fin 4) : Fin 4 → ℝ :=
 principal null dyad reconstructs it before the later local-clock section. -/
 def principalUhat : Fin 4 → ℝ := principalBasis 0
 
+/-- Every principal-frame vector is uniquely reconstructed from its four coordinate
+coefficients and the standard principal basis. -/
+theorem principalBasis_decomposition
+    (v : Fin 4 → ℝ) :
+    v = ∑ j : Fin 4, v j • principalBasis j := by
+  funext i
+  fin_cases i <;> simp [principalBasis]
+
+/-- Linear endomorphisms of the principal frame are determined by their values on
+the four principal basis vectors. -/
+theorem principalLinearMap_ext_on_basis
+    (A B : (Fin 4 → ℝ) →ₗ[ℝ] (Fin 4 → ℝ))
+    (h : ∀ j : Fin 4, A (principalBasis j) = B (principalBasis j)) :
+    A = B := by
+  ext v i
+  rw [principalBasis_decomposition v]
+  simp only [map_sum, map_smul, Finset.sum_apply, Pi.smul_apply]
+  apply Finset.sum_congr rfl
+  intro j hj
+  rw [h j]
+
+
 
 /-- Action of the principal mixed Maxwell stress endomorphism on a vector. -/
 def principalStressApply (u : ℝ) (v : Fin 4 → ℝ) (i : Fin 4) : ℝ :=
@@ -13134,6 +13156,45 @@ def PrincipalCarrierCharacteristicInput.J
     (D : PrincipalCarrierCharacteristicInput (P:=P)) :
     (Fin 4 → ℝ) →ₗ[ℝ] (Fin 4 → ℝ) :=
   (-16 * Real.pi) • D.T
+
+/-- Every matrix coefficient of the characteristic carrier endomorphism is the
+fixed-point jet reconstructed directly from the action's metric Euler derivative. -/
+theorem PrincipalCarrierCharacteristicInput.J_basis_eq_actionEulerJet
+    (D : PrincipalCarrierCharacteristicInput (P:=P))
+    (i j : Fin 4) :
+    D.J (principalBasis j) i =
+      (16 * Real.pi / principalMetricSign i) *
+        deriv
+          (principalScaledMetricEulerCoeffFromAction
+            D.E D.B i j) 0 := by
+  rw [← principalJetFromF_forced_from_actionEulerJet D.E D.B i j]
+  unfold PrincipalCarrierCharacteristicInput.J
+    PrincipalCarrierCharacteristicInput.T
+  change
+    (-16 * Real.pi) *
+      principalStressLinearFromF D.E D.B (principalBasis j) i =
+      principalJetFromF D.E D.B i j
+  rw [principalStressLinearFromF_apply]
+  simp [principalBasis, principalJetFromF]
+
+/-- There is no second linear carrier endomorphism with the same action Euler-jet
+matrix coefficients.  The `J` used by the characteristic construction is uniquely
+forced by the action derivative. -/
+theorem PrincipalCarrierCharacteristicInput.J_unique_from_actionEulerJet
+    (D : PrincipalCarrierCharacteristicInput (P:=P))
+    (J' : (Fin 4 → ℝ) →ₗ[ℝ] (Fin 4 → ℝ))
+    (hJ' : ∀ i j : Fin 4,
+      J' (principalBasis j) i =
+        (16 * Real.pi / principalMetricSign i) *
+          deriv
+            (principalScaledMetricEulerCoeffFromAction
+              D.E D.B i j) 0) :
+    J' = D.J := by
+  apply principalLinearMap_ext_on_basis
+  intro j
+  funext i
+  rw [hJ' i j, D.J_basis_eq_actionEulerJet i j]
+
 
 /-- Future-oriented contraction with the chosen positive hypersurface density. -/
 def PrincipalCarrierCharacteristicInput.iε
