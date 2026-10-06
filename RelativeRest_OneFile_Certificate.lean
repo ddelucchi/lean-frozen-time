@@ -8543,6 +8543,13 @@ theorem kerrChristoffel_theta_thetatheta
   field_simp [hsig, hdel]
   ring
 
+/-- Quadratic connection contraction in the coordinate Ricci tensor. -/
+def kerrConnectionProductTrace
+    (r M a Q θ : ℝ) (μ ν : Fin 4) : ℝ :=
+  ∑ ρ : Fin 4, ∑ σ : Fin 4,
+    kerrChristoffel r M a Q θ σ μ ρ *
+      kerrChristoffel r M a Q θ ρ ν σ
+
 /-- The quadratic connection contraction in R_tt collapses to two scalar squares. -/
 theorem kerrConnectionProductTrace_tt_formula
     (r M a Q θ : ℝ)
@@ -9281,12 +9288,6 @@ theorem kerrChristoffelPartial_lower_symmetric
       rw [hfun]
     · rw [if_neg h2]
 
-/-- Quadratic connection contraction in the coordinate Ricci tensor. -/
-def kerrConnectionProductTrace
-    (r M a Q θ : ℝ) (μ ν : Fin 4) : ℝ :=
-  ∑ ρ : Fin 4, ∑ σ : Fin 4,
-    kerrChristoffel r M a Q θ σ μ ρ *
-      kerrChristoffel r M a Q θ ρ ν σ
 
 /-- The quadratic Ricci contraction is symmetric in its two free lower indices. -/
 theorem kerrConnectionProductTrace_symmetric
