@@ -5281,6 +5281,19 @@ def carrierJetCurrent
     V →ₗ[ℝ] W :=
   (1 / (8 * Real.pi)) • (iε.comp J)
 
+/-- For the displayed Einstein-Maxwell action, the carrier current is literally
+the oriented-volume contraction of the Noether bulk endomorphism reconstructed
+from the metric Euler normal jet. -/
+theorem carrierJetCurrent_actionEuler_eq_metricNoether
+    {W : Type*} [AddCommGroup W] [Module ℝ W]
+    (E B : ℝ)
+    (iε : (Fin 4 → ℝ) →ₗ[ℝ] W) :
+    carrierJetCurrent (principalActionEulerJetLinear E B) iε =
+      iε.comp (principalMetricEulerNoetherJetLinear E B) := by
+  rw [principalMetricEulerNoetherJetLinear_eq_smul_carrier]
+  ext v
+  simp [carrierJetCurrent]
+
 /-- Stress-current form appearing on the other side of the bridge. -/
 def stressBridgeCurrent
     (T : V →ₗ[ℝ] V)
@@ -5317,6 +5330,21 @@ def carrierBulkResponse
     (iε : V →ₗ[ℝ] W) :
     V →ₗ[ℝ] ℝ :=
   integrate.comp (carrierJetCurrent J iε)
+
+/-- Hypersurface integration of the action-derived Noether bulk current is
+exactly the pre-existing carrier bulk response.  Thus the pointwise and integrated
+forms of the manuscript bridge are the same constructed object. -/
+theorem carrierBulkResponse_actionEuler_eq_metricNoether
+    {W : Type*} [AddCommGroup W] [Module ℝ W]
+    (E B : ℝ)
+    (integrate : W →ₗ[ℝ] ℝ)
+    (iε : (Fin 4 → ℝ) →ₗ[ℝ] W) :
+    carrierBulkResponse integrate
+        (principalActionEulerJetLinear E B) iε =
+      integrate.comp
+        (iε.comp (principalMetricEulerNoetherJetLinear E B)) := by
+  unfold carrierBulkResponse
+  rw [carrierJetCurrent_actionEuler_eq_metricNoether]
 
 /-- Hypersurface integration preserves the forced bridge:
 `∫W_Y=-2 ell`. -/
@@ -18550,6 +18578,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalMetricEulerNoetherJetCoeff_eq_carrier
 #print axioms RelativeRest.principalMetricEulerNoetherJetResponse_eq_carrier
 #print axioms RelativeRest.principalMetricEulerNoetherJetLinear_eq_smul_carrier
+#print axioms RelativeRest.carrierJetCurrent_actionEuler_eq_metricNoether
+#print axioms RelativeRest.carrierBulkResponse_actionEuler_eq_metricNoether
 #print axioms RelativeRest.principalDiffeomorphismNoether_decomposition
 #print axioms RelativeRest.principalGeneralizedBianchi_forced_by_diffeomorphism_invariance
 #print axioms RelativeRest.principalMetricEulerDivergence_zero_of_generalizedBianchi_onMaxwellShell
