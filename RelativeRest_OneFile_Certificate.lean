@@ -8237,6 +8237,96 @@ theorem relational_evolution_from_flow_derivative
     deriv (fun ϑ => O (ϑ - T)) θ = XF (θ - T) :=
   relational_translation_deriv O T θ (XF (θ - T)) hO
 
+/-! ### Manuscript-wide structural uniqueness certificate -/
+
+/-- One theorem collecting the major uniqueness/closure statements outside the
+field-specific characteristic/Kerr chain. Every clause below is a theorem already
+proved from the manuscript's stated algebraic/regularity hypotheses; no new choice
+is introduced by this certificate. -/
+theorem paperStructural_forced_certificate
+    {X : Type*} :
+    (∀ d : ℝ,
+      ((volumeHomothetyExponent d + scalarCurvatureHomothetyExponent) *
+          (-1 / 2 : ℝ) =
+        -((volumeHomothetyExponent d + maxwellInverseMetricExponent) *
+            (-1 / 2 : ℝ) +
+          maxwellFieldAmplitudeExponent * (1 / 2 : ℝ)) ↔ d = 4)) ∧
+    (∀ d : ℝ, hodgeConformalExponent d 2 = 0 ↔ d = 4) ∧
+    (∀ (f : ℝ → ℝ) (χ : ℝ),
+      (∀ r2 χ0 : ℝ,
+        0 < r2 → 0 < χ0 →
+        f (χ0 / r2) * r2 = f χ0) →
+      0 < χ → 0 < f 1 → χ^2 / (f χ)^2 = 1 →
+      f χ = χ) ∧
+    (∀ qm qp : ℝ,
+      nullCovectorNormSq qm qp ≠ 0 →
+      ∃! σ : ℝ, boostDefect qm qp σ = 0) ∧
+    (∀ I : R2 →ₗ[ℝ] R2,
+      I CA = TO → I DA = RO → I = actionOpticalMap) ∧
+    (∀ s σ : ℝ,
+      opticalBoost σ TO = actionOpticalMap (actionBoost s CA) →
+      σ = s) ∧
+    (∀ ω varpi accel dlogK : ℝ,
+      ω ≠ 0 →
+      (((-2 * ω * varpi = 0) ∧
+          (-ω * (accel + dlogK / 4) = 0)) ↔
+        (varpi = 0 ∧ accel = -dlogK / 4))) ∧
+    (∀ ω varpi : ℝ,
+      ω ≠ 0 →
+      (frobeniusObstruction ω varpi = 0 ↔ varpi = 0)) ∧
+    (∃! v : R2,
+      tangentToClockSection v ∧ clockLiouville 1 v = 1) ∧
+    (∀ (vartheta : ℝ → R2 → ℝ) (κ : ℝ) (v : R2),
+      (∀ c k : ℝ, ∀ w : R2,
+        0 < c →
+        vartheta (c * k) (clockDilationTangent c w) =
+          c * vartheta k w) →
+      (∀ w : R2, vartheta 1 w = clockDTheta w) →
+      0 < κ →
+      vartheta κ v = clockLiouville κ v) ∧
+    (∀ (flow : ℝ → X → X) (F XF : X → ℝ) (T : X → ℝ)
+        (θ : ℝ) (x : X),
+      (∀ t : ℝ, ∀ y : X,
+        HasDerivAt (fun z : ℝ => F (flow z y))
+          (XF (flow t y)) t) →
+      deriv (fun ϑ : ℝ => relationalObservable flow F T ϑ x) θ =
+        relationalGeneratorObservable flow XF T θ x) ∧
+    (∀ (flow : ℝ → X → X) (F : X → ℝ) (T : X → ℝ)
+        (θ t : ℝ) (x : X),
+      (∀ a b : ℝ, ∀ y : X,
+        flow a (flow b y) = flow (a + b) y) →
+      (∀ b : ℝ, ∀ y : X,
+        T (flow b y) = T y + b) →
+      relationalObservable flow F T θ (flow t x) =
+        relationalObservable flow F T θ x) := by
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · intro d
+    exact primitive_relative_weights_reciprocal_iff_four d
+  · intro d
+    exact hodge_twoform_conformal_iff_four d
+  · intro f χ hinv hχ hC hunit
+    exact conformal_factor_forced_from_common_scale
+      f hinv χ hχ hC hunit
+  · intro qm qp hnonnull
+    exact boost_balance_exists_unique_of_nonnull qm qp hnonnull
+  · intro I hC hD
+    exact actionOpticalMap_unique I hC hD
+  · intro s σ h
+    exact rapidity_forced_by_normalized_boost s σ h
+  · intro ω varpi accel dlogK hω
+    exact transport_zero_iff ω varpi accel dlogK hω
+  · intro ω varpi hω
+    exact frobeniusObstruction_zero_iff ω varpi hω
+  · exact clock_section_reeb_existsUnique
+  · intro vartheta κ v hhom hunit hκ
+    exact clockLiouville_unique_of_homogeneity
+      vartheta hhom hunit κ hκ v
+  · intro flow F XF T θ x hgen
+    exact relationalObservable_deriv flow F XF T θ x hgen
+  · intro flow F T θ t x hflow hclock
+    exact relationalObservable_gauge_invariant
+      flow F T θ t x hflow hclock
+
 /-! ## 17. Kerr–Newman scalar specialization -/
 
 /-- Kerr-Newman `Σ`. -/
@@ -17550,6 +17640,7 @@ theorem scalar_backbone_from_einstein_maxwell
 #check localLift_eq_zero_iff
 #check clockOmega_left_nondegenerate
 #check relational_evolution_from_flow_derivative
+#check paperStructural_forced_certificate
 
 end RelativeRest
 
@@ -17571,6 +17662,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.involution_projectors_scale_invariant
 #print axioms RelativeRest.relationalObservable_gauge_invariant
 #print axioms RelativeRest.relationalObservable_deriv
+#print axioms RelativeRest.paperStructural_forced_certificate
 #print axioms RelativeRest.implicit_endpoint_covector_null
 #print axioms RelativeRest.NullEndpointPairData.endpoint_eikonals_null
 #print axioms RelativeRest.NullEndpointPairData.optical_closure
