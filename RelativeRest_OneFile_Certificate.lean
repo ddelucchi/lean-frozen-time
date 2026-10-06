@@ -295,6 +295,92 @@ theorem character_rest_iff_zero (u s : ℝ) :
   · rintro rfl
     simp
 
+/-! ### Four-dimensional Maxwell trace and Einstein trace closure -/
+
+/-- Algebraic trace factor of the Maxwell stress tensor in D dimensions, suppressing
+the common nonzero normalization.  It is the contraction
+`F^{ac}F_{ac} - (D/4) F^{cd}F_{cd}`. -/
+def maxwellStressTraceFactor (D Fsq : ℝ) : ℝ :=
+  (1 - D / 4) * Fsq
+
+/-- Maxwell stress is identically trace-free in four dimensions. -/
+@[simp] theorem maxwellStressTraceFactor_four (Fsq : ℝ) :
+    maxwellStressTraceFactor 4 Fsq = 0 := by
+  simp [maxwellStressTraceFactor]
+
+/-- For a non-null invariant component, trace-freeness itself singles out four dimensions. -/
+theorem maxwellStressTraceFactor_zero_iff_four
+    (D Fsq : ℝ) (hF : Fsq ≠ 0) :
+    maxwellStressTraceFactor D Fsq = 0 ↔ D = 4 := by
+  unfold maxwellStressTraceFactor
+  constructor
+  · intro h
+    have hf : 1 - D / 4 = 0 :=
+      (mul_eq_zero.mp h).resolve_right hF
+    linarith
+  · rintro rfl
+    norm_num
+
+/-- Trace of the D-dimensional Einstein tensor. -/
+def einsteinTrace (D scalarR : ℝ) : ℝ :=
+  (1 - D / 2) * scalarR
+
+/-- In four dimensions, a trace-free source and the traced Einstein equation force
+vanishing scalar curvature. -/
+theorem four_dimensional_tracefree_einstein_scalar_zero
+    (scalarR traceT : ℝ)
+    (htracefree : traceT = 0)
+    (hEinTrace : einsteinTrace 4 scalarR = 8 * Real.pi * traceT) :
+    scalarR = 0 := by
+  rw [htracefree] at hEinTrace
+  unfold einsteinTrace at hEinTrace
+  norm_num at hEinTrace
+  linarith
+
+/-- Once the scalar curvature vanishes, the component Einstein equation reduces exactly
+to `Ric = 8π T`. -/
+theorem einstein_component_to_ricci
+    (Ric metricComp scalarR T : ℝ)
+    (hR : scalarR = 0)
+    (hEin :
+      Ric - (1 / 2 : ℝ) * metricComp * scalarR =
+        8 * Real.pi * T) :
+    Ric = 8 * Real.pi * T := by
+  rw [hR] at hEin
+  simpa using hEin
+
+/-- Full scalar certificate of the Einstein-Maxwell trace closure:
+Maxwell trace-freeness plus the traced and component Einstein equations force
+`Ric = 8πT`, with no independent Ricci-stress hypothesis. -/
+theorem einstein_maxwell_ricci_forced
+    (Ric metricComp scalarR traceT T : ℝ)
+    (htracefree : traceT = 0)
+    (hEinTrace : einsteinTrace 4 scalarR = 8 * Real.pi * traceT)
+    (hEin :
+      Ric - (1 / 2 : ℝ) * metricComp * scalarR =
+        8 * Real.pi * T) :
+    Ric = 8 * Real.pi * T := by
+  have hR :=
+    four_dimensional_tracefree_einstein_scalar_zero
+      scalarR traceT htracefree hEinTrace
+  exact einstein_component_to_ricci Ric metricComp scalarR T hR hEin
+
+/-- Therefore the fixed-point jet-curvature identity is forced directly from the
+four-dimensional Einstein-Maxwell equations. -/
+theorem jet_eq_minus_two_ricci_from_einstein_maxwell
+    (Ric metricComp scalarR traceT T : ℝ)
+    (htracefree : traceT = 0)
+    (hEinTrace : einsteinTrace 4 scalarR = 8 * Real.pi * traceT)
+    (hEin :
+      Ric - (1 / 2 : ℝ) * metricComp * scalarR =
+        8 * Real.pi * T) :
+    -16 * Real.pi * T = -2 * Ric := by
+  have hRic :=
+    einstein_maxwell_ricci_forced
+      Ric metricComp scalarR traceT T htracefree hEinTrace hEin
+  rw [hRic]
+  ring
+
 /-! ## 3. Dynamic fixed point and the defect jet -/
 
 /-- A nonzero tensor component cannot remain a solution under relative Maxwell weight unless `s=0`. -/
@@ -3359,6 +3445,34 @@ theorem scalar_backbone
   refine ⟨(reciprocal_weights_iff_four D).mp hrecip, exp_two_eq_one_iff s, ?_, optical_defect_is_tanh s⟩
   exact jet_eq_minus_two_ricci T Ric hRic
 
+
+/-- End-to-end scalar backbone with the Ricci-stress relation itself derived from
+the four-dimensional trace-free Einstein-Maxwell equations. -/
+theorem scalar_backbone_from_einstein_maxwell
+    (D s T Ric metricComp scalarR traceT : ℝ)
+    (hrecip : wG D = -(wM D))
+    (htracefree : traceT = 0)
+    (hEinTrace : einsteinTrace 4 scalarR = 8 * Real.pi * traceT)
+    (hEin :
+      Ric - (1 / 2 : ℝ) * metricComp * scalarR =
+        8 * Real.pi * T) :
+    D = 4 ∧
+    scalarR = 0 ∧
+    (Real.exp (2*s) = 1 ↔ s = 0) ∧
+    (-16 * Real.pi * T = -2 * Ric) ∧
+    ((Real.exp s - Real.exp (-s)) /
+      (Real.exp s + Real.exp (-s)) = Real.tanh s) := by
+  have hD : D = 4 := (reciprocal_weights_iff_four D).mp hrecip
+  have hR :
+      scalarR = 0 :=
+    four_dimensional_tracefree_einstein_scalar_zero
+      scalarR traceT htracefree hEinTrace
+  have hjet :
+      -16 * Real.pi * T = -2 * Ric :=
+    jet_eq_minus_two_ricci_from_einstein_maxwell
+      Ric metricComp scalarR traceT T htracefree hEinTrace hEin
+  exact ⟨hD, hR, exp_two_eq_one_iff s, hjet, optical_defect_is_tanh s⟩
+
 /-! ## 20. Audit sentinels -/
 
 #check reciprocal_weights_iff_four
@@ -3386,6 +3500,13 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check maxwellStressTraceFactor_four
+#check maxwellStressTraceFactor_zero_iff_four
+#check four_dimensional_tracefree_einstein_scalar_zero
+#check einstein_component_to_ricci
+#check einstein_maxwell_ricci_forced
+#check jet_eq_minus_two_ricci_from_einstein_maxwell
+#check scalar_backbone_from_einstein_maxwell
 #check principalJetApply_eq_neg_stress
 #check principal_plane_decomposition
 #check principalLorentzPart_eigen_plus
@@ -3603,6 +3724,7 @@ end RelativeRest
 /-! Kernel axiom audit. These commands are executable and are intentionally part of the build
 transcript: they expose every axiom used by representative end-to-end theorems. -/
 #print axioms RelativeRest.scalar_backbone
+#print axioms RelativeRest.scalar_backbone_from_einstein_maxwell
 #print axioms RelativeRest.defect_from_on_shell_equation
 #print axioms RelativeRest.boost_balance_exists_unique_of_nonnull
 #print axioms RelativeRest.rapidity_forced_by_normalized_boost
