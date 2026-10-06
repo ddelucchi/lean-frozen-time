@@ -2,7 +2,6 @@ name: Lean verification
 
 on:
   push:
-    branches: [formalize-forced-chain]
   pull_request:
   workflow_dispatch:
 
@@ -11,97 +10,55 @@ permissions:
 
 jobs:
   build:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-14]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
-      - name: Runner preflight
-        shell: bash
-        run: |
-          echo "runner-started" > runner-probe.txt
-          uname -a >> runner-probe.txt
-          date -u >> runner-probe.txt
-
-      - name: Upload runner probe
-        uses: actions/upload-artifact@v4
-        with:
-          name: runner-probe-${{ matrix.os }}
-          path: runner-probe.txt
-          if-no-files-found: error
-
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Verify and capture full transcript
-        id: verify
+      - name: Install elan
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Select pinned Lean
+        shell: bash
+        run: |
+          set -euo pipefail
+          elan default "$(cat lean-toolchain)"
+          lean --version
+          lake --version
+
+      - name: Resolve dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          lake update
+
+      - name: Get mathlib cache
+        shell: bash
+        run: |
+          set -euo pipefail
+          lake exe cache get
+
+      - name: Build certificate
+        id: build
         continue-on-error: true
         shell: bash
         run: |
           set -o pipefail
-          (
-            set +e
-            status=0
+          lake --no-ansi build 2>&1 | tee build.log
 
-            echo "=== install elan ==="
-            curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -o /tmp/elan-init.sh
-            rc=$?
-            if [ "$rc" -eq 0 ]; then
-              sh /tmp/elan-init.sh -y --default-toolchain none
-              rc=$?
-            fi
-            if [ "$rc" -ne 0 ]; then status="$rc"; fi
-            export PATH="$HOME/.elan/bin:$PATH"
-
-            echo "=== select pinned Lean ==="
-            elan default "$(cat lean-toolchain)"
-            rc=$?
-            if [ "$rc" -ne 0 ]; then status="$rc"; fi
-            lean --version
-            rc=$?
-            if [ "$rc" -ne 0 ]; then status="$rc"; fi
-            lake --version
-            rc=$?
-            if [ "$rc" -ne 0 ]; then status="$rc"; fi
-
-            echo "=== resolve dependencies ==="
-            lake update
-            rc=$?
-            if [ "$rc" -ne 0 ]; then status="$rc"; fi
-
-            echo "=== mathlib cache ==="
-            lake exe cache get
-            rc=$?
-            if [ "$rc" -ne 0 ]; then
-              echo "cache retrieval failed with $rc; continuing to build"
-            fi
-
-            echo "=== lake build ==="
-            lake --no-ansi build
-            rc=$?
-            if [ "$rc" -ne 0 ]; then status="$rc"; fi
-
-            echo "=== final status: $status ==="
-            exit "$status"
-          ) 2>&1 | tee ci.log
-          rc=${PIPESTATUS[0]}
-          echo "$rc" > ci-status.txt
-          exit "$rc"
-
-      - name: Upload verification transcript
+      - name: Upload build log
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: lean-verification-transcript-${{ matrix.os }}
-          path: |
-            ci.log
-            ci-status.txt
-          if-no-files-found: error
+          name: lean-build-log
+          path: build.log
+          if-no-files-found: warn
 
-      - name: Fail if verification failed
-        if: steps.verify.outcome != 'success'
+      - name: Fail if Lean build failed
+        if: steps.build.outcome != 'success'
         shell: bash
         run: exit 1
-
-# compile probe: current forced-chain certificate
