@@ -1597,54 +1597,6 @@ def principalTOLinear :
 @[simp] theorem principalTOLinear_apply (v : Fin 4 → ℝ) :
     principalTOLinear v = principalTO v := rfl
 
-/-- Canonical lift from the local stress-visible quotient to the selected timelike line. -/
-def principalLocalLift :
-    ((Fin 4 → ℝ) ⧸ LinearMap.ker principalTOLinear) →ₗ[ℝ]
-      (Fin 4 → ℝ) :=
-  (quotientClockCovector principalTOLinear).smulRight principalUhat
-
-/-- The quotient lift acts exactly as `[v] ↦ T_O(v) û_*`. -/
-theorem principalLocalLift_mk (v : Fin 4 → ℝ) :
-    principalLocalLift (Submodule.Quotient.mk v) =
-      principalTO v • principalUhat := by
-  simp [principalLocalLift, quotientClockCovector,
-    principalTOLinear_apply]
-
-/-- Every vector differs from its lifted quotient representative by a spatial vector. -/
-theorem principal_local_remainder_mem_kernel
-    (v : Fin 4 → ℝ) :
-    v - principalTO v • principalUhat ∈
-      LinearMap.ker principalTOLinear := by
-  simp [principalTOLinear, principalTO, principalUhat, principalBasis]
-
-/-- Hence the quotient class of every vector is exactly the class of its selected
-timelike representative. -/
-theorem principal_quotient_eq_timelike_rep
-    (v : Fin 4 → ℝ) :
-    (Submodule.Quotient.mk v :
-      (Fin 4 → ℝ) ⧸ LinearMap.ker principalTOLinear) =
-    Submodule.Quotient.mk (principalTO v • principalUhat) := by
-  rw [Submodule.Quotient.eq]
-  exact principal_local_remainder_mem_kernel v
-
-/-- On the selected timelike line, the quotient-lift composition is the identity. -/
-theorem principalLocalLift_inverts_timelike
-    (c : ℝ) :
-    principalLocalLift
-      (Submodule.Quotient.mk (c • principalUhat)) =
-      c • principalUhat := by
-  rw [principalLocalLift_mk]
-  simp [principalTO_unit]
-
-/-- The lift is a canonical section of the quotient map. -/
-theorem principalLocalLift_section
-    (q : (Fin 4 → ℝ) ⧸ LinearMap.ker principalTOLinear) :
-    Submodule.Quotient.mk (principalLocalLift q) = q := by
-  refine Submodule.Quotient.induction_on _ q ?_
-  intro v
-  rw [principalLocalLift_mk]
-  exact (principal_quotient_eq_timelike_rep v).symm
-
 /-- The invariant Rainich magnitude `χ = 1/2 sqrt(tr J²)` recovers the positive
 principal eigenvalue exactly. -/
 theorem principalStress_chi_from_trace
@@ -2979,6 +2931,56 @@ theorem quotient_clock_covector_forced
     hλ (quotientClockCovector_pullback Λ)
 
 end LinearDescent
+
+/-! ### Principal-frame local quotient and canonical timelike lift -/
+
+/-- Canonical lift from the local stress-visible quotient to the selected timelike line. -/
+def principalLocalLift :
+    ((Fin 4 → ℝ) ⧸ LinearMap.ker principalTOLinear) →ₗ[ℝ]
+      (Fin 4 → ℝ) :=
+  (quotientClockCovector principalTOLinear).smulRight principalUhat
+
+/-- The quotient lift acts exactly as `[v] ↦ T_O(v) û_*`. -/
+theorem principalLocalLift_mk (v : Fin 4 → ℝ) :
+    principalLocalLift (Submodule.Quotient.mk v) =
+      principalTO v • principalUhat := by
+  simp [principalLocalLift, quotientClockCovector,
+    principalTOLinear_apply]
+
+/-- Every vector differs from its lifted quotient representative by a spatial vector. -/
+theorem principal_local_remainder_mem_kernel
+    (v : Fin 4 → ℝ) :
+    v - principalTO v • principalUhat ∈
+      LinearMap.ker principalTOLinear := by
+  simp [principalTOLinear, principalTO, principalUhat, principalBasis]
+
+/-- Hence the quotient class of every vector is exactly the class of its selected
+timelike representative. -/
+theorem principal_quotient_eq_timelike_rep
+    (v : Fin 4 → ℝ) :
+    (Submodule.Quotient.mk v :
+      (Fin 4 → ℝ) ⧸ LinearMap.ker principalTOLinear) =
+    Submodule.Quotient.mk (principalTO v • principalUhat) := by
+  exact (Submodule.Quotient.eq _).2
+    (principal_local_remainder_mem_kernel v)
+
+/-- On the selected timelike line, the quotient-lift composition is the identity. -/
+theorem principalLocalLift_inverts_timelike
+    (c : ℝ) :
+    principalLocalLift
+      (Submodule.Quotient.mk (c • principalUhat)) =
+      c • principalUhat := by
+  rw [principalLocalLift_mk]
+  simp [principalTO_unit]
+
+/-- The lift is a canonical section of the quotient map. -/
+theorem principalLocalLift_section
+    (q : (Fin 4 → ℝ) ⧸ LinearMap.ker principalTOLinear) :
+    Submodule.Quotient.mk (principalLocalLift q) = q := by
+  refine Submodule.Quotient.induction_on _ q ?_
+  intro v
+  rw [principalLocalLift_mk]
+  exact (principal_quotient_eq_timelike_rep v).symm
 
 /-! ### Bilinear/presymplectic descent through a characteristic quotient -/
 
