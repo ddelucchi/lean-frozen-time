@@ -7327,6 +7327,66 @@ theorem kerr_stationary_inverse_block
         unfold Sigma
         ring
 
+/-- Full covariant Boyer-Lindquist metric component function. -/
+def kerrMetricCov
+    (r M a Q θ : ℝ) (i j : Fin 4) : ℝ :=
+  if i = 0 ∧ j = 0 then kerrGtt r M a Q θ
+  else if (i = 0 ∧ j = 3) ∨ (i = 3 ∧ j = 0) then
+    kerrGtPhi r M a Q θ
+  else if i = 1 ∧ j = 1 then kerrGrr r M a Q θ
+  else if i = 2 ∧ j = 2 then kerrGthetaTheta r a θ
+  else if i = 3 ∧ j = 3 then kerrGPhiPhi r M a Q θ
+  else 0
+
+/-- Full contravariant Boyer-Lindquist inverse-metric component function. -/
+def kerrMetricInv
+    (r M a Q θ : ℝ) (i j : Fin 4) : ℝ :=
+  if i = 0 ∧ j = 0 then kerrInvGtt r M a Q θ
+  else if (i = 0 ∧ j = 3) ∨ (i = 3 ∧ j = 0) then
+    kerrInvGtPhi r M a Q θ
+  else if i = 1 ∧ j = 1 then kerrInvGrr r M a Q θ
+  else if i = 2 ∧ j = 2 then kerrInvGthetaTheta r a θ
+  else if i = 3 ∧ j = 3 then kerrInvGPhiPhi r M a Q θ
+  else 0
+
+/-- Both component functions are symmetric. -/
+theorem kerrMetricCov_symmetric
+    (r M a Q θ : ℝ) (i j : Fin 4) :
+    kerrMetricCov r M a Q θ i j =
+      kerrMetricCov r M a Q θ j i := by
+  fin_cases i <;> fin_cases j <;>
+    simp [kerrMetricCov]
+
+theorem kerrMetricInv_symmetric
+    (r M a Q θ : ℝ) (i j : Fin 4) :
+    kerrMetricInv r M a Q θ i j =
+      kerrMetricInv r M a Q θ j i := by
+  fin_cases i <;> fin_cases j <;>
+    simp [kerrMetricInv]
+
+/-- The displayed contravariant metric is the actual inverse of the square-form
+Boyer-Lindquist metric in every component. -/
+theorem kerrMetric_inverse_certificate
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0)
+    (i j : Fin 4) :
+    (∑ k : Fin 4,
+      kerrMetricCov r M a Q θ i k *
+        kerrMetricInv r M a Q θ k j) =
+      (if i = j then 1 else 0) := by
+  rcases kerr_stationary_inverse_block
+    r M a Q θ hsig hdel hsin with
+    ⟨h00, h03, h30, h33⟩
+  fin_cases i <;> fin_cases j <;>
+    simp [kerrMetricCov, kerrMetricInv,
+      h00, h03, h30, h33,
+      kerrGrr, kerrInvGrr,
+      kerrGthetaTheta, kerrInvGthetaTheta] <;>
+    field_simp [hsig, hdel] <;>
+    ring
+
 /-- Positive-chart Boyer-Lindquist volume density `sqrt(-g)=Σ sinθ`. -/
 def kerrVolumeDensity (r a θ : ℝ) : ℝ :=
   Sigma r a θ * Real.sin θ
@@ -8906,6 +8966,9 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check kerrMetricCov_symmetric
+#check kerrMetricInv_symmetric
+#check kerrMetric_inverse_certificate
 #check principalFieldEnergyDensity_pos_of_nonzero
 #check principalStressFromF_00
 #check principalScaledResidualFromF_zero
@@ -9523,6 +9586,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrMinoClockFromPrincipalEM
 #print axioms RelativeRest.kerrPotential_field_factorization
 #print axioms RelativeRest.kerr_stationary_inverse_block
+#print axioms RelativeRest.kerrMetric_inverse_certificate
 #print axioms RelativeRest.kerr_metric_det
 #print axioms RelativeRest.kerrMaxwell_divergence_t
 #print axioms RelativeRest.kerrMaxwell_divergence_phi
