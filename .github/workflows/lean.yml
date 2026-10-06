@@ -10,13 +10,13 @@ permissions:
 
 jobs:
   build:
-    if: github.event_name == 'push'
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout branch
+      - name: Checkout PR head
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Run Lean and capture diagnostic
         shell: bash
@@ -46,7 +46,7 @@ jobs:
           } > ci-diagnostic.txt
           exit 0
 
-      - name: Commit diagnostic
+      - name: Commit diagnostic to PR branch
         shell: bash
         run: |
           git config user.name "lean-ci"
@@ -56,4 +56,4 @@ jobs:
             exit 0
           fi
           git commit -m "CI diagnostic [skip lean-ci]"
-          git push origin HEAD:${{ github.ref_name }}
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
