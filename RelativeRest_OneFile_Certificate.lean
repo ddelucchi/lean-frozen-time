@@ -694,6 +694,32 @@ theorem principalStress_rainich (u : ℝ) (i j : Fin 4) :
   rw [principalStress_sq, principalStress_trace_sq]
   by_cases h : i = j <;> simp [h] <;> ring
 
+/-- The invariant Rainich magnitude `χ = 1/2 sqrt(tr J²)` recovers the positive
+principal eigenvalue exactly. -/
+theorem principalStress_chi_from_trace
+    (u : ℝ) (hu : 0 ≤ u) :
+    (1 / 2 : ℝ) * Real.sqrt (principalStressTraceSq u) = u := by
+  rw [principalStress_trace_sq]
+  have hsq : 4 * u^2 = (2 * u)^2 := by ring
+  rw [hsq, Real.sqrt_sq_eq_abs, abs_of_nonneg]
+  · ring
+  · positivity
+
+/-- If `J=-2R`, so the squared carrier norm is four times the Ricci norm, then the
+same invariant normalization forces `χ = sqrt(K)`. -/
+theorem carrier_chi_eq_sqrt_ricci_norm
+    (Jnorm K : ℝ)
+    (hK : 0 ≤ K)
+    (hJ : Jnorm = 4 * K) :
+    (1 / 2 : ℝ) * Real.sqrt Jnorm = Real.sqrt K := by
+  have hsqrtK : 0 ≤ Real.sqrt K := Real.sqrt_nonneg K
+  have hsquare : 4 * K = (2 * Real.sqrt K)^2 := by
+    rw [mul_pow, Real.sq_sqrt hK]
+    ring
+  rw [hJ, hsquare, Real.sqrt_sq_eq_abs, abs_of_nonneg]
+  · ring
+  · positivity
+
 /-- Normalizing an endomorphism satisfying `J² = χ² I` produces an involution. -/
 theorem normalized_involution
     {V : Type*} [AddCommGroup V] [Module ℝ V]
@@ -1134,6 +1160,21 @@ theorem principal_endpoint_split :
     (1 / 2 : ℝ) • (principalThetaPlus - principalThetaMinus) = RO := by
   constructor <;> ext <;>
     norm_num [principalThetaPlus, principalThetaMinus, TO, RO]
+
+/-- The principal radial covector is genuinely nonzero. -/
+theorem RO_ne_zero : RO ≠ 0 := by
+  intro h
+  have h2 := congrArg Prod.snd h
+  norm_num [RO] at h2
+
+/-- Algebraic certificate of the paper's radial-jet statement: coincident endpoint
+values have zero odd radar defect, while their principal half-difference is the
+nonzero radial covector `R_O`. -/
+theorem radialjet_certificate (θ : ℝ) :
+    radarRadius θ θ = 0 ∧
+    (1 / 2 : ℝ) • (principalThetaPlus - principalThetaMinus) = RO ∧
+    RO ≠ 0 := by
+  refine ⟨radarRadius_self θ, (principal_endpoint_split).2, RO_ne_zero⟩
 
 /-- Optical exchange fixes the clock-even axis and reverses the radial-odd axis. -/
 def JO (v : R2) : R2 := (v.1, -v.2)
@@ -2517,6 +2558,10 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check principalStress_chi_from_trace
+#check carrier_chi_eq_sqrt_ricci_norm
+#check RO_ne_zero
+#check radialjet_certificate
 #check nullCovectorNormSq
 #check nullCovectorNormSq_ne_zero_components
 #check boost_balance_exists_unique_of_nonnull
