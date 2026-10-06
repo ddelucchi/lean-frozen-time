@@ -2195,16 +2195,6 @@ theorem clock_representatives_differ_by_first_integral
   rw [h₁ t x, h₂ t x]
   ring
 
-/-- If the endpoint construction fixes that first integral on one connected clock line,
-only a common additive origin remains. -/
-theorem common_shift_is_only_endpoint_freedom
-    (θp θm θp' θm' C : ℝ)
-    (hp : θp' = θp + C) (hm : θm' = θm + C) :
-    radarTime θp' θm' = radarTime θp θm + C ∧
-    radarRadius θp' θm' = radarRadius θp θm := by
-  rw [hp, hm]
-  exact radar_common_shift θp θm C
-
 end AffineClockPrimitive
 
 /-! ## 11. Pointwise local clock algebra -/
@@ -2483,6 +2473,17 @@ theorem radar_common_shift (θplus θminus C : ℝ) :
     radarTime (θplus + C) (θminus + C) = radarTime θplus θminus + C ∧
     radarRadius (θplus + C) (θminus + C) = radarRadius θplus θminus := by
   constructor <;> unfold radarTime radarRadius <;> ring
+
+
+/-- If null synchronization changes both endpoint readings by the same integration constant,
+the radial observable is fixed and only the clock origin moves. -/
+theorem common_shift_is_only_endpoint_freedom
+    (θp θm θp' θm' C : ℝ)
+    (hp : θp' = θp + C) (hm : θm' = θm + C) :
+    radarTime θp' θm' = radarTime θp θm + C ∧
+    radarRadius θp' θm' = radarRadius θp θm := by
+  rw [hp, hm]
+  exact radar_common_shift θp θm C
 
 /-- Coincident endpoints force vanishing relative radius. -/
 @[simp] theorem radarRadius_self (θ : ℝ) : radarRadius θ θ = 0 := by
