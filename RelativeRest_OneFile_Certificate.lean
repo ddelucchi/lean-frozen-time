@@ -1505,6 +1505,134 @@ theorem principalMaxwell_form_invariant_magnitude (E B : ℝ) :
     principalMaxwellFStarF_eq_maxwellJ,
     maxwell_invariants_eq_principalChi_sq]
 
+/-! ### Maxwell potential first variation and symplectic potential -/
+
+/-- Fixed-metric derivative of `F_ab F^ab` induced by a potential variation.
+Antisymmetry gives the universal factor four:
+`δ(F²)=4 F^{ab} ∇_a δA_b`. -/
+def principalMaxwellPotentialFsqDerivative
+    (Fup nablaDeltaA : Fin 4 → Fin 4 → ℝ) : ℝ :=
+  4 * ∑ a : Fin 4, ∑ b : Fin 4,
+    Fup a b * nablaDeltaA a b
+
+/-- Literal fixed-metric Maxwell-potential variation line through the displayed
+Einstein-Maxwell density. -/
+def principalMaxwellPotentialLagrangianLine
+    (Fsq : ℝ)
+    (Fup nablaDeltaA : Fin 4 → Fin 4 → ℝ)
+    (s : ℝ) : ℝ :=
+  einsteinMaxwellLagrangianDensity
+    1 0 (Fsq + s * principalMaxwellPotentialFsqDerivative Fup nablaDeltaA)
+
+/-- The displayed density differentiates to
+`-(4π)⁻¹ F^{ab} ∇_a δA_b`. -/
+theorem principalMaxwellPotentialLagrangianLine_hasDerivAt_zero
+    (Fsq : ℝ)
+    (Fup nablaDeltaA : Fin 4 → Fin 4 → ℝ) :
+    HasDerivAt
+      (principalMaxwellPotentialLagrangianLine
+        Fsq Fup nablaDeltaA)
+      (-(1 / (4 * Real.pi)) *
+        (∑ a : Fin 4, ∑ b : Fin 4,
+          Fup a b * nablaDeltaA a b)) 0 := by
+  have h := einsteinMaxwellLagrangianDensity_hasDerivAt_line_zero
+    1 0 Fsq 0 0
+    (principalMaxwellPotentialFsqDerivative Fup nablaDeltaA)
+  unfold principalMaxwellPotentialLagrangianLine
+    principalMaxwellPotentialFsqDerivative
+  convert h using 1 <;>
+    field_simp [ne_of_gt Real.pi_pos] <;>
+    ring
+
+/-- Pointwise Maxwell Euler contribution paired with `δA`, before rewriting it
+as the divergence equation. -/
+def principalMaxwellPotentialEulerDensity
+    (nablaF : Fin 4 → Fin 4 → ℝ)
+    (deltaA : Fin 4 → ℝ) : ℝ :=
+  (1 / (4 * Real.pi)) *
+    (∑ a : Fin 4, ∑ b : Fin 4,
+      nablaF a b * deltaA b)
+
+/-- Maxwell equation coefficient `∇_a F^{ab}`. -/
+def principalMaxwellPotentialEulerCoeff
+    (nablaF : Fin 4 → Fin 4 → ℝ)
+    (b : Fin 4) : ℝ :=
+  ∑ a : Fin 4, nablaF a b
+
+/-- The Euler density is precisely the Maxwell divergence contracted with the
+potential variation. -/
+theorem principalMaxwellPotentialEulerDensity_eq_divergence_contraction
+    (nablaF : Fin 4 → Fin 4 → ℝ)
+    (deltaA : Fin 4 → ℝ) :
+    principalMaxwellPotentialEulerDensity nablaF deltaA =
+      (1 / (4 * Real.pi)) *
+        (∑ b : Fin 4,
+          principalMaxwellPotentialEulerCoeff nablaF b * deltaA b) := by
+  unfold principalMaxwellPotentialEulerDensity
+    principalMaxwellPotentialEulerCoeff
+  congr 1
+  rw [Finset.sum_comm]
+  apply Finset.sum_congr rfl
+  intro b hb
+  rw [Finset.sum_mul]
+
+/-- Maxwell symplectic-potential current coefficient
+`Θ_EM^a=-(4π)⁻¹F^{ab}δA_b`. -/
+def principalMaxwellSymplecticPotentialCoeff
+    (Fup : Fin 4 → Fin 4 → ℝ)
+    (deltaA : Fin 4 → ℝ)
+    (a : Fin 4) : ℝ :=
+  -(1 / (4 * Real.pi)) *
+    (∑ b : Fin 4, Fup a b * deltaA b)
+
+/-- Divergence of the Maxwell potential after applying the Leibniz rule. -/
+def principalMaxwellSymplecticPotentialDivergence
+    (Fup nablaF nablaDeltaA : Fin 4 → Fin 4 → ℝ)
+    (deltaA : Fin 4 → ℝ) : ℝ :=
+  -(1 / (4 * Real.pi)) *
+    (∑ a : Fin 4, ∑ b : Fin 4,
+      (nablaF a b * deltaA b +
+        Fup a b * nablaDeltaA a b))
+
+/-- Exact local Maxwell first-variation decomposition:
+the displayed Lagrangian derivative equals the Maxwell Euler term plus the
+divergence of its symplectic potential. -/
+theorem principalMaxwellPotential_first_variation
+    (Fsq : ℝ)
+    (Fup nablaF nablaDeltaA : Fin 4 → Fin 4 → ℝ)
+    (deltaA : Fin 4 → ℝ) :
+    deriv
+        (principalMaxwellPotentialLagrangianLine
+          Fsq Fup nablaDeltaA) 0 =
+      principalMaxwellPotentialEulerDensity nablaF deltaA +
+        principalMaxwellSymplecticPotentialDivergence
+          Fup nablaF nablaDeltaA deltaA := by
+  rw [(principalMaxwellPotentialLagrangianLine_hasDerivAt_zero
+    Fsq Fup nablaDeltaA).deriv]
+  unfold principalMaxwellPotentialEulerDensity
+    principalMaxwellSymplecticPotentialDivergence
+  ring
+
+/-- On shell, `∇_aF^{ab}=0`, the entire potential variation is the exact
+symplectic-potential divergence. -/
+theorem principalMaxwellPotential_onShell_first_variation
+    (Fsq : ℝ)
+    (Fup nablaF nablaDeltaA : Fin 4 → Fin 4 → ℝ)
+    (deltaA : Fin 4 → ℝ)
+    (hMaxwell : ∀ b : Fin 4,
+      principalMaxwellPotentialEulerCoeff nablaF b = 0) :
+    deriv
+        (principalMaxwellPotentialLagrangianLine
+          Fsq Fup nablaDeltaA) 0 =
+      principalMaxwellSymplecticPotentialDivergence
+        Fup nablaF nablaDeltaA deltaA := by
+  rw [principalMaxwellPotential_first_variation]
+  have hEuler :
+      principalMaxwellPotentialEulerDensity nablaF deltaA = 0 := by
+    rw [principalMaxwellPotentialEulerDensity_eq_divergence_contraction]
+    simp [hMaxwell]
+  rw [hEuler, zero_add]
+
 /-! ### Maxwell metric first variation from the Einstein-Maxwell Lagrangian -/
 
 /-- Covariant quadratic contraction `F_{ic} F_j{}^c` in the principal frame. -/
@@ -17915,6 +18043,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.scalar_backbone
 #print axioms RelativeRest.relativeAction_fixed_point_jet
 #print axioms RelativeRest.einsteinMaxwellLagrangianDensity_decomposition
+#print axioms RelativeRest.principalMaxwellPotentialLagrangianLine_hasDerivAt_zero
+#print axioms RelativeRest.principalMaxwellPotential_first_variation
+#print axioms RelativeRest.principalMaxwellPotential_onShell_first_variation
 #print axioms RelativeRest.principalMaxwellLagrangianMetricLine_hasDerivAt_zero
 #print axioms RelativeRest.principalMaxwellLagrangianMetricLine_deriv_eq_neg_half_stress
 #print axioms RelativeRest.principalPalatini_scalar_boundary_eq_divergence
