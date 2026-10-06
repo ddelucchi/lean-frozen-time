@@ -315,12 +315,8 @@ theorem rho_mul_lambda_eq_kappa (u s : ℝ) :
 /-- The product of the two sector characters is exactly the square of the common character. -/
 theorem Xi_product_eq_kappa_sq (u s : ℝ) :
     XiGUS u s * XiMUS u s = (kappaUS u)^2 := by
-  rw [XiGUS_factorization, XiMUS_factorization]
-  rw [pow_two, ← Real.exp_add]
-  unfold kappaUS
-  rw [pow_two, ← Real.exp_add]
-  congr 1
-  ring
+  unfold XiGUS XiMUS
+  rw [← mul_pow, rho_mul_lambda_eq_kappa]
 
 /-- Therefore the positive projective common scale is literally
 `sqrt(Xi_G Xi_M)=κ=ρλ`. -/
