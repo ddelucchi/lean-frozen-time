@@ -1558,6 +1558,93 @@ theorem principalLocalClockRatio_forced
     principalTO principalUhat = 1 := by
   simp [principalTO, principalUhat, principalBasis]
 
+
+/-! ### Principal-frame realization of the local stress-visible quotient -/
+
+/-- Spatial hyperplane selected by the normalized principal observer. -/
+def principalSpatialSubmodule : Submodule ℝ (Fin 4 → ℝ) where
+  carrier := {v | v 0 = 0}
+  zero_mem' := by simp
+  add_mem' := by
+    intro x y hx hy
+    simp [hx, hy]
+  smul_mem' := by
+    intro c x hx
+    simp [hx]
+
+/-- The local clock kernel is exactly the principal spatial hyperplane. -/
+theorem principalTO_ker_eq_spatial :
+    LinearMap.ker
+      ({ toFun := principalTO
+         map_add' := by intro x y; rfl
+         map_smul' := by intro c x; rfl } :
+        (Fin 4 → ℝ) →ₗ[ℝ] ℝ) =
+      principalSpatialSubmodule := by
+  ext v
+  simp [principalTO, principalSpatialSubmodule]
+
+/-- Principal local clock covector as a linear map. -/
+def principalTOLinear :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ where
+  toFun := principalTO
+  map_add' := by
+    intro x y
+    rfl
+  map_smul' := by
+    intro c x
+    rfl
+
+@[simp] theorem principalTOLinear_apply (v : Fin 4 → ℝ) :
+    principalTOLinear v = principalTO v := rfl
+
+/-- Canonical lift from the local stress-visible quotient to the selected timelike line. -/
+def principalLocalLift :
+    ((Fin 4 → ℝ) ⧸ LinearMap.ker principalTOLinear) →ₗ[ℝ]
+      (Fin 4 → ℝ) :=
+  (quotientClockCovector principalTOLinear).smulRight principalUhat
+
+/-- The quotient lift acts exactly as `[v] ↦ T_O(v) û_*`. -/
+theorem principalLocalLift_mk (v : Fin 4 → ℝ) :
+    principalLocalLift (Submodule.Quotient.mk v) =
+      principalTO v • principalUhat := by
+  simp [principalLocalLift, quotientClockCovector,
+    principalTOLinear_apply]
+
+/-- Every vector differs from its lifted quotient representative by a spatial vector. -/
+theorem principal_local_remainder_mem_kernel
+    (v : Fin 4 → ℝ) :
+    v - principalTO v • principalUhat ∈
+      LinearMap.ker principalTOLinear := by
+  simp [principalTOLinear, principalTO, principalUhat, principalBasis]
+
+/-- Hence the quotient class of every vector is exactly the class of its selected
+timelike representative. -/
+theorem principal_quotient_eq_timelike_rep
+    (v : Fin 4 → ℝ) :
+    (Submodule.Quotient.mk v :
+      (Fin 4 → ℝ) ⧸ LinearMap.ker principalTOLinear) =
+    Submodule.Quotient.mk (principalTO v • principalUhat) := by
+  rw [Submodule.Quotient.eq]
+  exact principal_local_remainder_mem_kernel v
+
+/-- On the selected timelike line, the quotient-lift composition is the identity. -/
+theorem principalLocalLift_inverts_timelike
+    (c : ℝ) :
+    principalLocalLift
+      (Submodule.Quotient.mk (c • principalUhat)) =
+      c • principalUhat := by
+  rw [principalLocalLift_mk]
+  simp [principalTO_unit]
+
+/-- The lift is a canonical section of the quotient map. -/
+theorem principalLocalLift_section
+    (q : (Fin 4 → ℝ) ⧸ LinearMap.ker principalTOLinear) :
+    Submodule.Quotient.mk (principalLocalLift q) = q := by
+  refine Submodule.Quotient.induction_on _ q ?_
+  intro v
+  rw [principalLocalLift_mk]
+  exact (principal_quotient_eq_timelike_rep v).symm
+
 /-- The invariant Rainich magnitude `χ = 1/2 sqrt(tr J²)` recovers the positive
 principal eigenvalue exactly. -/
 theorem principalStress_chi_from_trace
@@ -5427,6 +5514,12 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check principalTO_ker_eq_spatial
+#check principalLocalLift_mk
+#check principal_local_remainder_mem_kernel
+#check principal_quotient_eq_timelike_rep
+#check principalLocalLift_inverts_timelike
+#check principalLocalLift_section
 #check kerrRadialFieldBlock_carter_aligned
 #check kerrPolarFieldBlock_carter_aligned
 #check kerrPotential_metric_principal_alignment
@@ -5798,6 +5891,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.rescaled_solution_preserving_iff
 #print axioms RelativeRest.characteristic_half_contraction_from_relative_scaling
 #print axioms RelativeRest.principalLocalClockRatio_forced
+#print axioms RelativeRest.principalLocalLift_section
 #print axioms RelativeRest.principalMaxwell_timelike_eigen_from_chi
 #print axioms RelativeRest.principalStressFromF_eq_principalStress
 #print axioms RelativeRest.principalJetFromF_rainich
