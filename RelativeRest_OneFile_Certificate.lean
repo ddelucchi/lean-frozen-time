@@ -574,6 +574,43 @@ theorem scaledResidual_odd_iteratedDeriv_eq_minus_two_ricci
   rw [hfun]
   exact defect_odd_iteratedDeriv_eq_minus_two_ricci T Ric hRic n
 
+
+/-- The same all-orders curvature statement with `Ric=8πT` derived, rather than assumed,
+from the four-dimensional trace-free Einstein-Maxwell equations. -/
+theorem scaledResidual_odd_iteratedDeriv_eq_minus_two_ricci_from_EM
+    (G T Ric metricComp scalarR traceT : ℝ)
+    (hEinstein : G = 8 * Real.pi * T)
+    (htracefree : traceT = 0)
+    (hEinTrace : einsteinTrace 4 scalarR = 8 * Real.pi * traceT)
+    (hEinComp :
+      Ric - (1 / 2 : ℝ) * metricComp * scalarR =
+        8 * Real.pi * T)
+    (n : ℕ) :
+    iteratedDeriv (2 * n + 1) (scaledResidual G T) 0 = -2 * Ric := by
+  have hRic :=
+    einstein_maxwell_ricci_forced
+      Ric metricComp scalarR traceT T htracefree hEinTrace hEinComp
+  exact scaledResidual_odd_iteratedDeriv_eq_minus_two_ricci
+    G T Ric hEinstein hRic n
+
+/-- The first surviving normal jet of the actual on-shell residual is therefore exactly
+`-2 Ric` from the Einstein-Maxwell equations themselves. -/
+theorem scaledResidual_first_jet_eq_minus_two_ricci_from_EM
+    (G T Ric metricComp scalarR traceT : ℝ)
+    (hEinstein : G = 8 * Real.pi * T)
+    (htracefree : traceT = 0)
+    (hEinTrace : einsteinTrace 4 scalarR = 8 * Real.pi * traceT)
+    (hEinComp :
+      Ric - (1 / 2 : ℝ) * metricComp * scalarR =
+        8 * Real.pi * T) :
+    deriv (scaledResidual G T) 0 = -2 * Ric := by
+  have hder :=
+    (scaledResidual_hasDerivAt_zero G T hEinstein).deriv
+  have hjet :=
+    jet_eq_minus_two_ricci_from_einstein_maxwell
+      Ric metricComp scalarR traceT T htracefree hEinTrace hEinComp
+  rw [hder, hjet]
+
 /-- On nonvacuum electrovac, the scaled field-equation residual has the unique zero `s=0`. -/
 theorem scaledResidual_zero_iff_fixed_point
     (G T s : ℝ) (hEinstein : G = 8 * Real.pi * T) (hT : T ≠ 0) :
@@ -3500,6 +3537,8 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check scaledResidual_odd_iteratedDeriv_eq_minus_two_ricci_from_EM
+#check scaledResidual_first_jet_eq_minus_two_ricci_from_EM
 #check maxwellStressTraceFactor_four
 #check maxwellStressTraceFactor_zero_iff_four
 #check four_dimensional_tracefree_einstein_scalar_zero
@@ -3726,6 +3765,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.scalar_backbone
 #print axioms RelativeRest.scalar_backbone_from_einstein_maxwell
 #print axioms RelativeRest.defect_from_on_shell_equation
+#print axioms RelativeRest.scaledResidual_first_jet_eq_minus_two_ricci_from_EM
 #print axioms RelativeRest.boost_balance_exists_unique_of_nonnull
 #print axioms RelativeRest.rapidity_forced_by_normalized_boost
 #print axioms RelativeRest.extensionalBridge_Lambda_unique
