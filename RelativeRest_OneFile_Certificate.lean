@@ -1167,14 +1167,6 @@ theorem RO_ne_zero : RO ≠ 0 := by
   have h2 := congrArg Prod.snd h
   norm_num [RO] at h2
 
-/-- Algebraic certificate of the paper's radial-jet statement: coincident endpoint
-values have zero odd radar defect, while their principal half-difference is the
-nonzero radial covector `R_O`. -/
-theorem radialjet_certificate (θ : ℝ) :
-    radarRadius θ θ = 0 ∧
-    (1 / 2 : ℝ) • (principalThetaPlus - principalThetaMinus) = RO ∧
-    RO ≠ 0 := by
-  refine ⟨radarRadius_self θ, (principal_endpoint_split).2, RO_ne_zero⟩
 
 /-- Optical exchange fixes the clock-even axis and reverses the radial-odd axis. -/
 def JO (v : R2) : R2 := (v.1, -v.2)
@@ -2040,6 +2032,15 @@ theorem radar_common_shift (θplus θminus C : ℝ) :
 @[simp] theorem radarRadius_self (θ : ℝ) : radarRadius θ θ = 0 := by
   unfold radarRadius
   ring
+
+/-- Algebraic certificate of the paper's radial-jet statement: coincident endpoint
+values have zero odd radar defect, while their principal half-difference is the
+nonzero radial covector `R_O`. -/
+theorem radialjet_certificate (θ : ℝ) :
+    radarRadius θ θ = 0 ∧
+    (1 / 2 : ℝ) • (principalThetaPlus - principalThetaMinus) = RO ∧
+    RO ≠ 0 := by
+  refine ⟨radarRadius_self θ, (principal_endpoint_split).2, RO_ne_zero⟩
 
 
 /- Abstract symmetric bilinear form, enough to prove the null sum/difference closure. -/
