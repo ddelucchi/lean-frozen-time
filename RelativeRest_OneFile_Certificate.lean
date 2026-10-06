@@ -1621,6 +1621,79 @@ theorem principalPointResponse_ratio_forced
 
 end PrincipalPointResponse
 
+/-! ### Restricted Iyer-Wald coefficient derived directly from the carrier jet -/
+
+/-- Relative coefficient of `ε_H=i_{u_*}ε` against the unit spatial volume in the
+adapted principal frame. -/
+def principalEpsilonHSpatialCoeff (ω : ℝ) : ℝ :=
+  (principalPhysicalU ω) 0
+
+@[simp] theorem principalEpsilonHSpatialCoeff_eq (ω : ℝ) :
+    principalEpsilonHSpatialCoeff ω = ω := by
+  simp [principalEpsilonHSpatialCoeff, principalPhysicalU,
+    principalUhat, principalBasis]
+
+/-- Coefficient of `w_Y(v)|_H=(8π)⁻¹ i_{J(v)}ε|_H` against the unit spatial volume. -/
+def principalBridgeSpatialCoeff
+    (ω : ℝ) (v : Fin 4 → ℝ) : ℝ :=
+  (1 / (8 * Real.pi)) * principalJetFromRate ω v 0
+
+/-- The fixed-point jet itself forces the local Iyer-Wald formula relative to `ε_H`. -/
+theorem principalBridgeSpatialCoeff_formula
+    (ω : ℝ) (v : Fin 4 → ℝ) :
+    principalBridgeSpatialCoeff ω v =
+      (ω / (8 * Real.pi) * principalTO v) *
+        principalEpsilonHSpatialCoeff ω := by
+  unfold principalBridgeSpatialCoeff principalJetFromRate
+  rw [principalEpsilonHSpatialCoeff_eq]
+  simp [principalJetInvolution, principalTO]
+  ring
+
+/-- On the normalized timelike unit the restricted bridge coefficient is exactly the
+normalization response used in the manuscript. -/
+theorem principalBridgeSpatialCoeff_unit
+    (ω : ℝ) :
+    principalBridgeSpatialCoeff ω principalUhat =
+      (ω / (8 * Real.pi)) *
+        principalEpsilonHSpatialCoeff ω := by
+  rw [principalBridgeSpatialCoeff_formula, principalTO_unit]
+  ring
+
+/-- Every restricted carrier current is the clock value times the normalized unit current. -/
+theorem principalBridgeSpatialCoeff_factor
+    (ω : ℝ) (v : Fin 4 → ℝ) :
+    principalBridgeSpatialCoeff ω v =
+      principalTO v *
+        principalBridgeSpatialCoeff ω principalUhat := by
+  rw [principalBridgeSpatialCoeff_formula,
+    principalBridgeSpatialCoeff_unit]
+  ring
+
+/-- For nonzero clock rate, the normalized carrier-current coefficient is nonzero. -/
+theorem principalBridgeSpatialCoeff_unit_ne_zero
+    (ω : ℝ) (hω : ω ≠ 0) :
+    principalBridgeSpatialCoeff ω principalUhat ≠ 0 := by
+  rw [principalBridgeSpatialCoeff_unit,
+    principalEpsilonHSpatialCoeff_eq]
+  exact mul_ne_zero
+    (div_ne_zero hω
+      (mul_ne_zero (by norm_num) (ne_of_gt Real.pi_pos)))
+    hω
+
+/-- Therefore the pointwise coefficient ratio derived from the actual jet is uniquely
+the chronometric covector `T_O`. -/
+theorem principalBridgeSpatialCoeff_ratio_forced
+    (ω λ : ℝ) (v : Fin 4 → ℝ)
+    (hω : ω ≠ 0)
+    (hresponse :
+      principalBridgeSpatialCoeff ω v =
+        λ * principalBridgeSpatialCoeff ω principalUhat) :
+    λ = principalTO v := by
+  rw [principalBridgeSpatialCoeff_factor] at hresponse
+  exact (mul_right_cancel₀
+    (principalBridgeSpatialCoeff_unit_ne_zero ω hω))
+    hresponse.symm
+
 
 /-! ### Principal-frame realization of the local stress-visible quotient -/
 
@@ -6179,6 +6252,12 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check principalEpsilonHSpatialCoeff_eq
+#check principalBridgeSpatialCoeff_formula
+#check principalBridgeSpatialCoeff_unit
+#check principalBridgeSpatialCoeff_factor
+#check principalBridgeSpatialCoeff_unit_ne_zero
+#check principalBridgeSpatialCoeff_ratio_forced
 #check clockTransport_projected_zero_iff
 #check principalFrobenius_all_zero_iff
 #check clockDilation_undilate
@@ -6600,6 +6679,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.characteristic_half_contraction_from_relative_scaling
 #print axioms RelativeRest.principalLocalClockRatio_forced
 #print axioms RelativeRest.principalPointResponse_ratio_forced
+#print axioms RelativeRest.principalBridgeSpatialCoeff_ratio_forced
 #print axioms RelativeRest.principalClockRate_three_way
 #print axioms RelativeRest.principalLocalLift_section
 #print axioms RelativeRest.globalToPrincipalLocalClockMap_pullback
