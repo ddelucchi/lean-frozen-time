@@ -5346,6 +5346,18 @@ theorem carrierJetCurrent_actionEuler_eq_metricNoether
   ext v
   simp [carrierJetCurrent]
 
+/-- The full finite relative carrier current is the oriented-volume contraction
+of the literal `2E^a{}_b` Noether endomorphism at the same rapidity. -/
+theorem carrierJetCurrent_metricEulerRelative_eq_metricNoetherRelative
+    {W : Type*} [AddCommGroup W] [Module ℝ W]
+    (E B s : ℝ)
+    (iε : (Fin 4 → ℝ) →ₗ[ℝ] W) :
+    carrierJetCurrent (principalMetricEulerRelativeLinear E B s) iε =
+      iε.comp (principalMetricEulerNoetherRelativeLinear E B s) := by
+  rw [principalMetricEulerNoetherRelativeLinear_eq_smul_metricEulerRelative]
+  ext v
+  simp [carrierJetCurrent]
+
 /-- Stress-current form appearing on the other side of the bridge. -/
 def stressBridgeCurrent
     (T : V →ₗ[ℝ] V)
@@ -18633,6 +18645,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalMetricEulerNoetherRelativeLinear_eq_smul_metricEulerRelative
 #print axioms RelativeRest.principalMetricEulerNoetherRelativeLinear_eq_smul_noetherJet
 #print axioms RelativeRest.carrierJetCurrent_actionEuler_eq_metricNoether
+#print axioms RelativeRest.carrierJetCurrent_metricEulerRelative_eq_metricNoetherRelative
 #print axioms RelativeRest.carrierBulkResponse_actionEuler_eq_metricNoether
 #print axioms RelativeRest.principalDiffeomorphismNoether_decomposition
 #print axioms RelativeRest.principalGeneralizedBianchi_forced_by_diffeomorphism_invariance
