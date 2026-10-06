@@ -1452,6 +1452,19 @@ theorem normalized_unit_unique
     v = u := by
   rw [hspan v, hv, one_smul]
 
+
+/-- On a one-dimensional real clock line, a nonzero covector selects exactly one normalized unit. -/
+theorem normalized_unit_existsUnique
+    (α : L₁ →ₗ[ℝ] ℝ)
+    (hα : α ≠ 0)
+    (hfin : Module.finrank ℝ L₁ = 1) :
+    ∃! u : L₁, α u = 1 := by
+  obtain ⟨u, hu⟩ := (LinearMap.surjective hα) 1
+  refine ⟨u, hu, ?_⟩
+  intro v hv
+  have hspan := reconstruction_from_normalized_covector α u hu hfin
+  exact normalized_unit_unique α u v hu hspan hv
+
 /-- Explicit normalized map between two one-dimensional clock lines. -/
 def normalizedClockMap
     (α : L₁ →ₗ[ℝ] ℝ) (u₂ : L₂) : L₁ →ₗ[ℝ] L₂ where
@@ -1485,6 +1498,39 @@ theorem normalizedClockMap_unique_of_covector
   change β (I x) = α x at hx
   rw [hx]
   rfl
+
+/-- Between two one-dimensional normalized clock lines, the canonical covector-preserving
+map is automatically bijective. -/
+theorem normalizedClockMap_bijective
+    (α : L₁ →ₗ[ℝ] ℝ) (β : L₂ →ₗ[ℝ] ℝ)
+    (u₁ : L₁) (u₂ : L₂)
+    (hαu : α u₁ = 1) (hβu : β u₂ = 1)
+    (hfin₁ : Module.finrank ℝ L₁ = 1)
+    (hfin₂ : Module.finrank ℝ L₂ = 1) :
+    Function.Bijective (normalizedClockMap α u₂) := by
+  have hspan₁ := reconstruction_from_normalized_covector α u₁ hαu hfin₁
+  have hspan₂ := reconstruction_from_normalized_covector β u₂ hβu hfin₂
+  constructor
+  · intro x y hxy
+    have hb := congrArg β hxy
+    simp [normalizedClockMap, hβu] at hb
+    rw [hspan₁ x, hspan₁ y, hb]
+  · intro y
+    refine ⟨(β y) • u₁, ?_⟩
+    rw [normalizedClockMap_apply, map_smul, hαu, smul_eq_mul, mul_one]
+    exact (hspan₂ y).symm
+
+/-- Hence the global/local clock identification is a genuine linear equivalence once both
+descended covectors have fixed their normalized units. -/
+noncomputable def normalizedClockEquiv
+    (α : L₁ →ₗ[ℝ] ℝ) (β : L₂ →ₗ[ℝ] ℝ)
+    (u₁ : L₁) (u₂ : L₂)
+    (hαu : α u₁ = 1) (hβu : β u₂ = 1)
+    (hfin₁ : Module.finrank ℝ L₁ = 1)
+    (hfin₂ : Module.finrank ℝ L₂ = 1) :
+    L₁ ≃ₗ[ℝ] L₂ :=
+  LinearEquiv.ofBijective (normalizedClockMap α u₂)
+    (normalizedClockMap_bijective α β u₁ u₂ hαu hβu hfin₁ hfin₂)
 
 end OneDimensional
 
@@ -2167,6 +2213,9 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check normalized_unit_existsUnique
+#check normalizedClockMap_bijective
+#check normalizedClockEquiv
 #check characteristicCovectorOfKernel
 #check characteristicCovectorOfKernel_factorization
 #check characteristicCovectorOfKernel_unique
