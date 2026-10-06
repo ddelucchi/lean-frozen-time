@@ -8371,36 +8371,6 @@ theorem kerrRicci_stationary_meridional_zero
               · apply kerrRicciCovFromMetric_zero_of_odd_stationary
                 norm_num [kerrStationarySign]
 
-/-- Those eight components already satisfy the Einstein-Maxwell Ricci target exactly. -/
-theorem kerrRicci_stationary_meridional_eq_target
-    (Q r M a θ : ℝ) :
-    kerrRicciCovFromMetric r M a Q θ 0 1 =
-        kerrEinsteinTargetRicciCoordinate Q r M a θ 0 1 ∧
-    kerrRicciCovFromMetric r M a Q θ 0 2 =
-        kerrEinsteinTargetRicciCoordinate Q r M a θ 0 2 ∧
-    kerrRicciCovFromMetric r M a Q θ 3 1 =
-        kerrEinsteinTargetRicciCoordinate Q r M a θ 3 1 ∧
-    kerrRicciCovFromMetric r M a Q θ 3 2 =
-        kerrEinsteinTargetRicciCoordinate Q r M a θ 3 2 ∧
-    kerrRicciCovFromMetric r M a Q θ 1 0 =
-        kerrEinsteinTargetRicciCoordinate Q r M a θ 1 0 ∧
-    kerrRicciCovFromMetric r M a Q θ 2 0 =
-        kerrEinsteinTargetRicciCoordinate Q r M a θ 2 0 ∧
-    kerrRicciCovFromMetric r M a Q θ 1 3 =
-        kerrEinsteinTargetRicciCoordinate Q r M a θ 1 3 ∧
-    kerrRicciCovFromMetric r M a Q θ 2 3 =
-        kerrEinsteinTargetRicciCoordinate Q r M a θ 2 3 := by
-  rcases kerrRicci_stationary_meridional_zero r M a Q θ with
-    ⟨h01,h02,h31,h32,h10,h20,h13,h23⟩
-  simpa [kerrEinsteinTargetRicciCoordinate] using
-    And.intro h01
-      (And.intro h02
-        (And.intro h31
-          (And.intro h32
-            (And.intro h10
-              (And.intro h20
-                (And.intro h13 h23))))))
-
 /-- Scalar curvature computed from the metric-derived Ricci tensor. -/
 def kerrScalarCurvatureFromMetric
     (r M a Q θ : ℝ) : ℝ :=
@@ -8734,6 +8704,36 @@ def kerrEinsteinTargetRicciCoordinate
         (r^2 + a^2)^2) /
       Sigma r a θ
   else 0
+
+/-- Those eight components already satisfy the Einstein-Maxwell Ricci target exactly. -/
+theorem kerrRicci_stationary_meridional_eq_target
+    (Q r M a θ : ℝ) :
+    kerrRicciCovFromMetric r M a Q θ 0 1 =
+        kerrEinsteinTargetRicciCoordinate Q r M a θ 0 1 ∧
+    kerrRicciCovFromMetric r M a Q θ 0 2 =
+        kerrEinsteinTargetRicciCoordinate Q r M a θ 0 2 ∧
+    kerrRicciCovFromMetric r M a Q θ 3 1 =
+        kerrEinsteinTargetRicciCoordinate Q r M a θ 3 1 ∧
+    kerrRicciCovFromMetric r M a Q θ 3 2 =
+        kerrEinsteinTargetRicciCoordinate Q r M a θ 3 2 ∧
+    kerrRicciCovFromMetric r M a Q θ 1 0 =
+        kerrEinsteinTargetRicciCoordinate Q r M a θ 1 0 ∧
+    kerrRicciCovFromMetric r M a Q θ 2 0 =
+        kerrEinsteinTargetRicciCoordinate Q r M a θ 2 0 ∧
+    kerrRicciCovFromMetric r M a Q θ 1 3 =
+        kerrEinsteinTargetRicciCoordinate Q r M a θ 1 3 ∧
+    kerrRicciCovFromMetric r M a Q θ 2 3 =
+        kerrEinsteinTargetRicciCoordinate Q r M a θ 2 3 := by
+  rcases kerrRicci_stationary_meridional_zero r M a Q θ with
+    ⟨h01,h02,h31,h32,h10,h20,h13,h23⟩
+  simpa [kerrEinsteinTargetRicciCoordinate] using
+    And.intro h01
+      (And.intro h02
+        (And.intro h31
+          (And.intro h32
+            (And.intro h10
+              (And.intro h20
+                (And.intro h13 h23))))))
 
 /-- The coframe-defined Einstein-Maxwell Ricci target is exactly the explicit coordinate tensor. -/
 theorem kerrEinsteinTargetRicciCov_eq_coordinate
