@@ -1350,6 +1350,119 @@ theorem principalMaxwell_form_invariant_magnitude (E B : ℝ) :
     principalMaxwellFStarF_eq_maxwellJ,
     maxwell_invariants_eq_principalChi_sq]
 
+/-! ### Maxwell metric first variation from the Einstein-Maxwell Lagrangian -/
+
+/-- Covariant quadratic contraction `F_{ic} F_j{}^c` in the principal frame. -/
+def principalMaxwellCovariantContraction
+    (E B : ℝ) (i j : Fin 4) : ℝ :=
+  ∑ c : Fin 4,
+    principalMaxwellF E B i c *
+      principalMetricSign c *
+      principalMaxwellF E B j c
+
+/-- Covariant metric coefficient in the orthonormal principal frame. -/
+def principalMetricCov (i j : Fin 4) : ℝ :=
+  if i = j then principalMetricSign i else 0
+
+/-- The inverse-metric variation of `F^2` contributes the factor two fixed by the
+two inverse metrics in the Maxwell Lagrangian. -/
+def principalMaxwellInverseMetricVariationCoeff
+    (E B : ℝ) (i j : Fin 4) : ℝ :=
+  -(1 / (8 * Real.pi)) *
+    principalMaxwellCovariantContraction E B i j
+
+/-- The volume-density variation contributes `+(32π)⁻¹ g_ij F²`. -/
+def principalMaxwellVolumeVariationCoeff
+    (E B : ℝ) (i j : Fin 4) : ℝ :=
+  (1 / (32 * Real.pi)) *
+    principalMetricCov i j * principalMaxwellFsq E B
+
+/-- Total algebraic coefficient of `δg^{ij}` in the Maxwell Lagrangian density,
+after factoring out the background volume density. -/
+def principalMaxwellMetricVariationCoeff
+    (E B : ℝ) (i j : Fin 4) : ℝ :=
+  principalMaxwellInverseMetricVariationCoeff E B i j +
+    principalMaxwellVolumeVariationCoeff E B i j
+
+/-- Covariant stress obtained by lowering the first index of the mixed stress. -/
+def principalStressCovFromF
+    (E B : ℝ) (i j : Fin 4) : ℝ :=
+  principalMetricSign i * principalStressFromF E B i j
+
+/-- The two primitive metric-variation contributions combine to exactly
+`-1/2 T_ij[F]`.  Thus the stress normalization and the trace subtraction are
+forced by the Maxwell Lagrangian normalization. -/
+theorem principalMaxwellMetricVariationCoeff_eq_neg_half_stress
+    (E B : ℝ) (i j : Fin 4) :
+    principalMaxwellMetricVariationCoeff E B i j =
+      (-1 / 2 : ℝ) * principalStressCovFromF E B i j := by
+  fin_cases i <;> fin_cases j <;>
+    simp [principalMaxwellMetricVariationCoeff,
+      principalMaxwellInverseMetricVariationCoeff,
+      principalMaxwellVolumeVariationCoeff,
+      principalMaxwellCovariantContraction, principalMetricCov,
+      principalStressCovFromF, principalStressFromF,
+      principalMetricSign, principalMaxwellF,
+      principalMaxwellFsq_eq_maxwellI, maxwellI] <;>
+    field_simp [ne_of_gt Real.pi_pos] <;>
+    ring
+
+/-- Einstein-Hilbert metric-variation coefficient in mixed-index form after
+lowering the first index with the principal metric. -/
+def principalEinsteinHilbertMetricVariationCoeff
+    (Gmixed : Fin 4 → Fin 4 → ℝ) (i j : Fin 4) : ℝ :=
+  (1 / (16 * Real.pi)) *
+    principalMetricSign i * Gmixed i j
+
+/-- Total Einstein-Maxwell metric Euler-Lagrange coefficient for an arbitrary
+candidate mixed Einstein tensor and the explicit principal Maxwell field. -/
+def principalEinsteinMaxwellMetricVariationCoeff
+    (Gmixed : Fin 4 → Fin 4 → ℝ)
+    (E B : ℝ) (i j : Fin 4) : ℝ :=
+  principalEinsteinHilbertMetricVariationCoeff Gmixed i j +
+    principalMaxwellMetricVariationCoeff E B i j
+
+/-- The total metric first-variation coefficient factors by the Einstein-Maxwell
+residual `G^i_j - 8π T^i_j`. -/
+theorem principalEinsteinMaxwellMetricVariationCoeff_factor
+    (Gmixed : Fin 4 → Fin 4 → ℝ)
+    (E B : ℝ) (i j : Fin 4) :
+    principalEinsteinMaxwellMetricVariationCoeff Gmixed E B i j =
+      (principalMetricSign i / (16 * Real.pi)) *
+        (Gmixed i j - 8 * Real.pi * principalStressFromF E B i j) := by
+  rw [principalEinsteinMaxwellMetricVariationCoeff,
+    principalMaxwellMetricVariationCoeff_eq_neg_half_stress]
+  unfold principalEinsteinHilbertMetricVariationCoeff
+    principalStressCovFromF
+  field_simp [ne_of_gt Real.pi_pos]
+  ring
+
+/-- Principal-frame metric signs are never zero. -/
+theorem principalMetricSign_ne_zero (i : Fin 4) :
+    principalMetricSign i ≠ 0 := by
+  fin_cases i <;> simp [principalMetricSign]
+
+/-- Stationarity of the Einstein-Maxwell metric variation is componentwise
+equivalent to the Einstein equation with the explicit Maxwell stress. -/
+theorem principalEinsteinMaxwellMetricVariationCoeff_eq_zero_iff
+    (Gmixed : Fin 4 → Fin 4 → ℝ)
+    (E B : ℝ) (i j : Fin 4) :
+    principalEinsteinMaxwellMetricVariationCoeff Gmixed E B i j = 0 ↔
+      Gmixed i j = 8 * Real.pi * principalStressFromF E B i j := by
+  rw [principalEinsteinMaxwellMetricVariationCoeff_factor]
+  have hc : principalMetricSign i / (16 * Real.pi) ≠ 0 := by
+    exact div_ne_zero (principalMetricSign_ne_zero i)
+      (mul_ne_zero (by norm_num) (ne_of_gt Real.pi_pos))
+  constructor
+  · intro h
+    have hres :
+        Gmixed i j - 8 * Real.pi * principalStressFromF E B i j = 0 := by
+      exact (mul_eq_zero.mp h).resolve_left hc
+    linarith
+  · intro h
+    rw [h]
+    ring
+
 /-- Mixed Maxwell stress computed directly from the explicit two-form:
 `T^a_b=(4π)⁻¹(F^{ac}F_{bc}-(1/4)δ^a_b F²)`. -/
 def principalStressFromF (E B : ℝ) (i j : Fin 4) : ℝ :=
