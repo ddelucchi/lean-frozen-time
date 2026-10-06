@@ -17328,6 +17328,24 @@ def PrincipalLocalNoetherVariationCharacteristicInput.characteristicCurrent
     (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
   D.toMetricEulerRelativeOrbitInput.characteristicCurrent
 
+/-- Local Noether covariance actually forces the entire compensated Iyer-Wald
+operator, not only its value on the physical relative orbit:
+`ω^{XY}+dB=C_action` on all of the two-sector variation space. -/
+theorem PrincipalLocalNoetherVariationCharacteristicInput.compensatedOperator_eq_actionConstraint
+    (D : PrincipalLocalNoetherVariationCharacteristicInput (P:=P)) :
+    D.variation.omegaXY + D.variation.dB =
+      D.carrier.noetherConstraintOperatorFromAction := by
+  ext X
+  rw [show
+      (D.variation.omegaXY + D.variation.dB) X =
+        D.variation.omegaXY X + D.variation.dB X by rfl]
+  rw [D.variation.compensated_eq_constraint]
+  have hC :
+      D.variation.constraint =
+        D.carrier.noetherConstraintOperatorFromAction :=
+    D.toDisplayedOrbitInput.constraint_eq_canonicalNoether
+  exact LinearMap.congr_fun hC X
+
 /-- The actual compensated Iyer-Wald current on the full relative action orbit
 is forced directly by locality and the local diffeomorphism derivative pairing.
 Neither a preferred symplectic-potential representative nor a preferred Noether
@@ -19982,6 +20000,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.PrincipalDisplayedMetricEulerOrbitVariationCharacteristicInput.constraint_eq_canonicalNoether
 #print axioms RelativeRest.PrincipalLocalNoetherVariationCharacteristicInput.bulkCoeff_forced
 #print axioms RelativeRest.PrincipalLocalNoetherVariationCharacteristicInput.constraintOrbit_forced
+#print axioms RelativeRest.PrincipalLocalNoetherVariationCharacteristicInput.compensatedOperator_eq_actionConstraint
 #print axioms RelativeRest.PrincipalLocalNoetherVariationCharacteristicInput.compensatedOrbit_forced_from_localNoether
 #print axioms RelativeRest.PrincipalLocalNoetherVariationCharacteristicInput.compensatedNormal_forced_from_action
 #print axioms RelativeRest.PrincipalLocalNoetherVariationCharacteristicInput.characteristicCurrent_eq_neg_half_compensatedNormal
