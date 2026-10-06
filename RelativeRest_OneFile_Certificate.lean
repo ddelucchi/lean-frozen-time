@@ -2211,6 +2211,46 @@ def principalEinsteinMaxwellMetricVariationCoeff
   principalEinsteinHilbertMetricVariationCoeff Gmixed i j +
     principalMaxwellMetricVariationCoeff E B i j
 
+/-! ### Combined local Einstein-Maxwell first variation -/
+
+/-- The displayed Einstein-Hilbert variation, Maxwell metric variation, and Maxwell
+potential variation combine into the complete local first-variation decomposition.
+Every normalization on the right has already been derived above from the displayed
+density.  The only geometric regularity premise is symmetry of the metric variation. -/
+theorem principalEinsteinMaxwell_local_first_variation
+    (RicCov : Fin 4 → Fin 4 → ℝ)
+    (nabla2H : Fin 4 → Fin 4 → Fin 4 → Fin 4 → ℝ)
+    (hsym : ∀ d e a b, nabla2H d e a b = nabla2H d e b a)
+    (E B : ℝ) (i j : Fin 4)
+    (nablaF nablaDeltaA : Fin 4 → Fin 4 → ℝ)
+    (deltaA : Fin 4 → ℝ) :
+    deriv
+        (principalEinsteinHilbertLagrangianMetricLineFromRicci
+          RicCov
+          (fun _ _ =>
+            principalPalatiniBoundaryDivergence
+              (principalNablaLinearizedChristoffelFromMetricSecondDerivative
+                nabla2H))
+          i j) 0 +
+      deriv (principalMaxwellLagrangianMetricLine E B i j) 0 +
+      deriv
+        (principalMaxwellPotentialLagrangianLine
+          (principalMaxwellFsq E B)
+          (principalMaxwellFUp E B) nablaDeltaA) 0 =
+    principalEinsteinMaxwellMetricVariationCoeff
+        (principalEinsteinMixedFromRicci RicCov) E B i j +
+      principalMaxwellPotentialEulerDensity nablaF deltaA +
+      principalEinsteinHilbertSymplecticPotentialDivergence nabla2H +
+      principalMaxwellSymplecticPotentialDivergence
+        (principalMaxwellFUp E B) nablaF nablaDeltaA deltaA := by
+  rw [principalEinsteinHilbert_first_variation_from_metric_second_derivative
+      RicCov nabla2H hsym i j,
+    ← principalMaxwellMetricVariationCoeff_eq_lagrangian_deriv,
+    principalMaxwellPotential_first_variation]
+  unfold principalEinsteinMaxwellMetricVariationCoeff
+  rw [principalEinsteinHilbertMetricVariationCoeff_from_ricci]
+  ring
+
 /-- The total metric first-variation coefficient factors by the Einstein-Maxwell
 residual `G^i_j - 8π T^i_j`. -/
 theorem principalEinsteinMaxwellMetricVariationCoeff_factor
@@ -18234,6 +18274,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalEinsteinHilbert_first_variation_from_metric_second_derivative
 #print axioms RelativeRest.principalEinsteinHilbertLagrangianMetricLineFromRicci_hasDerivAt_zero
 #print axioms RelativeRest.principalEinsteinHilbertMetricVariationCoeff_eq_bulk_lagrangian_deriv
+#print axioms RelativeRest.principalEinsteinMaxwell_local_first_variation
 #print axioms RelativeRest.linearDescendant_reciprocal
 #print axioms RelativeRest.linearDescendant_normalJet_of_opposite
 #print axioms RelativeRest.linearDescendant_reciprocal_hasDerivAt_zero
