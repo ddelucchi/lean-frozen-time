@@ -108,11 +108,19 @@ theorem iyerWald_lambda_unique
   exact descended_covector_unique D.beta D.beta_surj D.ell Λ
     (lambdaFromOmega D) hΛ (iyerWald_factorization D)
 
+theorem iyerWald_ell_nonzero
+    (D : IyerWaldResponseData (P:=P) (K:=K)) :
+    D.ell ≠ 0 := by
+  rcases D.ell_positive with ⟨p, hp⟩
+  intro hzero
+  rw [hzero] at hp
+  simp at hp
+
 theorem iyerWald_lambda_nonzero
     (D : IyerWaldResponseData (P:=P) (K:=K)) :
     lambdaFromOmega D ≠ 0 := by
   intro hzero
-  apply D.ell_nonzero
+  apply iyerWald_ell_nonzero D
   have hfac := iyerWald_factorization D
   rw [hzero] at hfac
   simpa using hfac.symm
