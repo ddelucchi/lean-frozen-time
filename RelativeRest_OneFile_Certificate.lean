@@ -6025,6 +6025,46 @@ theorem LagrangianVariationNoetherOperators.compensated_eq_constraint
   rw [D.iyerWald_identity_apply]
   module
 
+/-- The covariant-phase-space potential/charge ambiguity is invisible to the
+bulk object used by the manuscript.  Any two genuine first-variation/Noether
+realizations with the same constraint descendant have exactly the same compensated
+current `ω(X,Y)+dB`, even when `ω`, `θ`, `Q`, and `B` separately differ. -/
+theorem LagrangianVariationNoetherOperators.compensated_current_invariant_of_constraint
+    (D₁ D₂ : LagrangianVariationNoetherOperators (L:=L) (C:=C))
+    (hC : D₁.constraint = D₂.constraint)
+    (X : L) :
+    D₁.omegaXY X + D₁.dB X =
+      D₂.omegaXY X + D₂.dB X := by
+  rw [D₁.compensated_eq_constraint, D₂.compensated_eq_constraint, hC]
+
+/-- Operator form of boundary-representative invariance.  The compensated map itself
+depends only on the Noether constraint, not on the representative symplectic
+potential or charge decomposition. -/
+theorem LagrangianVariationNoetherOperators.compensated_operator_invariant_of_constraint
+    (D₁ D₂ : LagrangianVariationNoetherOperators (L:=L) (C:=C))
+    (hC : D₁.constraint = D₂.constraint) :
+    D₁.omegaXY + D₁.dB = D₂.omegaXY + D₂.dB := by
+  ext X
+  exact D₁.compensated_current_invariant_of_constraint D₂ hC X
+
+/-- In particular, once the action-derived canonical constraint is fixed, every
+legitimate Iyer-Wald representative has the same compensated current as the
+canonical completion.  Thus construction of a preferred `θ` or `Q_ξ`
+representative is not required to force the paper's bulk clock descendant. -/
+theorem LagrangianVariationNoetherOperators.compensated_eq_canonicalCompletion
+    (D : LagrangianVariationNoetherOperators (L:=L) (C:=C))
+    (canonicalConstraint : L →ₗ[ℝ] C)
+    (hC : D.constraint = canonicalConstraint) :
+    D.omegaXY + D.dB =
+      (D.toFirstVariationCartanData.toNoetherOperators
+        canonicalConstraint).omegaXY +
+      (D.toFirstVariationCartanData.toNoetherOperators
+        canonicalConstraint).dB := by
+  apply D.compensated_operator_invariant_of_constraint
+  exact
+    (D.toFirstVariationCartanData.toNoetherOperators_constraint
+      canonicalConstraint).symm.trans hC.symm
+
 /-- Existence and uniqueness of the compensated current already follows at this
 first-variation level. -/
 theorem LagrangianVariationNoetherOperators.omegaXY_existsUnique
@@ -19874,6 +19914,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.LagrangianFirstVariationCartanData.toNoetherOperators_constraint
 #print axioms RelativeRest.LagrangianVariationNoetherOperators.deltaConstraint_forced
 #print axioms RelativeRest.LagrangianVariationNoetherOperators.dDeltaCharge_forced
+#print axioms RelativeRest.LagrangianVariationNoetherOperators.compensated_current_invariant_of_constraint
+#print axioms RelativeRest.LagrangianVariationNoetherOperators.compensated_operator_invariant_of_constraint
 #print axioms RelativeRest.LagrangianVariationNoetherOperators_eq_canonical_completion
 #print axioms RelativeRest.LagrangianVariationNoetherOperators_unique_of_core_and_constraint
 #print axioms RelativeRest.principalMetricEulerDivergence_zero_of_generalizedBianchi_onMaxwellShell
