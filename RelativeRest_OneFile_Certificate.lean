@@ -311,6 +311,24 @@ theorem rho_mul_lambda_eq_kappa (u s : ℝ) :
   congr 1
   ring
 
+
+/-- The product of the two sector characters is exactly the square of the common character. -/
+theorem Xi_product_eq_kappa_sq (u s : ℝ) :
+    XiGUS u s * XiMUS u s = (kappaUS u)^2 := by
+  rw [XiGUS_factorization, XiMUS_factorization]
+  rw [pow_two, ← Real.exp_add]
+  unfold kappaUS
+  rw [pow_two, ← Real.exp_add]
+  congr 1
+  ring
+
+/-- Therefore the positive projective common scale is literally
+`sqrt(Xi_G Xi_M)=κ=ρλ`. -/
+theorem character_common_scale_sqrt (u s : ℝ) :
+    Real.sqrt (XiGUS u s * XiMUS u s) = kappaUS u := by
+  rw [Xi_product_eq_kappa_sq, Real.sqrt_sq_eq_abs]
+  exact abs_of_pos (Real.exp_pos u)
+
 /-- The common character cancels completely from the relative ratio. -/
 theorem character_ratio_eq_exp_two (u s : ℝ) :
     XiMUS u s / XiGUS u s = Real.exp (2 * s) := by
@@ -4313,6 +4331,8 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check Xi_product_eq_kappa_sq
+#check character_common_scale_sqrt
 #check gravScaleExponent_from_primitive_weights
 #check maxwellMetricScaleExponent_from_primitive_weights
 #check gravity_relative_weight_from_primitive_counts
