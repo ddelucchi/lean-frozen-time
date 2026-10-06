@@ -17310,11 +17310,23 @@ def PrincipalLocalNoetherVariationCharacteristicInput.toDisplayedOrbitInput
   variation := D.variation
   noetherConstraintOrbitFromMetricEuler := D.constraintOrbit_forced
 
+/-- The local Noether orbit already gives the earlier metric-Euler relative-orbit
+input directly, avoiding any dependence on later wrapper declarations. -/
+def PrincipalLocalNoetherVariationCharacteristicInput.toMetricEulerRelativeOrbitInput
+    (D : PrincipalLocalNoetherVariationCharacteristicInput (P:=P)) :
+    PrincipalMetricEulerRelativeOrbitVariationCharacteristicInput (P:=P) where
+  carrier := D.carrier
+  variation := D.variation
+  relativeMetricEulerCharacter := by
+    intro s v
+    rw [D.constraintOrbit_forced]
+    exact D.carrier.metricEulerRelativeOrbitResponse_apply s v
+
 /-- Characteristic current determined from the local Noether data. -/
 def PrincipalLocalNoetherVariationCharacteristicInput.characteristicCurrent
     (D : PrincipalLocalNoetherVariationCharacteristicInput (P:=P)) :
     (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
-  D.toDisplayedOrbitInput.characteristicCurrent
+  D.toMetricEulerRelativeOrbitInput.characteristicCurrent
 
 /-- The actual compensated Iyer-Wald current on the full relative action orbit
 is forced directly by locality and the local diffeomorphism derivative pairing.
@@ -17382,7 +17394,7 @@ theorem PrincipalLocalNoetherVariationCharacteristicInput.characteristicCurrent_
           (principalMetricEulerNoetherJetLinear
             D.carrier.E D.carrier.B)) := by
   rw [PrincipalLocalNoetherVariationCharacteristicInput.characteristicCurrent]
-  rw [principalDisplayedMetricEulerOrbitVariation_current_eq_metricEulerResponse]
+  rw [principalMetricEulerRelativeOrbitVariation_current_eq_metricEulerResponse]
   exact
     D.carrier.metricEulerJetResponse_eq_neg_half_noetherIntegral
 
