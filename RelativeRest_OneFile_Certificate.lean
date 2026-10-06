@@ -8129,6 +8129,56 @@ theorem kerrChristoffel_lower_symmetric
   rw [kerrMetricPartial_symmetric σ r M a Q θ μ ν]
   ring
 
+/-! ### Stationary-reflection parity of the Levi-Civita connection -/
+
+/-- Sign of a Boyer-Lindquist coordinate under `(t,φ) ↦ (-t,-φ)`. -/
+def kerrStationarySign (i : Fin 4) : ℝ :=
+  if i = 0 ∨ i = 3 then -1 else 1
+
+@[simp] theorem kerrStationarySign_zero :
+    kerrStationarySign 0 = -1 := by
+  simp [kerrStationarySign]
+
+@[simp] theorem kerrStationarySign_one :
+    kerrStationarySign 1 = 1 := by
+  simp [kerrStationarySign]
+
+@[simp] theorem kerrStationarySign_two :
+    kerrStationarySign 2 = 1 := by
+  simp [kerrStationarySign]
+
+@[simp] theorem kerrStationarySign_three :
+    kerrStationarySign 3 = -1 := by
+  simp [kerrStationarySign]
+
+/-- The Christoffel symbols transform with the product of their three coordinate signs. -/
+theorem kerrChristoffel_stationary_parity
+    (r M a Q θ : ℝ)
+    (ρ μ ν : Fin 4) :
+    kerrStationarySign ρ *
+        kerrStationarySign μ *
+        kerrStationarySign ν *
+        kerrChristoffel r M a Q θ ρ μ ν =
+      kerrChristoffel r M a Q θ ρ μ ν := by
+  fin_cases ρ <;> fin_cases μ <;> fin_cases ν <;>
+    simp [kerrStationarySign, kerrChristoffel,
+      kerrMetricInv, kerrMetricPartial, kerrCoordPartial,
+      kerrMetricCov] <;> ring
+
+/-- Hence every connection coefficient with odd stationary parity vanishes identically. -/
+theorem kerrChristoffel_zero_of_odd_stationary
+    (r M a Q θ : ℝ)
+    (ρ μ ν : Fin 4)
+    (hodd :
+      kerrStationarySign ρ *
+        kerrStationarySign μ *
+        kerrStationarySign ν = -1) :
+    kerrChristoffel r M a Q θ ρ μ ν = 0 := by
+  have hp :=
+    kerrChristoffel_stationary_parity r M a Q θ ρ μ ν
+  rw [hodd] at hp
+  linarith
+
 /-- Coordinate derivative of a Christoffel symbol. -/
 def kerrChristoffelPartial
     (κ : Fin 4) (r M a Q θ : ℝ)
@@ -10360,6 +10410,9 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check kerrStationarySign
+#check kerrChristoffel_stationary_parity
+#check kerrChristoffel_zero_of_odd_stationary
 #check kerrEinsteinTargetRicciCoordinate
 #check kerrEinsteinTargetRicciCov_eq_coordinate
 #check kerrMetricDerivativeRegular
@@ -11060,6 +11113,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrMetricPartial_eq_regular
 #print axioms RelativeRest.kerrChristoffel_eq_regular
 #print axioms RelativeRest.kerrChristoffel_lower_symmetric
+#print axioms RelativeRest.kerrChristoffel_stationary_parity
+#print axioms RelativeRest.kerrChristoffel_zero_of_odd_stationary
 #print axioms RelativeRest.kerrCoframe_orthonormal
 #print axioms RelativeRest.kerrEinsteinTargetRicci_trace_zero
 #print axioms RelativeRest.kerrEinsteinTargetRicciCov_eq_coordinate
