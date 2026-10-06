@@ -2028,6 +2028,32 @@ theorem normalized_unit_existsUnique
   exact normalized_unit_unique α u v hu hspan hv
 
 
+/-- Canonical normalized direction selected by a nonzero covector on a one-dimensional line. -/
+noncomputable def normalizedClockUnit
+    (α : L₁ →ₗ[ℝ] ℝ)
+    (hα : α ≠ 0)
+    (hfin : Module.finrank ℝ L₁ = 1) : L₁ :=
+  Classical.choose (normalized_unit_existsUnique α hα hfin)
+
+@[simp] theorem normalizedClockUnit_eval
+    (α : L₁ →ₗ[ℝ] ℝ)
+    (hα : α ≠ 0)
+    (hfin : Module.finrank ℝ L₁ = 1) :
+    α (normalizedClockUnit α hα hfin) = 1 :=
+  (Classical.choose_spec (normalized_unit_existsUnique α hα hfin)).1
+
+/-- On the descended one-dimensional contact line the Reeb normalization has one and only
+one possible direction.  Closedness is automatic from one-dimensionality above. -/
+theorem reeb_direction_unique
+    (α : L₁ →ₗ[ℝ] ℝ)
+    (hα : α ≠ 0)
+    (hfin : Module.finrank ℝ L₁ = 1)
+    (R : L₁) (hR : α R = 1) :
+    R = normalizedClockUnit α hα hfin := by
+  exact (Classical.choose_spec
+    (normalized_unit_existsUnique α hα hfin)).2 R hR
+
+
 /-- Every alternating bilinear two-form vanishes on a one-dimensional clock line.
 This is the algebraic content of the manuscript's statement that the descended one-form is closed. -/
 theorem alternating_bilinear_zero_on_clock_line
@@ -2155,6 +2181,29 @@ theorem clockPotential_normalized_flow
     clockPotential λ C (x + t • u) = clockPotential λ C x + t := by
   simp [clockPotential, hu]
   ring
+
+/-- Any two clock representatives normalized by the same flow differ by a first integral
+of that flow.  This is the torsor statement used before null synchronization. -/
+theorem clock_representatives_differ_by_first_integral
+    {X : Type*}
+    (flow : ℝ → X → X)
+    (Θ₁ Θ₂ : X → ℝ)
+    (h₁ : ∀ t x, Θ₁ (flow t x) = Θ₁ x + t)
+    (h₂ : ∀ t x, Θ₂ (flow t x) = Θ₂ x + t) :
+    ∀ t x, Θ₁ (flow t x) - Θ₂ (flow t x) = Θ₁ x - Θ₂ x := by
+  intro t x
+  rw [h₁ t x, h₂ t x]
+  ring
+
+/-- If the endpoint construction fixes that first integral on one connected clock line,
+only a common additive origin remains. -/
+theorem common_shift_is_only_endpoint_freedom
+    (θp θm θp' θm' C : ℝ)
+    (hp : θp' = θp + C) (hm : θm' = θm + C) :
+    radarTime θp' θm' = radarTime θp θm + C ∧
+    radarRadius θp' θm' = radarRadius θp θm := by
+  rw [hp, hm]
+  exact radar_common_shift θp θm C
 
 end AffineClockPrimitive
 
@@ -3241,6 +3290,11 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check normalizedClockUnit
+#check normalizedClockUnit_eval
+#check reeb_direction_unique
+#check clock_representatives_differ_by_first_integral
+#check common_shift_is_only_endpoint_freedom
 #check MaxwellBridgeData.response_positive
 #check MaxwellBridgeData.kernel_invisible
 #check MaxwellBridgeData.Lambda
@@ -3448,6 +3502,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.rapidity_forced_by_normalized_boost
 #print axioms RelativeRest.extensionalBridge_Lambda_unique
 #print axioms RelativeRest.maxwellBridge_Lambda_unique
+#print axioms RelativeRest.reeb_direction_unique
 #print axioms RelativeRest.causal_extended_endpoints_mono
 #print axioms RelativeRest.kerrLogChi_hasDerivAt_r
 #print axioms RelativeRest.kerrNewman_mino_clock_forced
