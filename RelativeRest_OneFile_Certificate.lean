@@ -17466,13 +17466,16 @@ theorem principalLocalNoether_forced_core_chain
           D.carrier.toCharacteristicCurrentData.Lambda
           (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
       principalUhat := by
-  have h := principalDisplayedMetricEulerOrbitVariation_forced_core_chain
-    D.toDisplayedOrbitInput u s
-  rcases h with ⟨hrest,_hmetric,horbit,hop,hcur,hL,hdim,hnorm⟩
-  refine ⟨hrest,?_,horbit,?_,hcur,hL,hdim,hnorm⟩
+  have h := principalMetricEulerRelativeOrbitVariation_forced_core_chain
+    D.toMetricEulerRelativeOrbitInput u s
+  rcases h with
+    ⟨hrest,_hmetric,_hCA,_hDA,_hop,hcur,hL,hdim,hnorm⟩
+  refine ⟨hrest,?_,D.constraintOrbit_forced,?_,?_,hL,hdim,hnorm⟩
   · intro i j
     exact D.bulkCoeff_forced s i j
   · exact D.constraint_eq_actionConstraint
+  · simpa [PrincipalLocalNoetherVariationCharacteristicInput.characteristicCurrent]
+      using hcur
 
 /-- The single canonical-constraint identity implies the previous finite-orbit
 bridge with no additional sector, sign, jet, or normalization hypothesis. -/
