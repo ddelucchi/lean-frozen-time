@@ -6638,6 +6638,97 @@ theorem characteristicCurrent_clockCovector_nonzero
   quotientClockCovector_nonzero D.Lambda
     (characteristicCurrent_Lambda_nonzero D)
 
+
+/-! ### Construction of the characteristic current from the fixed-point carrier -/
+
+section CarrierCharacteristicConstruction
+
+variable {W : Type*} [AddCommGroup W] [Module ℝ W]
+
+/-- Once the compensated Iyer-Wald bulk current is identified with the field-derived
+carrier current, the characteristic-current datum is constructed rather than assumed.
+The only extra hypothesis here is positivity of one integrated stress test profile. -/
+def characteristicCurrentDataOfCarrier
+    (beta : P →ₗ[ℝ] KSpace)
+    (J T : KSpace →ₗ[ℝ] KSpace)
+    (iε : KSpace →ₗ[ℝ] W)
+    (integrate : W →ₗ[ℝ] ℝ)
+    (hJ : J = (-16 * Real.pi) • T)
+    (positiveWitness : P)
+    (hpositive :
+      0 <
+        stressResponse integrate T iε
+          (beta positiveWitness)) :
+    CharacteristicCurrentData (P:=P) (KSpace:=KSpace) where
+  beta := beta
+  current := halfCarrierBulkCurrent integrate J iε
+  positiveWitness := positiveWitness
+  current_positive := by
+    rw [halfCarrierBulkCurrent_eq_stressResponse
+      integrate J T iε hJ]
+    exact hpositive
+
+/-- The current constructed from the carrier is exactly the Maxwell stress response
+on characteristic space. -/
+theorem characteristicCurrentDataOfCarrier_current
+    (beta : P →ₗ[ℝ] KSpace)
+    (J T : KSpace →ₗ[ℝ] KSpace)
+    (iε : KSpace →ₗ[ℝ] W)
+    (integrate : W →ₗ[ℝ] ℝ)
+    (hJ : J = (-16 * Real.pi) • T)
+    (p0 : P)
+    (hpositive :
+      0 < stressResponse integrate T iε (beta p0)) :
+    (characteristicCurrentDataOfCarrier
+      beta J T iε integrate hJ p0 hpositive).current =
+      stressResponse integrate T iε := by
+  exact halfCarrierBulkCurrent_eq_stressResponse
+    integrate J T iε hJ
+
+/-- Consequently its parameter response is literally the pullback of the integrated
+stress response along the characteristic map. -/
+theorem characteristicCurrentDataOfCarrier_ell
+    (beta : P →ₗ[ℝ] KSpace)
+    (J T : KSpace →ₗ[ℝ] KSpace)
+    (iε : KSpace →ₗ[ℝ] W)
+    (integrate : W →ₗ[ℝ] ℝ)
+    (hJ : J = (-16 * Real.pi) • T)
+    (p0 : P)
+    (hpositive :
+      0 < stressResponse integrate T iε (beta p0)) :
+    (characteristicCurrentDataOfCarrier
+      beta J T iε integrate hJ p0 hpositive).ell =
+      (stressResponse integrate T iε).comp beta := by
+  ext p
+  simp [CharacteristicCurrentData.ell,
+    characteristicCurrentDataOfCarrier,
+    halfCarrierBulkCurrent_eq_stressResponse
+      integrate J T iε hJ]
+
+/-- The unique characteristic covector is the restriction of the integrated stress
+response to the actual image of the characteristic map. -/
+theorem characteristicCurrentDataOfCarrier_Lambda_apply
+    (beta : P →ₗ[ℝ] KSpace)
+    (J T : KSpace →ₗ[ℝ] KSpace)
+    (iε : KSpace →ₗ[ℝ] W)
+    (integrate : W →ₗ[ℝ] ℝ)
+    (hJ : J = (-16 * Real.pi) • T)
+    (p0 : P)
+    (hpositive :
+      0 < stressResponse integrate T iε (beta p0))
+    (X : LinearMap.range beta) :
+    (characteristicCurrentDataOfCarrier
+      beta J T iε integrate hJ p0 hpositive).Lambda X =
+      stressResponse integrate T iε X := by
+  change
+    halfCarrierBulkCurrent integrate J iε X =
+      stressResponse integrate T iε X
+  exact LinearMap.congr_fun
+    (halfCarrierBulkCurrent_eq_stressResponse
+      integrate J T iε hJ) X
+
+end CarrierCharacteristicConstruction
+
 /-- Minimal remaining algebraic interface to the still-unformalized Iyer-Wald layer.
 The response covector is not supplied, its factorization is not supplied, and kernel invisibility
 is not supplied.  The only structural premise is the physical statement that the integrated
@@ -6895,6 +6986,10 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check characteristicCurrentDataOfCarrier
+#check characteristicCurrentDataOfCarrier_current
+#check characteristicCurrentDataOfCarrier_ell
+#check characteristicCurrentDataOfCarrier_Lambda_apply
 #check halfCarrierBulkCurrent_eq_stressResponse
 #check half_carrier_bridge_scalar
 #check characteristicCurrent_factorization
@@ -7379,6 +7474,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalFieldBridge_Lambda_unique
 #print axioms RelativeRest.characteristicCurrent_Lambda_unique
 #print axioms RelativeRest.characteristicCurrent_quotient_finrank_one
+#print axioms RelativeRest.characteristicCurrentDataOfCarrier_Lambda_apply
 #print axioms RelativeRest.reeb_direction_unique
 #print axioms RelativeRest.clock_section_reeb_existsUnique
 #print axioms RelativeRest.clockLiouville_unique_of_homogeneity
