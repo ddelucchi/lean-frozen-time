@@ -8052,6 +8052,58 @@ theorem kerrMetricPartial_theta
     kerrMetricPartial 3 r M a Q θ i j = 0 := by
   simp [kerrMetricPartial, kerrCoordPartial]
 
+/-- Fully explicit coordinate derivative tensor on the regular stationary chart. -/
+def kerrMetricDerivativeRegular
+    (κ : Fin 4) (r M a Q θ : ℝ)
+    (i j : Fin 4) : ℝ :=
+  if κ = 1 then kerrMetricRadialDerivative r M a Q θ i j
+  else if κ = 2 then kerrMetricPolarDerivative r M a Q θ i j
+  else 0
+
+/-- Every genuine coordinate derivative of the metric equals the explicit regular tensor. -/
+theorem kerrMetricPartial_eq_regular
+    (κ : Fin 4) (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (i j : Fin 4) :
+    kerrMetricPartial κ r M a Q θ i j =
+      kerrMetricDerivativeRegular κ r M a Q θ i j := by
+  fin_cases κ
+  · simp [kerrMetricDerivativeRegular]
+  · simpa [kerrMetricDerivativeRegular] using
+      kerrMetricPartial_r r M a Q θ hsig hdel i j
+  · simpa [kerrMetricDerivativeRegular] using
+      kerrMetricPartial_theta r M a Q θ hsig hdel i j
+  · simp [kerrMetricDerivativeRegular]
+
+/-- Algebraic Christoffel expression after all first coordinate derivatives have been evaluated. -/
+def kerrChristoffelRegular
+    (r M a Q θ : ℝ)
+    (ρ μ ν : Fin 4) : ℝ :=
+  (1 / 2 : ℝ) *
+    ∑ σ : Fin 4,
+      kerrMetricInv r M a Q θ ρ σ *
+        (kerrMetricDerivativeRegular μ r M a Q θ σ ν +
+         kerrMetricDerivativeRegular ν r M a Q θ σ μ -
+         kerrMetricDerivativeRegular σ r M a Q θ μ ν)
+
+/-- On the regular chart, the genuine Levi-Civita Christoffels contain no remaining
+unevaluated first derivatives. -/
+theorem kerrChristoffel_eq_regular
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (ρ μ ν : Fin 4) :
+    kerrChristoffel r M a Q θ ρ μ ν =
+      kerrChristoffelRegular r M a Q θ ρ μ ν := by
+  unfold kerrChristoffel kerrChristoffelRegular
+  apply congrArg ((1 / 2 : ℝ) * ·)
+  apply Finset.sum_congr rfl
+  intro σ hσ
+  rw [kerrMetricPartial_eq_regular μ r M a Q θ hsig hdel σ ν,
+      kerrMetricPartial_eq_regular ν r M a Q θ hsig hdel σ μ,
+      kerrMetricPartial_eq_regular σ r M a Q θ hsig hdel μ ν]
+
 /-- Levi-Civita Christoffel symbols constructed directly from the metric and inverse metric. -/
 def kerrChristoffel
     (r M a Q θ : ℝ)
@@ -10247,6 +10299,10 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check kerrMetricDerivativeRegular
+#check kerrMetricPartial_eq_regular
+#check kerrChristoffelRegular
+#check kerrChristoffel_eq_regular
 #check kerrMetricRadialDerivative
 #check kerrMetricPolarDerivative
 #check kerrMetricPartial_r
@@ -10938,6 +10994,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrMetricPartial_symmetric
 #print axioms RelativeRest.kerrMetricPartial_r
 #print axioms RelativeRest.kerrMetricPartial_theta
+#print axioms RelativeRest.kerrMetricPartial_eq_regular
+#print axioms RelativeRest.kerrChristoffel_eq_regular
 #print axioms RelativeRest.kerrChristoffel_lower_symmetric
 #print axioms RelativeRest.kerrCoframe_orthonormal
 #print axioms RelativeRest.kerrEinsteinTargetRicci_trace_zero
