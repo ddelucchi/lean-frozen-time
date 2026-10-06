@@ -220,7 +220,10 @@ theorem character_ratio_eq_exp_two (u s : ℝ) :
   have hku : kappaUS u ≠ 0 := ne_of_gt (Real.exp_pos u)
   have hem : Real.exp (-s) ≠ 0 := ne_of_gt (Real.exp_pos (-s))
   rw [mul_div_mul_left _ _ hku]
-  exact master_ratio s
+  rw [div_eq_iff hem]
+  rw [← Real.exp_add]
+  congr 1
+  ring
 
 /-- The logarithmic character ratio recovers the relative coordinate exactly. -/
 theorem relative_coordinate_recovered (u s : ℝ) :
