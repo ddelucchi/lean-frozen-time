@@ -13618,6 +13618,118 @@ theorem principalFirstVariation_forced_core_chain
     principalFirstVariationCharacteristic_current_eq_characteristicCurrent D,
     hL, hdim, hnorm⟩
 
+/-! ### Primitive-Noether-backed clock: no first-variation identities as input -/
+
+/-- Strongest covariant-phase-space interface in this file.  Only the primitive
+Noether descendants and their gravity/Maxwell constraint values are supplied.
+The first-variation identities, Iyer-Wald identity, compensated current, and
+clock quotient are all reconstructed below. -/
+structure PrincipalPrimitiveNoetherCharacteristicInput where
+  carrier : PrincipalCarrierCharacteristicInput (P:=P)
+  LG : L
+  LM : L
+  primitive : PrimitiveNoetherOperators
+    (L:=L) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ))
+  constraintGravity :
+    primitive.toFirstVariationNoetherOperators.constraint LG =
+      stressResponse LinearMap.id carrier.T carrier.iε
+  constraintMaxwell :
+    primitive.toFirstVariationNoetherOperators.constraint LM =
+      -(stressResponse LinearMap.id carrier.T carrier.iε)
+
+/-- Canonical promotion to the first-variation-backed interface. -/
+def PrincipalPrimitiveNoetherCharacteristicInput.toFirstVariationInput
+    (D : PrincipalPrimitiveNoetherCharacteristicInput (P:=P) (L:=L)) :
+    PrincipalFirstVariationCharacteristicInput (P:=P) (L:=L) where
+  carrier := D.carrier
+  LG := D.LG
+  LM := D.LM
+  variation := D.primitive.toFirstVariationNoetherOperators
+  constraintGravity := D.constraintGravity
+  constraintMaxwell := D.constraintMaxwell
+
+/-- Primitive Noether data therefore determines the same unique characteristic current. -/
+def PrincipalPrimitiveNoetherCharacteristicInput.characteristicCurrent
+    (D : PrincipalPrimitiveNoetherCharacteristicInput (P:=P) (L:=L)) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
+  D.toFirstVariationInput.characteristicCurrent
+
+theorem principalPrimitiveNoetherCharacteristic_current_eq_characteristicCurrent
+    (D : PrincipalPrimitiveNoetherCharacteristicInput (P:=P) (L:=L)) :
+    D.characteristicCurrent =
+      D.carrier.toCharacteristicCurrentData.current := by
+  exact principalFirstVariationCharacteristic_current_eq_characteristicCurrent
+    D.toFirstVariationInput
+
+/-- The full normalized clock chain now follows without supplying any
+first-variation, Cartan, Noether-decomposition, or Iyer-Wald identity premise. -/
+theorem principalPrimitiveNoetherCharacteristic_clock_chain
+    (D : PrincipalPrimitiveNoetherCharacteristicInput (P:=P) (L:=L)) :
+    D.characteristicCurrent =
+        D.carrier.toCharacteristicCurrentData.current ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    (quotientClockCovector principalTOLinear).comp
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda) =
+      D.carrier.toCharacteristicCurrentData.clockCovector ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat := by
+  exact principalFirstVariationCharacteristic_clock_chain
+    D.toFirstVariationInput
+
+/-- Strongest algebraic field/current core: the relative fixed point, action-derived
+carrier, Rainich square, primitive-Noether current, one-dimensional quotient, and
+normalized clock line are all forced in one implication chain. -/
+theorem principalPrimitiveNoether_forced_core_chain
+    (D : PrincipalPrimitiveNoetherCharacteristicInput (P:=P) (L:=L))
+    (u s : ℝ) :
+    ((8 * Real.pi * principalFieldEnergyDensity D.carrier.E D.carrier.B =
+        8 * Real.pi *
+          maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+          principalFieldEnergyDensity D.carrier.E D.carrier.B) ↔ s = 0) ∧
+    deriv (principalScaledResidualFromF
+      D.carrier.E D.carrier.B 0 0) 0 =
+      principalJetFromF D.carrier.E D.carrier.B 0 0 ∧
+    (∀ i j : Fin 4,
+      D.carrier.J (principalBasis j) i =
+        (16 * Real.pi / principalMetricSign i) *
+          deriv
+            (principalScaledMetricEulerCoeffFromAction
+              D.carrier.E D.carrier.B i j) 0) ∧
+    (∀ i j : Fin 4,
+      (∑ k : Fin 4,
+        principalJetFromF D.carrier.E D.carrier.B i k *
+          principalJetFromF D.carrier.E D.carrier.B k j) =
+        (principalChi D.carrier.E D.carrier.B)^2 *
+          (if i = j then 1 else 0)) ∧
+    D.characteristicCurrent =
+      D.carrier.toCharacteristicCurrentData.current ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat := by
+  rcases principalFirstVariation_forced_core_chain
+      D.toFirstVariationInput u s with
+    ⟨hrest, hjet, hrainich, hcur, hL, hdim, hnorm⟩
+  refine ⟨hrest, hjet, ?_, hrainich, hcur, hL, hdim, hnorm⟩
+  intro i j
+  exact D.carrier.J_basis_eq_actionEulerJet i j
+
 end LagrangianBackedCharacteristic
 
 end FullyFieldDerivedCharacteristic
