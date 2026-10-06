@@ -1495,6 +1495,44 @@ theorem principalStressFromF_eq_principalStress
     field_simp [ne_of_gt Real.pi_pos] <;>
     ring
 
+/-- Principal energy density is quadratic under common Maxwell-field amplitude scaling. -/
+theorem principalFieldEnergyDensity_scale
+    (c E B : ℝ) :
+    principalFieldEnergyDensity (c * E) (c * B) =
+      c^2 * principalFieldEnergyDensity E B := by
+  unfold principalFieldEnergyDensity
+  ring
+
+/-- The canonical mixed principal stress is linear in its scalar eigenvalue. -/
+theorem principalStress_scale
+    (c u : ℝ) (i j : Fin 4) :
+    principalStress (c * u) i j =
+      c * principalStress u i j := by
+  fin_cases i <;> fin_cases j <;>
+    simp [principalStress] <;> ring
+
+/-- Therefore Maxwell stress is quadratically forced by field amplitude:
+`T[cF]=c²T[F]`. -/
+theorem principalStressFromF_scale
+    (c E B : ℝ) (i j : Fin 4) :
+    principalStressFromF (c * E) (c * B) i j =
+      c^2 * principalStressFromF E B i j := by
+  rw [principalStressFromF_eq_principalStress,
+    principalStressFromF_eq_principalStress,
+    principalFieldEnergyDensity_scale,
+    principalStress_scale]
+
+/-- The relative Maxwell character is therefore exactly `e^{2s}` at stress level. -/
+theorem principalStressFromF_exp_scale
+    (s E B : ℝ) (i j : Fin 4) :
+    principalStressFromF (Real.exp s * E) (Real.exp s * B) i j =
+      Real.exp (2 * s) * principalStressFromF E B i j := by
+  rw [principalStressFromF_scale]
+  rw [show (Real.exp s)^2 = Real.exp (2 * s) by
+    rw [pow_two, ← Real.exp_add]
+    congr 1
+    ring]
+
 /-- The stress eigenvalue scale is exactly `χ/(16π)` because `χ=2(E²+B²)`. -/
 theorem principalFieldEnergyDensity_eq_chi
     (E B : ℝ) :
@@ -1725,6 +1763,100 @@ theorem principalScaledResidualFromF_deriv_zero
     deriv (principalScaledResidualFromF E B i j) 0 =
       principalJetFromF E B i j :=
   (principalScaledResidualFromF_hasDerivAt_zero E B i j).deriv
+
+/-! ### Relative carrier as an Einstein-Maxwell action Euler jet -/
+
+/-- Mixed Einstein tensor selected by the unscaled Einstein-Maxwell metric
+Euler-Lagrange equation for the explicit principal Maxwell field. -/
+def principalOnShellEinsteinFromF
+    (E B : ℝ) (i j : Fin 4) : ℝ :=
+  8 * Real.pi * principalStressFromF E B i j
+
+/-- Metric Euler-Lagrange coefficient of the same gravity tensor against the
+relatively scaled Maxwell field `F_s=e^s F`. -/
+def principalScaledMetricEulerCoeffFromAction
+    (E B : ℝ) (i j : Fin 4) (s : ℝ) : ℝ :=
+  principalEinsteinMaxwellMetricVariationCoeff
+    (principalOnShellEinsteinFromF E B)
+    (Real.exp s * E) (Real.exp s * B) i j
+
+/-- At relative rest the scaled action Euler coefficient vanishes exactly. -/
+@[simp] theorem principalScaledMetricEulerCoeffFromAction_zero
+    (E B : ℝ) (i j : Fin 4) :
+    principalScaledMetricEulerCoeffFromAction E B i j 0 = 0 := by
+  unfold principalScaledMetricEulerCoeffFromAction
+    principalOnShellEinsteinFromF
+  rw [principalEinsteinMaxwellMetricVariationCoeff_eq_zero_iff]
+  simp
+
+/-- The action-derived metric Euler coefficient is exactly the isolated
+Einstein-Maxwell relative residual times the nonzero action prefactor. -/
+theorem principalScaledMetricEulerCoeffFromAction_eq_residual
+    (E B : ℝ) (i j : Fin 4) (s : ℝ) :
+    principalScaledMetricEulerCoeffFromAction E B i j s =
+      (principalMetricSign i / (16 * Real.pi)) *
+        principalScaledResidualFromF E B i j s := by
+  unfold principalScaledMetricEulerCoeffFromAction
+    principalOnShellEinsteinFromF
+  rw [principalEinsteinMaxwellMetricVariationCoeff_factor,
+    principalStressFromF_exp_scale]
+  unfold principalScaledResidualFromF
+  ring
+
+/-- Thus the action Euler equation has the same unique nonzero-field fixed point,
+rather than merely sharing it by analogy. -/
+theorem principalScaledMetricEulerCoeffFromAction_00_zero_iff
+    (E B s : ℝ)
+    (hfield : E ≠ 0 ∨ B ≠ 0) :
+    principalScaledMetricEulerCoeffFromAction E B 0 0 s = 0 ↔
+      s = 0 := by
+  rw [principalScaledMetricEulerCoeffFromAction_eq_residual]
+  have hc : principalMetricSign (0 : Fin 4) / (16 * Real.pi) ≠ 0 := by
+    exact div_ne_zero (principalMetricSign_ne_zero 0)
+      (mul_ne_zero (by norm_num) (ne_of_gt Real.pi_pos))
+  constructor
+  · intro h
+    have hr : principalScaledResidualFromF E B 0 0 s = 0 :=
+      (mul_eq_zero.mp h).resolve_left hc
+    exact (principalScaledResidualFromF_00_zero_iff E B s hfield).mp hr
+  · intro hs
+    rw [hs]
+    simp
+
+/-- The first normal derivative of the action-derived Euler coefficient is
+the fixed-point carrier jet times the action normalization prefactor. -/
+theorem principalScaledMetricEulerCoeffFromAction_hasDerivAt_zero
+    (E B : ℝ) (i j : Fin 4) :
+    HasDerivAt
+      (principalScaledMetricEulerCoeffFromAction E B i j)
+      ((principalMetricSign i / (16 * Real.pi)) *
+        principalJetFromF E B i j) 0 := by
+  have hres := principalScaledResidualFromF_hasDerivAt_zero E B i j
+  have hmul := hres.const_mul
+    (principalMetricSign i / (16 * Real.pi))
+  have heq :
+      principalScaledMetricEulerCoeffFromAction E B i j =
+        fun s : ℝ =>
+          (principalMetricSign i / (16 * Real.pi)) *
+            principalScaledResidualFromF E B i j s := by
+    funext s
+    exact principalScaledMetricEulerCoeffFromAction_eq_residual E B i j s
+  rw [heq]
+  simpa [mul_comm, mul_left_comm, mul_assoc] using hmul
+
+/-- The carrier jet is therefore uniquely recoverable from the metric Euler jet;
+the conversion factor is fixed entirely by the Einstein-Hilbert normalization. -/
+theorem principalJetFromF_forced_from_actionEulerJet
+    (E B : ℝ) (i j : Fin 4) :
+    principalJetFromF E B i j =
+      (16 * Real.pi / principalMetricSign i) *
+        deriv (principalScaledMetricEulerCoeffFromAction E B i j) 0 := by
+  rw [(principalScaledMetricEulerCoeffFromAction_hasDerivAt_zero
+    E B i j).deriv]
+  have hi := principalMetricSign_ne_zero i
+  field_simp [hi, ne_of_gt Real.pi_pos]
+  ring
+
 
 
 /-- Consequently the fixed-point carrier jet is orientation-independent under
