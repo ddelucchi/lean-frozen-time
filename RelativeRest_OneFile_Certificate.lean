@@ -7368,8 +7368,11 @@ theorem principalStressResponse_formula
         (principalFutureFlux vol)
         (f • principalUhat) =
       f * principalFieldEnergyDensity E B * vol := by
-  unfold stressResponse
-  simp only [LinearMap.comp_apply, LinearMap.id_coe, id_eq]
+  change
+    principalFutureFlux vol
+      (principalStressLinearFromF E B
+        (f • principalUhat)) =
+      f * principalFieldEnergyDensity E B * vol
   rw [map_smul, principalStressLinearFromF_time_eigen]
   simp [principalFutureFlux, principalUhat, principalBasis]
   ring
