@@ -14057,8 +14057,7 @@ structure PrincipalActionSectorVariationCharacteristicInput where
     (L:=R2) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ))
   constraintFromActionLinearization :
     variation.constraint =
-      actionConstraintResponseLinear
-        (stressResponse LinearMap.id carrier.T carrier.iε)
+      actionConstraintResponseLinear carrier.actionEulerResponse
 
 /-- The common/even action direction is automatically on shell. -/
 theorem PrincipalActionSectorVariationCharacteristicInput.constraint_CA
@@ -14067,30 +14066,52 @@ theorem PrincipalActionSectorVariationCharacteristicInput.constraint_CA
   rw [D.constraintFromActionLinearization]
   exact actionConstraintResponseLinear_CA _
 
-/-- Gravity-sector response is derived from the single operator identity. -/
+/-- Gravity-sector response is derived from the single operator identity and is
+literally the response reconstructed from the action metric-Euler jet. -/
 theorem PrincipalActionSectorVariationCharacteristicInput.constraint_gravity
     (D : PrincipalActionSectorVariationCharacteristicInput (P:=P)) :
     D.variation.constraint actionGravitySector =
-      stressResponse LinearMap.id D.carrier.T D.carrier.iε := by
+      D.carrier.actionEulerResponse := by
   rw [D.constraintFromActionLinearization]
   exact actionConstraintResponseLinear_gravity _
 
-/-- Maxwell-sector response and its sign are likewise derived, not supplied. -/
+/-- The Maxwell action variation then identifies that action-Euler response with
+the explicit Maxwell stress response. -/
+theorem PrincipalActionSectorVariationCharacteristicInput.constraint_gravity_eq_stress
+    (D : PrincipalActionSectorVariationCharacteristicInput (P:=P)) :
+    D.variation.constraint actionGravitySector =
+      stressResponse LinearMap.id D.carrier.T D.carrier.iε := by
+  rw [D.constraint_gravity, D.carrier.actionEulerResponse_eq_stress]
+
+/-- Maxwell-sector response and its sign are likewise derived at the action-Euler level. -/
 theorem PrincipalActionSectorVariationCharacteristicInput.constraint_maxwell
     (D : PrincipalActionSectorVariationCharacteristicInput (P:=P)) :
     D.variation.constraint actionMaxwellSector =
-      -(stressResponse LinearMap.id D.carrier.T D.carrier.iε) := by
+      -D.carrier.actionEulerResponse := by
   rw [D.constraintFromActionLinearization]
   exact actionConstraintResponseLinear_maxwell _
 
-/-- The exchange-odd normal direction is exactly the universal `-2` stress response. -/
+theorem PrincipalActionSectorVariationCharacteristicInput.constraint_maxwell_eq_stress
+    (D : PrincipalActionSectorVariationCharacteristicInput (P:=P)) :
+    D.variation.constraint actionMaxwellSector =
+      -(stressResponse LinearMap.id D.carrier.T D.carrier.iε) := by
+  rw [D.constraint_maxwell, D.carrier.actionEulerResponse_eq_stress]
+
+/-- The exchange-odd normal direction is exactly the universal `-2` action-Euler
+response; the stress form is a derived corollary. -/
 theorem PrincipalActionSectorVariationCharacteristicInput.constraint_DA
+    (D : PrincipalActionSectorVariationCharacteristicInput (P:=P)) :
+    D.variation.constraint DA =
+      (-2 : ℝ) • D.carrier.actionEulerResponse := by
+  rw [D.constraintFromActionLinearization]
+  exact actionConstraintResponseLinear_DA _
+
+theorem PrincipalActionSectorVariationCharacteristicInput.constraint_DA_eq_stress
     (D : PrincipalActionSectorVariationCharacteristicInput (P:=P)) :
     D.variation.constraint DA =
       (-2 : ℝ) •
         stressResponse LinearMap.id D.carrier.T D.carrier.iε := by
-  rw [D.constraintFromActionLinearization]
-  exact actionConstraintResponseLinear_DA _
+  rw [D.constraint_DA, D.carrier.actionEulerResponse_eq_stress]
 
 /-- The reciprocal Lagrangian normal jet of the two sector basis vectors is literally DA. -/
 @[simp] theorem reciprocalLagrangianNormalJet_actionSectors :
@@ -14109,14 +14130,22 @@ def PrincipalActionSectorVariationCharacteristicInput.characteristicCurrent
     (D.variation.omegaXY DA + D.variation.dB DA)
 
 /-- First variation plus the single action-linearized constraint operator forces the
-current to be exactly the explicit Maxwell stress response. -/
+current to be exactly the action metric-Euler response. -/
+theorem principalActionSectorVariation_current_eq_actionEulerResponse
+    (D : PrincipalActionSectorVariationCharacteristicInput (P:=P)) :
+    D.characteristicCurrent = D.carrier.actionEulerResponse := by
+  unfold PrincipalActionSectorVariationCharacteristicInput.characteristicCurrent
+  rw [D.variation.compensated_eq_constraint, D.constraint_DA]
+  module
+
+/-- The explicit Maxwell action variation then converts that same current to the
+usual stress response. -/
 theorem principalActionSectorVariation_current_eq_stress
     (D : PrincipalActionSectorVariationCharacteristicInput (P:=P)) :
     D.characteristicCurrent =
       stressResponse LinearMap.id D.carrier.T D.carrier.iε := by
-  unfold PrincipalActionSectorVariationCharacteristicInput.characteristicCurrent
-  rw [D.variation.compensated_eq_constraint, D.constraint_DA]
-  module
+  rw [principalActionSectorVariation_current_eq_actionEulerResponse D,
+    D.carrier.actionEulerResponse_eq_stress]
 
 /-- Hence the variational current is the already-field-derived carrier current. -/
 theorem principalActionSectorVariation_current_eq_characteristicCurrent
@@ -14173,8 +14202,8 @@ theorem principalActionSectorVariation_forced_core_chain
           (if i = j then 1 else 0)) ∧
     D.variation.constraint CA = 0 ∧
     D.variation.constraint DA =
-      (-2 : ℝ) •
-        stressResponse LinearMap.id D.carrier.T D.carrier.iε ∧
+      (-2 : ℝ) • D.carrier.actionEulerResponse ∧
+    D.characteristicCurrent = D.carrier.actionEulerResponse ∧
     D.characteristicCurrent =
       D.carrier.toCharacteristicCurrentData.current ∧
     D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
@@ -14192,6 +14221,7 @@ theorem principalActionSectorVariation_forced_core_chain
     ⟨hrest, hjet, hrainich, _hrates, hclock⟩
   rcases hclock with ⟨hL, hdim, _hpull, hnorm⟩
   exact ⟨hrest, hjet, hrainich, D.constraint_CA, D.constraint_DA,
+    principalActionSectorVariation_current_eq_actionEulerResponse D,
     principalActionSectorVariation_current_eq_characteristicCurrent D,
     hL, hdim, hnorm⟩
 
