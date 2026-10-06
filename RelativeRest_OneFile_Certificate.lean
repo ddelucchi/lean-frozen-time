@@ -1523,6 +1523,67 @@ def principalMaxwellVolumeVariationCoeff
   (1 / (32 * Real.pi)) *
     principalMetricCov i j * principalMaxwellFsq E B
 
+/-- Directional derivative of the normalized volume density under the inverse-metric
+component variation `δg^{ij}`. -/
+def principalInverseMetricVolumeDerivative (i j : Fin 4) : ℝ :=
+  -(1 / 2 : ℝ) * principalMetricCov i j
+
+/-- Directional derivative of `F_ab F^ab` under the same inverse-metric component
+variation. The factor two is forced by the two inverse metrics raising the indices. -/
+def principalMaxwellFsqInverseMetricDerivative
+    (E B : ℝ) (i j : Fin 4) : ℝ :=
+  2 * principalMaxwellCovariantContraction E B i j
+
+/-- Literal one-parameter Maxwell-sector line through the displayed
+Einstein-Maxwell Lagrangian density for the inverse-metric component `ij`. -/
+def principalMaxwellLagrangianMetricLine
+    (E B : ℝ) (i j : Fin 4) (s : ℝ) : ℝ :=
+  einsteinMaxwellLagrangianDensity
+    (1 + s * principalInverseMetricVolumeDerivative i j)
+    0
+    (principalMaxwellFsq E B +
+      s * principalMaxwellFsqInverseMetricDerivative E B i j)
+
+/-- The actual directional derivative of the displayed Maxwell Lagrangian density
+is exactly the algebraic metric-variation coefficient used below. -/
+theorem principalMaxwellLagrangianMetricLine_hasDerivAt_zero
+    (E B : ℝ) (i j : Fin 4) :
+    HasDerivAt
+      (principalMaxwellLagrangianMetricLine E B i j)
+      (principalMaxwellInverseMetricVariationCoeff E B i j +
+        principalMaxwellVolumeVariationCoeff E B i j) 0 := by
+  have h := einsteinMaxwellLagrangianDensity_hasDerivAt_line_zero
+    1 0 (principalMaxwellFsq E B)
+    (principalInverseMetricVolumeDerivative i j)
+    0
+    (principalMaxwellFsqInverseMetricDerivative E B i j)
+  unfold principalMaxwellLagrangianMetricLine
+    principalInverseMetricVolumeDerivative
+    principalMaxwellFsqInverseMetricDerivative
+    principalMaxwellInverseMetricVariationCoeff
+    principalMaxwellVolumeVariationCoeff
+  convert h using 1 <;>
+    field_simp [ne_of_gt Real.pi_pos] <;> ring
+
+/-- Derivative form: the Maxwell metric Euler coefficient is literally the derivative
+of the displayed Lagrangian density along the inverse-metric component line. -/
+theorem principalMaxwellMetricVariationCoeff_eq_lagrangian_deriv
+    (E B : ℝ) (i j : Fin 4) :
+    principalMaxwellMetricVariationCoeff E B i j =
+      deriv (principalMaxwellLagrangianMetricLine E B i j) 0 := by
+  rw [(principalMaxwellLagrangianMetricLine_hasDerivAt_zero
+    E B i j).deriv]
+  rfl
+
+/-- Combining the literal density derivative with the explicit two-form calculation
+gives the stress coefficient directly from the Lagrangian. -/
+theorem principalMaxwellLagrangianMetricLine_deriv_eq_neg_half_stress
+    (E B : ℝ) (i j : Fin 4) :
+    deriv (principalMaxwellLagrangianMetricLine E B i j) 0 =
+      (-1 / 2 : ℝ) * principalStressCovFromF E B i j := by
+  rw [← principalMaxwellMetricVariationCoeff_eq_lagrangian_deriv,
+    principalMaxwellMetricVariationCoeff_eq_neg_half_stress]
+
 /-- Total algebraic coefficient of `δg^{ij}` in the Maxwell Lagrangian density,
 after factoring out the background volume density. -/
 def principalMaxwellMetricVariationCoeff
@@ -16478,6 +16539,12 @@ theorem scalar_backbone_from_einstein_maxwell
 #check einsteinMaxwellLagrangianDensity_decomposition
 #check einsteinMaxwellLagrangianDensity_hasDerivAt_line_zero
 #check einsteinMaxwellLagrangianDensity_line_deriv_zero
+#check principalInverseMetricVolumeDerivative
+#check principalMaxwellFsqInverseMetricDerivative
+#check principalMaxwellLagrangianMetricLine
+#check principalMaxwellLagrangianMetricLine_hasDerivAt_zero
+#check principalMaxwellMetricVariationCoeff_eq_lagrangian_deriv
+#check principalMaxwellLagrangianMetricLine_deriv_eq_neg_half_stress
 #check reciprocalLagrangian
 #check reciprocalLagrangian_exchange
 #check reciprocalLagrangianNormalJet
@@ -17073,6 +17140,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.scalar_backbone
 #print axioms RelativeRest.relativeAction_fixed_point_jet
 #print axioms RelativeRest.einsteinMaxwellLagrangianDensity_decomposition
+#print axioms RelativeRest.principalMaxwellLagrangianMetricLine_hasDerivAt_zero
+#print axioms RelativeRest.principalMaxwellLagrangianMetricLine_deriv_eq_neg_half_stress
 #print axioms RelativeRest.linearDescendant_reciprocal
 #print axioms RelativeRest.linearDescendant_normalJet_of_opposite
 #print axioms RelativeRest.linearDescendant_reciprocal_hasDerivAt_zero
