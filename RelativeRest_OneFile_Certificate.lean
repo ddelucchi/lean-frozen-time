@@ -1703,6 +1703,18 @@ theorem principalMaxwellPotential_first_variation
     principalMaxwellSymplecticPotentialDivergence
   ring
 
+/-- In particular a pure Gauss variation `δA=dλ` has identically zero
+bulk response on the source-free Maxwell shell.  This is the explicit local form
+of the manuscript statement that the pure Gauss response vanishes. -/
+theorem principalMaxwell_pureGauss_bulk_response_zero
+    (nablaF : Fin 4 → Fin 4 → ℝ)
+    (gradLambda : Fin 4 → ℝ)
+    (hMaxwell : ∀ b : Fin 4,
+      principalMaxwellPotentialEulerCoeff nablaF b = 0) :
+    principalMaxwellPotentialEulerDensity nablaF gradLambda = 0 := by
+  rw [principalMaxwellPotentialEulerDensity_eq_divergence_contraction]
+  simp [hMaxwell]
+
 /-- On shell, `∇_aF^{ab}=0`, the entire potential variation is the exact
 symplectic-potential divergence. -/
 theorem principalMaxwellPotential_onShell_first_variation
@@ -18358,6 +18370,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalMaxwellFsqVariationFromDeltaF_principal
 #print axioms RelativeRest.principalMaxwellPotentialLagrangianLine_hasDerivAt_zero
 #print axioms RelativeRest.principalMaxwellPotential_first_variation
+#print axioms RelativeRest.principalMaxwell_pureGauss_bulk_response_zero
 #print axioms RelativeRest.principalMaxwellPotential_onShell_first_variation
 #print axioms RelativeRest.principalMaxwellLagrangianMetricLine_hasDerivAt_zero
 #print axioms RelativeRest.principalMaxwellLagrangianMetricLine_deriv_eq_neg_half_stress
