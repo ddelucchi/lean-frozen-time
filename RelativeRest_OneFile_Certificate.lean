@@ -18921,7 +18921,7 @@ structure PaperActionLocalIFTArchitectureCertificate
      kerrVolumeDensity r a θ * kerrRaisedFthetaT Q r M a θ =
         kerrDensitizedFthetaT Q r a θ ∧
      kerrVolumeDensity r a θ * kerrRaisedFthetaPhi Q r M a θ =
-        kerrDensitizedFthetaPhi Q r M a θ ∧
+        kerrDensitizedFthetaPhi Q r a θ ∧
      deriv (fun x : ℝ => kerrDensitizedFrt Q x a θ) r +
         deriv (fun x : ℝ => kerrDensitizedFthetaT Q r a x) θ = 0 ∧
      deriv (fun x : ℝ => kerrDensitizedFrPhi Q x a θ) r +
