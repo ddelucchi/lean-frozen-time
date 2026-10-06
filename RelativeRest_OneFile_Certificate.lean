@@ -22,11 +22,20 @@ This file is intentionally adversarial about assumptions.
   higher-jet `r=0` stratum.
 * The action side is pushed back to explicit Einstein-Hilbert/Maxwell density pieces,
   explicit principal-frame metric variations, and the reciprocal two-sector Lagrangian.  The
-  Maxwell stress normalization is derived from the Maxwell action variation; the full metric
-  Euler coefficient factors by `G-8πT`; its relative normal derivative uniquely fixes the
-  carrier.  A first-variation/Cartan/Noether package then derives the Iyer-Wald operator
-  identity rather than assuming it, and the normalized two-sector constraint operator fixes
-  the compensated current, characteristic quotient, and principal clock line.
+  Maxwell stress coefficient is now the literal directional derivative of the displayed
+  Einstein-Maxwell density along an inverse-metric component line; the full metric Euler
+  coefficient factors by `G-8πT`.  Its first normal derivative reconstructs the carrier,
+  while its full finite-rapidity relative orbit reconstructs the reciprocal constraint
+  character.  A first-variation/Cartan/Noether package then derives the Iyer-Wald operator
+  identity rather than assuming it.  The strongest current interface needs only one geometric
+  compatibility statement: the Noether constraint descendant along the physical relative
+  orbit equals that explicit metric-Euler orbit.  From it the frozen value, surviving `-2`
+  jet, sector signs, entire two-sector constraint operator, compensated current,
+  characteristic quotient, and normalized principal clock line are all theorems.
+* A manuscript-wide structural certificate also bundles the already-proved uniqueness of
+  four-dimensional reciprocity, conformal normalization, residual boost balance,
+  action-to-optical identification and rapidity, transport/Frobenius closure, homogeneous
+  clock-cover/Reeb normalization, and relational evolution/gauge invariance.
 * The Kerr-Newman specialization now includes the full Christoffel/Ricci calculation: the
   metric-derived Einstein tensor is proved equal to `8πT[F]` for the potential-derived
   Maxwell field on the regular Carter chart.
