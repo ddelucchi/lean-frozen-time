@@ -1890,6 +1890,28 @@ theorem clock_rate_square
     have hs : ω^2 = χ := by rw [hω, Real.sq_sqrt hχ]
     nlinarith
 
+/-- Scalar model of the future-oriented Maxwell response used to prove that the
+characteristic clock covector cannot vanish. -/
+def maxwellPositiveResponse (f χ vol : ℝ) : ℝ :=
+  f * χ * vol / (16 * Real.pi)
+
+/-- Maxwell positivity forces a strictly positive response whenever the smearing,
+carrier magnitude, and oriented hypersurface density are positive. -/
+theorem maxwellPositiveResponse_pos
+    (f χ vol : ℝ)
+    (hf : 0 < f) (hχ : 0 < χ) (hvol : 0 < vol) :
+    0 < maxwellPositiveResponse f χ vol := by
+  unfold maxwellPositiveResponse
+  positivity
+
+/-- Hence the positivity witness used in characteristic descent is not a normalization choice:
+any positive nonzero Maxwell test profile supplies one. -/
+theorem maxwellPositiveResponse_ne_zero
+    (f χ vol : ℝ)
+    (hf : 0 < f) (hχ : 0 < χ) (hvol : 0 < vol) :
+    maxwellPositiveResponse f χ vol ≠ 0 :=
+  ne_of_gt (maxwellPositiveResponse_pos f χ vol hf hχ hvol)
+
 /-- Principal stress energy density fixes the same clock scale. -/
 theorem energy_density_clock_rate
     (χ ε ω : ℝ)
@@ -2033,6 +2055,47 @@ theorem radar_common_shift (θplus θminus C : ℝ) :
   unfold radarRadius
   ring
 
+
+/-! ### Causal endpoint value algebra -/
+
+/-- Abstract past endpoint used by the global causal-order construction. -/
+def pastEndpoint (S : Set ℝ) : ℝ := sSup S
+
+/-- Abstract future endpoint used by the global causal-order construction. -/
+def futureEndpoint (S : Set ℝ) : ℝ := sInf S
+
+/-- Enlargement of a nonempty bounded-above chronological past can only increase its endpoint. -/
+theorem pastEndpoint_mono
+    {S T : Set ℝ}
+    (hT : BddAbove T) (hS : S.Nonempty) (hST : S ⊆ T) :
+    pastEndpoint S ≤ pastEndpoint T := by
+  exact csSup_le_csSup hT hS hST
+
+/-- Shrinking a nonempty future set can only increase its infimum endpoint.
+This is the order-theoretic half of causal push-up for the future endpoint. -/
+theorem futureEndpoint_mono_of_reverse_inclusion
+    {S T : Set ℝ}
+    (hS : BddBelow S) (hT : T.Nonempty) (hTS : T ⊆ S) :
+    futureEndpoint S ≤ futureEndpoint T := by
+  exact csInf_le_csInf hS hT hTS
+
+/-- If causal push-up enlarges the past set and shrinks the future set, both null endpoints
+are monotone and therefore so is their exchange-even radar midpoint. -/
+theorem causal_radar_clock_mono
+    {P₁ P₂ F₁ F₂ : Set ℝ}
+    (hP₂bdd : BddAbove P₂) (hP₁ne : P₁.Nonempty)
+    (hP : P₁ ⊆ P₂)
+    (hF₁bdd : BddBelow F₁) (hF₂ne : F₂.Nonempty)
+    (hF : F₂ ⊆ F₁) :
+    radarTime (futureEndpoint F₁) (pastEndpoint P₁) ≤
+      radarTime (futureEndpoint F₂) (pastEndpoint P₂) := by
+  have hp : pastEndpoint P₁ ≤ pastEndpoint P₂ :=
+    pastEndpoint_mono hP₂bdd hP₁ne hP
+  have hf : futureEndpoint F₁ ≤ futureEndpoint F₂ :=
+    futureEndpoint_mono_of_reverse_inclusion hF₁bdd hF₂ne hF
+  unfold radarTime
+  linarith
+
 /-- Algebraic certificate of the paper's radial-jet statement: coincident endpoint
 values have zero odd radar defect, while their principal half-difference is the
 nonzero radial covector `R_O`. -/
@@ -2164,6 +2227,11 @@ theorem synchronization_total_closed
 /-- Standard clock-cover symplectic form on `(Θ,κ)` tangent vectors. -/
 def clockOmega (v w : R2) : ℝ := v.2 * w.1 - v.1 * w.2
 
+
+/-- Canonical Poisson pairing on clock-cover coordinate differentials. -/
+def clockPoisson (df dg : R2) : ℝ :=
+  df.1 * dg.2 - df.2 * dg.1
+
 /-- Coordinate tangent vectors. -/
 def dThetaVec : R2 := (1,0)
 def dKappaVec : R2 := (0,1)
@@ -2172,6 +2240,13 @@ def dKappaVec : R2 := (0,1)
     clockOmega dKappaVec dThetaVec = 1 ∧
     clockOmega dThetaVec dKappaVec = -1 := by
   norm_num [clockOmega, dThetaVec, dKappaVec]
+
+
+/-- The homogeneous clock variables are a canonical conjugate pair. -/
+@[simp] theorem clockPoisson_coordinates :
+    clockPoisson dThetaVec dKappaVec = 1 ∧
+    clockPoisson dKappaVec dThetaVec = -1 := by
+  norm_num [clockPoisson, dThetaVec, dKappaVec]
 
 
 /-- Euler/common-scale vector on the positive clock cover. -/
@@ -2559,6 +2634,12 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check pastEndpoint_mono
+#check futureEndpoint_mono_of_reverse_inclusion
+#check causal_radar_clock_mono
+#check maxwellPositiveResponse_pos
+#check maxwellPositiveResponse_ne_zero
+#check clockPoisson_coordinates
 #check principalStress_chi_from_trace
 #check carrier_chi_eq_sqrt_ricci_norm
 #check RO_ne_zero
