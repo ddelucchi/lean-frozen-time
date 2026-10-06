@@ -4903,6 +4903,97 @@ def carterOmega (r a : ℝ) : ℝ :=
 def carterNumerator (r a : ℝ) : R2 :=
   (r^2 + a^2, a)
 
+
+/-- Stationary `(t,φ)` quadratic form read directly from the square-form
+Kerr-Newman metric. -/
+def kerrStationaryNormSq
+    (r M a Q θ : ℝ) (v : R2) : ℝ :=
+  -(Delta r M a Q / Sigma r a θ) *
+      (v.1 - a * (Real.sin θ)^2 * v.2)^2
+    + ((Real.sin θ)^2 / Sigma r a θ) *
+      (a * v.1 - (r^2 + a^2) * v.2)^2
+
+/-- The first Carter stationary combination collapses exactly to `Σ`. -/
+theorem carterNumerator_time_leg (r a θ : ℝ) :
+    (carterNumerator r a).1 -
+        a * (Real.sin θ)^2 * (carterNumerator r a).2 =
+      Sigma r a θ := by
+  unfold carterNumerator
+  have htrig : 1 - (Real.sin θ)^2 = (Real.cos θ)^2 := by
+    nlinarith [Real.sin_sq_add_cos_sq θ]
+  calc
+    r^2 + a^2 - a * (Real.sin θ)^2 * a
+        = r^2 + a^2 * (1 - (Real.sin θ)^2) := by ring
+    _ = r^2 + a^2 * (Real.cos θ)^2 := by rw [htrig]
+    _ = Sigma r a θ := rfl
+
+/-- The orthogonal stationary square-form combination vanishes on the Carter direction. -/
+theorem carterNumerator_axial_leg (r a : ℝ) :
+    a * (carterNumerator r a).1 -
+        (r^2 + a^2) * (carterNumerator r a).2 = 0 := by
+  unfold carterNumerator
+  ring
+
+/-- The stationary quadratic form is homogeneous of degree two. -/
+theorem kerrStationaryNormSq_smul
+    (r M a Q θ c : ℝ) (v : R2) :
+    kerrStationaryNormSq r M a Q θ (c • v) =
+      c^2 * kerrStationaryNormSq r M a Q θ v := by
+  rcases v with ⟨vt, vphi⟩
+  simp [kerrStationaryNormSq, pow_two]
+  ring
+
+/-- The unnormalized Carter stationary vector has norm exactly `-ΣΔ`. -/
+theorem carterNumerator_norm
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0) :
+    kerrStationaryNormSq r M a Q θ (carterNumerator r a) =
+      - Sigma r a θ * Delta r M a Q := by
+  unfold kerrStationaryNormSq
+  rw [carterNumerator_time_leg r a θ,
+    carterNumerator_axial_leg r a]
+  simp
+  field_simp [hsig]
+  ring
+
+/-- Metric-normalized Carter observer in the stationary plane. -/
+def carterObserver
+    (r M a Q θ : ℝ) : R2 :=
+  (Real.sqrt (Sigma r a θ * Delta r M a Q))⁻¹ •
+    carterNumerator r a
+
+/-- In the regular exterior sector `Σ>0, Δ>0`, the Carter observer is unit timelike
+for the Kerr-Newman metric. -/
+theorem carterObserver_unit_timelike
+    (r M a Q θ : ℝ)
+    (hsig : 0 < Sigma r a θ)
+    (hdel : 0 < Delta r M a Q) :
+    kerrStationaryNormSq r M a Q θ
+      (carterObserver r M a Q θ) = -1 := by
+  rw [carterObserver, kerrStationaryNormSq_smul,
+    carterNumerator_norm r M a Q θ (ne_of_gt hsig)]
+  have hp : 0 < Sigma r a θ * Delta r M a Q :=
+    mul_pos hsig hdel
+  have hs :
+      (Real.sqrt (Sigma r a θ * Delta r M a Q))^2 =
+        Sigma r a θ * Delta r M a Q :=
+    Real.sq_sqrt (le_of_lt hp)
+  have hs0 :
+      Real.sqrt (Sigma r a θ * Delta r M a Q) ≠ 0 :=
+    ne_of_gt (Real.sqrt_pos.2 hp)
+  have hc :
+      (Real.sqrt (Sigma r a θ * Delta r M a Q))⁻¹ ^ 2 *
+        (Sigma r a θ * Delta r M a Q) = 1 := by
+    rw [← hs]
+    field_simp [hs0]
+  calc
+    (Real.sqrt (Sigma r a θ * Delta r M a Q))⁻¹ ^ 2 *
+        (-Sigma r a θ * Delta r M a Q)
+        =
+      -((Real.sqrt (Sigma r a θ * Delta r M a Q))⁻¹ ^ 2 *
+        (Sigma r a θ * Delta r M a Q)) := by ring
+    _ = -1 := by rw [hc]
+
 /-- The Carter numerator is exactly the stationary direction with angular velocity
 `Ω_C=a/(r²+a²)`, multiplied by its forced normalization factor. -/
 theorem carterNumerator_factorization
@@ -5213,6 +5304,11 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check carterNumerator_time_leg
+#check carterNumerator_axial_leg
+#check kerrStationaryNormSq_smul
+#check carterNumerator_norm
+#check carterObserver_unit_timelike
 #check Sigma_hasDerivAt_theta
 #check kerrPotentialT_hasDerivAt_r
 #check kerrPotentialPhi_hasDerivAt_r
@@ -5596,4 +5692,5 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrMinoClockFromPrincipalEM
 #print axioms RelativeRest.kerrPotential_field_factorization
 #print axioms RelativeRest.kerr_relative_rest_carter_certificate
+#print axioms RelativeRest.carterObserver_unit_timelike
 #print axioms RelativeRest.kerr_regular_first_or_second_radial_jet_resolves
