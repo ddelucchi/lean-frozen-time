@@ -103,3 +103,5 @@ jobs:
         if: steps.verify.outcome != 'success'
         shell: bash
         run: exit 1
+
+# compile probe: current forced-chain certificate
