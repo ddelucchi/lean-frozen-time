@@ -15171,6 +15171,19 @@ def PrincipalCarrierCharacteristicInput.metricEulerJetResponse
   halfCarrierBulkCurrent LinearMap.id
     (principalActionEulerJetLinear D.E D.B) D.iε
 
+/-- The metric-Euler jet response is exactly negative one half of the
+hypersurface integral of the literal action-derived Noether bulk current. -/
+theorem PrincipalCarrierCharacteristicInput.metricEulerJetResponse_eq_neg_half_noetherIntegral
+    (D : PrincipalCarrierCharacteristicInput (P:=P)) :
+    D.metricEulerJetResponse =
+      (-1 / 2 : ℝ) •
+        (D.iε.comp (principalMetricEulerNoetherJetLinear D.E D.B)) := by
+  unfold PrincipalCarrierCharacteristicInput.metricEulerJetResponse
+    halfCarrierBulkCurrent
+  rw [carrierBulkResponse_actionEuler_eq_metricNoether]
+  ext v
+  simp
+
 /-- Characteristic response reconstructed from the action metric-Euler jet itself.
 `J` is uniquely fixed by the derivatives of `principalScaledMetricEulerCoeffFromAction`,
 so this definition contains no independent stress normalization. -/
@@ -15215,6 +15228,19 @@ def PrincipalCarrierCharacteristicInput.metricEulerRelativeOrbitResponse
     (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
   carrierBulkResponse LinearMap.id
     (principalMetricEulerRelativeLinear D.E D.B s) D.iε
+
+/-- The finite metric-Euler orbit response is literally the hypersurface
+integral of the action-derived `2E^a{}_b(s)` Noether bulk current. -/
+theorem PrincipalCarrierCharacteristicInput.metricEulerRelativeOrbitResponse_eq_noetherIntegral
+    (D : PrincipalCarrierCharacteristicInput (P:=P)) (s : ℝ) :
+    D.metricEulerRelativeOrbitResponse s =
+      D.iε.comp
+        (principalMetricEulerNoetherRelativeLinear D.E D.B s) := by
+  unfold PrincipalCarrierCharacteristicInput.metricEulerRelativeOrbitResponse
+    carrierBulkResponse
+  rw [carrierJetCurrent_metricEulerRelative_eq_metricNoetherRelative]
+  ext v
+  simp
 
 /-- The full action-Euler orbit response is the reciprocal character multiplying
 the fixed metric-Euler jet response. -/
@@ -18647,6 +18673,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.carrierJetCurrent_actionEuler_eq_metricNoether
 #print axioms RelativeRest.carrierJetCurrent_metricEulerRelative_eq_metricNoetherRelative
 #print axioms RelativeRest.carrierBulkResponse_actionEuler_eq_metricNoether
+#print axioms RelativeRest.PrincipalCarrierCharacteristicInput.metricEulerJetResponse_eq_neg_half_noetherIntegral
+#print axioms RelativeRest.PrincipalCarrierCharacteristicInput.metricEulerRelativeOrbitResponse_eq_noetherIntegral
 #print axioms RelativeRest.principalDiffeomorphismNoether_decomposition
 #print axioms RelativeRest.principalGeneralizedBianchi_forced_by_diffeomorphism_invariance
 #print axioms RelativeRest.principalMetricEulerDivergence_zero_of_generalizedBianchi_onMaxwellShell
