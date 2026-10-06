@@ -1,4 +1,4 @@
-import RelativeRest_DeepPass36
+import RelativeRest_DeepPass37
 
 /-!
 # Referee-facing axiom audit
@@ -134,3 +134,7 @@ headline formal statements.  There are no project-local axiom declarations in th
 #print axioms RelativeRest.emJetEndomorphism_selfadjoint
 #print axioms RelativeRest.emNormalizedJet_selfadjoint
 #print axioms RelativeRest.emPrincipalPlanes_orthogonal
+
+#print axioms RelativeRest.relationalObservable_origin_invariant
+#print axioms RelativeRest.relationalObservable_gauge_invariant
+#print axioms RelativeRest.relational_complete_observable_certificate
