@@ -1565,25 +1565,6 @@ theorem principalMaxwellLagrangianMetricLine_hasDerivAt_zero
   convert h using 1 <;>
     field_simp [ne_of_gt Real.pi_pos] <;> ring
 
-/-- Derivative form: the Maxwell metric Euler coefficient is literally the derivative
-of the displayed Lagrangian density along the inverse-metric component line. -/
-theorem principalMaxwellMetricVariationCoeff_eq_lagrangian_deriv
-    (E B : ℝ) (i j : Fin 4) :
-    principalMaxwellMetricVariationCoeff E B i j =
-      deriv (principalMaxwellLagrangianMetricLine E B i j) 0 := by
-  rw [(principalMaxwellLagrangianMetricLine_hasDerivAt_zero
-    E B i j).deriv]
-  rfl
-
-/-- Combining the literal density derivative with the explicit two-form calculation
-gives the stress coefficient directly from the Lagrangian. -/
-theorem principalMaxwellLagrangianMetricLine_deriv_eq_neg_half_stress
-    (E B : ℝ) (i j : Fin 4) :
-    deriv (principalMaxwellLagrangianMetricLine E B i j) 0 =
-      (-1 / 2 : ℝ) * principalStressCovFromF E B i j := by
-  rw [← principalMaxwellMetricVariationCoeff_eq_lagrangian_deriv,
-    principalMaxwellMetricVariationCoeff_eq_neg_half_stress]
-
 /-- Total algebraic coefficient of `δg^{ij}` in the Maxwell Lagrangian density,
 after factoring out the background volume density. -/
 def principalMaxwellMetricVariationCoeff
@@ -1624,6 +1605,26 @@ theorem principalMaxwellMetricVariationCoeff_eq_neg_half_stress
       principalMaxwellFsq_eq_maxwellI, maxwellI] <;>
     field_simp [ne_of_gt Real.pi_pos] <;>
     ring
+
+
+/-- Derivative form: the Maxwell metric Euler coefficient is literally the derivative
+of the displayed Lagrangian density along the inverse-metric component line. -/
+theorem principalMaxwellMetricVariationCoeff_eq_lagrangian_deriv
+    (E B : ℝ) (i j : Fin 4) :
+    principalMaxwellMetricVariationCoeff E B i j =
+      deriv (principalMaxwellLagrangianMetricLine E B i j) 0 := by
+  rw [(principalMaxwellLagrangianMetricLine_hasDerivAt_zero
+    E B i j).deriv]
+  rfl
+
+/-- Combining the literal density derivative with the explicit two-form calculation
+gives the stress coefficient directly from the Lagrangian. -/
+theorem principalMaxwellLagrangianMetricLine_deriv_eq_neg_half_stress
+    (E B : ℝ) (i j : Fin 4) :
+    deriv (principalMaxwellLagrangianMetricLine E B i j) 0 =
+      (-1 / 2 : ℝ) * principalStressCovFromF E B i j := by
+  rw [← principalMaxwellMetricVariationCoeff_eq_lagrangian_deriv,
+    principalMaxwellMetricVariationCoeff_eq_neg_half_stress]
 
 
 /-- Einstein-Hilbert metric-variation coefficient in mixed-index form after
