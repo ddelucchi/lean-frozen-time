@@ -5357,6 +5357,87 @@ theorem null_pair_closure_iff
 
 /-! ### Minimal Synge endpoint interface and forced optical closure -/
 
+/-- Minimal first-jet Synge data at the two null endpoints.  The endpoint covectors
+`dΘ_±`, their linearized equations, and their nullness are *not* input data.  The
+only geometric facts retained are: the world function vanishes at each endpoint,
+its Hamilton-Jacobi identity holds there, and the endpoint derivative is nonzero so
+the implicit endpoint is regular. -/
+structure SyngeEndpointJetData where
+  sigmaPlus : ℝ
+  sigmaMinus : ℝ
+  sigmaXPlus : W
+  sigmaXMinus : W
+  sigmaThetaPlus : ℝ
+  sigmaThetaMinus : ℝ
+  endpointPlus : sigmaPlus = 0
+  endpointMinus : sigmaMinus = 0
+  worldEikonalPlus :
+    bil B sigmaXPlus sigmaXPlus = 2 * sigmaPlus
+  worldEikonalMinus :
+    bil B sigmaXMinus sigmaXMinus = 2 * sigmaMinus
+  sigmaThetaPlus_ne : sigmaThetaPlus ≠ 0
+  sigmaThetaMinus_ne : sigmaThetaMinus ≠ 0
+
+/-- The implicit-function theorem can only produce this endpoint covector. -/
+def SyngeEndpointJetData.dThetaPlus
+    (D : SyngeEndpointJetData B) : W :=
+  (-D.sigmaThetaPlus⁻¹) • D.sigmaXPlus
+
+def SyngeEndpointJetData.dThetaMinus
+    (D : SyngeEndpointJetData B) : W :=
+  (-D.sigmaThetaMinus⁻¹) • D.sigmaXMinus
+
+/-- The constructed future endpoint covector solves the differentiated endpoint equation. -/
+theorem SyngeEndpointJetData.linearizedPlus
+    (D : SyngeEndpointJetData B) :
+    D.sigmaXPlus +
+      D.sigmaThetaPlus • D.dThetaPlus = 0 := by
+  unfold SyngeEndpointJetData.dThetaPlus
+  rw [smul_smul]
+  have hcoef :
+      D.sigmaThetaPlus * (-D.sigmaThetaPlus⁻¹) = -1 := by
+    field_simp [D.sigmaThetaPlus_ne]
+  rw [hcoef, neg_one_smul, add_neg_cancel]
+
+/-- The constructed past endpoint covector solves the differentiated endpoint equation. -/
+theorem SyngeEndpointJetData.linearizedMinus
+    (D : SyngeEndpointJetData B) :
+    D.sigmaXMinus +
+      D.sigmaThetaMinus • D.dThetaMinus = 0 := by
+  unfold SyngeEndpointJetData.dThetaMinus
+  rw [smul_smul]
+  have hcoef :
+      D.sigmaThetaMinus * (-D.sigmaThetaMinus⁻¹) = -1 := by
+    field_simp [D.sigmaThetaMinus_ne]
+  rw [hcoef, neg_one_smul, add_neg_cancel]
+
+/-- Synge's Hamilton-Jacobi identity plus the null endpoint condition forces the
+world-function covector itself to be null. -/
+theorem SyngeEndpointJetData.sigmaXPlus_null
+    (D : SyngeEndpointJetData B) :
+    bil B D.sigmaXPlus D.sigmaXPlus = 0 := by
+  rw [D.worldEikonalPlus, D.endpointPlus]
+  ring
+
+theorem SyngeEndpointJetData.sigmaXMinus_null
+    (D : SyngeEndpointJetData B) :
+    bil B D.sigmaXMinus D.sigmaXMinus = 0 := by
+  rw [D.worldEikonalMinus, D.endpointMinus]
+  ring
+
+/-- Therefore both implicit endpoint covectors are forced null eikonals. -/
+theorem SyngeEndpointJetData.endpoint_eikonals_null
+    (D : SyngeEndpointJetData B) :
+    bil B D.dThetaPlus D.dThetaPlus = 0 ∧
+    bil B D.dThetaMinus D.dThetaMinus = 0 := by
+  constructor
+  · exact implicit_endpoint_covector_null
+      B D.sigmaXPlus D.dThetaPlus D.sigmaThetaPlus
+      D.sigmaThetaPlus_ne D.linearizedPlus D.sigmaXPlus_null
+  · exact implicit_endpoint_covector_null
+      B D.sigmaXMinus D.dThetaMinus D.sigmaThetaMinus
+      D.sigmaThetaMinus_ne D.linearizedMinus D.sigmaXMinus_null
+
 /-- Exchange-even midpoint of two endpoint covectors. -/
 def endpointMidpointCovector (dPlus dMinus : W) : W :=
   (1 / 2 : ℝ) • (dPlus + dMinus)
@@ -5446,6 +5527,51 @@ theorem NullEndpointPairData.optical_closure
     exact hp
   · rw [hrm]
     exact hm
+
+
+/-- The older endpoint-pair interface is canonically reconstructed from the minimal
+Synge world-function jet data. -/
+def SyngeEndpointJetData.toNullEndpointPairData
+    (D : SyngeEndpointJetData B) :
+    NullEndpointPairData B where
+  sigmaXPlus := D.sigmaXPlus
+  sigmaXMinus := D.sigmaXMinus
+  dThetaPlus := D.dThetaPlus
+  dThetaMinus := D.dThetaMinus
+  sigmaThetaPlus := D.sigmaThetaPlus
+  sigmaThetaMinus := D.sigmaThetaMinus
+  sigmaThetaPlus_ne := D.sigmaThetaPlus_ne
+  sigmaThetaMinus_ne := D.sigmaThetaMinus_ne
+  linearizedPlus := D.linearizedPlus
+  linearizedMinus := D.linearizedMinus
+  sigmaXPlus_null := D.sigmaXPlus_null
+  sigmaXMinus_null := D.sigmaXMinus_null
+
+/-- Radar clock covector constructed directly from the minimal Synge jet. -/
+def SyngeEndpointJetData.clockCovector
+    (D : SyngeEndpointJetData B) : W :=
+  endpointMidpointCovector D.dThetaPlus D.dThetaMinus
+
+/-- Radar radial covector constructed directly from the same minimal Synge jet. -/
+def SyngeEndpointJetData.radialCovector
+    (D : SyngeEndpointJetData B) : W :=
+  endpointRadialCovector D.dThetaPlus D.dThetaMinus
+
+/-- The complete optical closure is forced directly from the world-function endpoint
+condition, Synge Hamilton-Jacobi identity, and regular implicit endpoint derivative. -/
+theorem SyngeEndpointJetData.optical_closure
+    (D : SyngeEndpointJetData B)
+    (hsym : ∀ x y, bil B x y = bil B y x) :
+    bil B D.clockCovector D.radialCovector = 0 ∧
+    -(bil B D.clockCovector D.clockCovector) =
+      bil B D.radialCovector D.radialCovector := by
+  have h :=
+    D.toNullEndpointPairData.optical_closure hsym
+  simpa [SyngeEndpointJetData.clockCovector,
+    SyngeEndpointJetData.radialCovector,
+    NullEndpointPairData.clockCovector,
+    NullEndpointPairData.radialCovector,
+    SyngeEndpointJetData.toNullEndpointPairData] using h
 
 /-- Thus the optical lapse norm is not independent endpoint data: the two norms are the
 same scalar with opposite sign. -/
@@ -7829,6 +7955,12 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check SyngeEndpointJetData.linearizedPlus
+#check SyngeEndpointJetData.linearizedMinus
+#check SyngeEndpointJetData.sigmaXPlus_null
+#check SyngeEndpointJetData.endpoint_eikonals_null
+#check SyngeEndpointJetData.toNullEndpointPairData
+#check SyngeEndpointJetData.optical_closure
 #check principalStressLinearFromF_apply
 #check principalStressLinearFromF_time_eigen
 #check principalStressResponse_formula
@@ -8327,6 +8459,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.implicit_endpoint_covector_null
 #print axioms RelativeRest.NullEndpointPairData.endpoint_eikonals_null
 #print axioms RelativeRest.NullEndpointPairData.optical_closure
+#print axioms RelativeRest.SyngeEndpointJetData.endpoint_eikonals_null
+#print axioms RelativeRest.SyngeEndpointJetData.optical_closure
 #print axioms RelativeRest.opticalMetric2_inverse
 #print axioms RelativeRest.opticalMetric2_lapse_form
 #print axioms RelativeRest.clockAccumulation_hasDerivAt
