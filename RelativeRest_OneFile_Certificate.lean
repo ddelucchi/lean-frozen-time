@@ -2384,6 +2384,96 @@ noncomputable def clockQuotientDualEquiv
 
 end LinearDescent
 
+/-! ### Bilinear/presymplectic descent through a characteristic quotient -/
+
+section BilinearDescent
+
+variable {V : Type*} [AddCommGroup V] [Module ℝ V]
+
+/-- If a bilinear form annihilates a characteristic subspace in both slots, it descends
+canonically to the quotient. -/
+def quotientBilinearForm
+    (B : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (p : Submodule ℝ V)
+    (hleft : p ≤ LinearMap.ker B)
+    (hright : p ≤ LinearMap.ker B.flip) :
+    (V ⧸ p) →ₗ[ℝ] (V ⧸ p) →ₗ[ℝ] ℝ :=
+  B.liftQ₂ p p hleft hright
+
+/-- Pulling the descended form back to representatives recovers the original form exactly. -/
+@[simp] theorem quotientBilinearForm_mk
+    (B : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (p : Submodule ℝ V)
+    (hleft : p ≤ LinearMap.ker B)
+    (hright : p ≤ LinearMap.ker B.flip)
+    (x y : V) :
+    quotientBilinearForm B p hleft hright
+      (Submodule.Quotient.mk x) (Submodule.Quotient.mk y) =
+      B x y := by
+  rfl
+
+/-- A bilinear form on the quotient is uniquely determined by its pullback on representatives. -/
+theorem quotientBilinearForm_unique
+    (p : Submodule ℝ V)
+    (B₁ B₂ : (V ⧸ p) →ₗ[ℝ] (V ⧸ p) →ₗ[ℝ] ℝ)
+    (h :
+      ∀ x y : V,
+        B₁ (Submodule.Quotient.mk x) (Submodule.Quotient.mk y) =
+          B₂ (Submodule.Quotient.mk x) (Submodule.Quotient.mk y)) :
+    B₁ = B₂ := by
+  ext x y
+  refine Submodule.Quotient.induction_on x ?_
+  intro vx
+  refine Submodule.Quotient.induction_on y ?_
+  intro vy
+  exact h vx vy
+
+/-- Skew-symmetry survives characteristic descent. -/
+theorem quotientBilinearForm_skew
+    (B : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (p : Submodule ℝ V)
+    (hleft : p ≤ LinearMap.ker B)
+    (hright : p ≤ LinearMap.ker B.flip)
+    (hskew : ∀ x y : V, B x y = - B y x) :
+    ∀ x y : V ⧸ p,
+      quotientBilinearForm B p hleft hright x y =
+        - quotientBilinearForm B p hleft hright y x := by
+  intro x y
+  refine Submodule.Quotient.induction_on x ?_
+  intro vx
+  refine Submodule.Quotient.induction_on y ?_
+  intro vy
+  simpa using hskew vx vy
+
+/-- If a skew form annihilates the characteristic subspace in the first slot, the second
+radical condition is automatic. -/
+theorem skew_right_radical_of_left
+    (B : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (p : Submodule ℝ V)
+    (hskew : ∀ x y : V, B x y = - B y x)
+    (hleft : p ≤ LinearMap.ker B) :
+    p ≤ LinearMap.ker B.flip := by
+  intro z hz
+  apply LinearMap.ext
+  intro x
+  have hz0 : B z x = 0 := by
+    have hzker := hleft hz
+    exact LinearMap.congr_fun hzker x
+  simp [LinearMap.flip_apply, hskew x z, hz0]
+
+/-- Hence a skew presymplectic form descends as soon as the characteristic directions
+lie in its kernel. -/
+def skewQuotientBilinearForm
+    (B : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (p : Submodule ℝ V)
+    (hskew : ∀ x y : V, B x y = - B y x)
+    (hchar : p ≤ LinearMap.ker B) :
+    (V ⧸ p) →ₗ[ℝ] (V ⧸ p) →ₗ[ℝ] ℝ :=
+  quotientBilinearForm B p hchar
+    (skew_right_radical_of_left B p hskew hchar)
+
+end BilinearDescent
+
 /-! ## 10. One-dimensional covector-preserving identification -/
 
 section OneDimensional
@@ -3973,6 +4063,12 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check quotientBilinearForm
+#check quotientBilinearForm_mk
+#check quotientBilinearForm_unique
+#check quotientBilinearForm_skew
+#check skew_right_radical_of_left
+#check skewQuotientBilinearForm
 #check covectorScaleMap
 #check covectorScaleMap_bijective
 #check normalizedCovectorDualEquiv
@@ -4243,6 +4339,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.reeb_direction_unique
 #print axioms RelativeRest.clock_section_reeb_existsUnique
 #print axioms RelativeRest.clockQuotientDualEquiv
+#print axioms RelativeRest.quotientBilinearForm_unique
 #print axioms RelativeRest.causal_extended_endpoints_mono
 #print axioms RelativeRest.kerrLogChi_hasDerivAt_r
 #print axioms RelativeRest.kerrNewman_mino_clock_forced
