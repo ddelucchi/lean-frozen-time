@@ -1,0 +1,659 @@
+\documentclass[aps,prl,reprint]{revtex4-2}
+
+\usepackage{amsmath,amssymb,mathtools,bm,mathrsfs}
+\usepackage[nopatch=footnote]{microtype}
+\setlength{\emergencystretch}{1em}
+\usepackage[hidelinks]{hyperref}
+
+\newcommand{\EM}{\mathrm{EM}}
+\newcommand{\dd}{\mathrm d}
+\newcommand{\Lie}{\mathcal L}
+\newcommand{\cK}{\mathcal K}
+\newcommand{\Aff}{\operatorname{Aff}}
+\newcommand{\spanop}{\operatorname{span}}
+
+\begin{document}
+
+\title{Relative Rest as the Resolution of Frozen Time in Einstein--Maxwell Theory}
+
+\author{Daxx W. Delucchi}
+\email{ddelucch@asu.edu}
+\affiliation{Department of Physics, Arizona State University, Tempe, Arizona 85287, USA}
+
+\begin{abstract}
+Generally covariant dynamics appears frozen because Hamiltonian constraints vanish. We show that four-dimensional Einstein--Maxwell theory carries an intrinsic clock within this frozen structure. At a unique relative fixed point, a vanishing defect leaves a nonzero normal derivative, $\mathfrak J=-16\pi T^{\EM}=-2R$. The same tensor fixes frame and chronometry, descends to a unique characteristic clock, and is realized by null exchange. Its rate is $d\Theta/d\tau=(R_{ab}R^{ab})^{1/4}$. The frozen zero therefore retains the temporal structure required for relational evolution.
+\end{abstract}
+
+\maketitle
+
+\textit{Relative rest---}Take two marked points of a finite body. The statement that the body is at rest and the statement that the two points are at rest relative to one another are not the same. Two points may move together without making the body an absolute frame against which the rest of the world must move. Under a motion carried equally by both points, their mutual configuration may remain fixed even though neither point is fixed. The common motion disappears from the comparison, while the tangent generating it survives. Relative rest is therefore a statement about what disappears from a comparison, not necessarily about what vanishes in the underlying motion.
+
+Nothing in this argument depends on the points being material objects. What matters is only that two structures can be compared, that exchange reverses their difference, and that there is a state at which this difference vanishes. At that state the comparison is zero. Its variation need not be. The question is therefore not whether something disappears at relative rest, but what survives the disappearance.
+
+The frozen-formalism problem in generally covariant dynamics has the same architecture. Hamiltonian constraints vanish while their characteristic flow is gauge, so evolution must be read relationally \cite{Rovelli,Dittrich,Anderson,Isham}. Standard constructions supply a clock or reference system \cite{BrownKuchar,HoehnVanrietvelde}; intrinsic-coordinate constructions choose spacetime scalars \cite{PonsSalisbury}. We ask the converse: does the vanishing itself leave enough structure to recover a clock? In Einstein--Maxwell theory it does. The relative comparison of the action sectors has a unique fixed point, yet its normal survives as a physical tensor. We follow that survivor until no independent temporal choice remains.
+
+\textit{One fixed point, one carrier---}To isolate what disappears, allow gravity and electromagnetism to scale independently. Begin with the Einstein--Maxwell action
+\begin{equation}
+S_{\EM}[g,A]=\frac{1}{16\pi}\int_{\mathcal M}
+\left(R-F_{ab}F^{ab}\right)\epsilon_g,
+\qquad F=\dd A .
+\label{eq:action}
+\end{equation}
+Vary the two sectors off shell by $(g,A)\mapsto(\rho^2g,\lambda A)$ with $\rho,\lambda>0$. Four dimensions are singled out by this scaling: only there do the relative weights become reciprocal. The homogeneous characters are $\Xi_G=\rho^2$ and $\Xi_M=\lambda^2$. Their common positive scale carries no relative information. Factoring it separates a common scale $\kappa$ from the single relative coordinate $s$:
+\begin{equation}
+\begin{aligned}
+\kappa&=\sqrt{\Xi_G\Xi_M}=\rho\lambda,\\
+s&=\frac12\log\frac{\Xi_M}{\Xi_G}=\log\frac{\lambda}{\rho},\\
+(\Xi_G,\Xi_M)&=\kappa(e^{-s},e^s),\qquad
+\delta_{\EM}=\tanh s .
+\end{aligned}
+\label{eq:characters}
+\end{equation}
+The reciprocal normalization in Eq.~\eqref{eq:characters} fixes the relative coordinate up to exchange orientation: exchange sends $s\mapsto-s$, with unique interior fixed point $s=0$.
+
+A kinematic fixed point would not suffice. The field equations select the same point. Constant metric rescaling leaves $G_{ab}$ unchanged, whereas the electromagnetic stress tensor acquires the relative weight $e^{2s}$. Hence, on nonvacuum electrovac,
+\begin{equation}
+G_{ab}=8\pi T^{\EM}_{ab}
+\Longrightarrow
+G_{ab}-8\pi e^{2s}T^{\EM}_{ab}=0
+\iff s=0 .
+\label{eq:fixed}
+\end{equation}
+The exchange fixed point is therefore also the unique relative rescaling that remains a solution. To ask what survives its vanishing, remove the common character and form the normal defect:
+\begin{align}
+\begin{aligned}
+\widehat{\mathcal R}_{ab}(s)
+&=e^{-s}\!\left(G_{ab}-8\pi e^{2s}T^{\EM}_{ab}\right)\\
+&=-16\pi\sinh s\,T^{\EM}_{ab} .
+\end{aligned}
+\label{eq:defect}
+\end{align}
+At the fixed point the odd defect vanishes; its normal derivative does not:
+\begin{equation}
+\begin{aligned}
+\widehat{\mathcal R}_{ab}(0)&=0,\\
+\mathfrak J_{ab}
+:=\left.\partial_s\widehat{\mathcal R}_{ab}\right|_0
+&=-16\pi T^{\EM}_{ab}=-2R_{ab}.
+\end{aligned}
+\label{eq:jet}
+\end{equation}
+The pattern persists: every even normal derivative vanishes, while every odd derivative lies on the single line $\mathbb R\mathfrak J$. With $\eta_{ab}=R_{ab}$,
+\begin{equation}
+\begin{aligned}
+\mathfrak C_{ab}&=2\cosh s\,\eta_{ab},\qquad
+\mathfrak D_{ab}=-2\sinh s\,\eta_{ab},\\
+-\mathfrak D/\mathfrak C&=\tanh s .
+\end{aligned}
+\label{eq:evenodd}
+\end{equation}
+Thus the fixed point erases the exchange-odd value, not the structure generating it: $\mathfrak D(0)=0$ while $-\mathfrak D'(0)=\mathfrak C(0)\neq0$. Its surviving normal derivative is simultaneously electromagnetic stress and spacetime curvature.
+
+\textit{The carrier fixes spacetime---}Before asking what geometry $\mathfrak J$ determines, notice what the comparison already contains. The reciprocal action weights furnish the defining two-dimensional boost representation. Let $V_A=\spanop\{E_G,E_M\}$, with
+\begin{equation}
+\begin{gathered}
+Y_AE_G=-E_G,\qquad Y_AE_M=E_M,\\
+C_A=E_G+E_M,\qquad D_A=-E_G+E_M.
+\end{gathered}
+\label{eq:actionmodule}
+\end{equation}
+Then $Y_AC_A=D_A$, $Y_AD_A=C_A$, and $Y_A^2=I$, so
+\begin{equation}
+e^{sY_A}C_A=\cosh s\,C_A+\sinh s\,D_A .
+\label{eq:actionboost}
+\end{equation}
+The boost algebra therefore precedes any spacetime observer; the field equations make its odd direction physical by sending $D_A$ to $\mathfrak J$.
+
+What geometry does this survivor determine? On the non-null electromagnetic sector, Rainich algebra answers:
+\begin{equation}
+\mathfrak J^a{}_c\mathfrak J^c{}_b
+=\frac14\left(\mathfrak J_{cd}\mathfrak J^{cd}\right)\delta^a{}_b .
+\label{eq:rainich}
+\end{equation}
+Its invariant magnitude normalizes the corresponding endomorphism,
+\begin{equation}
+\chi=\frac12\sqrt{\mathfrak J_{ab}\mathfrak J^{ab}}
+=\sqrt{R_{ab}R^{ab}},
+\qquad
+\mathsf S=\chi^{-1}g^{-1}\mathfrak J.
+\label{eq:chiS}
+\end{equation}
+Hence $\mathsf S^2=I$: $\mathfrak J$ splits spacetime into two principal planes. Maxwell energy positivity selects the Lorentzian $+1$ eigenspace $\Pi_L$ \cite{MisnerWheeler,WittenRainich}; its null lines determine a normalized principal pair up to one residual boost $(k,l)\mapsto(e^{-\sigma}k,e^{\sigma}l)$.
+
+One freedom remains inside $\Pi_L$: the boost of its null dyad. The same carrier removes it. Common Einstein--Maxwell scaling sends $\chi\mapsto\rho^{-2}\chi$, so $p=P_L\dd\log\chi$ is invariant. Where $p^2\neq0$, write $q_-=p(k)$ and $q_+=p(l)$. The exchange-odd boost defect
+\begin{equation}
+\Delta_p(\sigma)=e^{-2\sigma}q_-^2-e^{2\sigma}q_+^2
+\label{eq:boostdefect}
+\end{equation}
+is strictly monotone. There can therefore be only one balance,
+$\sigma_*=(1/2)\log|q_-/q_+|$. The balanced dyad $(k_*,l_*)$ is independent of the starting boost and fixes $u_*=(k_*+l_*)/\sqrt2$. If $p$ does not resolve the residual stabilizer, the same test continues through the jet tower: the first finite jet that breaks it fixes the frame; if none does, the surviving boost is an exact symmetry of the full fixed-point jet. What remains is determined geometry or genuine fixed-point isotropy, never an unrecorded observer choice.
+
+One freedom remains: conformal scale. Again the carrier supplies what the null geometry lacks. Common-scale invariance makes the conformal factor proportional to $\chi$; requiring the carrier to become a unit involution fixes the proportionality:
+\begin{equation}
+\widehat g=\chi g,
+\qquad
+(\widehat g^{-1}\mathfrak J)^2=I,
+\qquad
+\widehat u_*=\chi^{-1/2}u_* .
+\label{eq:ghat}
+\end{equation}
+Thus the tensor that selects the principal plane also fixes its chronometric normalization: the fixed-point jet supplies exactly the conformal scale left undetermined by the null geometry.
+
+\textit{One boost, one rapidity---}The action coefficients and reconstructed spacetime now carry normalized boost structures. Identifying them must introduce no new choice. On the optical side let
+$V_O=\spanop\{T_O,R_O\}$ with
+$T_O=-\widehat u_*^\flat$, $R_O=\widehat e_*^\flat$, and
+$B_OT_O=R_O$, $B_OR_O=T_O$. Let exchange act by $J_AC_A=C_A$, $J_AD_A=-D_A$ and $J_OT_O=T_O$, $J_OR_O=-R_O$. The fixed-point residual already fixes the odd identification: $D_A$ is sent to $\mathfrak J$; exchange parity selects the odd optical line reconstructed by $\mathfrak J$, and the $\widehat g$-unit normalization fixes its covector to $R_O$. Hence $\mathcal I_\Phi D_A=R_O$. Compatibility with the normalized boost generators then forces $\mathcal I_\Phi C_A=B_OR_O=T_O$. No multiplicative freedom remains, and hence
+\begin{equation}
+\mathcal I_\Phi C_A=T_O,
+\qquad
+\mathcal I_\Phi D_A=R_O .
+\label{eq:map}
+\end{equation}
+On these already-normalized bases, $D_A=Y_AC_A$ and $R_O=B_OT_O$, so $\mathcal I_\Phi J_A=J_O\mathcal I_\Phi$ and the normalized generators intertwine on a basis:
+\begin{equation}
+\mathcal I_\Phi Y_A=B_O\mathcal I_\Phi,
+\qquad
+\mathcal I_\Phi e^{sY_A}=e^{sB_O}\mathcal I_\Phi .
+\label{eq:intertwiner}
+\end{equation}
+No independent optical map, and hence no independent optical parameter, remains: the action parameter is physical rapidity, $\sigma=s$ up to simultaneous exchange $s,\sigma\mapsto-s,-\sigma$.
+
+The comparison coordinate has become physical rapidity. For
+$\widehat u_s=\cosh s\,\widehat u_*+\sinh s\,\widehat e_*$, the principal null covectors carry $\nu_+=e^s$ and $\nu_-=e^{-s}$. Hence
+\begin{equation}
+\begin{aligned}
+\frac{\Xi_M}{\Xi_G}&=\frac{\nu_+}{\nu_-}=e^{2s},\\
+\delta_{\EM}
+&=\frac{\Xi_M-\Xi_G}{\Xi_M+\Xi_G}
+=\frac{\nu_+-\nu_-}{\nu_++\nu_-}
+=\tanh s\equiv v_{\rm rel}.
+\end{aligned}
+\label{eq:masterratio}
+\end{equation}
+Relative rest is now an identity, not an analogy:
+$\Xi_G=\Xi_M\iff\nu_+=\nu_-\iff v_{\rm rel}=0$.
+The action balance and optical rest are not merely corresponding notions; they are the same fixed point seen through two descendants of $\mathfrak J$.
+
+\textit{The carrier survives freezing---}The decisive test is whether the carrier survives canonical freezing. Let $Y=\partial_s|_u$ and $D=\partial_u|_s$ be the action-fixed relative and common-scale variations, and let $X_{\boldsymbol\xi}$ denote the bulk diffeomorphism-plus-Gauss characteristic variation on multiplier-reduced ADM--Maxwell phase space. With $\boldsymbol\omega_{\rm IW}$ the covariant symplectic-current three-form, keep the Iyer--Wald identity before hypersurface integration \cite{IyerWald}:
+\begin{equation}
+\begin{aligned}
+\mathcal B_Y[\boldsymbol\xi]
+&:=\delta_YQ_{\boldsymbol\xi}
+-\iota_\xi\theta(Y),\\
+\mathcal W_Y[\boldsymbol\xi]
+&:=\boldsymbol\omega_{\rm IW}
+(X_{\boldsymbol\xi},Y)
++\dd\mathcal B_Y[\boldsymbol\xi]\\
+&=-2\,\epsilon_a\xi^bT^{\EM\,a}{}_b
+=\frac{1}{8\pi}\epsilon_a
+\mathfrak J^a{}_b\xi^b,\\
+\mathcal W_Y[\boldsymbol\xi](x)
+&=w_{Y,x}(\xi_x),\qquad
+w_{Y,x}(v):=
+\frac{1}{8\pi}\iota_{\mathfrak J(v)}\epsilon,\\
+\Omega_{\rm can}^{\rm bulk}
+(X_{\boldsymbol\xi},Y)
+&=\int_\Sigma\mathcal W_Y[\boldsymbol\xi]
+=-2\ell_\Phi(\boldsymbol\xi),\\
+\ell_\Phi(\boldsymbol\xi)
+&=\int_\Sigma
+\epsilon_a\xi^bT^{\EM\,a}{}_b .
+\end{aligned}
+\label{eq:bridge}
+\end{equation}
+Equation~\eqref{eq:bridge} is already boundary separated: $\mathcal B_Y$ carries the surface term, while the compensated current $\mathcal W_Y$ is fixed pointwise by $\mathfrak J$. Thus asymptotic or horizon charges remain separate, while the clock descendant comes from the bulk stress response $\int_\Sigma\mathcal W_Y=-2\ell_\Phi$; the pure Gauss response vanishes. The same equation gives the descendant pointwise as $w_{Y,x}$ and after hypersurface integration as $\ell_\Phi$. At the integrated level it depends only on the characteristic variation. Set $\cK_\Phi:=\operatorname{im}\beta_\Phi$, with $\beta_\Phi(\boldsymbol\xi)=X_{\boldsymbol\xi}(\Phi)$. With $(\iota_Y\Omega)(X)=\Omega(Y,X)$, the factorization is
+\begin{equation}
+\ell_\Phi
+=\beta_\Phi^*\!\left(\frac12\,\iota_Y\Omega_{\rm can}^{\rm bulk}\big|_{\cK_\Phi}\right).
+\label{eq:Lambdafactor}
+\end{equation}
+Because $\beta_\Phi$ is onto $\cK_\Phi$, its pullback on covectors is injective. Equation~\eqref{eq:Lambda} is therefore the unique covector on $\cK_\Phi$ whose pullback is $\ell_\Phi$:
+\begin{equation}
+\begin{aligned}
+\Lambda_\Phi
+&=\frac12\,\iota_Y\Omega_{\rm can}^{\rm bulk}\big|_{\cK_\Phi},
+&\beta_\Phi^*\Lambda_\Phi&=\ell_\Phi,\\
+\Lambda_\Phi(X_{\boldsymbol\xi})
+&=-\frac12\Omega_{\rm can}^{\rm bulk}(X_{\boldsymbol\xi},Y).
+\end{aligned}
+\label{eq:Lambda}
+\end{equation}
+The kernel inclusion is automatic: a parameter producing no characteristic variation produces no stress response. Injectivity also forbids changing $\Lambda_\Phi$ without changing $\ell_\Phi$. One possibility remains: the unique descendant could vanish. Maxwell positivity excludes it. On the non-null Maxwell stratum, $\mathsf S^2=I$, $\chi>0$, and a future timelike $u\in\Pi_L$ obeys $T^{\EM a}{}_bu^b=-(\chi/16\pi)u^a$. For nonzero $f\ge0$ supported where $\chi>0$, $\ell_\Phi(fu)=-(16\pi)^{-1}\int_\Sigma f\chi\,\epsilon_a u^a>0$ in the future orientation. Thus $\ell_\Phi\neq0$, hence $\Lambda_\Phi\neq0$. A nonzero real covector has codimension-one kernel, so the stress-visible characteristic quotient is not chosen to be one-dimensional; it must be
+$\mathcal L_\Phi:=\cK_\Phi/\ker\Lambda_\Phi\simeq\operatorname{im}\Lambda_\Phi=\mathbb R$.
+Only one dimension remains. The quotient map $\pi_\Phi:\cK_\Phi\to\mathcal L_\Phi$ therefore induces a unique $\lambda_\Phi\in\mathcal L_\Phi^*$ with $\pi_\Phi^*\lambda_\Phi=\Lambda_\Phi$. Every one-form on a one-dimensional quotient is closed, so $\lambda_\Phi=\dd\Theta_\Phi$ locally. Thus
+\begin{equation}
+\pi_\Phi^*\dd\Theta_\Phi
+=\Lambda_\Phi
+=\frac12\,\iota_Y\Omega_{\rm can}^{\rm bulk}\big|_{\cK_\Phi},
+\qquad
+[\Theta_\Phi]\in C^\infty(\mathcal L_\Phi)/\mathbb R .
+\label{eq:clockdescent}
+\end{equation}
+The fixed-point normal survives freezing twice: it fixes the surviving line and the covector that measures displacement along it. Because the reciprocal characters normalize $Y=\partial_s$, neither $\Lambda_\Phi$ nor $\dd\Theta_\Phi$ can be independently rescaled. Only the origin of $\Theta_\Phi$ remains free.
+
+The contact structure adds no new choice; it is already contained in the same relative homogeneity. Define
+\begin{equation}
+\Omega_+=\Omega_G+\Omega_M,
+\qquad
+\Omega_-=\tfrac12\Lie_Y\Omega_+,
+\qquad
+\vartheta_{\rm rel}=\iota_D\Omega_-,
+\label{eq:omega}
+\end{equation}
+so that $\Lie_D\Omega_-=\Omega_-$ and
+$\dd\vartheta_{\rm rel}=\Omega_-$. The reciprocal sector weights give, for $X\in\cK$,
+$\vartheta_{\rm rel}(X)=\Omega_-(D,X)=-\tfrac12\Omega_{\rm can}^{\rm bulk}(X,Y)=\Lambda(X)$; hence $\vartheta_{\rm rel}|_{\cK}=\Lambda$. The Iyer--Wald covector is therefore independently the homogeneous Liouville primitive. On the connected regular stratum, constant characteristic rank makes the characteristic foliation locally simple, and this primitive is basic on its leaves; it therefore descends uniquely. Here $Q$ is the local positive common-scale quotient of the descended exact homogeneous cover, $C_Q$ its induced canonical contact distribution, and $N_\Phi$ the intrinsic one-dimensional relative scale-normal space, namely the quotient of the two-sector scale algebra by the tangent to the solution-preserving diagonal. Exact characteristic descent followed by the positive common-scale quotient gives
+\begin{equation}
+T_\Phi Q/C_{Q,\Phi}
+\simeq\cK_\Phi/\ker\Lambda_\Phi,
+\qquad
+N_\Phi\simeq(T_\Phi Q/C_{Q,\Phi})^* .
+\label{eq:contact}
+\end{equation}
+The reduction adds no structure: the relative normal that produced $\mathfrak J$ has become the transverse contact line of the frozen theory.
+
+\textit{One line, one clock---}The same Iyer--Wald descendant is now normalized before integration and matched to its integrated characteristic quotient:
+\begin{equation}
+\begin{gathered}
+K:=R_{ab}R^{ab},\qquad
+\omega:=K^{1/4}=\sqrt{\chi},\qquad
+u_*:=\omega\widehat u_*,\\
+H_x:=u_*^\perp,\qquad
+\epsilon_H:=\iota_{u_*}\epsilon,\qquad
+T_O:=-\widehat u_*^\flat .
+\end{gathered}
+\label{eq:localdata}
+\end{equation}
+Since $\mathfrak J_{ab}$ is symmetric and
+$\mathfrak J^a{}_bu_*^b=\chi u_*^a$, every
+$v\in T_xM$ has a unique decomposition
+\begin{equation}
+\mathfrak J^a{}_bv^b
+=
+\omega\,T_O(v)\,u_*^a+w^a,
+\qquad
+w\in H_x .
+\label{eq:Jdecomposition}
+\end{equation}
+Restricting the pointwise response $w_{Y,x}$ of Eq.~\eqref{eq:bridge} to the principal rest three-plane gives
+\begin{equation}
+\left.w_{Y,x}(v)\right|_{H_x}
+=
+\frac{\omega}{8\pi}
+T_O(v)\,\epsilon_H,
+\qquad
+\left.w_{Y,x}(\widehat u_*)\right|_{H_x}
+=
+\frac{\omega}{8\pi}\epsilon_H .
+\label{eq:localIW}
+\end{equation}
+Since $\chi>0$, the second three-form in Eq.~\eqref{eq:localIW} is nonzero, so there is a unique scalar $\lambda_x(v)$ such that
+\begin{equation}
+\left.w_{Y,x}(v)\right|_{H_x}
+=
+\lambda_x(v)
+\left.w_{Y,x}(\widehat u_*)\right|_{H_x}.
+\label{eq:lambdalocaldef}
+\end{equation}
+Then
+\begin{equation}
+\lambda_x
+=
+T_O
+=
+-\widehat u_*^\flat,
+\qquad
+\lambda_x(\widehat u_*)=1,
+\qquad
+\ker\lambda_x=H_x .
+\label{eq:lambdalocal}
+\end{equation}
+Thus the local stress-visible parameter quotient and its $\mathfrak J$-selected lift are
+\begin{equation}
+\begin{aligned}
+\mathcal L_x^{\rm loc}
+&:=T_xM/\ker\lambda_x
+=T_xM/H_x,\\
+\bar\lambda_x([v])
+&:=\lambda_x(v),\\
+s_x:\mathcal L_x^{\rm loc}
+&\longrightarrow\mathbb R\widehat u_*(x),
+\qquad
+s_x([v])
+=\bar\lambda_x([v])\widehat u_* .
+\end{aligned}
+\label{eq:locallift}
+\end{equation}
+Because $v-\lambda_x(v)\widehat u_*\in\ker\lambda_x$, $s_x$ inverts the quotient map on the principal timelike line.
+
+The identification creates neither covector. The integrated Iyer--Wald factorization has already fixed $\dd\Theta_\Phi$, while the unintegrated pointwise response has independently fixed $\bar\lambda_x=T_O=-\widehat u_*^\flat$. Both descend from the same pre-integration current $\mathcal W_Y$. Since each descended covector is nonzero on a one-dimensional carrier, both are isomorphisms to $\mathbb R$; compatibility therefore forces the unique map:
+\begin{equation}
+\begin{aligned}
+\mathscr I_{\Phi,x}:
+\mathcal L_\Phi
+&\longrightarrow
+\mathcal L_x^{\rm loc},\\
+\mathscr I_{\Phi,x}(X)
+&:=
+\dd\Theta_\Phi(X)\,[\widehat u_*],\\
+\mathscr I_{\Phi,x}^{\,*}\bar\lambda_x
+&=\dd\Theta_\Phi .
+\end{aligned}
+\label{eq:clockiso}
+\end{equation}
+Equivalently, $\mathscr I_{\Phi,x}=\bar\lambda_x^{-1}\circ\dd\Theta_\Phi$. The common Iyer--Wald origin fixes the two covectors to be matched; one-dimensionality leaves no residual identification freedom. Let $X_*$ be the unique positive element with $\dd\Theta_\Phi(X_*)=1$. Then
+\begin{equation}
+\begin{aligned}
+\dd\Theta_\Phi(X_*)&=1,\\
+\mathscr I_{\Phi,x}(X_*)&=[\widehat u_*],\\
+(s_x\circ\mathscr I_{\Phi,x})(X_*)&=\widehat u_* .
+\end{aligned}
+\label{eq:normalizationbridge}
+\end{equation}
+Thus the unit element selected by the integrated characteristic covector has the $\mathfrak J$-normalized unit timelike vector $\widehat u_*$ as its unique local representative, with no inversion of the hypersurface integral and no additional scale. Let $\Theta$ denote the transported local representative of $\Theta_\Phi$ determined by $s_x\circ\mathscr I_{\Phi,x}$. Along every integral curve of $\widehat u_*$, $\widehat u_*^a\nabla_a\Theta=1$; since $\widehat u_*$ is unit timelike for $\widehat g$, this parameter is the proper time of the chronometric metric:
+\begin{equation}
+\begin{aligned}
+\left.\dd\Theta\right|_{\mathbb R\widehat u_*}
+&=\dd\widehat\tau=\omega\,\dd\tau,
+\qquad\widehat u_*\Theta=1,\\
+\omega&=K^{1/4}=4\sqrt{\pi\varepsilon_{\EM}},\\
+\omega&=\left[(F_{ab}F^{ab})^2+
+(F_{ab}{}^\star F^{ab})^2\right]^{1/4},
+\end{aligned}
+\label{eq:clock}
+\end{equation}
+where $\varepsilon_{\EM}:=T^{\EM}_{ab}u_*^au_*^b$. Thus the normalization is fixed twice without an independent choice: the unintegrated Iyer--Wald descendant gives $\lambda_x=-\widehat u_*^\flat$, while its integrated characteristic descendant gives $\dd\Theta_\Phi$. Equation~\eqref{eq:clockiso} uniquely preserves these two fixed covectors. The local clock is therefore the proper time of $\widehat g$; its rate is simultaneously the fourth root of the Ricci norm, the square root of the principal electromagnetic energy density, and the invariant magnitude of the Maxwell field.
+
+The restriction in Eq.~\eqref{eq:clock} matters: it fixes $\dd\Theta$ on the one-dimensional clock line; null exchange below supplies its exact spacetime synchronization.
+
+\textit{The comparison closes---}The clock is fixed. Its relational reading requires only two null signals in the chronometric geometry. Along an integral curve of $\widehat u_*$, emission and reception events $\tau_\pm(x)$ give
+\begin{equation}
+\begin{aligned}
+\Theta_\pm(x)&=\int_{\tau_0}^{\tau_\pm(x)}
+(R_{ab}R^{ab})^{1/4}\dd\tau,\\
+\mathcal T_{\EM}&=\frac{\Theta_++\Theta_-}{2},\qquad
+\mathcal R_{\EM}=\frac{\Theta_+-\Theta_-}{2}.
+\end{aligned}
+\label{eq:radarclock}
+\end{equation}
+Exchange leaves no further combination to choose: its even projection is the clock midpoint and its odd projection the radial defect. Although $\widehat u_*\Theta=1$ admits representatives differing by first integrals, the optical construction reduces this freedom on each connected clock line to a common shift, $\Theta_\pm\mapsto\Theta_\pm+C$. Hence $\mathcal T_{\EM}\mapsto\mathcal T_{\EM}+C$ while $\mathcal R_{\EM}$ is unchanged. Only the origin remains conventional. On the generating orbit,
+\begin{equation}
+\mathcal R_{\EM}|_\gamma=0,
+\qquad
+\dd^{\rm pr}\mathcal R_{\EM}|_\gamma
+=\widehat e_*^\flat\neq0 .
+\label{eq:radialjet}
+\end{equation}
+The opening pattern returns: on the generating worldline the relative quantity vanishes while its first derivative survives. Because the two boost modules are already identified,
+\begin{equation}
+\frac{\dd^{\rm pr}\mathcal R_{\EM}(\widehat u_s)}
+{\dd^{\rm pr}\mathcal T_{\EM}(\widehat u_s)}
+=-\frac{\mathfrak D}{\mathfrak C}=\tanh s .
+\label{eq:defectvelocity}
+\end{equation}
+The relative Euler defect is therefore the relational optical velocity: the action comparison has become operational.
+
+The closure goes further. The same chronometric normalization already fixes the local optical covector,
+\begin{equation}
+\begin{aligned}
+T_O&=-\widehat u_*^\flat=-\omega u_*^\flat,\\
+\widehat g^{ab}T_{Oa}T_{Ob}
+&=-1,\qquad
+g^{ab}T_{Oa}T_{Ob}
+=-\omega^2=-\sqrt K,\\
+\dd T_O&=-\dd(\omega u_*^\flat),\\
+h_a{}^ch_b{}^d(\dd T_O)_{cd}&=-2\omega\varpi_{ab},\\
+u_*^ah_b{}^c(\dd T_O)_{ac}
+&=-\omega\!\left(a_b+\frac14D_b\log K\right).
+\end{aligned}
+\label{eq:clocktransport}
+\end{equation}
+The clock therefore carries its own transport law: vorticity is its purely spatial curvature, while acceleration relative to the gradient of its invariant rate supplies the mixed part.
+
+On the regular non-null stratum, these also give the complete local integrability conditions: $T_O$ is locally exact iff
+$\varpi_{ab}=0$ and $a_b=-\tfrac14D_b\log K$, while the weaker Frobenius condition
+$T_O\wedge\dd T_O=0$ requires only $\varpi_{ab}=0$.
+
+Null exchange now synchronizes this local standard without adding another. Since $\Theta_\pm=\mathcal T_{\EM}\pm\mathcal R_{\EM}$ are null eikonals of $\widehat g$, their sum and difference give
+\begin{equation}
+\begin{aligned}
+\widehat g^{-1}(\dd\mathcal T_{\EM},\dd\mathcal R_{\EM})&=0,\\
+-\widehat g^{-1}(\dd\mathcal T_{\EM},\dd\mathcal T_{\EM})
+&=\widehat g^{-1}(\dd\mathcal R_{\EM},\dd\mathcal R_{\EM})
+=:N_{\rm opt}^{-2},\\
+\widehat g_{(2)}
+&=N_{\rm opt}^{2}
+\left(-\dd\mathcal T_{\EM}^{2}
++\dd\mathcal R_{\EM}^{2}\right).
+\end{aligned}
+\label{eq:opticalclosure}
+\end{equation}
+The even and odd descendants form an orthogonal Hamilton--Jacobi pair of equal and opposite norm. The same endpoints supply what $T_O$ does not itself synchronize:
+\begin{equation}
+\begin{aligned}
+\dd\mathcal T_{\EM}
+&=T_O+\beta=-\omega u_*^\flat+\beta,
+&\dd\beta&=-\dd T_O=\dd(\omega u_*^\flat),\\
+\beta^{\rm pr}|_\gamma&=0 .
+\end{aligned}
+\label{eq:synchronization}
+\end{equation}
+Thus $\beta$ is not an added synchronization field but the forced difference between the locally normalized chronometric covector and its exact null-synchronized extension.
+
+Null exchange therefore cancels the intrinsic anholonomy, $\dd T_O+\dd\beta=0$, without requiring $T_O$ itself to be exact.
+
+The homogeneous reduction closes the same normalization without a new choice. On the positive clock cover, one-homogeneity in the already-fixed common character uniquely extends $\dd\Theta$ to the clock-cover one-form. Since $\vartheta_{\rm rel}=\iota_D\Omega_-$, the descended clock-cover primitive inherits $\iota_D\vartheta_{\rm clk}=0$; together with $\Lie_D\vartheta_{\rm clk}=\vartheta_{\rm clk}$ and $\vartheta_{\rm clk}|_{\kappa=1}=\dd\Theta$, this leaves no alternative to $\vartheta_{\rm clk}=\kappa\,\dd\Theta$:
+\begin{equation}
+\begin{aligned}
+\mathscr R_\Theta&=X_*,
+&\vartheta_{\rm clk}&=\kappa\,\dd\Theta,\\
+\omega_{\rm clk}&=\dd\kappa\wedge\dd\Theta,
+&\{\Theta,\kappa\}_{\rm clk}&=1 .
+\end{aligned}
+\label{eq:clockcover}
+\end{equation}
+The relative character has therefore descended to the normalized clock direction, while the common character supplies its homogeneous canonical partner. No new structure is added: the spacetime, optical, and homogeneous descendants close on the same one-dimensional clock.
+
+Relational evolution now follows on the reduced clock phase space. There $X_*=\mathscr R_\Theta$ is unique and obeys $X_*\mathcal T_{\EM}=1$, so any smooth reduced function evolves with respect to this clock by
+\begin{equation}
+\mathcal O_F^{\EM}(\vartheta)
+=F\circ\Phi^{X_*}_{\vartheta-\mathcal T_{\EM}},
+\qquad
+\partial_\vartheta\mathcal O_F^{\EM}
+=\mathcal O_{X_*F}^{\EM}.
+\label{eq:relevolution}
+\end{equation}
+The constraint remains zero and its flow remains gauge; the fixed point supplies the intrinsic parameter that turns that same characteristic flow into relational evolution.
+
+\textit{Discussion---}We began with a comparison in which common motion disappears but its tangent survives. Einstein--Maxwell theory realizes the same architecture. Its relative fixed point is frozen, yet its normal survives as $\mathfrak J$ and fixes the spacetime frame, characteristic line, chronometric differential, transport, and null geometry extending the local standard. No independent temporal normalization is added: relative rest erases the value, not the differential structure required for evolution.
+
+Only now specialize to Kerr--Newman. Equations~\eqref{eq:chiS} and \eqref{eq:boostdefect} have already fixed the principal frame, and Eq.~\eqref{eq:clock} the clock, before $\Sigma$ or $\Delta$ appears; no Kerr frame or parametrization is chosen anew. With
+\[
+\Sigma=r^2+a^2\cos^2\theta,\qquad
+\Delta=r^2-2Mr+a^2+Q^2,
+\]
+the electrovac Ricci norm is \(K=4Q^4/\Sigma^4\), so
+\[
+\chi=\frac{2Q^2}{\Sigma^2},
+\qquad
+P_L\dd\log\chi=-\frac{4r}{\Sigma}\,\dd r .
+\]
+Here the boost-fixing covector is purely radial in the Kerr--Newman principal plane. Equation~\eqref{eq:boostdefect} then makes its balance equivalent to $p(u_*)=0$, selecting the unique zero-radial-boost principal observer,
+\[
+u_*=u_C
+=\frac{(r^2+a^2)\partial_t+a\partial_\phi}
+{\sqrt{\Sigma\Delta}},
+\qquad
+\Omega_C=\frac{a}{r^2+a^2},
+\]
+the Carter observer of the canonical separability frame \cite{CarterKN,CarterSep}. Carter is therefore not imposed by a separability ansatz; it is the Kerr--Newman value of the frame already derived from the fixed-point carrier. Since Eq.~\eqref{eq:masterratio} identifies vanishing optical rapidity with the action fixed point, $u_C$ is precisely the Kerr--Newman realization of Einstein--Maxwell relative rest. The same invariant fixes the clock. Writing $M:=K^{-1/4}=\Sigma/(\sqrt2|Q|)$, the frame condition is $u_*M=0$, while Eq.~\eqref{eq:clock} gives
+\begin{equation}
+\dd\Theta
+=M^{-1}\dd\tau
+=\frac{\sqrt2|Q|}{\Sigma}\,\dd\tau
+=\sqrt2|Q|\,\dd\lambda_{\rm M},
+\label{eq:minoclock}
+\end{equation}
+where $\dd\lambda_{\rm M}=\dd\tau/\Sigma$ is the Mino reparametrization. Equation~\eqref{eq:minoclock} is a worldline identity and requires no spacetime exactness of $T_O$. The same field-derived scalar therefore fixes both members of the Carter--Mino structure: its level sets select the Carter rest frame, while its reciprocal supplies, up to the fixed charge normalization, the parameter that separates radial and polar motion \cite{CarterKN,HackmannXu}. The intrinsic clock consequently parameterizes neutral geodesics and separated charged-particle dynamics in the same variable. The corresponding separable geometry extends to the scalar wave problem \cite{CarterSep}, and its Mino normalization is used to construct the fundamental orbital frequencies \cite{FujitaHikida}.
+
+The spherical and vacuum limits sharpen the distinction. In Reissner--Nordstr\"om, $\Sigma=r^2$: the balanced observer becomes the static electrovac frame and $\dd\Theta=\sqrt2|Q|\,\dd\tau/r^2$. As $Q\to0$, the electromagnetic carrier, frame selection, and clock normalization disappear, although Carter separability and a useful Mino-type parameter may remain. Thus not every preferred observer or parameter is intrinsic. On the regular non-null Einstein--Maxwell sector, the field theory itself selects both: in Kerr--Newman, relative rest is Carter and its chronometry is Mino. Equivalently, $\Theta$ counts local Einstein--Maxwell curvature timescales along the uniquely balanced principal frame.
+
+The same distinction clarifies null branching. Multiple connecting null geodesics may branch while causal-order endpoints remain single valued, so a smooth eikonal branch can fail without creating a second clock. Beyond Kerr--Newman, the identity raises a geometric question: when does $K^{-1/4}$ coincide, up to constant normalization, with the natural separability multiplier of an integrable Einstein--matter system? Its common-scale invariance also suggests $\Theta$ as an intrinsic evolution variable for numerical electrovac dynamics. Frozen time is not repaired by adjoining a second temporal structure; the clock is the differential content of the frozen comparison itself.
+
+\begin{acknowledgments}
+This work received no external funding. OpenAI GPT-5.6 Sol was used as an auxiliary tool for derivation checking, literature synthesis, and manuscript editing. The author independently conceived the research, developed the framework, performed and verified the derivations, interpreted the results, and takes full responsibility for the manuscript.
+\end{acknowledgments}
+
+\paragraph*{Data availability.}
+No data were created or analyzed in this theoretical study.
+
+\begin{thebibliography}{99}
+
+\bibitem{Rovelli}
+C. Rovelli,
+``Partial Observables,''
+Phys. Rev. D \textbf{65}, 124013 (2002).
+
+\bibitem{Dittrich}
+B. Dittrich,
+``Partial and Complete Observables for Hamiltonian Constrained Systems,''
+Gen. Relativ. Gravit. \textbf{39}, 1891 (2007).
+
+\bibitem{Anderson}
+E. Anderson,
+``Problem of Time in Quantum Gravity,''
+Ann. Phys. (Berlin) \textbf{524}, 757 (2012).
+
+\bibitem{Isham}
+C. J. Isham,
+``Canonical Quantum Gravity and the Problem of Time,''
+in \textit{Integrable Systems, Quantum Groups, and Quantum Field Theories},
+edited by L. A. Ibort and M. A. Rodr\'iguez
+(Kluwer, Dordrecht, 1993), pp. 157--288.
+
+\bibitem{BrownKuchar}
+J. D. Brown and K. V. Kucha\v{r},
+``Dust as a Standard of Space and Time in Canonical Quantum Gravity,''
+Phys. Rev. D \textbf{51}, 5600 (1995).
+
+\bibitem{HoehnVanrietvelde}
+P. A. H\"ohn and A. Vanrietvelde,
+``How to switch between relational quantum clocks,''
+New J. Phys. \textbf{22}, 123048 (2020).
+
+\bibitem{PonsSalisbury}
+J. M. Pons and D. C. Salisbury,
+``Issue of time in generally covariant theories and the Komar--Bergmann approach to observables in general relativity,''
+Phys. Rev. D \textbf{71}, 124012 (2005).
+
+\bibitem{MisnerWheeler}
+C. W. Misner and J. A. Wheeler,
+``Classical Physics as Geometry,''
+Ann. Phys. (N.Y.) \textbf{2}, 525 (1957).
+
+\bibitem{WittenRainich}
+L. Witten,
+``Geometry of Gravitation and Electromagnetism,''
+Phys. Rev. \textbf{115}, 206 (1959).
+
+\bibitem{IyerWald}
+V. Iyer and R. M. Wald,
+``Some Properties of Noether Charge and a Proposal\linebreak[1] for Dynamical Black Hole Entropy,''
+Phys. Rev. D \textbf{50}, 846 (1994).
+
+\bibitem{GrabowskaGrabowski}
+K. Grabowska and J. Grabowski,
+``Reductions: precontact versus presymplectic,''
+Ann. Mat. Pura Appl. \textbf{202}, 2803 (2023).
+
+\bibitem{BellSloan}
+C. Bell and D. Sloan,
+``Gauge symmetries, contact reduction, and singular field theories,''
+Phys. Rev. D \textbf{113}, 125023 (2026).
+
+\bibitem{CarterKN}
+B. Carter,
+``Global Structure of the Kerr Family of Gravitational Fields,''
+Phys. Rev. \textbf{174}, 1559 (1968).
+
+\bibitem{CarterSep}
+B. Carter,
+``Hamilton--Jacobi and Schr\"odinger Separable Solutions of Einstein's Equations,''
+Commun. Math. Phys. \textbf{10}, 280 (1968).
+
+\bibitem{HackmannXu}
+E. Hackmann and H. Xu,
+``Charged Particle Motion in Kerr--Newmann Space-Times,''
+Phys. Rev. D \textbf{87}, 124030 (2013).
+
+\bibitem{FujitaHikida}
+R. Fujita and W. Hikida,
+``Analytical Solutions of Bound Timelike Geodesic Orbits in Kerr Spacetime,''
+Class. Quantum Grav. \textbf{26}, 135002 (2009).
+
+\end{thebibliography}
+
+\section*{End Matter}
+
+\textit{Projective uniqueness and four-dimensionality---}
+Write $r=\Xi_M/\Xi_G>0$. The unique fractional-linear coordinate with $\delta(0)=-1$, $\delta(\infty)=1$, and $\delta(1)=0$ is $\delta=(r-1)/(r+1)$; exchange gives $\delta(r^{-1})=-\delta(r)$ and $r_{12}=r_1r_2$ gives $\delta_{12}=(\delta_1+\delta_2)/(1+\delta_1\delta_2)$. With $r=e^{2s}$ and unit tangent, $\delta=\tanh s$. In $D$ dimensions $S_G\mapsto\rho^{D-2}S_G$ and $S_M\mapsto\rho^{D-4}\lambda^2S_M$; for $\rho=e^{(u-s)/2}$, $\lambda=e^{(u+s)/2}$ the relative weights are $-(D-2)/2$ and $(6-D)/2$, exact opposites only at $D=4$. Then $(e^{-s},e^s)$ is exchanged by $s\mapsto-s$, and $G_{ab}[\rho^2g]=G_{ab}[g]$, $T^{\EM}_{ab}[\rho^2g,\lambda F]=e^{2s}T^{\EM}_{ab}$ select the same fixed point.
+
+\textit{Metric, frame, and optical normalization---}
+At a solution $\mathcal R^{\rm lin}_\Phi(x_GE_G+x_ME_M)=(x_G-x_M)R_{ab}$, so $C_A=E_G+E_M$ maps to $0$ and $D_A=-E_G+E_M$ to $\mathfrak J=-2R=-16\pi T^{\EM}$. On the non-null stratum, $(g^{-1}\mathfrak J)^2=\chi^2I$ with $\chi=\tfrac12[\mathfrak J_{ab}\mathfrak J^{ab}]^{1/2}$, so $\mathsf S=\chi^{-1}g^{-1}\mathfrak J$ is an involution and Maxwell positivity selects its Lorentzian principal plane $\Pi_L$. If $\widetilde g=f(\chi)g$ is invariant under common homothety, then $f(c\chi)=cf(\chi)$ and hence $f=C\chi$; requiring $(\widetilde g^{-1}\mathfrak J)^2=I$ gives $C=1$, so $\widehat g=\chi g$. Representative independence is $\chi[\Omega^2g,\mathfrak J]=\Omega^{-2}\chi[g,\mathfrak J]$. Also $H_{\widehat g}=\chi^{-1}H_g$ gives $X_{H_{\widehat g}}=\chi^{-1}X_{H_g}$ on the null cone, while four-dimensional conformal invariance of ${}^\star$ on two-forms preserves $\dd F=\dd({}^\star_{\widehat g}F)=0$. For $p=P_L\dd\log\chi$ and a normalized principal null dyad, $q_-=p(k)$ and $q_+=p(l)$ transform under a boost as $q_-\mapsto e^{-\sigma}q_-$ and $q_+\mapsto e^\sigma q_+$. Thus $\Delta_p(\sigma)=e^{-2\sigma}q_-^2-e^{2\sigma}q_+^2$ has $\Delta_p'=-2(e^{-2\sigma}q_-^2+e^{2\sigma}q_+^2)<0$, giving the unique balance $\sigma_*=\tfrac12\log|q_-/q_+|$ whenever $p$ resolves the stabilizer. If the starting dyad is changed by rapidity $\tau$, then $q_-\mapsto e^{-\tau}q_-$, $q_+\mapsto e^{\tau}q_+$ and $\sigma_*\mapsto\sigma_*-\tau$; hence $k_*=e^{-\sigma_*}k$ and $l_*=e^{\sigma_*}l$ are independent of the starting boost. Formally, with $H_m(x):=\operatorname{Stab}_{SO^+(1,1)}(j_x^m\mathfrak J)$ and $H_{m+1}\subseteq H_m$, the first $m$ for which $H_m=\{e\}$ fixes $\mathbb Ru_*$; if none exists, $H_\infty(x):=\bigcap_mH_m(x)=\operatorname{Stab}_{SO^+(1,1)}(j_x^\infty\mathfrak J)$ is the exact residual boost isotropy of the full fixed-point jet.
+
+With $C_A=E_G+E_M$, $D_A=-E_G+E_M$, $Y_AC_A=D_A$, $Y_AD_A=C_A$, and $T_O=-\widehat u_*^\flat$, $R_O=\widehat e_*^\flat$, $B_OT_O=R_O$, $B_OR_O=T_O$, exchange parity fixes $\mathcal I_\Phi C_A=T_O$, $\mathcal I_\Phi D_A=R_O$. Hence $\mathcal I_\Phi Y_A=B_O\mathcal I_\Phi$ and $\mathcal I_\Phi e^{sY_A}=e^{sB_O}\mathcal I_\Phi$; on either null eigendirection $e^s=e^{\sigma(s)}$, so $\sigma=s$ up to simultaneous exchange. Without pointing only $\mathcal I_\Phi\mapsto a\mathcal I_\Phi$ remains, which cancels from the null ratio. Along an integral curve $\gamma$ of $\widehat u_*$, the null endpoints satisfy $\widehat\sigma(x,\gamma(\Theta_\pm))=0$. Differentiation gives $\nabla_a\Theta_\pm=-\widehat\sigma_a/(\widehat\sigma_{a'}\widehat u_*^{a'})$ and hence $\widehat g^{-1}(\dd\Theta_\pm,\dd\Theta_\pm)=0$ wherever smooth. Their principal limits are $\dd^{\rm pr}\Theta_\pm=-\widehat u_*^\flat\pm\widehat e_*^\flat$, yielding $\dd^{\rm pr}\mathcal T_{\EM}=-\widehat u_*^\flat$ and $\dd^{\rm pr}\mathcal R_{\EM}=\widehat e_*^\flat$.
+
+\textit{Exact characteristic descent and the clock cover---}
+The relative and common-scale flows satisfy $B_Y(s)^*\Omega_G=e^{-s}\Omega_G$, $B_Y(s)^*\Omega_M=e^s\Omega_M$, and $B_D(t)^*\Omega_{G,M}=e^t\Omega_{G,M}$. Hence $\Omega_-=\tfrac12\Lie_Y(\Omega_G+\Omega_M)$ obeys $\Lie_D\Omega_-=\Omega_-$ and $\vartheta_{\rm rel}=\iota_D\Omega_-$ satisfies $\dd\vartheta_{\rm rel}=\Omega_-$. The off-shell Iyer--Wald identity
+$\boldsymbol\omega_{\rm IW}(Y,X_{\boldsymbol\xi})
+=\dd(\delta_YQ_{\boldsymbol\xi}-\iota_\xi\theta(Y))
+-\delta_YC_{\boldsymbol\xi}$,
+together with
+$\delta_YC_{\boldsymbol\xi}
+=-2\epsilon_aT^a{}_b\xi^b$
+and antisymmetry of $\boldsymbol\omega_{\rm IW}$ gives
+$\mathcal W_Y[\boldsymbol\xi] := \boldsymbol\omega_{\rm IW}(X_{\boldsymbol\xi},Y) +\dd(\delta_YQ_{\boldsymbol\xi}-\iota_\xi\theta(Y)) = -2\epsilon_aT^a{}_b\xi^b = \frac1{8\pi} \epsilon_a\mathfrak J^a{}_b\xi^b .$
+The right-hand side depends algebraically only on $\xi_x$, so
+$\mathcal W_Y[\boldsymbol\xi](x) = w_{Y,x}(\xi_x), \qquad w_{Y,x}(v) = \frac1{8\pi} \iota_{\mathfrak J(v)}\epsilon .$
+For closed $\Sigma$, or with the asymptotic/horizon surface term $\int_{\partial\Sigma}\mathcal B_Y$ retained separately, the boundary-compensated bulk response is $\Omega_\Sigma^{\rm bulk} (X_{\boldsymbol\xi},Y) = \int_\Sigma\mathcal W_Y[\boldsymbol\xi] = -2\ell_\Phi(\boldsymbol\xi).$
+For $\cK_\Phi=\operatorname{im}\beta_\Phi$, $\beta_\Phi(\boldsymbol\xi)=X_{\boldsymbol\xi}(\Phi)$, this is $\ell_\Phi=\beta_\Phi^*(\tfrac12\iota_Y\Omega_{\Sigma}^{\rm bulk}|_{\cK_\Phi})$. Since $\beta_\Phi$ is onto, $\beta_\Phi^*$ is injective, forcing $\Lambda_\Phi=\tfrac12\iota_Y\Omega_{\Sigma}^{\rm bulk}|_{\cK_\Phi}$ with $\beta_\Phi^*\Lambda_\Phi=\ell_\Phi$; thus $\ker\beta_\Phi\subseteq\ker\ell_\Phi$, and no additive or multiplicative change preserves the pullback. Nor can $\Lambda_\Phi$ vanish: for future timelike $u\in\Pi_L$ and nonzero $f\ge0$ supported where $\chi>0$, $\ell_\Phi(fu)=-(16\pi)^{-1}\int_\Sigma f\chi\,\epsilon_a u^a>0$. Hence $\cK_\Phi/\ker\Lambda_\Phi\simeq\mathbb R$, $\pi_\Phi^*\dd\Theta_\Phi=\Lambda_\Phi$, and $[\Theta_\Phi]\in C^\infty(\mathcal L_\Phi)/\mathbb R$; normalization of $Y=\partial_s$ leaves only the additive origin of $\Theta_\Phi$; since $\dd\Theta_\Phi\neq0$ on the one-dimensional quotient, there is a unique positive $X_*\in\mathcal L_\Phi$ satisfying $\dd\Theta_\Phi(X_*)=1$.
+
+Reciprocal homogeneity gives $\lambda:=\vartheta_{\rm rel}|_{\cK}=\Lambda$. On the regular chart just specified, its characteristic distribution has constant rank and is locally simple. On a characteristic leaf let $\chi_\lambda:=\{Z\in\ker\lambda:\iota_Z\dd\lambda=a_Z\lambda\}$. Then $\widetilde Z:=Z-a_ZD$ obeys $\iota_{\widetilde Z}\Omega_-=0=\vartheta_{\rm rel}(\widetilde Z)$ on the common-scale saturation, and conversely every kernel vector has this form. Thus $q^*\theta=\vartheta_{\rm rel}$, $q^*\omega_{\rm red}=\Omega_-$, $\omega_{\rm red}=\dd\theta$, $\iota_{D_0}\omega_{\rm red}=\theta$, and $\Lie_{D_0}\omega_{\rm red}=\omega_{\rm red}$: the quotient is contact. Put $u_*=\omega\widehat u_*$, $\omega=\sqrt{\chi}$, $H_x=u_*^\perp$, $\epsilon_H=\iota_{u_*}\epsilon$, and $T_O=-\widehat u_*^\flat$. Since $\mathfrak J^a{}_bu_*^b=\chi u_*^a$, for arbitrary $v\in T_xM$ write $\mathfrak Jv=a(v)u_*+w$ with $w\in H_x$. Symmetry of $\mathfrak J_{ab}$ gives
+$-a(v) =g(u_*,\mathfrak Jv) =g(\mathfrak Ju_*,v) =\chi g(u_*,v) =-\omega T_O(v),$
+and hence $a(v)=\omega T_O(v)$. Therefore
+$\left.w_{Y,x}(v)\right|_{H_x} = \frac{\omega}{8\pi}T_O(v)\epsilon_H .$
+Since $T_O(\widehat u_*)=1$,
+$\left.w_{Y,x}(\widehat u_*)\right|_{H_x} = \frac{\omega}{8\pi}\epsilon_H\neq0.$
+The unique scalar defined by
+$\left.w_{Y,x}(v)\right|_{H_x} = \lambda_x(v) \left.w_{Y,x}(\widehat u_*)\right|_{H_x}$
+is therefore
+$\lambda_x(v)=T_O(v) =-\widehat g(\widehat u_*,v).$
+Thus $\ker\lambda_x=H_x$ and $\mathcal L_x^{\rm loc}=T_xM/H_x$. Writing $\bar\lambda_x([v])=\lambda_x(v)$, define
+$s_x([v])=\bar\lambda_x([v])\widehat u_*.$
+Because $v-\lambda_x(v)\widehat u_*\in H_x$, $s_x$ is well defined and is inverse to the quotient projection on $\mathbb R\widehat u_*$. The global and local clock lines are related by
+$\mathscr I_{\Phi,x}(X) = \dd\Theta_\Phi(X)[\widehat u_*], \qquad \bar\lambda_x(\mathscr I_{\Phi,x}(X)) = \dd\Theta_\Phi(X),$
+so
+$\mathscr I_{\Phi,x}^{\,*}\bar\lambda_x = \dd\Theta_\Phi .$
+Since $\bar\lambda_x$ is a nonzero covector on a one-dimensional vector space, it is an isomorphism to $\mathbb R$; therefore the pullback condition determines $\mathscr I_{\Phi,x}$ uniquely. Hence
+$\dd\Theta_\Phi(X_*)=1, \mathscr I_{\Phi,x}(X_*)=[\widehat u_*], (s_x\circ\mathscr I_{\Phi,x})(X_*)=\widehat u_* .$
+Write $\Theta$ for the transported local representative of $\Theta_\Phi$ determined by $s_x\circ\mathscr I_{\Phi,x}$. On its positive homogeneous cover let $\kappa=e^u$, so $D=\partial_u=\kappa\partial_\kappa$. The section $\kappa=1$ carries $\dd\Theta$, while $\Lie_D\vartheta_{\rm clk}=\vartheta_{\rm clk}$; integration along the homogeneous flow gives $\vartheta_{\rm clk}=\kappa\,\dd\Theta$. Consequently $\omega_{\rm clk}=\dd\kappa\wedge\dd\Theta$ and $\{\Theta,\kappa\}_{\rm clk}=1$. On the one-dimensional descended contact line $\dd(\dd\Theta)=0$ and $\dd\Theta(X_*)=1$, so its Reeb vector is $\mathscr R_\Theta=X_*$.
+
+\textit{Chronometric identities and transport---}
+Put $K=R_{ab}R^{ab}$ and $\omega=K^{1/4}=\sqrt\chi$. Transporting the globally normalized quotient coordinate through the unique covector-preserving map above gives $\widehat u_*\Theta=1$ on the local clock line. Since $\widehat g=\omega^2g$ and $\widehat g(\widehat u_*,\widehat u_*)=-1$,
+$\left.\dd\Theta\right|_{\mathbb R\widehat u_*} = \dd\widehat\tau = \omega\,\dd\tau .$ Also $T_O=-\widehat u_*^\flat=-\omega u_*^\flat$ and
+$g(u_*,u_*)=-1$, so
+$g^{ab}T_{Oa}T_{Ob}=\omega^2g(u_*,u_*)=-\omega^2=-\sqrt K$,
+while $\widehat g^{ab}T_{Oa}T_{Ob}=-1$ by construction. The principal stress eigenvalue $T^{\EM\,a}{}_bu_*^b=-(\chi/16\pi)u_*^a$ gives $\varepsilon_{\EM}=T^{\EM}_{ab}u_*^au_*^b=\chi/(16\pi)$ and therefore $\omega=4\sqrt{\pi\varepsilon_{\EM}}$. In a principal Maxwell frame, $F=E\,e^0\wedge e^1+B\,e^2\wedge e^3$, so $F_{ab}F^{ab}=2(B^2-E^2)$ and $F_{ab}{}^\star F^{ab}=-4EB$; their squared sum is $4(E^2+B^2)^2=\chi^2=K$, proving Eq.~\eqref{eq:clock}. Moreover $T_O=-\widehat u_*^\flat=-\omega u_*^\flat$, whence $\dd T_O=-\dd(\omega u_*^\flat)$. Using $\nabla_{[a}u_{b]}=-u_{[a}a_{b]}+\varpi_{ab}$ and $h_a{}^bu_b=0$ gives directly $h_a{}^ch_b{}^d(\dd T_O)_{cd}=-2\omega\varpi_{ab}$ and $u_*^ah_b{}^c(\dd T_O)_{ac}=-D_b\omega-\omega a_b=-\omega[a_b+\tfrac14D_b\log K]$, which proves Eq.~\eqref{eq:clocktransport}. Since these are the spatial--spatial and timelike--spatial components of the two-form $\dd T_O$, they vanish simultaneously iff
+$\varpi_{ab}=0$ and
+$a_b=-\tfrac14D_b\log K$.
+Moreover, because $T_O=-\omega u_*^\flat$ with $\omega>0$,
+Frobenius gives
+$T_O\wedge\dd T_O=0\iff\varpi_{ab}=0$.
+
+\textit{Optical closure and globalization---}
+Substituting $\dd\Theta_\pm=\dd\mathcal T_{\EM}\pm\dd\mathcal R_{\EM}$ into $\widehat g^{-1}(\dd\Theta_\pm,\dd\Theta_\pm)=0$ and taking the difference gives $\widehat g^{-1}(\dd\mathcal T_{\EM},\dd\mathcal R_{\EM})=0$; taking the sum gives $\widehat g^{-1}(\dd\mathcal T_{\EM},\dd\mathcal T_{\EM})=-\widehat g^{-1}(\dd\mathcal R_{\EM},\dd\mathcal R_{\EM})$. Defining their common magnitude by $N_{\rm opt}^{-2}$ yields Eq.~\eqref{eq:opticalclosure}. Next set $\beta:=\dd\mathcal T_{\EM}-T_O=\dd\mathcal T_{\EM}+\omega u_*^\flat$. Since $\dd^2\mathcal T_{\EM}=0$,
+$\dd\beta=-\dd T_O=\dd(\omega u_*^\flat)$, while the principal endpoint limit gives $\beta^{\rm pr}|_\gamma=0$, proving Eq.~\eqref{eq:synchronization}. The optical extension therefore adds no synchronization datum: it transports the already-normalized local clock. Equivalently, on any open $U$, $\mathcal T_{\EM}^{\rm clock}(U):=\{\Theta:\widehat u_*\Theta=1\}$ is an affine torsor over $\mathcal I(U):=\{I:\widehat u_*I=0\}$, and the endpoint construction reduces this freedom on each connected clock line to $\Theta\mapsto\Theta+C$.
+
+The endpoint values globalize without choosing a null branch: $\Theta_-(x)=\sup\{\theta:\gamma(\theta)\ll x\}$ and $\Theta_+(x)=\inf\{\theta:x\ll\gamma(\theta)\}$, with $\sup\varnothing=-\infty$, $\inf\varnothing=+\infty$. They depend only on the fixed chronometric geometry, oriented line, and causal order, so null-geodesic branching need not branch the endpoint values. On $\mathcal D_\gamma=\{x:\Theta_\pm\in\mathbb R,\Theta_-\le\Theta_+\}$, causal push-up makes both endpoints, hence $\mathcal T_{\EM}$, monotone. Smooth eikonals recover the differential construction; at caustics derivatives may branch while the clock value does not, and horizons or other causal obstructions appear as endpoint loss, divergence, or order failure. Finally $F\neq0$ gives $\chi>0\Rightarrow(g^{-1}\mathfrak J)^2=\chi^2I$ and $\chi=0\Rightarrow(g^{-1}\mathfrak J)^2=0$, the semisimple stratum and nilpotent null boundary; at $F=0$ the carrier vanishes, while rank changes or residual jet isotropy define intrinsic strata with any surviving isotropy an exact symmetry.
+
+\end{document}
