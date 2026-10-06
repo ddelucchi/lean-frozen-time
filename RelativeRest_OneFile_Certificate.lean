@@ -5922,6 +5922,29 @@ theorem SyngeEndpointJetData.linearizedMinus
     field_simp [D.sigmaThetaMinus_ne]
   rw [hcoef, neg_one_smul, add_neg_cancel]
 
+/-- Regularity makes the future Synge endpoint covector unique: every solution of the
+linearized endpoint equation is the constructed endpoint differential. -/
+theorem SyngeEndpointJetData.dThetaPlus_unique
+    (D : SyngeEndpointJetData B)
+    (eta : W)
+    (heta : D.sigmaXPlus + D.sigmaThetaPlus • eta = 0) :
+    eta = D.dThetaPlus := by
+  simpa [SyngeEndpointJetData.dThetaPlus] using
+    (implicit_endpoint_covector
+      D.sigmaXPlus eta D.sigmaThetaPlus
+      D.sigmaThetaPlus_ne heta)
+
+/-- Regularity likewise makes the past Synge endpoint covector unique. -/
+theorem SyngeEndpointJetData.dThetaMinus_unique
+    (D : SyngeEndpointJetData B)
+    (eta : W)
+    (heta : D.sigmaXMinus + D.sigmaThetaMinus • eta = 0) :
+    eta = D.dThetaMinus := by
+  simpa [SyngeEndpointJetData.dThetaMinus] using
+    (implicit_endpoint_covector
+      D.sigmaXMinus eta D.sigmaThetaMinus
+      D.sigmaThetaMinus_ne heta)
+
 /-- Synge's Hamilton-Jacobi identity plus the null endpoint condition forces the
 world-function covector itself to be null. -/
 theorem SyngeEndpointJetData.sigmaXPlus_null
@@ -5966,6 +5989,22 @@ theorem endpointCovector_reconstruction
         endpointRadialCovector dPlus dMinus = dMinus := by
   constructor <;>
     simp [endpointMidpointCovector, endpointRadialCovector] <;>
+    module
+
+/-- The midpoint/radial decomposition is the unique pair reconstructing two endpoint
+covectors. Hence no independent optical split survives once the endpoints are fixed. -/
+theorem endpointCovector_decomposition_unique
+    (dPlus dMinus T R : W)
+    (hplus : T + R = dPlus)
+    (hminus : T - R = dMinus) :
+    T = endpointMidpointCovector dPlus dMinus ∧
+    R = endpointRadialCovector dPlus dMinus := by
+  constructor
+  · unfold endpointMidpointCovector
+    rw [← hplus, ← hminus]
+    module
+  · unfold endpointRadialCovector
+    rw [← hplus, ← hminus]
     module
 
 /-- The only smooth local Synge data needed for the optical closure: each endpoint solves
@@ -6067,6 +6106,40 @@ def SyngeEndpointJetData.clockCovector
 def SyngeEndpointJetData.radialCovector
     (D : SyngeEndpointJetData B) : W :=
   endpointRadialCovector D.dThetaPlus D.dThetaMinus
+
+/-- The smooth Synge clock/radius covectors are unique, not merely canonically defined. -/
+theorem SyngeEndpointJetData.clock_radial_unique
+    (D : SyngeEndpointJetData B)
+    (T R : W)
+    (hplus : T + R = D.dThetaPlus)
+    (hminus : T - R = D.dThetaMinus) :
+    T = D.clockCovector ∧ R = D.radialCovector := by
+  simpa [SyngeEndpointJetData.clockCovector,
+    SyngeEndpointJetData.radialCovector] using
+    (endpointCovector_decomposition_unique
+      D.dThetaPlus D.dThetaMinus T R hplus hminus)
+
+/-- Full first-jet uniqueness certificate: every regular candidate endpoint pair and
+every clock/radius split satisfying the defining equations is the Synge-derived one. -/
+theorem SyngeEndpointJetData.firstJet_forced_unique
+    (D : SyngeEndpointJetData B)
+    (dPlus dMinus T R : W)
+    (hlinPlus : D.sigmaXPlus + D.sigmaThetaPlus • dPlus = 0)
+    (hlinMinus : D.sigmaXMinus + D.sigmaThetaMinus • dMinus = 0)
+    (hplus : T + R = dPlus)
+    (hminus : T - R = dMinus) :
+    dPlus = D.dThetaPlus ∧
+    dMinus = D.dThetaMinus ∧
+    T = D.clockCovector ∧
+    R = D.radialCovector := by
+  have hp : dPlus = D.dThetaPlus :=
+    D.dThetaPlus_unique dPlus hlinPlus
+  have hm : dMinus = D.dThetaMinus :=
+    D.dThetaMinus_unique dMinus hlinMinus
+  rw [hp] at hplus
+  rw [hm] at hminus
+  rcases D.clock_radial_unique T R hplus hminus with ⟨hT, hR⟩
+  exact ⟨hp, hm, hT, hR⟩
 
 /-- The complete optical closure is forced directly from the world-function endpoint
 condition, Synge Hamilton-Jacobi identity, and regular implicit endpoint derivative. -/
@@ -10523,6 +10596,11 @@ theorem scalar_backbone_from_einstein_maxwell
 #check principalCarrierCharacteristic_normalizationBridge
 #check principalCarrierCharacteristic_clock_chain
 #check SyngeEndpointJetData.linearizedPlus
+#check SyngeEndpointJetData.dThetaPlus_unique
+#check SyngeEndpointJetData.dThetaMinus_unique
+#check endpointCovector_decomposition_unique
+#check SyngeEndpointJetData.clock_radial_unique
+#check SyngeEndpointJetData.firstJet_forced_unique
 #check SyngeEndpointJetData.linearizedMinus
 #check SyngeEndpointJetData.sigmaXPlus_null
 #check SyngeEndpointJetData.endpoint_eikonals_null
@@ -11027,6 +11105,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.implicit_endpoint_covector_null
 #print axioms RelativeRest.NullEndpointPairData.endpoint_eikonals_null
 #print axioms RelativeRest.NullEndpointPairData.optical_closure
+#print axioms RelativeRest.SyngeEndpointJetData.dThetaPlus_unique
+#print axioms RelativeRest.SyngeEndpointJetData.dThetaMinus_unique
+#print axioms RelativeRest.SyngeEndpointJetData.firstJet_forced_unique
 #print axioms RelativeRest.SyngeEndpointJetData.endpoint_eikonals_null
 #print axioms RelativeRest.SyngeEndpointJetData.optical_closure
 #print axioms RelativeRest.opticalMetric2_inverse
