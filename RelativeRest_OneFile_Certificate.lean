@@ -7406,6 +7406,29 @@ def Delta (r M a Q : ℝ) : ℝ := r^2 - 2*M*r + a^2 + Q^2
 
 /-! ### Boyer-Lindquist metric inverse and densitized Maxwell field -/
 
+/-- Covariant stationary metric coefficients obtained by expanding the two square-form
+stationary one-forms. -/
+def kerrGtt (r M a Q θ : ℝ) : ℝ :=
+  (-Delta r M a Q + a^2 * (Real.sin θ)^2) /
+    Sigma r a θ
+
+def kerrGtPhi (r M a Q θ : ℝ) : ℝ :=
+  a * (Real.sin θ)^2 *
+    (Delta r M a Q - (r^2 + a^2)) /
+    Sigma r a θ
+
+def kerrGPhiPhi (r M a Q θ : ℝ) : ℝ :=
+  (Real.sin θ)^2 *
+    ((r^2 + a^2)^2 -
+      a^2 * Delta r M a Q * (Real.sin θ)^2) /
+    Sigma r a θ
+
+def kerrGrr (r M a Q θ : ℝ) : ℝ :=
+  Sigma r a θ / Delta r M a Q
+
+def kerrGthetaTheta (r a θ : ℝ) : ℝ :=
+  Sigma r a θ
+
 /-- Compact Kerr-Newman mass/charge factor `H=2Mr-Q²`. -/
 def kerrH (r M Q : ℝ) : ℝ :=
   2 * M * r - Q^2
@@ -7707,30 +7730,6 @@ theorem kerrGPhiPhi_hasDerivAt_theta
   unfold Sigma
   ring
 
-/-! ### Boyer-Lindquist metric inverse and densitized Maxwell field -/
-
-/-- Covariant stationary metric coefficients obtained by expanding the two square-form
-stationary one-forms. -/
-def kerrGtt (r M a Q θ : ℝ) : ℝ :=
-  (-Delta r M a Q + a^2 * (Real.sin θ)^2) /
-    Sigma r a θ
-
-def kerrGtPhi (r M a Q θ : ℝ) : ℝ :=
-  a * (Real.sin θ)^2 *
-    (Delta r M a Q - (r^2 + a^2)) /
-    Sigma r a θ
-
-def kerrGPhiPhi (r M a Q θ : ℝ) : ℝ :=
-  (Real.sin θ)^2 *
-    ((r^2 + a^2)^2 -
-      a^2 * Delta r M a Q * (Real.sin θ)^2) /
-    Sigma r a θ
-
-def kerrGrr (r M a Q θ : ℝ) : ℝ :=
-  Sigma r a θ / Delta r M a Q
-
-def kerrGthetaTheta (r a θ : ℝ) : ℝ :=
-  Sigma r a θ
 
 /-- Contravariant stationary block and radial/polar inverse coefficients. -/
 def kerrInvGtt (r M a Q θ : ℝ) : ℝ :=
