@@ -3571,8 +3571,9 @@ theorem iyerWald_half_compensated_eq_stressResponse
   rw [iyerWald_compensated_eq_carrierBulkResponse
       omegaYX omegaXY dB integrate J T iε
       hJ hanti hIW]
-  exact halfCarrierBulkCurrent_eq_stressResponse
-    integrate J T iε hJ
+  simpa [halfCarrierBulkCurrent] using
+    (halfCarrierBulkCurrent_eq_stressResponse
+      integrate J T iε hJ)
 
 end IyerWaldLinearBridge
 
