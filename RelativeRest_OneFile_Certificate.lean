@@ -3213,6 +3213,48 @@ theorem clockLiouville_homogeneous (c κ : ℝ) (v : R2) :
   ring
 
 
+/-- On the unit common-scale section `κ=1`, the homogeneous Liouville primitive is
+literally the descended clock one-form `dΘ`. -/
+theorem clockLiouville_unit_section (v : R2) :
+    clockLiouville 1 v = clockDTheta v := by
+  rcases v with ⟨vΘ, vκ⟩
+  simp [clockLiouville, clockDTheta]
+
+/-- Tangency to the unit-scale section means no `κ` component. -/
+def tangentToClockSection (v : R2) : Prop :=
+  v.2 = 0
+
+@[simp] theorem dThetaVec_tangentToClockSection :
+    tangentToClockSection dThetaVec := by
+  simp [tangentToClockSection, dThetaVec]
+
+@[simp] theorem clockLiouville_unit_dThetaVec :
+    clockLiouville 1 dThetaVec = 1 := by
+  norm_num [clockLiouville, dThetaVec]
+
+/-- The unit-scale section has a unique tangent direction normalized by the clock one-form:
+this is the finite-dimensional Reeb/clock vector. -/
+theorem clock_section_reeb_unique
+    (v : R2)
+    (htan : tangentToClockSection v)
+    (hnorm : clockLiouville 1 v = 1) :
+    v = dThetaVec := by
+  rcases v with ⟨vΘ, vκ⟩
+  simp [tangentToClockSection] at htan
+  simp [clockLiouville] at hnorm
+  subst vκ
+  ext <;> simp [dThetaVec, hnorm]
+
+/-- Thus the clock-cover Reeb vector is forced to be `∂Θ` on `κ=1`. -/
+theorem clock_section_reeb_existsUnique :
+    ∃! v : R2,
+      tangentToClockSection v ∧ clockLiouville 1 v = 1 := by
+  refine ⟨dThetaVec,
+    ⟨dThetaVec_tangentToClockSection, clockLiouville_unit_dThetaVec⟩, ?_⟩
+  intro v hv
+  exact clock_section_reeb_unique v hv.1 hv.2
+
+
 /-- Tangent action of positive common-scale dilation on the clock cover. -/
 def clockDilationTangent (c : ℝ) (v : R2) : R2 :=
   (v.1, c * v.2)
@@ -3876,6 +3918,11 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check clockLiouville_unit_section
+#check dThetaVec_tangentToClockSection
+#check clockLiouville_unit_dThetaVec
+#check clock_section_reeb_unique
+#check clock_section_reeb_existsUnique
 #check conformalUnitFactor_metric_cancel
 #check conformal_unit_timelike_normalization
 #check conformal_dual_scale
@@ -4135,6 +4182,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.extensionalBridge_Lambda_unique
 #print axioms RelativeRest.maxwellBridge_Lambda_unique
 #print axioms RelativeRest.reeb_direction_unique
+#print axioms RelativeRest.clock_section_reeb_existsUnique
 #print axioms RelativeRest.causal_extended_endpoints_mono
 #print axioms RelativeRest.kerrLogChi_hasDerivAt_r
 #print axioms RelativeRest.kerrNewman_mino_clock_forced
