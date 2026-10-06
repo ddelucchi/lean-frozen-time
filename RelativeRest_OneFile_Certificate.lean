@@ -754,6 +754,24 @@ theorem involution_projectors_idempotent
   · simp [involutionProjMinus, map_sub, map_smul, hS]
     module
 
+
+/-- For a self-adjoint involution, the +1 and -1 eigenspaces are automatically orthogonal.
+This is the algebraic core of the principal-plane splitting used after Rainich normalization. -/
+theorem involution_eigenspaces_orthogonal
+    {V : Type*} [AddCommGroup V] [Module ℝ V]
+    (B : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (S : V →ₗ[ℝ] V)
+    (hself : ∀ x y : V, B (S x) y = B x (S y))
+    (x y : V) (hx : S x = x) (hy : S y = -y) :
+    B x y = 0 := by
+  have hneg : B x y = - B x y := by
+    calc
+      B x y = B (S x) y := by rw [hx]
+      _ = B x (S y) := hself x y
+      _ = B x (-y) := by rw [hy]
+      _ = - B x y := by simp
+  linarith
+
 /-! ## 6. Unique residual boost balance -/
 
 /-- Scalar boost defect. -/
@@ -1190,6 +1208,45 @@ theorem actionOpticalMap_intertwines_boost (s : ℝ) (v : R2) :
       ← Real.cosh_add_sinh, ← Real.cosh_sub_sinh] <;>
     ring
 
+
+/-- The normalized action-to-optical map is injective. -/
+theorem actionOpticalMap_injective : Function.Injective actionOpticalMap := by
+  intro x y h
+  rcases x with ⟨x₁, x₂⟩
+  rcases y with ⟨y₁, y₂⟩
+  have h₁ := congrArg Prod.fst h
+  have h₂ := congrArg Prod.snd h
+  simp [actionOpticalMap] at h₁ h₂
+  ext <;> linarith
+
+/-- The normalized action-to-optical map is surjective. -/
+theorem actionOpticalMap_surjective : Function.Surjective actionOpticalMap := by
+  rintro ⟨t, r⟩
+  refine ⟨(t - r, t + r), ?_⟩
+  ext <;> simp [actionOpticalMap] <;> ring
+
+/-- Equality of normalized boosted optical time directions forces equality of rapidities. -/
+theorem opticalBoost_TO_injective :
+    Function.Injective (fun s : ℝ => opticalBoost s TO) := by
+  intro σ s h
+  have hc := congrArg Prod.fst h
+  have hs := congrArg Prod.snd h
+  simp [opticalBoost, TO] at hc hs
+  have he : Real.exp σ = Real.exp s := by
+    rw [← Real.cosh_add_sinh σ, ← Real.cosh_add_sinh s, hc, hs]
+  exact Real.exp_injective he
+
+/-- Once the normalized action and optical boost representations are intertwined,
+the optical rapidity is not a free reparametrization: it is exactly the action coordinate. -/
+theorem rapidity_forced_by_normalized_boost
+    (s σ : ℝ)
+    (h : opticalBoost σ TO = actionOpticalMap (actionBoost s CA)) :
+    σ = s := by
+  have hi := actionOpticalMap_intertwines_boost s CA
+  rw [actionOpticalMap_CA] at hi
+  apply opticalBoost_TO_injective
+  exact h.trans hi
+
 /-! ## 9. Abstract Iyer–Wald/characteristic linear descent
 
 The physics-specific derivation of the Iyer–Wald current is deliberately not assumed globally.
@@ -1475,6 +1532,26 @@ theorem localLift_eq_zero_iff
   · intro h
     simp [localLift, h]
 
+/-- Normalization on the distinguished unit forces the local clock covector to be nonzero. -/
+theorem localClock_lambda_nonzero (D : LocalClockData (V:=V)) :
+    D.lambda ≠ 0 := by
+  intro hzero
+  have h := D.normalized
+  rw [hzero] at h
+  simp at h
+
+/-- The local stress-visible quotient is canonically a real line. -/
+noncomputable def localClockQuotientEquivReal
+    (D : LocalClockData (V:=V)) :
+    (V ⧸ LinearMap.ker D.lambda) ≃ₗ[ℝ] ℝ :=
+  clockQuotientEquivReal D.lambda (localClock_lambda_nonzero D)
+
+/-- Consequently the local quotient has exactly one real dimension. -/
+theorem localClockQuotient_finrank_one
+    (D : LocalClockData (V:=V)) :
+    Module.finrank ℝ (V ⧸ LinearMap.ker D.lambda) = 1 := by
+  exact clockQuotient_finrank_one D.lambda (localClock_lambda_nonzero D)
+
 end LocalClock
 
 /-! ## 12. Chronometric scalar identities -/
@@ -1657,6 +1734,46 @@ theorem null_pair_equal_opposite_norm
   change -((B T) T) = (B R) R
   linarith
 
+/-- Conversely, orthogonality and equal-opposite norms force both exchanged combinations null. -/
+theorem orthogonal_equal_opposite_implies_null_pair
+    (hsym : ∀ x y, bil B x y = bil B y x)
+    (T R : W)
+    (horth : bil B T R = 0)
+    (hnorm : -(bil B T T) = bil B R R) :
+    bil B (T + R) (T + R) = 0 ∧
+    bil B (T - R) (T - R) = 0 := by
+  have hsym' : ∀ x y, B x y = B y x := by
+    intro x y
+    exact hsym x y
+  constructor
+  · simp only [bil, map_add, LinearMap.add_apply]
+    rw [hsym' R T]
+    change (B T) T + (B T) R + ((B T) R + (B R) R) = 0
+    change (B T) R = 0 at horth
+    change -((B T) T) = (B R) R at hnorm
+    linarith
+  · simp only [bil, map_sub, LinearMap.sub_apply]
+    rw [hsym' R T]
+    change (B T) T - (B T) R - ((B T) R - (B R) R) = 0
+    change (B T) R = 0 at horth
+    change -((B T) T) = (B R) R at hnorm
+    linarith
+
+/-- The two-null-eikonal formulation is therefore exactly equivalent to the orthogonal
+equal-and-opposite-norm optical closure. -/
+theorem null_pair_closure_iff
+    (hsym : ∀ x y, bil B x y = bil B y x)
+    (T R : W) :
+    (bil B (T + R) (T + R) = 0 ∧
+     bil B (T - R) (T - R) = 0) ↔
+    (bil B T R = 0 ∧ -(bil B T T) = bil B R R) := by
+  constructor
+  · rintro ⟨hp, hm⟩
+    exact ⟨null_pair_orthogonal B hsym T R hp hm,
+      null_pair_equal_opposite_norm B hsym T R hp hm⟩
+  · rintro ⟨ho, hn⟩
+    exact orthogonal_equal_opposite_implies_null_pair B hsym T R ho hn
+
 end OpticalClosure
 
 /-- Synchronization correction is uniquely the difference between an exact radar differential and
@@ -1828,6 +1945,31 @@ theorem mino_clock_identity
   rw [hclock, hmino]
   field_simp [hsig]
 
+/-- Combining the curvature invariant, positive carrier root, and Mino definition
+removes the clock-rate formula as an independent premise. -/
+theorem kerrNewman_mino_clock_forced
+    (Q sig K χ ω dt dlam : ℝ)
+    (hsig : 0 < sig) (hQ : Q ≠ 0)
+    (hK : K = 4 * Q^4 / sig^4)
+    (hχ : χ = Real.sqrt K)
+    (hω : ω = Real.sqrt χ)
+    (hmino : dlam = dt / sig) :
+    ω * dt = Real.sqrt 2 * |Q| * dlam := by
+  have hχform := kerrNewman_chi_from_K Q sig K χ hsig hQ hK hχ
+  have hw := kerrNewman_clock_rate Q sig χ ω hsig hχform hω
+  rw [hw, hmino]
+  field_simp [ne_of_gt hsig]
+  ring
+
+/-- At zero charge the Kerr-Newman Ricci carrier vanishes identically in the scalar specialization. -/
+theorem kerrNewman_vacuum_carrier_vanishes
+    (sig K χ : ℝ)
+    (hK : K = 4 * (0 : ℝ)^4 / sig^4)
+    (hχ : χ = Real.sqrt K) :
+    χ = 0 := by
+  rw [hχ, hK]
+  norm_num
+
 /-- Reissner-Nordström specialization (`a=0`) of `Σ`. -/
 theorem sigma_reissner_nordstrom (r θ : ℝ) : Sigma r 0 θ = r^2 := by
   simp [Sigma]
@@ -1948,6 +2090,17 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check involution_eigenspaces_orthogonal
+#check actionOpticalMap_injective
+#check actionOpticalMap_surjective
+#check opticalBoost_TO_injective
+#check rapidity_forced_by_normalized_boost
+#check localClock_lambda_nonzero
+#check localClockQuotientEquivReal
+#check localClockQuotient_finrank_one
+#check null_pair_closure_iff
+#check kerrNewman_mino_clock_forced
+#check kerrNewman_vacuum_carrier_vanishes
 #check actionBoost_zero
 #check actionBoost_hasDerivAt
 #check opticalBoost_zero
