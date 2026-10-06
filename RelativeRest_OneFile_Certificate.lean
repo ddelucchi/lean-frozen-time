@@ -1152,6 +1152,39 @@ theorem principalFieldEnergyDensity_eq_chi
   field_simp [ne_of_gt Real.pi_pos]
   ring
 
+
+/-- Overall Maxwell-field orientation reversal does not change the principal energy density. -/
+@[simp] theorem principalFieldEnergyDensity_neg
+    (E B : ℝ) :
+    principalFieldEnergyDensity (-E) (-B) =
+      principalFieldEnergyDensity E B := by
+  unfold principalFieldEnergyDensity
+  ring
+
+/-- Nor does it change the Rainich carrier magnitude. -/
+@[simp] theorem principalChi_neg (E B : ℝ) :
+    principalChi (-E) (-B) = principalChi E B := by
+  unfold principalChi
+  ring
+
+/-- The Maxwell stress tensor is quadratic, hence invariant under the overall sign
+change induced by the Carter coframe orientation. -/
+theorem principalStressFromF_neg
+    (E B : ℝ) (i j : Fin 4) :
+    principalStressFromF (-E) (-B) i j =
+      principalStressFromF E B i j := by
+  rw [principalStressFromF_eq_principalStress,
+    principalStressFromF_eq_principalStress,
+    principalFieldEnergyDensity_neg]
+
+/-- Consequently the fixed-point carrier jet is also orientation-independent. -/
+theorem principalJetFromF_neg
+    (E B : ℝ) (i j : Fin 4) :
+    principalJetFromF (-E) (-B) i j =
+      principalJetFromF E B i j := by
+  unfold principalJetFromF
+  rw [principalStressFromF_neg]
+
 /-- Direct principal-frame Rainich square identity. -/
 theorem principalStress_sq (u : ℝ) (i j : Fin 4) :
     (∑ k : Fin 4, principalStress u i k * principalStress u k j) =
@@ -6726,6 +6759,10 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check principalFieldEnergyDensity_neg
+#check principalChi_neg
+#check principalStressFromF_neg
+#check principalJetFromF_neg
 #check clockLiouville_horizontal_Euler
 #check clockLiouville_dilation_pullback
 #check relativeSymplecticPlus_hasDerivAt_zero
@@ -7184,6 +7221,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalMaxwell_timelike_eigen_from_chi
 #print axioms RelativeRest.principalStressFromF_eq_principalStress
 #print axioms RelativeRest.principalJetFromF_rainich
+#print axioms RelativeRest.principalJetFromF_neg
 #print axioms RelativeRest.principalNormalizedJetFromFApply_eq_involution
 #print axioms RelativeRest.principalMaxwell_form_invariant_magnitude
 #print axioms RelativeRest.defect_from_on_shell_equation
