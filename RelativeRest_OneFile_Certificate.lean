@@ -13680,6 +13680,31 @@ def PrincipalCarrierCharacteristicInput.iε
     (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
   principalFutureFlux D.volume
 
+/-- Characteristic response reconstructed from the action metric-Euler jet itself.
+`J` is uniquely fixed by the derivatives of `principalScaledMetricEulerCoeffFromAction`,
+so this definition contains no independent stress normalization. -/
+def PrincipalCarrierCharacteristicInput.actionEulerResponse
+    (D : PrincipalCarrierCharacteristicInput (P:=P)) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
+  halfCarrierBulkCurrent LinearMap.id D.J D.iε
+
+/-- The action-Euler-jet response is exactly the explicit Maxwell stress response.
+This is the bridge from the action variation to the characteristic covector. -/
+theorem PrincipalCarrierCharacteristicInput.actionEulerResponse_eq_stress
+    (D : PrincipalCarrierCharacteristicInput (P:=P)) :
+    D.actionEulerResponse =
+      stressResponse LinearMap.id D.T D.iε := by
+  unfold PrincipalCarrierCharacteristicInput.actionEulerResponse
+  exact halfCarrierBulkCurrent_eq_stressResponse
+    LinearMap.id D.J D.T D.iε rfl
+
+/-- Hence the action-Euler response is positive on the distinguished future profile. -/
+theorem PrincipalCarrierCharacteristicInput.actionEulerResponse_positive
+    (D : PrincipalCarrierCharacteristicInput (P:=P)) :
+    0 < D.actionEulerResponse (D.beta D.positiveWitness) := by
+  rw [D.actionEulerResponse_eq_stress]
+  exact D.response_positive
+
 /-- The distinguished parameter has strictly positive integrated stress response,
 derived entirely from the explicit Maxwell field and orientation data. -/
 theorem PrincipalCarrierCharacteristicInput.response_positive
@@ -13965,6 +13990,130 @@ theorem principalLagrangianCharacteristic_clock_chain
   exact ⟨
     principalLagrangianCharacteristic_iwCurrent_eq_characteristicCurrent D,
     hL, hdim, hpull, hnorm⟩
+
+/-! ### Action-Euler-linked first variation: metric action jet to clock line -/
+
+/-- Strongest action-linked finite-dimensional interface in the file. The gravity
+Noether constraint is identified with the response reconstructed from the metric
+Euler jet of the Einstein-Maxwell action, while the total constraint vanishes on shell.
+The stress response and Maxwell-sector sign are both derived downstream. -/
+structure PrincipalActionEulerLagrangianVariationCharacteristicInput where
+  carrier : PrincipalCarrierCharacteristicInput (P:=P)
+  LG : L
+  LM : L
+  variation : LagrangianVariationNoetherOperators
+    (L:=L) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ))
+  gravityConstraintFromActionEuler :
+    variation.constraint LG = carrier.actionEulerResponse
+  totalConstraintOnShell :
+    variation.constraint (LG + LM) = 0
+
+/-- The action-Euler response theorem converts this package to the on-shell
+first-variation package without assuming a stress normalization. -/
+def PrincipalActionEulerLagrangianVariationCharacteristicInput.toOnShellInput
+    (D : PrincipalActionEulerLagrangianVariationCharacteristicInput (P:=P) (L:=L)) :
+    PrincipalOnShellLagrangianVariationCharacteristicInput (P:=P) (L:=L) where
+  carrier := D.carrier
+  LG := D.LG
+  LM := D.LM
+  variation := D.variation
+  gravityConstraintResponse := by
+    rw [D.gravityConstraintFromActionEuler,
+      D.carrier.actionEulerResponse_eq_stress]
+  totalConstraintOnShell := D.totalConstraintOnShell
+
+/-- Maxwell constraint sign is therefore forced from the action-Euler gravity response
+and the total on-shell equation. -/
+theorem PrincipalActionEulerLagrangianVariationCharacteristicInput.maxwellConstraintResponse
+    (D : PrincipalActionEulerLagrangianVariationCharacteristicInput (P:=P) (L:=L)) :
+    D.variation.constraint D.LM =
+      -(stressResponse LinearMap.id D.carrier.T D.carrier.iε) :=
+  D.toOnShellInput.maxwellConstraintResponse
+
+def PrincipalActionEulerLagrangianVariationCharacteristicInput.characteristicCurrent
+    (D : PrincipalActionEulerLagrangianVariationCharacteristicInput (P:=P) (L:=L)) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
+  D.toOnShellInput.characteristicCurrent
+
+/-- The covariant-phase-space current is now sourced from the action metric-Euler jet,
+not from an independently normalized stress current. -/
+theorem principalActionEulerLagrangianVariation_current_eq_actionEulerResponse
+    (D : PrincipalActionEulerLagrangianVariationCharacteristicInput (P:=P) (L:=L)) :
+    D.characteristicCurrent = D.carrier.actionEulerResponse := by
+  rw [PrincipalActionEulerLagrangianVariationCharacteristicInput.characteristicCurrent,
+    principalOnShellLagrangianVariation_current_eq_stress,
+    D.carrier.actionEulerResponse_eq_stress]
+
+/-- Consequently the action-linked current is exactly the canonical characteristic
+current used by the quotient construction. -/
+theorem principalActionEulerLagrangianVariation_current_eq_characteristicCurrent
+    (D : PrincipalActionEulerLagrangianVariationCharacteristicInput (P:=P) (L:=L)) :
+    D.characteristicCurrent =
+      D.carrier.toCharacteristicCurrentData.current := by
+  exact principalOnShellLagrangianVariation_current_eq_characteristicCurrent
+    D.toOnShellInput
+
+/-- Full clock chain sourced at the metric Euler jet of the action. -/
+theorem principalActionEulerLagrangianVariation_clock_chain
+    (D : PrincipalActionEulerLagrangianVariationCharacteristicInput (P:=P) (L:=L)) :
+    D.characteristicCurrent =
+        D.carrier.toCharacteristicCurrentData.current ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    (quotientClockCovector principalTOLinear).comp
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda) =
+      D.carrier.toCharacteristicCurrentData.clockCovector ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat :=
+  principalOnShellLagrangianVariation_clock_chain D.toOnShellInput
+
+/-- Strongest action-linked core certificate currently in the file. The same action
+metric Euler derivative fixes the carrier `J`; first variation and Noether identities
+fix the compensated current; total on-shell balance fixes the Maxwell sign; and the
+current fixes the normalized clock quotient. -/
+theorem principalActionEulerLagrangianVariation_forced_core_chain
+    (D : PrincipalActionEulerLagrangianVariationCharacteristicInput (P:=P) (L:=L))
+    (u s : ℝ) :
+    ((8 * Real.pi * principalFieldEnergyDensity D.carrier.E D.carrier.B =
+        8 * Real.pi *
+          maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+          principalFieldEnergyDensity D.carrier.E D.carrier.B) ↔ s = 0) ∧
+    deriv (principalScaledResidualFromF
+      D.carrier.E D.carrier.B 0 0) 0 =
+      principalJetFromF D.carrier.E D.carrier.B 0 0 ∧
+    (∀ i j : Fin 4,
+      D.carrier.J (principalBasis j) i =
+        (16 * Real.pi / principalMetricSign i) *
+          deriv (principalScaledMetricEulerCoeffFromAction
+            D.carrier.E D.carrier.B i j) 0) ∧
+    D.characteristicCurrent = D.carrier.actionEulerResponse ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat := by
+  have hcore := principalOnShellLagrangianVariation_forced_core_chain
+    D.toOnShellInput u s
+  rcases hcore with ⟨hrest,hjet,_hrainich,_hcurrent,hL,hdim,hnorm⟩
+  refine ⟨hrest,hjet,?_,
+    principalActionEulerLagrangianVariation_current_eq_actionEulerResponse D,
+    hL,hdim,hnorm⟩
+  intro i j
+  exact D.carrier.J_basis_eq_actionEulerJet i j
 
 /-! ### On-shell Lagrangian first variation: total field equation to clock line -/
 
