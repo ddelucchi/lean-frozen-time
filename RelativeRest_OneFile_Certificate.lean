@@ -3649,6 +3649,54 @@ theorem kerrRadialLogGradient_ne_zero_iff
   · intro hr
     exact div_ne_zero (mul_ne_zero (by norm_num) hr) hsig
 
+
+/-- Radial carrier-gradient coefficient selecting the residual Kerr-Newman boost. -/
+def kerrRadialGradient (r a θ : ℝ) : ℝ :=
+  -4 * r / Sigma r a θ
+
+/-- A purely radial principal covector has equal-and-opposite null components; the common
+normalization is irrelevant to the balance. -/
+def kerrGradientQMinus (r a θ : ℝ) : ℝ :=
+  kerrRadialGradient r a θ
+
+def kerrGradientQPlus (r a θ : ℝ) : ℝ :=
+  - kerrRadialGradient r a θ
+
+/-- On the regular `r ≠ 0` stratum the Kerr carrier gradient genuinely resolves the boost. -/
+theorem kerrGradientQMinus_ne_zero
+    (r a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hr : r ≠ 0) :
+    kerrGradientQMinus r a θ ≠ 0 := by
+  unfold kerrGradientQMinus kerrRadialGradient
+  exact (kerrRadialLogGradient_ne_zero_iff r a θ hsig).2 hr
+
+/-- Therefore the unique carrier-selected residual rapidity in the canonical principal
+Kerr-Newman frame is exactly zero. -/
+theorem kerrCarrier_balance_rapidity_zero
+    (r a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hr : r ≠ 0) :
+    sigmaStar
+      (kerrGradientQMinus r a θ)
+      (kerrGradientQPlus r a θ) = 0 := by
+  have hq := kerrGradientQMinus_ne_zero r a θ hsig hr
+  unfold kerrGradientQPlus
+  exact sigmaStar_opposite_components
+    (kerrGradientQMinus r a θ) hq
+
+/-- Equivalently, the carrier-selected observer is the unboosted principal observer. -/
+theorem kerrCarrier_balanced_observer_unboosted
+    (r a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hr : r ≠ 0) :
+    opticalObserver
+      (sigmaStar
+        (kerrGradientQMinus r a θ)
+        (kerrGradientQPlus r a θ)) = TO := by
+  rw [kerrCarrier_balance_rapidity_zero r a θ hsig hr]
+  ext <;> norm_num [opticalObserver, TO]
+
 /-- Kerr-Newman `Δ`. -/
 def Delta (r M a Q : ℝ) : ℝ := r^2 - 2*M*r + a^2 + Q^2
 
@@ -3857,6 +3905,32 @@ theorem carterNumerator_factorization
   · simp [carterNumerator, carterOmega]
     field_simp [h]
 
+
+/-- The stationary angular velocity of the canonical principal Kerr-Newman direction is
+therefore exactly Carter's `Ω_C`. -/
+theorem carterNumerator_angular_velocity
+    (r a : ℝ) (h : r^2 + a^2 ≠ 0) :
+    (carterNumerator r a).2 / (carterNumerator r a).1 =
+      carterOmega r a := by
+  simp [carterNumerator, carterOmega]
+  field_simp [h]
+
+/-- Combining the carrier-gradient balance with the canonical Kerr-Newman principal
+stationary direction gives the algebraic Carter-rest certificate: no residual boost is
+applied, and the selected stationary direction has angular velocity `Ω_C`. -/
+theorem kerr_relative_rest_carter_certificate
+    (r a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hr : r ≠ 0)
+    (hden : r^2 + a^2 ≠ 0) :
+    sigmaStar
+      (kerrGradientQMinus r a θ)
+      (kerrGradientQPlus r a θ) = 0 ∧
+    (carterNumerator r a).2 / (carterNumerator r a).1 =
+      carterOmega r a := by
+  exact ⟨kerrCarrier_balance_rapidity_zero r a θ hsig hr,
+    carterNumerator_angular_velocity r a hden⟩
+
 /-- Reissner-Nordström specialization (`a=0`) of `Σ`. -/
 theorem sigma_reissner_nordstrom (r θ : ℝ) : Sigma r 0 θ = r^2 := by
   simp [Sigma]
@@ -4064,6 +4138,12 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check kerrRadialGradient
+#check kerrGradientQMinus_ne_zero
+#check kerrCarrier_balance_rapidity_zero
+#check kerrCarrier_balanced_observer_unboosted
+#check carterNumerator_angular_velocity
+#check kerr_relative_rest_carter_certificate
 #check quotientBilinearForm
 #check quotientBilinearForm_mk
 #check quotientBilinearForm_unique
@@ -4345,3 +4425,4 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrLogChi_hasDerivAt_r
 #print axioms RelativeRest.kerrNewman_mino_clock_forced
 #print axioms RelativeRest.kerrNewman_mino_clock_from_principal_EM
+#print axioms RelativeRest.kerr_relative_rest_carter_certificate
