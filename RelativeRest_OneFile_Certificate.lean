@@ -4413,6 +4413,61 @@ theorem kerrPotential_field_factorization
     kerrPotentialT_hasDerivAt_theta Q r a θ hsig,
     kerrPotentialPhi_hasDerivAt_theta Q r a θ hsig⟩
 
+
+/-- Stationary one-form coefficients of the first Kerr-Newman metric square
+`dt-a sin²θ dφ`. -/
+def kerrTemporalOneFormCoeffs (a θ : ℝ) : R2 :=
+  (1, -a * (Real.sin θ)^2)
+
+/-- Stationary one-form coefficients of the second metric square
+`a dt-(r²+a²)dφ`. -/
+def kerrAxialOneFormCoeffs (r a : ℝ) : R2 :=
+  (a, -(r^2 + a^2))
+
+/-- Radial coordinate block of `F=dA`, represented by its `(dt,dφ)` coefficients. -/
+def kerrRadialFieldBlock (Q r a θ : ℝ) : R2 :=
+  (kerrPrincipalE Q r a θ,
+    -a * (Real.sin θ)^2 * kerrPrincipalE Q r a θ)
+
+/-- Polar coordinate block of `F=dA`. -/
+def kerrPolarFieldBlock (Q r a θ : ℝ) : R2 :=
+  (-a * Real.sin θ * kerrPrincipalB Q r a θ,
+    (r^2 + a^2) * Real.sin θ * kerrPrincipalB Q r a θ)
+
+/-- The radial Maxwell block lies exactly on the first Carter metric-square one-form. -/
+theorem kerrRadialFieldBlock_carter_aligned
+    (Q r a θ : ℝ) :
+    kerrRadialFieldBlock Q r a θ =
+      (kerrPrincipalE Q r a θ) •
+        kerrTemporalOneFormCoeffs a θ := by
+  ext <;>
+    simp [kerrRadialFieldBlock, kerrTemporalOneFormCoeffs] <;>
+    ring
+
+/-- The polar Maxwell block lies exactly on the second Carter metric-square one-form,
+with the orientation factor `-B sinθ`. -/
+theorem kerrPolarFieldBlock_carter_aligned
+    (Q r a θ : ℝ) :
+    kerrPolarFieldBlock Q r a θ =
+      (-kerrPrincipalB Q r a θ * Real.sin θ) •
+        kerrAxialOneFormCoeffs r a := by
+  ext <;>
+    simp [kerrPolarFieldBlock, kerrAxialOneFormCoeffs] <;>
+    ring
+
+/-- Thus the potential-derived electromagnetic field and the square-form metric select
+the same two stationary principal one-form directions. -/
+theorem kerrPotential_metric_principal_alignment
+    (Q r a θ : ℝ) :
+    kerrRadialFieldBlock Q r a θ =
+        (kerrPrincipalE Q r a θ) •
+          kerrTemporalOneFormCoeffs a θ ∧
+    kerrPolarFieldBlock Q r a θ =
+        (-kerrPrincipalB Q r a θ * Real.sin θ) •
+          kerrAxialOneFormCoeffs r a :=
+  ⟨kerrRadialFieldBlock_carter_aligned Q r a θ,
+    kerrPolarFieldBlock_carter_aligned Q r a θ⟩
+
 /-- The Kerr-Newman principal electromagnetic magnitude collapses exactly to `Q²/Σ²`.
 This is the algebraic identity behind the curvature carrier and requires no curvature tensor
 calculation once the principal Maxwell components are known. -/
@@ -5372,6 +5427,9 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check kerrRadialFieldBlock_carter_aligned
+#check kerrPolarFieldBlock_carter_aligned
+#check kerrPotential_metric_principal_alignment
 #check kerrResolvingQMinus_ne_zero
 #check kerrResolving_balance_rapidity_zero
 #check kerrResolving_balanced_observer_unboosted
@@ -5763,6 +5821,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrNewman_mino_clock_from_principal_EM
 #print axioms RelativeRest.kerrMinoClockFromPrincipalEM
 #print axioms RelativeRest.kerrPotential_field_factorization
+#print axioms RelativeRest.kerrPotential_metric_principal_alignment
 #print axioms RelativeRest.kerr_relative_rest_carter_certificate
 #print axioms RelativeRest.carterObserver_unit_timelike
 #print axioms RelativeRest.kerr_relative_rest_carter_regular
