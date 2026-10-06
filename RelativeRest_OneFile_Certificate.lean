@@ -16772,6 +16772,57 @@ theorem principalDisplayedMetricEulerOrbitVariation_forced_core_chain
   exact principalMetricEulerRelativeLinear_basis
     D.carrier.E D.carrier.B s i j
 
+/-- Characteristic current obtained from the single canonical Noether
+constraint identity. -/
+def PrincipalCanonicalNoetherVariationCharacteristicInput.characteristicCurrent
+    (D : PrincipalCanonicalNoetherVariationCharacteristicInput (P:=P)) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
+  D.toDisplayedOrbitInput.characteristicCurrent
+
+/-- Strongest action/CPS forced-core theorem with only one geometric bridge premise:
+the Iyer-Wald constraint operator is the canonical `2E^a{}_b` operator already
+constructed from the displayed Einstein-Maxwell action. -/
+theorem principalCanonicalNoether_forced_core_chain
+    (D : PrincipalCanonicalNoetherVariationCharacteristicInput (P:=P))
+    (u s : ℝ) :
+    ((8 * Real.pi * principalFieldEnergyDensity D.carrier.E D.carrier.B =
+        8 * Real.pi *
+          maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+          principalFieldEnergyDensity D.carrier.E D.carrier.B) ↔ s = 0) ∧
+    (∀ i j : Fin 4,
+      principalMetricEulerRelativeLinear D.carrier.E D.carrier.B s
+          (principalBasis j) i =
+        (16 * Real.pi / principalMetricSign i) * Real.exp (-s) *
+          principalScaledMetricEulerCoeffFromAction
+            D.carrier.E D.carrier.B i j s) ∧
+    D.variation.constraint =
+      D.carrier.noetherConstraintOperatorFromAction ∧
+    D.variation.constraint CA = 0 ∧
+    D.variation.constraint DA =
+      D.carrier.iε.comp
+        (principalMetricEulerNoetherJetLinear
+          D.carrier.E D.carrier.B) ∧
+    D.characteristicCurrent = D.carrier.metricEulerJetResponse ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat := by
+  have h := principalDisplayedMetricEulerOrbitVariation_forced_core_chain
+    D.toDisplayedOrbitInput u s
+  rcases h with ⟨hrest,hmetric,_horbit,_hop,hcur,hL,hdim,hnorm⟩
+  refine ⟨hrest,hmetric,D.noetherConstraintFromAction,?_,?_,hcur,hL,hdim,hnorm⟩
+  · rw [D.noetherConstraintFromAction]
+    exact D.carrier.noetherConstraintOperatorFromAction_CA
+  · rw [D.noetherConstraintFromAction]
+    exact D.carrier.noetherConstraintOperatorFromAction_DA
+
 /-! ### Central manuscript closure certificate -/
 
 /-- A single closure theorem assembling the manuscript's central forced chain.
@@ -18768,6 +18819,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.PrincipalCarrierCharacteristicInput.noetherConstraintOperatorFromAction_DA
 #print axioms RelativeRest.PrincipalCarrierCharacteristicInput.noetherConstraintOperatorFromAction_relativeOrbit
 #print axioms RelativeRest.PrincipalDisplayedMetricEulerOrbitVariationCharacteristicInput.constraint_eq_canonicalNoether
+#print axioms RelativeRest.principalCanonicalNoether_forced_core_chain
 #print axioms RelativeRest.principalDiffeomorphismNoether_decomposition
 #print axioms RelativeRest.principalGeneralizedBianchi_forced_by_diffeomorphism_invariance
 #print axioms RelativeRest.principalMetricEulerDivergence_zero_of_generalizedBianchi_onMaxwellShell
