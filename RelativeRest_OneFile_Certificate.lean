@@ -787,6 +787,24 @@ theorem involution_eigenspaces_orthogonal
 
 /-! ## 6. Unique residual boost balance -/
 
+/-- Principal-plane covector norm in a normalized null basis, with
+`g^{-1}(p,p) = -2 q_- q_+`. -/
+def nullCovectorNormSq (qminus qplus : ℝ) : ℝ :=
+  -2 * qminus * qplus
+
+/-- A non-null principal-plane covector necessarily has both null components nonzero. -/
+theorem nullCovectorNormSq_ne_zero_components
+    (qm qp : ℝ)
+    (hnonnull : nullCovectorNormSq qm qp ≠ 0) :
+    qm ≠ 0 ∧ qp ≠ 0 := by
+  constructor
+  · intro hqm
+    apply hnonnull
+    simp [nullCovectorNormSq, hqm]
+  · intro hqp
+    apply hnonnull
+    simp [nullCovectorNormSq, hqp]
+
 /-- Scalar boost defect. -/
 def boostDefect (qminus qplus σ : ℝ) : ℝ :=
   Real.exp (-2 * σ) * qminus^2 - Real.exp (2 * σ) * qplus^2
@@ -943,6 +961,24 @@ theorem boost_balance_exists_unique
   intro τ hτ
   exact boost_balance_unique qm qp τ (sigmaStar qm qp) hqm hqp
     hτ (sigmaStar_balance qm qp hqm hqp)
+
+/-- In the manuscript's geometric hypothesis `p² ≠ 0`, the unique balance follows from
+one non-null condition rather than two separately imposed component assumptions. -/
+theorem boost_balance_exists_unique_of_nonnull
+    (qm qp : ℝ)
+    (hnonnull : nullCovectorNormSq qm qp ≠ 0) :
+    ∃! σ : ℝ, boostDefect qm qp σ = 0 := by
+  rcases nullCovectorNormSq_ne_zero_components qm qp hnonnull with ⟨hqm, hqp⟩
+  exact boost_balance_exists_unique qm qp hqm hqp
+
+/-- The same non-null condition forces the manuscript's explicit balancing rapidity to solve
+the defect equation. -/
+theorem sigmaStar_balance_of_nonnull
+    (qm qp : ℝ)
+    (hnonnull : nullCovectorNormSq qm qp ≠ 0) :
+    boostDefect qm qp (sigmaStar qm qp) = 0 := by
+  rcases nullCovectorNormSq_ne_zero_components qm qp hnonnull with ⟨hqm, hqp⟩
+  exact sigmaStar_balance qm qp hqm hqp
 
 /-- Substituting the forced balancing rapidity makes the balanced null dyad independent
 of the initial boost representative. -/
@@ -2481,6 +2517,10 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check nullCovectorNormSq
+#check nullCovectorNormSq_ne_zero_components
+#check boost_balance_exists_unique_of_nonnull
+#check sigmaStar_balance_of_nonnull
 #check kernel_invisible_of_response_extensional
 #check alternating_bilinear_zero_on_clock_line
 #check clockPotential_increment
