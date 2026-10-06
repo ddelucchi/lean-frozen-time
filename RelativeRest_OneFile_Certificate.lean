@@ -287,8 +287,39 @@ theorem solution_preserving_fixed_point_iff
   · rintro rfl
     simp
 
+/-- Scalar component of the common-character-removed field-equation residual. -/
+def scaledResidual (G T s : ℝ) : ℝ :=
+  Real.exp (-s) * (G - 8 * Real.pi * Real.exp (2 * s) * T)
+
+/-- On shell, the scaled residual is forced to the exchange-odd sinh defect used in the paper. -/
+theorem scaledResidual_onShell_eq_sinh
+    (G T s : ℝ) (hEinstein : G = 8 * Real.pi * T) :
+    scaledResidual G T s = -16 * Real.pi * Real.sinh s * T := by
+  have hexp : Real.exp (-s) * Real.exp (2 * s) = Real.exp s := by
+    rw [← Real.exp_add]
+    congr 1
+    ring
+  rw [scaledResidual, hEinstein]
+  calc
+    Real.exp (-s) *
+        (8 * Real.pi * T - 8 * Real.pi * Real.exp (2 * s) * T)
+        =
+      8 * Real.pi * T *
+        (Real.exp (-s) - Real.exp (-s) * Real.exp (2 * s)) := by ring
+    _ = 8 * Real.pi * T * (Real.exp (-s) - Real.exp s) := by rw [hexp]
+    _ = -16 * Real.pi * Real.sinh s * T := by
+      rw [← Real.cosh_sub_sinh s, ← Real.cosh_add_sinh s]
+      ring
+
 /-- Scalar model of the on-shell odd normal defect. -/
 def defect (T s : ℝ) : ℝ := -16 * Real.pi * Real.sinh s * T
+
+/-- The paper's defect is exactly the on-shell scaled field-equation residual. -/
+theorem scaledResidual_onShell_eq_defect
+    (G T s : ℝ) (hEinstein : G = 8 * Real.pi * T) :
+    scaledResidual G T s = defect T s := by
+  rw [scaledResidual_onShell_eq_sinh G T s hEinstein]
+  rfl
 
 @[simp] theorem defect_zero (T : ℝ) : defect T 0 = 0 := by
   simp [defect]
@@ -355,6 +386,13 @@ theorem defect_odd_iteratedDeriv_ne_zero
     iteratedDeriv (2 * n + 1) (defect T) 0 ≠ 0 := by
   rw [defect_odd_iteratedDeriv_eq_minus_two_ricci T Ric hRic n]
   exact mul_ne_zero (by norm_num) hRic0
+
+/-- On nonvacuum electrovac, the scaled field-equation residual has the unique zero `s=0`. -/
+theorem scaledResidual_zero_iff_fixed_point
+    (G T s : ℝ) (hEinstein : G = 8 * Real.pi * T) (hT : T ≠ 0) :
+    scaledResidual G T s = 0 ↔ s = 0 := by
+  rw [scaledResidual_onShell_eq_defect G T s hEinstein]
+  exact defect_eq_zero_iff T s hT
 
 /-- Even/odd carrier pair used in the manuscript. -/
 def carrierEven (η s : ℝ) : ℝ := 2 * Real.cosh s * η
@@ -431,6 +469,21 @@ theorem carrier_ratio
 
 abbrev R2 := ℝ × ℝ
 
+/-- Linearized solution residual on the two action-sector coefficients.
+At a solution this is the scalar model of
+`R^{lin}_Φ(x_G E_G+x_M E_M)=(x_G-x_M)R`. -/
+def residualLinear (Ric : ℝ) : R2 →ₗ[ℝ] ℝ where
+  toFun v := (v.1 - v.2) * Ric
+  map_add' x y := by
+    rcases x with ⟨x₁, x₂⟩
+    rcases y with ⟨y₁, y₂⟩
+    simp
+    ring
+  map_smul' c x := by
+    rcases x with ⟨x₁, x₂⟩
+    simp
+    ring
+
 /-- Action-space boost generator in the `(E_G,E_M)` basis. -/
 def YA (v : R2) : R2 := (-v.1, v.2)
 
@@ -452,6 +505,21 @@ def JA (v : R2) : R2 := (v.2, v.1)
 @[simp] theorem JA_sq (v : R2) : JA (JA v) = v := by
   rcases v with ⟨x, y⟩
   rfl
+
+@[simp] theorem residualLinear_CA (Ric : ℝ) :
+    residualLinear Ric CA = 0 := by
+  norm_num [residualLinear, CA]
+
+@[simp] theorem residualLinear_DA (Ric : ℝ) :
+    residualLinear Ric DA = -2 * Ric := by
+  norm_num [residualLinear, DA]
+  ring
+
+/-- The odd action direction maps exactly to the fixed-point carrier `J=-2R=-16πT`. -/
+theorem residualLinear_DA_eq_jet
+    (T Ric : ℝ) (hRic : Ric = 8 * Real.pi * T) :
+    residualLinear Ric DA = -16 * Real.pi * T := by
+  rw [residualLinear_DA, ← jet_eq_minus_two_ricci T Ric hRic]
 
 @[simp] theorem YA_CA : YA CA = DA := by
   ext <;> norm_num [YA, CA, DA]
@@ -1809,6 +1877,12 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check scaledResidual_onShell_eq_sinh
+#check scaledResidual_onShell_eq_defect
+#check scaledResidual_zero_iff_fixed_point
+#check residualLinear_CA
+#check residualLinear_DA
+#check residualLinear_DA_eq_jet
 #check JA_CA
 #check JA_DA
 #check JA_actionBoost
