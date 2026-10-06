@@ -10,6 +10,7 @@ require mathlib from git
 lean_lib RelativeRest_OneFile_Certificate
 lean_lib RelativeRest_DeepPass2
 lean_lib RelativeRest_DeepPass3
+lean_lib RelativeRest_DeepPass4
 
 @[default_target]
-lean_lib RelativeRest_DeepPass4
+lean_lib RelativeRest_DeepPass5
