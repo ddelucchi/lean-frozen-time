@@ -18817,6 +18817,174 @@ end PaperForcedArchitecture
 
 end GeometricInterface
 
+/-! ### Strong manuscript-wide certificate from constructed local Noether + actual Synge IFT data -/
+
+section PaperActionLocalIFTArchitecture
+
+variable {X : Type*}
+  [NormedAddCommGroup X] [NormedSpace ℝ X] [CompleteSpace X]
+
+/-- Strongest manuscript-wide proof object in the file.  Its CPS datum contains only
+the carrier plus first-variation/Cartan core, while its optical datum contains actual
+world-function maps, strict derivatives and IFT invertibility.  The Noether package,
+local bulk coefficient, global relative orbit, endpoint covectors and optical closure
+are constructed downstream. -/
+structure PaperActionLocalIFTArchitectureCertificate
+    (Bdual :
+      (X →L[ℝ] ℝ) →ₗ[ℝ] (X →L[ℝ] ℝ) →ₗ[ℝ] ℝ)
+    (D : PrincipalActionLocalCompletedCharacteristicInput (P:=P))
+    (S : RegularSyngeEndpointPairSource Bdual)
+    (Q r M a θ dt dlam u s : ℝ) : Prop where
+  actionFixedPoint :
+    (8 * Real.pi * principalFieldEnergyDensity D.carrier.E D.carrier.B =
+      8 * Real.pi *
+        maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+        principalFieldEnergyDensity D.carrier.E D.carrier.B) ↔ s = 0
+  localNoetherCoeff :
+    ∀ i j : Fin 4,
+      D.bulkCoeff s i j =
+        2 * principalMetricSign i * Real.exp (-s) *
+          principalScaledMetricEulerCoeffFromAction
+            D.carrier.E D.carrier.B i j s
+  canonicalConstraint :
+    D.variation.constraint =
+      D.carrier.noetherConstraintOperatorFromAction
+  characteristicCurrent :
+    D.characteristicCurrent =
+      D.carrier.toCharacteristicCurrentData.current
+  quotientOneDimensional :
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1
+  normalizedClockLift :
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat
+  futureEndpointIFT :
+    HasStrictFDerivAt
+      S.plus.endpointMap
+      ((-S.plus.sigmaTheta⁻¹) • S.plus.sigmaX)
+      S.plus.u.1
+  pastEndpointIFT :
+    HasStrictFDerivAt
+      S.minus.endpointMap
+      ((-S.minus.sigmaTheta⁻¹) • S.minus.sigmaX)
+      S.minus.u.1
+  syngeOpticalClosure :
+    bil Bdual
+        S.toSyngeEndpointJetData.clockCovector
+        S.toSyngeEndpointJetData.radialCovector = 0 ∧
+    -(bil Bdual
+        S.toSyngeEndpointJetData.clockCovector
+        S.toSyngeEndpointJetData.clockCovector) =
+      bil Bdual
+        S.toSyngeEndpointJetData.radialCovector
+        S.toSyngeEndpointJetData.radialCovector
+  characteristicBasicDescent :
+    IsBasicCovectorFor
+        (LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda)
+        D.carrier.toCharacteristicCurrentData.Lambda ∧
+      ∃! λbar :
+          (D.carrier.toCharacteristicCurrentData.K ⧸
+            LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) →ₗ[ℝ] ℝ,
+        λbar.comp
+            (LinearMap.ker
+              D.carrier.toCharacteristicCurrentData.Lambda).mkQ =
+          D.carrier.toCharacteristicCurrentData.Lambda
+  clockCoverReebUnique :
+    ∃! v : R2,
+      tangentToClockSection v ∧ clockLiouville 1 v = 1
+  relationalEvolution :
+    ∀ (O XF : ℝ → ℝ) (T ϑ : ℝ),
+      HasDerivAt O (XF (ϑ - T)) (ϑ - T) →
+      deriv (fun z => O (z - T)) ϑ = XF (ϑ - T)
+  causalBranchIndependence :
+    ∀ (P₁ P₂ F₁ F₂ : Set ℝ),
+      P₁ = P₂ → F₁ = F₂ →
+      pastEndpoint P₁ = pastEndpoint P₂ ∧
+      futureEndpoint F₁ = futureEndpoint F₂
+  kerrFullFieldMetricClock :
+    (∀ i j : Fin 4,
+      kerrEinsteinCovFromMetric r M a Q θ i j =
+        8 * Real.pi *
+          kerrMaxwellStressCovFromPotential Q r M a θ i j) ∧
+    kerrCoordinateField Q r a θ =
+      kerrFieldInCarterCoframe Q r M a θ ∧
+    (kerrVolumeDensity r a θ * kerrRaisedFrt Q r M a θ =
+        kerrDensitizedFrt Q r a θ ∧
+     kerrVolumeDensity r a θ * kerrRaisedFrPhi Q r M a θ =
+        kerrDensitizedFrPhi Q r a θ ∧
+     kerrVolumeDensity r a θ * kerrRaisedFthetaT Q r M a θ =
+        kerrDensitizedFthetaT Q r a θ ∧
+     kerrVolumeDensity r a θ * kerrRaisedFthetaPhi Q r M a θ =
+        kerrDensitizedFthetaPhi Q r M a θ ∧
+     deriv (fun x : ℝ => kerrDensitizedFrt Q x a θ) r +
+        deriv (fun x : ℝ => kerrDensitizedFthetaT Q r a x) θ = 0 ∧
+     deriv (fun x : ℝ => kerrDensitizedFrPhi Q x a θ) r +
+        deriv (fun x : ℝ => kerrDensitizedFthetaPhi Q r a x) θ = 0) ∧
+    sigmaStar
+      (kerrResolvingQMinus r a θ)
+      (kerrResolvingQPlus r a θ) = 0 ∧
+    kerrStationaryNormSq r M a Q θ
+      (carterObserver r M a Q θ) = -1 ∧
+    kerrClockRateFromPrincipalEM Q r a θ * dt =
+      Real.sqrt 2 * |Q| * dlam
+
+/-- Constructor for the strongest manuscript-wide architecture certificate. -/
+theorem paper_actionLocal_IFT_architecture_certificate
+    (Bdual :
+      (X →L[ℝ] ℝ) →ₗ[ℝ] (X →L[ℝ] ℝ) →ₗ[ℝ] ℝ)
+    (D : PrincipalActionLocalCompletedCharacteristicInput (P:=P))
+    (S : RegularSyngeEndpointPairSource Bdual)
+    (hsym : ∀ x y, bil Bdual x y = bil Bdual y x)
+    (Q r M a θ dt dlam u s : ℝ)
+    (hQ : Q ≠ 0)
+    (hsig : 0 < Sigma r a θ)
+    (hdel : 0 < Delta r M a Q)
+    (hsin : 0 < Real.sin θ)
+    (hmino : dlam = dt / Sigma r a θ) :
+    PaperActionLocalIFTArchitectureCertificate
+      Bdual D S Q r M a θ dt dlam u s := by
+  have hcore :=
+    principalActionLocalCompleted_forced_core_chain D u s
+  rcases hcore with
+    ⟨hrest,hbulk,hconstraint,_hcurMetric,_hLambda,hdim,hnorm⟩
+  refine {
+    actionFixedPoint := hrest
+    localNoetherCoeff := hbulk
+    canonicalConstraint := hconstraint
+    characteristicCurrent := ?_
+    quotientOneDimensional := hdim
+    normalizedClockLift := hnorm
+    futureEndpointIFT :=
+      S.plus.endpointMap_hasStrictFDerivAt_explicit
+    pastEndpointIFT :=
+      S.minus.endpointMap_hasStrictFDerivAt_explicit
+    syngeOpticalClosure := S.optical_closure hsym
+    characteristicBasicDescent := ?_
+    clockCoverReebUnique := clock_section_reeb_existsUnique
+    relationalEvolution := ?_
+    causalBranchIndependence := ?_
+    kerrFullFieldMetricClock :=
+      kerrNewman_full_field_metric_clock_certificate
+        Q r M a θ dt dlam hQ hsig hdel hsin hmino }
+  · exact
+      principalDisplayedMetricEulerOrbitVariation_current_eq_characteristicCurrent
+        D.toLocalNoetherInput.toDisplayedOrbitInput
+  · exact
+      kernelClockCovector_basic_and_unique
+        D.carrier.toCharacteristicCurrentData.Lambda
+  · intro O XF T ϑ hO
+    exact relational_evolution_from_flow_derivative O XF T ϑ hO
+  · intro P₁ P₂ F₁ F₂ hP hF
+    exact causal_endpoints_branch_independent hP hF
+
+end PaperActionLocalIFTArchitecture
+
 /-! ## 19. End-to-end dependency record -/
 
 /-- A compact theorem collecting the fully proved scalar backbone: four-dimensional reciprocity,
