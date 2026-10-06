@@ -6,18 +6,23 @@ import Mathlib
 
 This file is intentionally adversarial about assumptions.
 
-* Every theorem in the scalar/projective/boost/quotient/clock-algebra chain below is proved.
-* No proof placeholders or project-local axioms are used in theorem bodies.
-* Where the manuscript uses infrastructure that is not presently reconstructed here from the
-  Einstein–Maxwell Lagrangian (full Lorentzian tensor calculus, Iyer–Wald current, contact
-  reduction, causal endpoint globalization, explicit Kerr–Newman curvature), the required
-  geometric fact is represented by an explicit hypothesis to a downstream theorem.
+* Every theorem body below is explicit: there are no `sorry` placeholders or project-local axioms.
+* The projective/action-scaling, fixed-point jet, explicit principal Maxwell stress, Rainich
+  involution, residual-boost uniqueness, characteristic quotient, one-dimensional clock,
+  optical closure, relational-flow algebra, and Kerr–Newman principal-field scalar chain are
+  proved in Lean.
+* In particular, the strongest Kerr–Newman route reconstructs the Ricci norm, intrinsic clock
+  rate, and Mino relation from the explicit principal Maxwell field rather than importing a
+  Kerr-specific curvature scalar.
+* What is not yet reconstructed from first principles is the full differential-geometric
+  infrastructure: the Einstein–Maxwell Lagrangian as Lorentzian tensor/differential-form
+  objects, the Iyer–Wald current on covariant phase space, smooth Synge-world-function endpoint
+  geometry through caustics, and the derivation of the canonical Kerr–Newman principal tetrad
+  from the metric and potential.  Those facts enter only through explicit downstream interfaces
+  or hypotheses; the algebraic consequences are proved once they are supplied.
 
-Consequently this file is a genuine kernel-checkable *logical certificate* for a large fraction
-of the manuscript, but it is not falsely advertised as a first-principles formalization of all
-GR/covariant-phase-space infrastructure.  The remaining interfaces are isolated in the
-`GeometricInterface` and `KerrNewmanInterface` sections so they can be discharged later without
-changing the downstream proofs.
+Consequently this file is a kernel-oriented logical certificate of the manuscript's forced
+algebraic and quotient structure while keeping the remaining geometric boundary visible.
 -/
 
 noncomputable section
