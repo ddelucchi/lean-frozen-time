@@ -16993,6 +16993,82 @@ theorem principalCanonicalNoether_forced_core_chain
   · rw [D.noetherConstraintFromAction]
     exact D.carrier.noetherConstraintOperatorFromAction_DA
 
+/-! ### Canonical completion: no free Noether constraint or charge descendants -/
+
+/-- Finite-dimensional action/CPS input before any Noether constraint or charge
+descendant is chosen.  The first-variation/Cartan core is retained, while the
+entire Noether package is canonically completed using the action-derived bulk
+constraint. -/
+structure PrincipalCanonicalCompletedCharacteristicInput where
+  carrier : PrincipalCarrierCharacteristicInput (P:=P)
+  core : LagrangianFirstVariationCartanData
+    (L:=R2) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ))
+
+/-- The complete Noether package is constructed, not supplied. -/
+def PrincipalCanonicalCompletedCharacteristicInput.variation
+    (D : PrincipalCanonicalCompletedCharacteristicInput (P:=P)) :
+    LagrangianVariationNoetherOperators
+      (L:=R2) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ)) :=
+  D.core.toNoetherOperators
+    D.carrier.noetherConstraintOperatorFromAction
+
+/-- The constructed package satisfies the single canonical Noether identity
+definitionally through the completion theorem. -/
+def PrincipalCanonicalCompletedCharacteristicInput.toCanonicalNoetherInput
+    (D : PrincipalCanonicalCompletedCharacteristicInput (P:=P)) :
+    PrincipalCanonicalNoetherVariationCharacteristicInput (P:=P) where
+  carrier := D.carrier
+  variation := D.variation
+  noetherConstraintFromAction := by
+    exact
+      D.core.toNoetherOperators_constraint
+        D.carrier.noetherConstraintOperatorFromAction
+
+/-- Characteristic current of the canonically completed package. -/
+def PrincipalCanonicalCompletedCharacteristicInput.characteristicCurrent
+    (D : PrincipalCanonicalCompletedCharacteristicInput (P:=P)) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
+  D.toCanonicalNoetherInput.characteristicCurrent
+
+/-- Entire finite-dimensional action-to-clock core with no independently supplied
+Noether constraint, sector sign, relative orbit, charge derivative, or Iyer-Wald
+identity.  Those are all reconstructed from the first-variation/Cartan core and
+the action-derived canonical constraint. -/
+theorem principalCanonicalCompleted_forced_core_chain
+    (D : PrincipalCanonicalCompletedCharacteristicInput (P:=P))
+    (u s : ℝ) :
+    ((8 * Real.pi * principalFieldEnergyDensity D.carrier.E D.carrier.B =
+        8 * Real.pi *
+          maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+          principalFieldEnergyDensity D.carrier.E D.carrier.B) ↔ s = 0) ∧
+    (∀ i j : Fin 4,
+      principalMetricEulerRelativeLinear D.carrier.E D.carrier.B s
+          (principalBasis j) i =
+        (16 * Real.pi / principalMetricSign i) * Real.exp (-s) *
+          principalScaledMetricEulerCoeffFromAction
+            D.carrier.E D.carrier.B i j s) ∧
+    D.variation.constraint =
+      D.carrier.noetherConstraintOperatorFromAction ∧
+    D.variation.constraint CA = 0 ∧
+    D.variation.constraint DA =
+      D.carrier.iε.comp
+        (principalMetricEulerNoetherJetLinear
+          D.carrier.E D.carrier.B) ∧
+    D.characteristicCurrent = D.carrier.metricEulerJetResponse ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat := by
+  exact principalCanonicalNoether_forced_core_chain
+    D.toCanonicalNoetherInput u s
+
 /-! ### Central manuscript closure certificate -/
 
 /-- A single closure theorem assembling the manuscript's central forced chain.
@@ -18990,6 +19066,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.PrincipalCarrierCharacteristicInput.noetherConstraintOperatorFromAction_relativeOrbit
 #print axioms RelativeRest.PrincipalDisplayedMetricEulerOrbitVariationCharacteristicInput.constraint_eq_canonicalNoether
 #print axioms RelativeRest.principalCanonicalNoether_forced_core_chain
+#print axioms RelativeRest.principalCanonicalCompleted_forced_core_chain
 #print axioms RelativeRest.principalDiffeomorphismNoether_decomposition
 #print axioms RelativeRest.principalGeneralizedBianchi_forced_by_diffeomorphism_invariance
 #print axioms RelativeRest.LagrangianFirstVariationCartanData.toNoetherOperators_constraint
