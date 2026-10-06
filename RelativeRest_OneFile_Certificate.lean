@@ -4293,6 +4293,25 @@ theorem Sigma_hasDerivAt_r (r a θ : ℝ) :
   unfold Sigma
   convert ((hasDerivAt_id r).pow 2).add_const (a^2 * (Real.cos θ)^2) using 1 <;> ring
 
+/-- Polar derivative of the Kerr-Newman separability scalar. -/
+theorem Sigma_hasDerivAt_theta (r a θ : ℝ) :
+    HasDerivAt (fun x : ℝ => Sigma r a x)
+      (-2 * a^2 * Real.cos θ * Real.sin θ) θ := by
+  have hc := (Real.hasDerivAt_cos θ).pow 2
+  have hs := hc.const_mul (a^2)
+  have hsum := hs.const_add (r^2)
+  unfold Sigma
+  convert hsum using 1 <;> ring
+
+/-- Boyer-Lindquist time component of the Kerr-Newman potential
+`A=-(Qr/Σ)(dt-a sin²θ dφ)`. -/
+def kerrPotentialT (Q r a θ : ℝ) : ℝ :=
+  -Q * r / Sigma r a θ
+
+/-- Boyer-Lindquist azimuthal component of the same potential. -/
+def kerrPotentialPhi (Q r a θ : ℝ) : ℝ :=
+  Q * r * a * (Real.sin θ)^2 / Sigma r a θ
+
 /-- Principal-frame electric component of the Kerr-Newman Maxwell field. -/
 def kerrPrincipalE (Q r a θ : ℝ) : ℝ :=
   Q * (r^2 - a^2 * (Real.cos θ)^2) / (Sigma r a θ)^2
@@ -4300,6 +4319,94 @@ def kerrPrincipalE (Q r a θ : ℝ) : ℝ :=
 /-- Principal-frame magnetic component of the Kerr-Newman Maxwell field. -/
 def kerrPrincipalB (Q r a θ : ℝ) : ℝ :=
   2 * Q * a * r * Real.cos θ / (Sigma r a θ)^2
+
+
+/-- The radial derivative of `A_t` is exactly the principal electric coefficient. -/
+theorem kerrPotentialT_hasDerivAt_r
+    (Q r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    HasDerivAt (fun x : ℝ => kerrPotentialT Q x a θ)
+      (kerrPrincipalE Q r a θ) r := by
+  have hn : HasDerivAt (fun x : ℝ => -Q * x) (-Q) r :=
+    (hasDerivAt_id r).const_mul (-Q)
+  have hd := Sigma_hasDerivAt_r r a θ
+  have hraw := hn.fun_div hd hsig
+  unfold kerrPotentialT
+  convert hraw using 1
+  unfold kerrPrincipalE Sigma
+  field_simp [hsig]
+  ring
+
+/-- The radial derivative of `A_φ` is the same electric coefficient with the forced
+Boyer-Lindquist factor `-a sin²θ`. -/
+theorem kerrPotentialPhi_hasDerivAt_r
+    (Q r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    HasDerivAt (fun x : ℝ => kerrPotentialPhi Q x a θ)
+      (-a * (Real.sin θ)^2 * kerrPrincipalE Q r a θ) r := by
+  have hn :
+      HasDerivAt
+        (fun x : ℝ => (Q * a * (Real.sin θ)^2) * x)
+        (Q * a * (Real.sin θ)^2) r :=
+    (hasDerivAt_id r).const_mul (Q * a * (Real.sin θ)^2)
+  have hd := Sigma_hasDerivAt_r r a θ
+  have hraw := hn.fun_div hd hsig
+  unfold kerrPotentialPhi
+  convert hraw using 1
+  unfold kerrPrincipalE Sigma
+  field_simp [hsig]
+  ring
+
+/-- The polar derivative of `A_t` is the principal magnetic coefficient with factor
+`-a sinθ`. -/
+theorem kerrPotentialT_hasDerivAt_theta
+    (Q r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    HasDerivAt (fun x : ℝ => kerrPotentialT Q r a x)
+      (-a * Real.sin θ * kerrPrincipalB Q r a θ) θ := by
+  have hn : HasDerivAt (fun _ : ℝ => -Q * r) 0 θ :=
+    hasDerivAt_const θ (-Q * r)
+  have hd := Sigma_hasDerivAt_theta r a θ
+  have hraw := hn.fun_div hd hsig
+  unfold kerrPotentialT
+  convert hraw using 1
+  unfold kerrPrincipalB Sigma
+  field_simp [hsig]
+  ring
+
+/-- The polar derivative of `A_φ` carries the complementary principal factor
+`(r²+a²) sinθ`. -/
+theorem kerrPotentialPhi_hasDerivAt_theta
+    (Q r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    HasDerivAt (fun x : ℝ => kerrPotentialPhi Q r a x)
+      ((r^2 + a^2) * Real.sin θ * kerrPrincipalB Q r a θ) θ := by
+  have hsin2 := (Real.hasDerivAt_sin θ).pow 2
+  have hn :
+      HasDerivAt
+        (fun x : ℝ => (Q * r * a) * (Real.sin x)^2)
+        ((Q * r * a) * (2 * Real.sin θ * Real.cos θ)) θ := by
+    convert hsin2.const_mul (Q * r * a) using 1 <;> ring
+  have hd := Sigma_hasDerivAt_theta r a θ
+  have hraw := hn.fun_div hd hsig
+  unfold kerrPotentialPhi
+  convert hraw using 1
+  unfold kerrPrincipalB Sigma
+  field_simp [hsig]
+  ring
+
+/-- The four nonzero coordinate derivatives of the Kerr-Newman potential therefore
+factor through the two principal field scalars `E` and `B`. -/
+theorem kerrPotential_field_factorization
+    (Q r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    HasDerivAt (fun x : ℝ => kerrPotentialT Q x a θ)
+        (kerrPrincipalE Q r a θ) r ∧
+    HasDerivAt (fun x : ℝ => kerrPotentialPhi Q x a θ)
+        (-a * (Real.sin θ)^2 * kerrPrincipalE Q r a θ) r ∧
+    HasDerivAt (fun x : ℝ => kerrPotentialT Q r a x)
+        (-a * Real.sin θ * kerrPrincipalB Q r a θ) θ ∧
+    HasDerivAt (fun x : ℝ => kerrPotentialPhi Q r a x)
+        ((r^2 + a^2) * Real.sin θ * kerrPrincipalB Q r a θ) θ := by
+  exact ⟨kerrPotentialT_hasDerivAt_r Q r a θ hsig,
+    kerrPotentialPhi_hasDerivAt_r Q r a θ hsig,
+    kerrPotentialT_hasDerivAt_theta Q r a θ hsig,
+    kerrPotentialPhi_hasDerivAt_theta Q r a θ hsig⟩
 
 /-- The Kerr-Newman principal electromagnetic magnitude collapses exactly to `Q²/Σ²`.
 This is the algebraic identity behind the curvature carrier and requires no curvature tensor
@@ -5101,6 +5208,12 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check Sigma_hasDerivAt_theta
+#check kerrPotentialT_hasDerivAt_r
+#check kerrPotentialPhi_hasDerivAt_r
+#check kerrPotentialT_hasDerivAt_theta
+#check kerrPotentialPhi_hasDerivAt_theta
+#check kerrPotential_field_factorization
 #check maxwellPositiveResponseFromField_eq
 #check maxwellPositiveResponseFromField_pos
 #check PrincipalFieldBridgeData.response_positive
@@ -5476,5 +5589,6 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrNewman_mino_clock_forced
 #print axioms RelativeRest.kerrNewman_mino_clock_from_principal_EM
 #print axioms RelativeRest.kerrMinoClockFromPrincipalEM
+#print axioms RelativeRest.kerrPotential_field_factorization
 #print axioms RelativeRest.kerr_relative_rest_carter_certificate
 #print axioms RelativeRest.kerr_regular_first_or_second_radial_jet_resolves
