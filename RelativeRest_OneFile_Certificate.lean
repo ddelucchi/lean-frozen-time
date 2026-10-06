@@ -2981,6 +2981,63 @@ def skewQuotientBilinearForm
   quotientBilinearForm B p hchar
     (skew_right_radical_of_left B p hskew hchar)
 
+/-- Canonical symplectic reduction of a skew bilinear form by its full characteristic kernel. -/
+def presymplecticReductionForm
+    (B : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (hskew : ∀ x y : V, B x y = - B y x) :
+    (V ⧸ LinearMap.ker B) →ₗ[ℝ]
+      (V ⧸ LinearMap.ker B) →ₗ[ℝ] ℝ :=
+  skewQuotientBilinearForm B (LinearMap.ker B) hskew le_rfl
+
+/-- The reduced form evaluates on quotient representatives exactly as the original form. -/
+@[simp] theorem presymplecticReductionForm_mk
+    (B : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (hskew : ∀ x y : V, B x y = - B y x)
+    (x y : V) :
+    presymplecticReductionForm B hskew
+      (Submodule.Quotient.mk x) (Submodule.Quotient.mk y) =
+      B x y := by
+  rfl
+
+/-- Quotienting a skew presymplectic form by its entire characteristic kernel makes the
+descended form left-nondegenerate. -/
+theorem presymplecticReductionForm_left_nondegenerate
+    (B : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (hskew : ∀ x y : V, B x y = - B y x)
+    (x : V ⧸ LinearMap.ker B)
+    (hzero :
+      ∀ y : V ⧸ LinearMap.ker B,
+        presymplecticReductionForm B hskew x y = 0) :
+    x = 0 := by
+  refine Submodule.Quotient.induction_on _ x ?_
+  intro v
+  rw [Submodule.Quotient.mk_eq_zero]
+  change B v = 0
+  apply LinearMap.ext
+  intro w
+  simpa using hzero (Submodule.Quotient.mk w)
+
+/-- By skew-symmetry the same reduced form is nondegenerate in the second slot as well. -/
+theorem presymplecticReductionForm_right_nondegenerate
+    (B : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (hskew : ∀ x y : V, B x y = - B y x)
+    (y : V ⧸ LinearMap.ker B)
+    (hzero :
+      ∀ x : V ⧸ LinearMap.ker B,
+        presymplecticReductionForm B hskew x y = 0) :
+    y = 0 := by
+  apply presymplecticReductionForm_left_nondegenerate B hskew y
+  intro x
+  have hx := hzero x
+  have hredskew :
+      presymplecticReductionForm B hskew y x =
+        - presymplecticReductionForm B hskew x y := by
+    exact quotientBilinearForm_skew
+      B (LinearMap.ker B) le_rfl
+      (skew_right_radical_of_left B (LinearMap.ker B) hskew le_rfl)
+      hskew y x
+  rw [hredskew, hx, neg_zero]
+
 end BilinearDescent
 
 /-! ## 10. One-dimensional covector-preserving identification -/
@@ -4947,6 +5004,10 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check presymplecticReductionForm
+#check presymplecticReductionForm_mk
+#check presymplecticReductionForm_left_nondegenerate
+#check presymplecticReductionForm_right_nondegenerate
 #check clockAccumulation_hasDerivAt
 #check clockAccumulation_deriv
 #check clockAccumulation_origin
@@ -5303,6 +5364,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.clock_section_reeb_existsUnique
 #print axioms RelativeRest.clockQuotientDualEquiv
 #print axioms RelativeRest.quotientBilinearForm_unique
+#print axioms RelativeRest.presymplecticReductionForm_left_nondegenerate
 #print axioms RelativeRest.causal_extended_endpoints_mono
 #print axioms RelativeRest.kerrLogChi_hasDerivAt_r
 #print axioms RelativeRest.kerrNewman_mino_clock_forced
