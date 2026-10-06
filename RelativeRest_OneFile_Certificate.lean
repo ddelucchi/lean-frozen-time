@@ -21,17 +21,17 @@ This file is intentionally adversarial about assumptions.
   metric-normalized Carter observer and its carrier-selected rest condition, including the
   higher-jet `r=0` stratum.
 * The action side is pushed back to explicit Einstein-Hilbert/Maxwell density pieces,
-  explicit principal-frame metric variations, and the reciprocal two-sector Lagrangian.  The
-  Maxwell stress coefficient is now the literal directional derivative of the displayed
-  Einstein-Maxwell density along an inverse-metric component line; the full metric Euler
-  coefficient factors by `G-8πT`.  Its first normal derivative reconstructs the carrier,
-  while its full finite-rapidity relative orbit reconstructs the reciprocal constraint
-  character.  A first-variation/Cartan/Noether package then derives the Iyer-Wald operator
-  identity rather than assuming it.  The strongest current interface needs only one geometric
-  compatibility statement: the Noether constraint descendant along the physical relative
-  orbit equals that explicit metric-Euler orbit.  From it the frozen value, surviving `-2`
-  jet, sector signs, entire two-sector constraint operator, compensated current,
-  characteristic quotient, and normalized principal clock line are all theorems.
+  explicit principal-frame metric and potential variations, the Palatini identity, and the
+  reciprocal two-sector Lagrangian.  The Einstein-Hilbert and Maxwell symplectic-potential
+  divergences are derived from the displayed density; the Maxwell stress coefficient is the
+  literal inverse-metric derivative; and the full local Einstein-Maxwell first variation is
+  proved, including its on-shell reduction to a pure boundary divergence.  The relative
+  metric-Euler jet reconstructs the carrier and the local Noether bulk coefficient
+  `2 E^a_b`; locality plus arbitrary `∇ξ` pairing uniquely forces that coefficient and
+  hence the full finite relative constraint orbit.  The strongest finite-dimensional CPS
+  model canonically completes the Noether descendants from the first-variation/Cartan core,
+  so frozen value, surviving jet, sector signs, compensated current, characteristic quotient,
+  and normalized clock line are all theorems rather than independently supplied data.
 * A manuscript-wide structural certificate also bundles the already-proved uniqueness of
   four-dimensional reciprocity, conformal normalization, residual boost balance,
   action-to-optical identification and rapidity, transport/Frobenius closure, homogeneous
@@ -39,16 +39,23 @@ This file is intentionally adversarial about assumptions.
 * The Kerr-Newman specialization now includes the full Christoffel/Ricci calculation: the
   metric-derived Einstein tensor is proved equal to `8πT[F]` for the potential-derived
   Maxwell field on the regular Carter chart.
-* What is not yet reconstructed from first principles is concentrated in genuinely
-  manifold-level infrastructure: construction of the full Einstein-Hilbert symplectic
-  potential/Noether charge and proof that the abstract first-variation/Noether operators used
-  below are exactly those of the Lorentzian Einstein-Maxwell action, together with global
-  smooth Synge-world-function endpoint existence across caustics/conjugate points.  Once those
-  geometric inputs are supplied, the downstream algebraic, quotient, transport, clock,
-  optical, relational, and Kerr consequences are forced by the theorems below.
+* The regular optical branch is now tied to Mathlib's actual implicit-function
+  theorem: strict world-function derivatives plus invertibility construct the endpoint maps,
+  force the nonzero endpoint derivative, and give exactly
+  `dTheta = -(partial_Theta sigma)^(-1) d_x sigma`.  Global causal endpoint values are
+  branch-independent in the separate order-theoretic construction; no global smoothness
+  through caustics is claimed by the manuscript or required here.
+* The characteristic quotient is globally simple in the linear model, basic covectors descend
+  uniquely, and the homogeneous clock cover/Reeb normalization is explicit.
+* The remaining first-principles boundary is therefore narrower and genuinely
+  differential-geometric: identify the abstract first-variation/Cartan core with the actual
+  Lorentzian Einstein-Maxwell covariant symplectic potential and geometric Noether charge
+  (including the exact surface-charge representative).  The bulk Noether coefficient,
+  its normalization, its relative orbit, and every clock consequence are already derived.
 
 Consequently this file is a kernel-oriented logical certificate of the manuscript's forced
-algebraic and quotient structure while keeping the remaining geometric boundary visible.
+action, bulk-Noether, quotient, optical, transport, relational, and Kerr structure while
+keeping that final geometric identification visible.
 -/
 
 noncomputable section
