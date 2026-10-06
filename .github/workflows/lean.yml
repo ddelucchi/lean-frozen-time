@@ -1,9 +1,6 @@
 name: Lean verification
 
 on:
-  push:
-    branches:
-      - "formalization/deep-forced-pass-2"
   workflow_dispatch:
 
 permissions:
