@@ -1041,6 +1041,18 @@ theorem principalStress_trace_sq (u : ℝ) :
   simp_rw [principalStress_sq]
   norm_num
 
+
+/-- Since the fixed-point jet is `J=-2R`, the principal Ricci endomorphism is
+`R=-J/2`; its squared trace is therefore one quarter of the jet squared trace. -/
+def principalRicciNormFromCarrier (χ : ℝ) : ℝ :=
+  (1 / 4 : ℝ) * principalStressTraceSq χ
+
+/-- The Einstein-Maxwell Rainich carrier forces the Ricci norm to be exactly `χ²`. -/
+theorem principalRicciNormFromCarrier_eq (χ : ℝ) :
+    principalRicciNormFromCarrier χ = χ^2 := by
+  rw [principalRicciNormFromCarrier, principalStress_trace_sq]
+  ring
+
 /-- Literal principal-frame form of
 `J^a{}_c J^c{}_b = (1/4) tr(J²) δ^a{}_b`. -/
 theorem principalStress_rainich (u : ℝ) (i j : Fin 4) :
@@ -3691,6 +3703,34 @@ theorem kerrChiScalar_eq_principalChi
   rw [kerrPrincipalChi_formula Q r a θ hsig]
   rfl
 
+
+/-- Ricci norm reconstructed directly from the principal Einstein-Maxwell carrier. -/
+def kerrRicciNormScalar (Q r a θ : ℝ) : ℝ :=
+  principalRicciNormFromCarrier
+    (principalChi
+      (kerrPrincipalE Q r a θ)
+      (kerrPrincipalB Q r a θ))
+
+/-- The advertised Kerr-Newman Ricci norm is now a theorem of the principal Maxwell field,
+not an imported curvature formula. -/
+theorem kerrRicciNormScalar_formula
+    (Q r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
+    kerrRicciNormScalar Q r a θ =
+      4 * Q^4 / (Sigma r a θ)^4 := by
+  rw [kerrRicciNormScalar, principalRicciNormFromCarrier_eq,
+    kerrPrincipalChi_formula Q r a θ hsig]
+  field_simp [hsig]
+  ring
+
+/-- By construction the Kerr Ricci norm is identically the square of the principal carrier. -/
+theorem kerrRicciNormScalar_eq_carrier_sq
+    (Q r a θ : ℝ) :
+    kerrRicciNormScalar Q r a θ =
+      (principalChi
+        (kerrPrincipalE Q r a θ)
+        (kerrPrincipalB Q r a θ))^2 := by
+  simp [kerrRicciNormScalar, principalRicciNormFromCarrier_eq]
+
 /-- The squared Maxwell invariants of Kerr-Newman therefore give `4Q⁴/Σ⁴` directly. -/
 theorem kerrMaxwellInvariantMagnitude
     (Q r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
@@ -3981,6 +4021,27 @@ theorem kerrNewman_clock_rate_from_principal_EM
       (kerrPrincipalB Q r a θ))
     ω hsigpos hchi hω'
 
+
+/-- Intrinsic Kerr-Newman clock rate constructed only from the principal Maxwell field. -/
+def kerrClockRateFromPrincipalEM (Q r a θ : ℝ) : ℝ :=
+  Real.sqrt (Real.sqrt (kerrRicciNormScalar Q r a θ))
+
+/-- The explicit principal Maxwell field forces the intrinsic clock rate
+`sqrt(2)|Q|/Σ` with no curvature input. -/
+theorem kerrClockRateFromPrincipalEM_formula
+    (Q r a θ : ℝ)
+    (hQ : Q ≠ 0)
+    (hsigpos : 0 < Sigma r a θ) :
+    kerrClockRateFromPrincipalEM Q r a θ =
+      Real.sqrt 2 * |Q| / Sigma r a θ := by
+  exact kerrNewman_clock_rate_from_principal_EM
+    Q r a θ
+    (kerrRicciNormScalar Q r a θ)
+    (kerrClockRateFromPrincipalEM Q r a θ)
+    hQ hsigpos
+    (kerrRicciNormScalar_eq_carrier_sq Q r a θ)
+    rfl
+
 /-- Curvature-derived Kerr-Newman separability multiplier. -/
 def kerrMultiplier (Q sig : ℝ) : ℝ :=
   sig / (Real.sqrt 2 * |Q|)
@@ -4065,6 +4126,19 @@ theorem kerrNewman_mino_clock_from_principal_EM
     kerrNewman_clock_rate_from_principal_EM
       Q r a θ K ω hQ hsigpos hKcarrier hω
   rw [hw, hmino]
+  field_simp [ne_of_gt hsigpos]
+  ring
+
+
+/-- Fully constructed principal-field version of the Kerr-Newman Mino-clock identity. -/
+theorem kerrMinoClockFromPrincipalEM
+    (Q r a θ dt dlam : ℝ)
+    (hQ : Q ≠ 0)
+    (hsigpos : 0 < Sigma r a θ)
+    (hmino : dlam = dt / Sigma r a θ) :
+    kerrClockRateFromPrincipalEM Q r a θ * dt =
+      Real.sqrt 2 * |Q| * dlam := by
+  rw [kerrClockRateFromPrincipalEM_formula Q r a θ hQ hsigpos, hmino]
   field_simp [ne_of_gt hsigpos]
   ring
 
@@ -4327,6 +4401,13 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check principalRicciNormFromCarrier_eq
+#check kerrRicciNormScalar
+#check kerrRicciNormScalar_formula
+#check kerrRicciNormScalar_eq_carrier_sq
+#check kerrClockRateFromPrincipalEM
+#check kerrClockRateFromPrincipalEM_formula
+#check kerrMinoClockFromPrincipalEM
 #check Xi_product_eq_kappa_sq
 #check character_common_scale_sqrt
 #check gravScaleExponent_from_primitive_weights
@@ -4631,5 +4712,6 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrLogChi_hasDerivAt_r
 #print axioms RelativeRest.kerrNewman_mino_clock_forced
 #print axioms RelativeRest.kerrNewman_mino_clock_from_principal_EM
+#print axioms RelativeRest.kerrMinoClockFromPrincipalEM
 #print axioms RelativeRest.kerr_relative_rest_carter_certificate
 #print axioms RelativeRest.kerr_regular_first_or_second_radial_jet_resolves
