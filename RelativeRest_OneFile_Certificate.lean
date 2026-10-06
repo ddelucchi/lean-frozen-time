@@ -8510,6 +8510,72 @@ theorem kerrChristoffelTracePartial_theta_r
     (kerrChristoffelTrace_r_hasDerivAt_theta
       r M a Q θ hsig hdel hsin).deriv
 
+/-- Radial derivative of the polar connection trace. -/
+theorem kerrChristoffelTrace_theta_hasDerivAt_r
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    HasDerivAt
+      (fun x : ℝ => kerrChristoffelTrace x M a Q θ 2)
+      (4 * a^2 * r * Real.cos θ * Real.sin θ /
+        (Sigma r a θ)^2) r := by
+  have hfirst :
+      HasDerivAt
+        (fun _ : ℝ => Real.cos θ / Real.sin θ)
+        0 r :=
+    hasDerivAt_const r (Real.cos θ / Real.sin θ)
+  have hn :
+      HasDerivAt
+        (fun _ : ℝ =>
+          -2 * a^2 * Real.cos θ * Real.sin θ)
+        0 r :=
+    hasDerivAt_const r
+      (-2 * a^2 * Real.cos θ * Real.sin θ)
+  have hfrac :=
+    hn.fun_div (Sigma_hasDerivAt_r r a θ) hsig
+  have hreg := hfirst.add hfrac
+  have hreg' :
+      HasDerivAt
+        (fun x : ℝ =>
+          Real.cos θ / Real.sin θ -
+            2 * a^2 * Real.cos θ * Real.sin θ /
+              Sigma x a θ)
+        (4 * a^2 * r * Real.cos θ * Real.sin θ /
+          (Sigma r a θ)^2) r := by
+    convert hreg using 1
+    field_simp [hsig, hsin]
+    ring
+  have hS :=
+    (Sigma_hasDerivAt_r r a θ).continuousAt.eventually_ne hsig
+  have hD :=
+    (Delta_hasDerivAt_r r M a Q).continuousAt.eventually_ne hdel
+  have heq :
+      (fun x : ℝ => kerrChristoffelTrace x M a Q θ 2) =ᶠ[𝓝 r]
+        (fun x : ℝ =>
+          Real.cos θ / Real.sin θ -
+            2 * a^2 * Real.cos θ * Real.sin θ /
+              Sigma x a θ) := by
+    filter_upwards [hS, hD] with x hxS hxD
+    exact kerrChristoffelTrace_theta
+      x M a Q θ hxS hxD hsin
+  exact hreg'.congr_of_eventuallyEq heq
+
+theorem kerrChristoffelTracePartial_r_theta
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrCoordPartial 1
+      (fun rr th => kerrChristoffelTrace rr M a Q th 2)
+      r θ =
+      4 * a^2 * r * Real.cos θ * Real.sin θ /
+        (Sigma r a θ)^2 := by
+  unfold kerrCoordPartial
+  simpa using
+    (kerrChristoffelTrace_theta_hasDerivAt_r
+      r M a Q θ hsig hdel hsin).deriv
+
 /-- Coordinate derivatives of odd-parity Christoffels vanish identically as well. -/
 @[simp] theorem kerrChristoffelPartial_zero_of_odd_stationary
     (κ : Fin 4) (r M a Q θ : ℝ)
@@ -8638,6 +8704,58 @@ theorem kerrRicci_rtheta_eq_target
     kerrRicciCovFromMetric r M a Q θ 1 2 =
       kerrEinsteinTargetRicciCoordinate Q r M a θ 1 2 := by
   rw [kerrRicci_rtheta_zero r M a Q θ hsig hdel hsin]
+  simp [kerrEinsteinTargetRicciCoordinate]
+
+/-- Reverse-order mixed meridional Ricci component has the analogous reduction. -/
+theorem kerrRicci_thetar_reduction
+    (r M a Q θ : ℝ) :
+    kerrRicciCovFromMetric r M a Q θ 2 1 =
+      kerrChristoffelPartial 1 r M a Q θ 1 1 2 +
+      kerrChristoffelPartial 2 r M a Q θ 2 1 2 -
+      kerrCoordPartial 1
+        (fun rr th => kerrChristoffelTrace rr M a Q th 2)
+        r θ +
+      kerrChristoffel r M a Q θ 1 1 2 *
+        kerrChristoffelTrace r M a Q θ 1 +
+      kerrChristoffel r M a Q θ 2 1 2 *
+        kerrChristoffelTrace r M a Q θ 2 -
+      kerrConnectionCrossTrace r M a Q θ := by
+  rw [kerrChristoffel_lower_symmetric r M a Q θ 1 2 1,
+      kerrChristoffel_lower_symmetric r M a Q θ 2 2 1]
+  unfold kerrRicciCovFromMetric kerrConnectionCrossTrace
+  simp [kerrStationarySign,
+    kerrChristoffel_zero_of_odd_stationary]
+  ring
+
+/-- The reverse mixed meridional Ricci component also vanishes directly. -/
+theorem kerrRicci_thetar_zero
+    (r M a Q θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrRicciCovFromMetric r M a Q θ 2 1 = 0 := by
+  rw [kerrRicci_thetar_reduction,
+    kerrChristoffelPartial_r_rtheta r M a Q θ hsig hdel,
+    kerrChristoffelPartial_theta_rtheta r M a Q θ hsig hdel,
+    kerrChristoffelTracePartial_r_theta r M a Q θ hsig hdel hsin,
+    kerrChristoffel_r_rtheta r M a Q θ hsig hdel,
+    kerrChristoffel_theta_rtheta r M a Q θ hsig hdel,
+    kerrChristoffelTrace_r r M a Q θ hsig hdel hsin,
+    kerrChristoffelTrace_theta r M a Q θ hsig hdel hsin,
+    kerrConnectionCrossTrace_formula r M a Q θ hsig hdel hsin]
+  field_simp [hsig, hsin]
+  have htrig := Real.sin_sq_add_cos_sq θ
+  unfold Sigma
+  nlinarith
+
+theorem kerrRicci_thetar_eq_target
+    (Q r M a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrRicciCovFromMetric r M a Q θ 2 1 =
+      kerrEinsteinTargetRicciCoordinate Q r M a θ 2 1 := by
+  rw [kerrRicci_thetar_zero r M a Q θ hsig hdel hsin]
   simp [kerrEinsteinTargetRicciCoordinate]
 
 /-! ### Einstein equations already closed by stationary-reflection parity -/
@@ -11071,6 +11189,11 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check kerrChristoffelTrace_theta_hasDerivAt_r
+#check kerrChristoffelTracePartial_r_theta
+#check kerrRicci_thetar_reduction
+#check kerrRicci_thetar_zero
+#check kerrRicci_thetar_eq_target
 #check kerrChristoffel_r_rtheta_hasDerivAt_r
 #check kerrChristoffel_theta_rtheta_hasDerivAt_theta
 #check kerrChristoffelTrace_r_hasDerivAt_theta
@@ -11827,6 +11950,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrChristoffelTrace_r_hasDerivAt_theta
 #print axioms RelativeRest.kerrRicci_rtheta_zero
 #print axioms RelativeRest.kerrRicci_rtheta_eq_target
+#print axioms RelativeRest.kerrChristoffelTrace_theta_hasDerivAt_r
+#print axioms RelativeRest.kerrRicci_thetar_zero
+#print axioms RelativeRest.kerrRicci_thetar_eq_target
 #print axioms RelativeRest.kerrCoframe_orthonormal
 #print axioms RelativeRest.kerrEinsteinTargetRicci_trace_zero
 #print axioms RelativeRest.kerrFullRicciEquation_iff_even_obligations
