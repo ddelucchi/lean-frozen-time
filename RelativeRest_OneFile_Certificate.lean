@@ -13880,6 +13880,24 @@ def PrincipalCarrierCharacteristicInput.metricEulerJetResponse
   halfCarrierBulkCurrent LinearMap.id
     (principalActionEulerJetLinear D.E D.B) D.iε
 
+/-- Characteristic response reconstructed from the action metric-Euler jet itself.
+`J` is uniquely fixed by the derivatives of `principalScaledMetricEulerCoeffFromAction`,
+so this definition contains no independent stress normalization. -/
+def PrincipalCarrierCharacteristicInput.actionEulerResponse
+    (D : PrincipalCarrierCharacteristicInput (P:=P)) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
+  halfCarrierBulkCurrent LinearMap.id D.J D.iε
+
+/-- The action-Euler-jet response is exactly the explicit Maxwell stress response.
+This is the bridge from the action variation to the characteristic covector. -/
+theorem PrincipalCarrierCharacteristicInput.actionEulerResponse_eq_stress
+    (D : PrincipalCarrierCharacteristicInput (P:=P)) :
+    D.actionEulerResponse =
+      stressResponse LinearMap.id D.T D.iε := by
+  unfold PrincipalCarrierCharacteristicInput.actionEulerResponse
+  exact halfCarrierBulkCurrent_eq_stressResponse
+    LinearMap.id D.J D.T D.iε rfl
+
 /-- The direct metric-Euler-derivative response is exactly the previously named
 action-Euler response. -/
 theorem PrincipalCarrierCharacteristicInput.metricEulerJetResponse_eq_actionEulerResponse
@@ -13898,23 +13916,6 @@ theorem PrincipalCarrierCharacteristicInput.metricEulerJetResponse_eq_stress
   rw [D.metricEulerJetResponse_eq_actionEulerResponse,
     D.actionEulerResponse_eq_stress]
 
-/-- Characteristic response reconstructed from the action metric-Euler jet itself.
-`J` is uniquely fixed by the derivatives of `principalScaledMetricEulerCoeffFromAction`,
-so this definition contains no independent stress normalization. -/
-def PrincipalCarrierCharacteristicInput.actionEulerResponse
-    (D : PrincipalCarrierCharacteristicInput (P:=P)) :
-    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
-  halfCarrierBulkCurrent LinearMap.id D.J D.iε
-
-/-- The action-Euler-jet response is exactly the explicit Maxwell stress response.
-This is the bridge from the action variation to the characteristic covector. -/
-theorem PrincipalCarrierCharacteristicInput.actionEulerResponse_eq_stress
-    (D : PrincipalCarrierCharacteristicInput (P:=P)) :
-    D.actionEulerResponse =
-      stressResponse LinearMap.id D.T D.iε := by
-  unfold PrincipalCarrierCharacteristicInput.actionEulerResponse
-  exact halfCarrierBulkCurrent_eq_stressResponse
-    LinearMap.id D.J D.T D.iε rfl
 
 /-- Hence the action-Euler response is positive on the distinguished future profile. -/
 theorem PrincipalCarrierCharacteristicInput.actionEulerResponse_positive
@@ -14574,106 +14575,6 @@ theorem principalActionEulerSectorVariation_forced_core_chain
   intro i j
   exact D.carrier.J_basis_eq_actionEulerJet i j
 
-/-! ### Metric-Euler-jet interface: displayed action derivative to covariant clock -/
-
-/-- Strongest finite-dimensional action interface. The surviving odd constraint jet is
-identified directly with the hypersurface response reconstructed from derivatives of
-the displayed Einstein-Maxwell metric Euler coefficient. No stress tensor current and
-no separately declared carrier response appears in the input. -/
-structure PrincipalMetricEulerJetVariationCharacteristicInput where
-  carrier : PrincipalCarrierCharacteristicInput (P:=P)
-  variation : LagrangianVariationNoetherOperators
-    (L:=R2) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ))
-  frozenCommon : variation.constraint CA = 0
-  survivingNormalFromMetricEuler :
-    variation.constraint DA =
-      (-2 : ℝ) • carrier.metricEulerJetResponse
-
-/-- This literal action-derivative interface canonically produces the fixed-point-jet
-interface used by the rest of the proof. -/
-def PrincipalMetricEulerJetVariationCharacteristicInput.toFixedPointInput
-    (D : PrincipalMetricEulerJetVariationCharacteristicInput (P:=P)) :
-    PrincipalFixedPointJetVariationCharacteristicInput (P:=P) where
-  carrier := D.carrier
-  variation := D.variation
-  frozenCommon := D.frozenCommon
-  survivingNormal := by
-    rw [← D.carrier.metricEulerJetResponse_eq_actionEulerResponse]
-    exact D.survivingNormalFromMetricEuler
-
-def PrincipalMetricEulerJetVariationCharacteristicInput.characteristicCurrent
-    (D : PrincipalMetricEulerJetVariationCharacteristicInput (P:=P)) :
-    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
-  D.toFixedPointInput.characteristicCurrent
-
-/-- The covariant current equals the response reconstructed directly from the metric
-Euler derivatives. -/
-theorem principalMetricEulerJetVariation_current_eq_metricEulerResponse
-    (D : PrincipalMetricEulerJetVariationCharacteristicInput (P:=P)) :
-    D.characteristicCurrent = D.carrier.metricEulerJetResponse := by
-  rw [PrincipalMetricEulerJetVariationCharacteristicInput.characteristicCurrent,
-    principalFixedPointJetVariation_current_eq_actionEulerResponse,
-    ← D.carrier.metricEulerJetResponse_eq_actionEulerResponse]
-
-theorem principalMetricEulerJetVariation_clock_chain
-    (D : PrincipalMetricEulerJetVariationCharacteristicInput (P:=P)) :
-    D.characteristicCurrent =
-        D.carrier.toCharacteristicCurrentData.current ∧
-    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
-    Module.finrank ℝ
-      (D.carrier.toCharacteristicCurrentData.K ⧸
-        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
-    (quotientClockCovector principalTOLinear).comp
-      (globalToPrincipalLocalClockMap
-        D.carrier.toCharacteristicCurrentData.Lambda) =
-      D.carrier.toCharacteristicCurrentData.clockCovector ∧
-    principalLocalLift
-      (globalToPrincipalLocalClockMap
-        D.carrier.toCharacteristicCurrentData.Lambda
-        (globalClockQuotientUnit
-          D.carrier.toCharacteristicCurrentData.Lambda
-          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
-      principalUhat :=
-  principalFixedPointJetVariation_clock_chain D.toFixedPointInput
-
-/-- Action-to-clock closure sourced at the literal metric Euler normal derivative. -/
-theorem principalMetricEulerJetVariation_forced_core_chain
-    (D : PrincipalMetricEulerJetVariationCharacteristicInput (P:=P))
-    (u s : ℝ) :
-    ((8 * Real.pi * principalFieldEnergyDensity D.carrier.E D.carrier.B =
-        8 * Real.pi *
-          maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
-          principalFieldEnergyDensity D.carrier.E D.carrier.B) ↔ s = 0) ∧
-    (∀ i j : Fin 4,
-      principalActionEulerJetLinear D.carrier.E D.carrier.B
-          (principalBasis j) i =
-        (16 * Real.pi / principalMetricSign i) *
-          deriv (principalScaledMetricEulerCoeffFromAction
-            D.carrier.E D.carrier.B i j) 0) ∧
-    D.variation.constraint CA = 0 ∧
-    D.variation.constraint DA =
-      (-2 : ℝ) • D.carrier.metricEulerJetResponse ∧
-    D.characteristicCurrent = D.carrier.metricEulerJetResponse ∧
-    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
-    Module.finrank ℝ
-      (D.carrier.toCharacteristicCurrentData.K ⧸
-        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
-    principalLocalLift
-      (globalToPrincipalLocalClockMap
-        D.carrier.toCharacteristicCurrentData.Lambda
-        (globalClockQuotientUnit
-          D.carrier.toCharacteristicCurrentData.Lambda
-          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
-      principalUhat := by
-  have h := principalFixedPointJetVariation_forced_core_chain
-    D.toFixedPointInput u s
-  rcases h with ⟨hrest,_hJ,hCA,_hDA,_hG,_hM,_hcur,hL,hdim,hnorm⟩
-  refine ⟨hrest, ?_, hCA, D.survivingNormalFromMetricEuler,
-    principalMetricEulerJetVariation_current_eq_metricEulerResponse D,
-    hL,hdim,hnorm⟩
-  intro i j
-  exact principalActionEulerJetLinear_basis D.carrier.E D.carrier.B i j
-
 /-! ### Fixed-point-jet-forced constraint: frozen value + surviving derivative determine all -/
 
 /-- Minimal finite-dimensional covariant-phase-space interface matching the paper's
@@ -14799,6 +14700,107 @@ theorem principalFixedPointJetVariation_forced_core_chain
   rcases h with ⟨hrest,hJ,hCA,hDA,hcur,hL,hdim,hnorm⟩
   exact ⟨hrest,hJ,hCA,hDA,D.constraint_gravity,D.constraint_maxwell,
     hcur,hL,hdim,hnorm⟩
+
+/-! ### Metric-Euler-jet interface: displayed action derivative to covariant clock -/
+
+/-- Strongest finite-dimensional action interface. The surviving odd constraint jet is
+identified directly with the hypersurface response reconstructed from derivatives of
+the displayed Einstein-Maxwell metric Euler coefficient. No stress tensor current and
+no separately declared carrier response appears in the input. -/
+structure PrincipalMetricEulerJetVariationCharacteristicInput where
+  carrier : PrincipalCarrierCharacteristicInput (P:=P)
+  variation : LagrangianVariationNoetherOperators
+    (L:=R2) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ))
+  frozenCommon : variation.constraint CA = 0
+  survivingNormalFromMetricEuler :
+    variation.constraint DA =
+      (-2 : ℝ) • carrier.metricEulerJetResponse
+
+/-- This literal action-derivative interface canonically produces the fixed-point-jet
+interface used by the rest of the proof. -/
+def PrincipalMetricEulerJetVariationCharacteristicInput.toFixedPointInput
+    (D : PrincipalMetricEulerJetVariationCharacteristicInput (P:=P)) :
+    PrincipalFixedPointJetVariationCharacteristicInput (P:=P) where
+  carrier := D.carrier
+  variation := D.variation
+  frozenCommon := D.frozenCommon
+  survivingNormal := by
+    rw [← D.carrier.metricEulerJetResponse_eq_actionEulerResponse]
+    exact D.survivingNormalFromMetricEuler
+
+def PrincipalMetricEulerJetVariationCharacteristicInput.characteristicCurrent
+    (D : PrincipalMetricEulerJetVariationCharacteristicInput (P:=P)) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
+  D.toFixedPointInput.characteristicCurrent
+
+/-- The covariant current equals the response reconstructed directly from the metric
+Euler derivatives. -/
+theorem principalMetricEulerJetVariation_current_eq_metricEulerResponse
+    (D : PrincipalMetricEulerJetVariationCharacteristicInput (P:=P)) :
+    D.characteristicCurrent = D.carrier.metricEulerJetResponse := by
+  rw [PrincipalMetricEulerJetVariationCharacteristicInput.characteristicCurrent,
+    principalFixedPointJetVariation_current_eq_actionEulerResponse,
+    ← D.carrier.metricEulerJetResponse_eq_actionEulerResponse]
+
+theorem principalMetricEulerJetVariation_clock_chain
+    (D : PrincipalMetricEulerJetVariationCharacteristicInput (P:=P)) :
+    D.characteristicCurrent =
+        D.carrier.toCharacteristicCurrentData.current ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    (quotientClockCovector principalTOLinear).comp
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda) =
+      D.carrier.toCharacteristicCurrentData.clockCovector ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat :=
+  principalFixedPointJetVariation_clock_chain D.toFixedPointInput
+
+/-- Action-to-clock closure sourced at the literal metric Euler normal derivative. -/
+theorem principalMetricEulerJetVariation_forced_core_chain
+    (D : PrincipalMetricEulerJetVariationCharacteristicInput (P:=P))
+    (u s : ℝ) :
+    ((8 * Real.pi * principalFieldEnergyDensity D.carrier.E D.carrier.B =
+        8 * Real.pi *
+          maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+          principalFieldEnergyDensity D.carrier.E D.carrier.B) ↔ s = 0) ∧
+    (∀ i j : Fin 4,
+      principalActionEulerJetLinear D.carrier.E D.carrier.B
+          (principalBasis j) i =
+        (16 * Real.pi / principalMetricSign i) *
+          deriv (principalScaledMetricEulerCoeffFromAction
+            D.carrier.E D.carrier.B i j) 0) ∧
+    D.variation.constraint CA = 0 ∧
+    D.variation.constraint DA =
+      (-2 : ℝ) • D.carrier.metricEulerJetResponse ∧
+    D.characteristicCurrent = D.carrier.metricEulerJetResponse ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat := by
+  have h := principalFixedPointJetVariation_forced_core_chain
+    D.toFixedPointInput u s
+  rcases h with ⟨hrest,_hJ,hCA,_hDA,_hG,_hM,_hcur,hL,hdim,hnorm⟩
+  refine ⟨hrest, ?_, hCA, D.survivingNormalFromMetricEuler,
+    principalMetricEulerJetVariation_current_eq_metricEulerResponse D,
+    hL,hdim,hnorm⟩
+  intro i j
+  exact principalActionEulerJetLinear_basis D.carrier.E D.carrier.B i j
+
 
 /-! ### Basis-forced action-Euler constraint: only common on-shellness + gravity response -/
 
