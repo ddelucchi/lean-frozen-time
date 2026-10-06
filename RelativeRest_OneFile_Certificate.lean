@@ -3710,7 +3710,7 @@ theorem implicit_endpoint_covector
     (hlin : sigmaX + sigmaTheta • dTheta = 0) :
     dTheta = (-sigmaTheta⁻¹) • sigmaX := by
   have hsd : sigmaTheta • dTheta = -sigmaX :=
-    eq_neg_of_add_eq_zero_left hlin
+    eq_neg_of_add_eq_zero_right hlin
   calc
     dTheta = (sigmaTheta⁻¹ * sigmaTheta) • dTheta := by
       rw [inv_mul_cancel₀ hden, one_smul]
@@ -3743,7 +3743,6 @@ theorem bil_smul_self
 /-- Therefore the implicit endpoint covector is null whenever the world-function
 covector entering the endpoint equation is null. -/
 theorem implicit_endpoint_covector_null
-    (hsym : ∀ x y, bil B x y = bil B y x)
     (sigmaX dTheta : W) (sigmaTheta : ℝ)
     (hden : sigmaTheta ≠ 0)
     (hlin : sigmaX + sigmaTheta • dTheta = 0)
