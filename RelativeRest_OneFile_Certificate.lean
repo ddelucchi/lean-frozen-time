@@ -4951,6 +4951,107 @@ theorem null_pair_closure_iff
   · rintro ⟨ho, hn⟩
     exact orthogonal_equal_opposite_implies_null_pair B hsym T R ho hn
 
+/-! ### Minimal Synge endpoint interface and forced optical closure -/
+
+/-- Exchange-even midpoint of two endpoint covectors. -/
+def endpointMidpointCovector (dPlus dMinus : W) : W :=
+  (1 / 2 : ℝ) • (dPlus + dMinus)
+
+/-- Exchange-odd half-difference of the endpoint covectors. -/
+def endpointRadialCovector (dPlus dMinus : W) : W :=
+  (1 / 2 : ℝ) • (dPlus - dMinus)
+
+/-- The midpoint/half-difference reconstruct the endpoint covectors exactly. -/
+theorem endpointCovector_reconstruction
+    (dPlus dMinus : W) :
+    endpointMidpointCovector dPlus dMinus +
+        endpointRadialCovector dPlus dMinus = dPlus ∧
+    endpointMidpointCovector dPlus dMinus -
+        endpointRadialCovector dPlus dMinus = dMinus := by
+  constructor <;>
+    simp [endpointMidpointCovector, endpointRadialCovector] <;>
+    module
+
+/-- The only smooth local Synge data needed for the optical closure: each endpoint solves
+its linearized world-function equation, the endpoint derivative is nonzero, and the
+world-function covector is null. -/
+structure NullEndpointPairData where
+  sigmaXPlus : W
+  sigmaXMinus : W
+  dThetaPlus : W
+  dThetaMinus : W
+  sigmaThetaPlus : ℝ
+  sigmaThetaMinus : ℝ
+  sigmaThetaPlus_ne : sigmaThetaPlus ≠ 0
+  sigmaThetaMinus_ne : sigmaThetaMinus ≠ 0
+  linearizedPlus :
+    sigmaXPlus + sigmaThetaPlus • dThetaPlus = 0
+  linearizedMinus :
+    sigmaXMinus + sigmaThetaMinus • dThetaMinus = 0
+  sigmaXPlus_null :
+    bil B sigmaXPlus sigmaXPlus = 0
+  sigmaXMinus_null :
+    bil B sigmaXMinus sigmaXMinus = 0
+
+/-- Both endpoint differentials are therefore null eikonals. -/
+theorem NullEndpointPairData.endpoint_eikonals_null
+    (D : NullEndpointPairData B) :
+    bil B D.dThetaPlus D.dThetaPlus = 0 ∧
+    bil B D.dThetaMinus D.dThetaMinus = 0 := by
+  constructor
+  · exact implicit_endpoint_covector_null
+      B D.sigmaXPlus D.dThetaPlus D.sigmaThetaPlus
+      D.sigmaThetaPlus_ne D.linearizedPlus
+      D.sigmaXPlus_null
+  · exact implicit_endpoint_covector_null
+      B D.sigmaXMinus D.dThetaMinus D.sigmaThetaMinus
+      D.sigmaThetaMinus_ne D.linearizedMinus
+      D.sigmaXMinus_null
+
+/-- Radar clock covector forced by the two endpoint eikonals. -/
+def NullEndpointPairData.clockCovector
+    (D : NullEndpointPairData B) : W :=
+  endpointMidpointCovector D.dThetaPlus D.dThetaMinus
+
+/-- Radar radial covector forced by the same endpoint eikonals. -/
+def NullEndpointPairData.radialCovector
+    (D : NullEndpointPairData B) : W :=
+  endpointRadialCovector D.dThetaPlus D.dThetaMinus
+
+/-- The endpoint eikonals are exactly clock plus/minus radial covectors. -/
+theorem NullEndpointPairData.reconstruction
+    (D : NullEndpointPairData B) :
+    D.clockCovector + D.radialCovector = D.dThetaPlus ∧
+    D.clockCovector - D.radialCovector = D.dThetaMinus :=
+  endpointCovector_reconstruction D.dThetaPlus D.dThetaMinus
+
+/-- The full optical closure follows from the minimal Synge data and symmetry of the
+inverse metric: clock and radius are orthogonal and have equal-and-opposite norm. -/
+theorem NullEndpointPairData.optical_closure
+    (D : NullEndpointPairData B)
+    (hsym : ∀ x y, bil B x y = bil B y x) :
+    bil B D.clockCovector D.radialCovector = 0 ∧
+    -(bil B D.clockCovector D.clockCovector) =
+      bil B D.radialCovector D.radialCovector := by
+  rcases D.endpoint_eikonals_null with ⟨hp, hm⟩
+  rcases D.reconstruction with ⟨hrp, hrm⟩
+  apply (null_pair_closure_iff B hsym
+    D.clockCovector D.radialCovector).1
+  constructor
+  · rw [hrp]
+    exact hp
+  · rw [hrm]
+    exact hm
+
+/-- Thus the optical lapse norm is not independent endpoint data: the two norms are the
+same scalar with opposite sign. -/
+theorem NullEndpointPairData.equal_norm_forced
+    (D : NullEndpointPairData B)
+    (hsym : ∀ x y, bil B x y = bil B y x) :
+    bil B D.radialCovector D.radialCovector =
+      -(bil B D.clockCovector D.clockCovector) :=
+  (D.optical_closure hsym).2.symm
+
 end OpticalClosure
 
 /-- Synchronization correction is uniquely the difference between an exact radar differential and
@@ -7060,6 +7161,11 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check endpointCovector_reconstruction
+#check NullEndpointPairData.endpoint_eikonals_null
+#check NullEndpointPairData.reconstruction
+#check NullEndpointPairData.optical_closure
+#check NullEndpointPairData.equal_norm_forced
 #check PrincipalFieldCurrentData.current_positive
 #check PrincipalFieldCurrentData.toCharacteristicCurrentData
 #check principalFieldCurrent_factorization
@@ -7515,6 +7621,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.relationalObservable_gauge_invariant
 #print axioms RelativeRest.relationalObservable_deriv
 #print axioms RelativeRest.implicit_endpoint_covector_null
+#print axioms RelativeRest.NullEndpointPairData.endpoint_eikonals_null
+#print axioms RelativeRest.NullEndpointPairData.optical_closure
 #print axioms RelativeRest.clockAccumulation_hasDerivAt
 #print axioms RelativeRest.clockTransport_spatial
 #print axioms RelativeRest.clockTransport_mixed_logK
