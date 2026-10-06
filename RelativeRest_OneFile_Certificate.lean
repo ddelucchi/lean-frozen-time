@@ -1559,6 +1559,69 @@ theorem principalLocalClockRatio_forced
   simp [principalTO, principalUhat, principalBasis]
 
 
+/-! ### Literal pointwise local Iyer-Wald response line -/
+
+section PrincipalPointResponse
+
+variable {HForm : Type*} [AddCommGroup HForm] [Module ℝ HForm]
+
+/-- Restricted pointwise current on the principal rest hyperplane, with a distinguished
+oriented spatial volume element `ε_H`. -/
+def principalPointResponse
+    (ω : ℝ) (εH : HForm) (v : Fin 4 → ℝ) : HForm :=
+  (ω / (8 * Real.pi) * principalTO v) • εH
+
+/-- This is exactly the manuscript's local response formula. -/
+theorem principalPointResponse_formula
+    (ω : ℝ) (εH : HForm) (v : Fin 4 → ℝ) :
+    principalPointResponse ω εH v =
+      (ω / (8 * Real.pi) * principalTO v) • εH := rfl
+
+/-- On the normalized principal timelike vector the response loses the clock coefficient. -/
+@[simp] theorem principalPointResponse_unit
+    (ω : ℝ) (εH : HForm) :
+    principalPointResponse ω εH principalUhat =
+      (ω / (8 * Real.pi)) • εH := by
+  simp [principalPointResponse, principalTO_unit]
+
+/-- Every pointwise response is the chronometric scalar times the unit response. -/
+theorem principalPointResponse_factor
+    (ω : ℝ) (εH : HForm) (v : Fin 4 → ℝ) :
+    principalPointResponse ω εH v =
+      principalTO v •
+        principalPointResponse ω εH principalUhat := by
+  rw [principalPointResponse_unit]
+  simp [principalPointResponse, smul_smul]
+  ring
+
+/-- Positive/nonzero rate and nonzero spatial volume make the normalized pointwise
+response genuinely nonzero. -/
+theorem principalPointResponse_unit_ne_zero
+    (ω : ℝ) (εH : HForm)
+    (hω : ω ≠ 0) (hε : εH ≠ 0) :
+    principalPointResponse ω εH principalUhat ≠ 0 := by
+  rw [principalPointResponse_unit]
+  apply smul_ne_zero
+  · exact div_ne_zero hω
+      (mul_ne_zero (by norm_num) (ne_of_gt Real.pi_pos))
+  · exact hε
+
+/-- Therefore the unique response ratio is literally the local chronometric covector. -/
+theorem principalPointResponse_ratio_forced
+    (ω λ : ℝ) (εH : HForm) (v : Fin 4 → ℝ)
+    (hω : ω ≠ 0) (hε : εH ≠ 0)
+    (hresponse :
+      principalPointResponse ω εH v =
+        λ • principalPointResponse ω εH principalUhat) :
+    λ = principalTO v := by
+  rw [principalPointResponse_factor] at hresponse
+  have hunit :=
+    principalPointResponse_unit_ne_zero ω εH hω hε
+  exact (smul_left_injective ℝ hunit) hresponse.symm
+
+end PrincipalPointResponse
+
+
 /-! ### Principal-frame realization of the local stress-visible quotient -/
 
 /-- Spatial hyperplane selected by the normalized principal observer. -/
@@ -5917,6 +5980,11 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check principalPointResponse_formula
+#check principalPointResponse_unit
+#check principalPointResponse_factor
+#check principalPointResponse_unit_ne_zero
+#check principalPointResponse_ratio_forced
 #check clockTransportTwoForm_skew
 #check clockTransport_spatial
 #check clockTransport_mixed
@@ -6320,6 +6388,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.rescaled_solution_preserving_iff
 #print axioms RelativeRest.characteristic_half_contraction_from_relative_scaling
 #print axioms RelativeRest.principalLocalClockRatio_forced
+#print axioms RelativeRest.principalPointResponse_ratio_forced
 #print axioms RelativeRest.principalLocalLift_section
 #print axioms RelativeRest.globalToPrincipalLocalClockMap_pullback
 #print axioms RelativeRest.normalizationBridge_principal
