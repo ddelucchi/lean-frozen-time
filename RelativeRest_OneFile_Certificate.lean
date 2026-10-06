@@ -14,12 +14,17 @@ This file is intentionally adversarial about assumptions.
 * In particular, the strongest Kerr–Newman route reconstructs the Ricci norm, intrinsic clock
   rate, and Mino relation from the explicit principal Maxwell field rather than importing a
   Kerr-specific curvature scalar.
-* What is not yet reconstructed from first principles is the full differential-geometric
-  infrastructure: the Einstein–Maxwell Lagrangian as Lorentzian tensor/differential-form
-  objects, the Iyer–Wald current on covariant phase space, smooth Synge-world-function endpoint
-  geometry through caustics, and the derivation of the canonical Kerr–Newman principal tetrad
-  from the metric and potential.  Those facts enter only through explicit downstream interfaces
-  or hypotheses; the algebraic consequences are proved once they are supplied.
+* The Kerr–Newman specialization now also differentiates the Boyer–Lindquist potential,
+  reconstructs its coordinate Maxwell field, proves equality with the full Carter orthonormal
+  coframe form, and derives the metric-normalized Carter observer and its carrier-selected rest
+  condition, including the higher-jet `r=0` stratum.
+* What is not yet reconstructed from first principles is the full manifold-level
+  differential-geometric infrastructure: the Einstein–Maxwell Lagrangian and Euler–Lagrange
+  equations as tensor/differential-form objects, a proof inside Lean that the supplied
+  Kerr–Newman metric/potential solve those equations, the Iyer–Wald current on covariant phase
+  space, and smooth Synge-world-function endpoint geometry through caustics.  Those facts enter
+  only through explicit downstream interfaces or hypotheses; their algebraic, quotient, local
+  transport, clock, and Kerr consequences are proved once they are supplied.
 
 Consequently this file is a kernel-oriented logical certificate of the manuscript's forced
 algebraic and quotient structure while keeping the remaining geometric boundary visible.
