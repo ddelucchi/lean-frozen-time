@@ -2355,6 +2355,77 @@ theorem unit_involution_fixes_conformal_constant
   have hC2 : C^2 = 1 := by nlinarith
   nlinarith [sq_nonneg (C - 1), sq_nonneg (C + 1)]
 
+/-! ### Carrier scaling from tensor index weights -/
+
+/-- Squared carrier contraction under a constant common metric homothety.
+Two raised indices contribute the factor `ρ⁻⁴`. -/
+def carrierContractionUnderScale (ρ Jsq : ℝ) : ℝ :=
+  ρ⁻4 * Jsq
+
+/-- The positive Rainich magnitude built from the squared contraction. -/
+def carrierMagnitudeFromContraction (Jsq : ℝ) : ℝ :=
+  (1 / 2 : ℝ) * Real.sqrt Jsq
+
+/-- Positive square-root homogeneity converts the forced contraction scaling
+`ρ⁻⁴` into the carrier scaling `ρ⁻²`. -/
+theorem carrierMagnitude_common_scale
+    (ρ Jsq : ℝ)
+    (hρ : 0 < ρ)
+    (hJ : 0 ≤ Jsq) :
+    carrierMagnitudeFromContraction
+      (carrierContractionUnderScale ρ Jsq) =
+      ρ⁻2 * carrierMagnitudeFromContraction Jsq := by
+  have hρ0 : ρ ≠ 0 := ne_of_gt hρ
+  have hcpos : 0 < ρ⁻2 := by positivity
+  have hc : 0 ≤ ρ⁻2 := le_of_lt hcpos
+  have hscale :
+      ρ⁻4 = (ρ⁻2)^2 := by
+    field_simp [hρ0]
+    ring
+  have hscaled :
+      0 ≤ carrierContractionUnderScale ρ Jsq := by
+    unfold carrierContractionUnderScale
+    positivity
+  have hleftsq :
+      (Real.sqrt
+        (carrierContractionUnderScale ρ Jsq))^2 =
+        carrierContractionUnderScale ρ Jsq :=
+    Real.sq_sqrt hscaled
+  have hrightsq :
+      ((ρ⁻2) * Real.sqrt Jsq)^2 =
+        carrierContractionUnderScale ρ Jsq := by
+    rw [mul_pow, Real.sq_sqrt hJ]
+    unfold carrierContractionUnderScale
+    rw [hscale]
+    ring
+  have hleftnonneg :
+      0 ≤ Real.sqrt
+        (carrierContractionUnderScale ρ Jsq) :=
+    Real.sqrt_nonneg _
+  have hrightnonneg :
+      0 ≤ (ρ⁻2) * Real.sqrt Jsq :=
+    mul_nonneg hc (Real.sqrt_nonneg _)
+  have hsqrt :
+      Real.sqrt (carrierContractionUnderScale ρ Jsq) =
+        (ρ⁻2) * Real.sqrt Jsq := by
+    nlinarith
+  unfold carrierMagnitudeFromContraction
+  rw [hsqrt]
+  ring
+
+/-- Thus the manuscript's common-scale law `χ ↦ ρ⁻²χ` is a consequence of the
+two inverse-metric weights in the invariant contraction, not an independent postulate. -/
+theorem carrier_chi_common_scale
+    (ρ Jsq χ : ℝ)
+    (hρ : 0 < ρ)
+    (hJ : 0 ≤ Jsq)
+    (hχ : χ = carrierMagnitudeFromContraction Jsq) :
+    carrierMagnitudeFromContraction
+      (carrierContractionUnderScale ρ Jsq) =
+      ρ⁻2 * χ := by
+  rw [hχ]
+  exact carrierMagnitude_common_scale ρ Jsq hρ hJ
+
 /-- Scalar certificate for representative independence:
 if `χ ↦ Ω⁻²χ` and `g ↦ Ω²g`, their normalized product is unchanged. -/
 theorem conformal_representative_product_invariant
@@ -7289,6 +7360,8 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check carrierMagnitude_common_scale
+#check carrier_chi_common_scale
 #check common_scale_invariance_implies_homogeneous
 #check common_scale_invariance_forces_linear_factor
 #check conformal_factor_forced_from_common_scale
@@ -7754,6 +7827,7 @@ end RelativeRest
 transcript: they expose every axiom used by representative end-to-end theorems. -/
 #print axioms RelativeRest.scalar_backbone
 #print axioms RelativeRest.conformal_factor_forced_from_common_scale
+#print axioms RelativeRest.carrier_chi_common_scale
 #print axioms RelativeRest.relationalObservable_gauge_invariant
 #print axioms RelativeRest.relationalObservable_deriv
 #print axioms RelativeRest.implicit_endpoint_covector_null
