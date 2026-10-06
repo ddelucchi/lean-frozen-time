@@ -4269,6 +4269,31 @@ variable {L C : Type*}
   [AddCommGroup L] [Module ℝ L]
   [AddCommGroup C] [Module ℝ C]
 
+/-- Primitive covariant-phase-space descendants. At this level no Iyer-Wald,
+Cartan-first-variation, or Noether-decomposition identity is supplied as a premise;
+the composite operators are defined from these primitive descendants. -/
+structure PrimitiveNoetherOperators where
+  deltaThetaGauge : L →ₗ[ℝ] C
+  lieTheta : L →ₗ[ℝ] C
+  contractEuler : L →ₗ[ℝ] C
+  dContractTheta : L →ₗ[ℝ] C
+  dDeltaCharge : L →ₗ[ℝ] C
+
+def PrimitiveNoetherOperators.contractDeltaL
+    (D : PrimitiveNoetherOperators (L:=L) (C:=C)) :
+    L →ₗ[ℝ] C :=
+  D.contractEuler + D.lieTheta - D.dContractTheta
+
+def PrimitiveNoetherOperators.deltaNoether
+    (D : PrimitiveNoetherOperators (L:=L) (C:=C)) :
+    L →ₗ[ℝ] C :=
+  D.deltaThetaGauge - D.contractDeltaL
+
+def PrimitiveNoetherOperators.deltaConstraint
+    (D : PrimitiveNoetherOperators (L:=L) (C:=C)) :
+    L →ₗ[ℝ] C :=
+  D.deltaNoether - D.dDeltaCharge
+
 /-- Primitive linear descendants used before invoking the Iyer-Wald identity.
 They encode only: variation of the Noether-current definition, contraction of
 the Lagrangian first-variation formula together with Cartan's identity, and
@@ -4288,6 +4313,42 @@ structure FirstVariationNoetherOperators where
     contractDeltaL = contractEuler + lieTheta - dContractTheta
   noether_decomposition_variation :
     deltaNoether = deltaConstraint + dDeltaCharge
+
+/-- The three first-variation/Noether identities are now consequences of definitions. -/
+def PrimitiveNoetherOperators.toFirstVariationNoetherOperators
+    (D : PrimitiveNoetherOperators (L:=L) (C:=C)) :
+    FirstVariationNoetherOperators (L:=L) (C:=C) where
+  deltaThetaGauge := D.deltaThetaGauge
+  lieTheta := D.lieTheta
+  contractDeltaL := D.contractDeltaL
+  contractEuler := D.contractEuler
+  dContractTheta := D.dContractTheta
+  deltaNoether := D.deltaNoether
+  deltaConstraint := D.deltaConstraint
+  dDeltaCharge := D.dDeltaCharge
+  noether_current_variation := by rfl
+  first_variation_cartan := by rfl
+  noether_decomposition_variation := by
+    unfold PrimitiveNoetherOperators.deltaConstraint
+    module
+
+/-- Consequently the off-shell Iyer-Wald operator identity has no independent
+identity hypothesis at primitive Noether level. -/
+theorem PrimitiveNoetherOperators.iyerWald_operator_identity
+    (D : PrimitiveNoetherOperators (L:=L) (C:=C)) :
+    D.toFirstVariationNoetherOperators.omegaYX =
+      D.toFirstVariationNoetherOperators.dB -
+        D.toFirstVariationNoetherOperators.constraint :=
+  D.toFirstVariationNoetherOperators.iyerWald_operator_identity
+
+/-- The compensated current is unique already at primitive Noether level. -/
+theorem PrimitiveNoetherOperators.omegaXY_existsUnique
+    (D : PrimitiveNoetherOperators (L:=L) (C:=C)) :
+    ∃! W : L →ₗ[ℝ] C,
+      ∀ X : L,
+        W X + D.toFirstVariationNoetherOperators.dB X =
+          D.toFirstVariationNoetherOperators.constraint X :=
+  D.toFirstVariationNoetherOperators.omegaXY_existsUnique
 
 /-- Presymplectic current in the ordered pair (ordinary variation, gauge variation). -/
 def FirstVariationNoetherOperators.omegaYX
