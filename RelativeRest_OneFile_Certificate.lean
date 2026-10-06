@@ -1140,8 +1140,60 @@ def residualLinear (Ric : ℝ) : R2 →ₗ[ℝ] ℝ where
     simp
     ring
 
+/-- Covector-valued lift of the already-derived action residual.
+For any response `ell`, the two action coefficients contribute with opposite signs. -/
+def actionConstraintResponseLinear
+    {C : Type*} [AddCommGroup C] [Module ℝ C]
+    (ell : C) : R2 →ₗ[ℝ] C where
+  toFun v := (v.1 - v.2) • ell
+  map_add' x y := by
+    rcases x with ⟨x₁,x₂⟩
+    rcases y with ⟨y₁,y₂⟩
+    simp
+    module
+  map_smul' a x := by
+    rcases x with ⟨x₁,x₂⟩
+    simp
+    module
+
+@[simp] theorem actionConstraintResponseLinear_gravity
+    {C : Type*} [AddCommGroup C] [Module ℝ C] (ell : C) :
+    actionConstraintResponseLinear ell actionGravitySector = ell := by
+  simp [actionConstraintResponseLinear, actionGravitySector]
+
+@[simp] theorem actionConstraintResponseLinear_maxwell
+    {C : Type*} [AddCommGroup C] [Module ℝ C] (ell : C) :
+    actionConstraintResponseLinear ell actionMaxwellSector = -ell := by
+  simp [actionConstraintResponseLinear, actionMaxwellSector]
+
+@[simp] theorem actionConstraintResponseLinear_CA
+    {C : Type*} [AddCommGroup C] [Module ℝ C] (ell : C) :
+    actionConstraintResponseLinear ell CA = 0 := by
+  simp [actionConstraintResponseLinear, CA]
+
+@[simp] theorem actionConstraintResponseLinear_DA
+    {C : Type*} [AddCommGroup C] [Module ℝ C] (ell : C) :
+    actionConstraintResponseLinear ell DA = (-2 : ℝ) • ell := by
+  simp [actionConstraintResponseLinear, DA]
+  module
+
+/-- Evaluation of the covector-valued action residual reproduces the scalar residual
+already used to derive the fixed-point carrier. Thus the characteristic constraint
+response is not a new two-sector sign convention. -/
+theorem actionConstraintResponseLinear_apply_eq_residualLinear
+    (ell : (Fin 4 → ℝ) →ₗ[ℝ] ℝ)
+    (x : R2) (v : Fin 4 → ℝ) :
+    actionConstraintResponseLinear ell x v =
+      residualLinear (ell v) x := by
+  rcases x with ⟨xG,xM⟩
+  simp [actionConstraintResponseLinear, residualLinear]
+
 /-- Action-space boost generator in the `(E_G,E_M)` basis. -/
 def YA (v : R2) : R2 := (-v.1, v.2)
+
+/-- Gravity and Maxwell coordinate basis vectors of the normalized two-sector action space. -/
+def actionGravitySector : R2 := (1, 0)
+def actionMaxwellSector : R2 := (0, 1)
 
 /-- Exchange-even action direction. -/
 def CA : R2 := (1, 1)
@@ -13991,6 +14043,158 @@ theorem principalLagrangianCharacteristic_clock_chain
     principalLagrangianCharacteristic_iwCurrent_eq_characteristicCurrent D,
     hL, hdim, hpull, hnorm⟩
 
+/-! ### Exact action-sector first variation: one operator fixes the whole constraint jet -/
+
+/-- Strongest finite-dimensional covariant-phase-space interface in the certificate.
+The Lagrangian variation is defined on the paper's normalized two-sector action space.
+Its complete constraint descendant is identified once, as an operator, with the
+covector-valued lift of the same `(x_G-x_M)` Einstein-Maxwell residual that produced
+the fixed-point carrier. No separate gravity value, Maxwell value, or total-on-shell
+constraint hypothesis remains. -/
+structure PrincipalActionSectorVariationCharacteristicInput where
+  carrier : PrincipalCarrierCharacteristicInput (P:=P)
+  variation : LagrangianVariationNoetherOperators
+    (L:=R2) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ))
+  constraintFromActionLinearization :
+    variation.constraint =
+      actionConstraintResponseLinear
+        (stressResponse LinearMap.id carrier.T carrier.iε)
+
+/-- The common/even action direction is automatically on shell. -/
+theorem PrincipalActionSectorVariationCharacteristicInput.constraint_CA
+    (D : PrincipalActionSectorVariationCharacteristicInput (P:=P)) :
+    D.variation.constraint CA = 0 := by
+  rw [D.constraintFromActionLinearization]
+  exact actionConstraintResponseLinear_CA _
+
+/-- Gravity-sector response is derived from the single operator identity. -/
+theorem PrincipalActionSectorVariationCharacteristicInput.constraint_gravity
+    (D : PrincipalActionSectorVariationCharacteristicInput (P:=P)) :
+    D.variation.constraint actionGravitySector =
+      stressResponse LinearMap.id D.carrier.T D.carrier.iε := by
+  rw [D.constraintFromActionLinearization]
+  exact actionConstraintResponseLinear_gravity _
+
+/-- Maxwell-sector response and its sign are likewise derived, not supplied. -/
+theorem PrincipalActionSectorVariationCharacteristicInput.constraint_maxwell
+    (D : PrincipalActionSectorVariationCharacteristicInput (P:=P)) :
+    D.variation.constraint actionMaxwellSector =
+      -(stressResponse LinearMap.id D.carrier.T D.carrier.iε) := by
+  rw [D.constraintFromActionLinearization]
+  exact actionConstraintResponseLinear_maxwell _
+
+/-- The exchange-odd normal direction is exactly the universal `-2` stress response. -/
+theorem PrincipalActionSectorVariationCharacteristicInput.constraint_DA
+    (D : PrincipalActionSectorVariationCharacteristicInput (P:=P)) :
+    D.variation.constraint DA =
+      (-2 : ℝ) •
+        stressResponse LinearMap.id D.carrier.T D.carrier.iε := by
+  rw [D.constraintFromActionLinearization]
+  exact actionConstraintResponseLinear_DA _
+
+/-- The reciprocal Lagrangian normal jet of the two sector basis vectors is literally DA. -/
+@[simp] theorem reciprocalLagrangianNormalJet_actionSectors :
+    reciprocalLagrangianNormalJet
+      actionGravitySector actionMaxwellSector = DA := by
+  ext <;>
+    norm_num [reciprocalLagrangianNormalJet,
+      actionGravitySector, actionMaxwellSector, DA]
+
+/-- Characteristic current sourced directly by the actual first-variation-derived
+compensated current evaluated on the unique exchange-odd action normal. -/
+def PrincipalActionSectorVariationCharacteristicInput.characteristicCurrent
+    (D : PrincipalActionSectorVariationCharacteristicInput (P:=P)) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
+  (-1 / 2 : ℝ) •
+    (D.variation.omegaXY DA + D.variation.dB DA)
+
+/-- First variation plus the single action-linearized constraint operator forces the
+current to be exactly the explicit Maxwell stress response. -/
+theorem principalActionSectorVariation_current_eq_stress
+    (D : PrincipalActionSectorVariationCharacteristicInput (P:=P)) :
+    D.characteristicCurrent =
+      stressResponse LinearMap.id D.carrier.T D.carrier.iε := by
+  unfold PrincipalActionSectorVariationCharacteristicInput.characteristicCurrent
+  rw [D.variation.compensated_eq_constraint, D.constraint_DA]
+  module
+
+/-- Hence the variational current is the already-field-derived carrier current. -/
+theorem principalActionSectorVariation_current_eq_characteristicCurrent
+    (D : PrincipalActionSectorVariationCharacteristicInput (P:=P)) :
+    D.characteristicCurrent =
+      D.carrier.toCharacteristicCurrentData.current := by
+  rw [principalActionSectorVariation_current_eq_stress D,
+    principalCarrierCharacteristic_current D.carrier]
+
+/-- The full characteristic clock chain now follows with no separately supplied
+sector values or total constraint equation. -/
+theorem principalActionSectorVariation_clock_chain
+    (D : PrincipalActionSectorVariationCharacteristicInput (P:=P)) :
+    D.characteristicCurrent =
+        D.carrier.toCharacteristicCurrentData.current ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    (quotientClockCovector principalTOLinear).comp
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda) =
+      D.carrier.toCharacteristicCurrentData.clockCovector ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat := by
+  rcases principalCarrierCharacteristic_clock_chain D.carrier with
+    ⟨hL, hdim, hpull, hnorm⟩
+  exact ⟨principalActionSectorVariation_current_eq_characteristicCurrent D,
+    hL, hdim, hpull, hnorm⟩
+
+/-- Strongest action-sector forced-core statement: one first-variation package and
+one operator equality to the field-equation linearization determine the relative rest
+point, carrier/Rainich structure, compensated current, quotient and normalized clock. -/
+theorem principalActionSectorVariation_forced_core_chain
+    (D : PrincipalActionSectorVariationCharacteristicInput (P:=P))
+    (u s : ℝ) :
+    ((8 * Real.pi * principalFieldEnergyDensity D.carrier.E D.carrier.B =
+        8 * Real.pi *
+          maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+          principalFieldEnergyDensity D.carrier.E D.carrier.B) ↔ s = 0) ∧
+    deriv (principalScaledResidualFromF
+      D.carrier.E D.carrier.B 0 0) 0 =
+      principalJetFromF D.carrier.E D.carrier.B 0 0 ∧
+    (∀ i j : Fin 4,
+      (∑ k : Fin 4,
+        principalJetFromF D.carrier.E D.carrier.B i k *
+          principalJetFromF D.carrier.E D.carrier.B k j) =
+        (principalChi D.carrier.E D.carrier.B)^2 *
+          (if i = j then 1 else 0)) ∧
+    D.variation.constraint CA = 0 ∧
+    D.variation.constraint DA =
+      (-2 : ℝ) •
+        stressResponse LinearMap.id D.carrier.T D.carrier.iε ∧
+    D.characteristicCurrent =
+      D.carrier.toCharacteristicCurrentData.current ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat := by
+  rcases principalField_forced_core_chain D.carrier u s with
+    ⟨hrest, hjet, hrainich, _hrates, hclock⟩
+  rcases hclock with ⟨hL, hdim, _hpull, hnorm⟩
+  exact ⟨hrest, hjet, hrainich, D.constraint_CA, D.constraint_DA,
+    principalActionSectorVariation_current_eq_characteristicCurrent D,
+    hL, hdim, hnorm⟩
+
 /-! ### On-shell Lagrangian first variation: total field equation to clock line -/
 
 /-- Strongest non-manifold covariant-phase-space interface: the total Einstein-Maxwell
@@ -15564,6 +15768,14 @@ theorem scalar_backbone_from_einstein_maxwell
 #check residualLinear_CA
 #check residualLinear_DA
 #check residualLinear_DA_eq_jet
+#check actionGravitySector
+#check actionMaxwellSector
+#check actionConstraintResponseLinear
+#check actionConstraintResponseLinear_gravity
+#check actionConstraintResponseLinear_maxwell
+#check actionConstraintResponseLinear_CA
+#check actionConstraintResponseLinear_DA
+#check actionConstraintResponseLinear_apply_eq_residualLinear
 #check JA_CA
 #check JA_DA
 #check JA_actionBoost
