@@ -16,15 +16,17 @@ This file is intentionally adversarial about assumptions.
   Kerr-specific curvature scalar.
 * The Kerr–Newman specialization now also differentiates the Boyer–Lindquist potential,
   reconstructs its coordinate Maxwell field, proves equality with the full Carter orthonormal
-  coframe form, and derives the metric-normalized Carter observer and its carrier-selected rest
-  condition, including the higher-jet `r=0` stratum.
-* What is not yet reconstructed from first principles is the full manifold-level
-  differential-geometric infrastructure: the Einstein–Maxwell Lagrangian and Euler–Lagrange
-  equations as tensor/differential-form objects, a proof inside Lean that the supplied
-  Kerr–Newman metric/potential solve those equations, the Iyer–Wald current on covariant phase
-  space, and smooth Synge-world-function endpoint geometry through caustics.  Those facts enter
-  only through explicit downstream interfaces or hypotheses; their algebraic, quotient, local
-  transport, clock, and Kerr consequences are proved once they are supplied.
+  coframe form, derives the metric inverse block and determinant, and proves both the homogeneous
+  and source-free Maxwell equations in the regular Boyer–Lindquist chart.  It also derives the
+  metric-normalized Carter observer and its carrier-selected rest condition, including the
+  higher-jet `r=0` stratum.
+* What is not yet reconstructed from first principles is the remaining manifold-level
+  differential-geometric infrastructure: variation of the Einstein–Maxwell action as genuine
+  tensor/differential-form fields, the full Christoffel/Riemann/Ricci computation proving the
+  Kerr–Newman metric satisfies the Einstein equation, the covariant Iyer–Wald identity itself
+  on phase space, and smooth Synge-world-function endpoint existence through caustics.  Once
+  those geometric inputs are available, their algebraic, quotient, transport, clock, optical,
+  and Kerr consequences are already forced by the theorems below.
 
 Consequently this file is a kernel-oriented logical certificate of the manuscript's forced
 algebraic and quotient structure while keeping the remaining geometric boundary visible.
