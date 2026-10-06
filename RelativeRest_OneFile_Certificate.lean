@@ -964,6 +964,15 @@ theorem nullCovector_nonnull_boost_iff
 def boostDefect (qminus qplus σ : ℝ) : ℝ :=
   Real.exp (-2 * σ) * qminus^2 - Real.exp (2 * σ) * qplus^2
 
+
+/-- Boosted null components themselves. -/
+def boostedQMinus (qminus σ : ℝ) : ℝ := Real.exp (-σ) * qminus
+def boostedQPlus (qplus σ : ℝ) : ℝ := Real.exp σ * qplus
+
+/-- Timelike/rest component of the principal-plane covector, up to the fixed null normalization. -/
+def boostedRestComponent (qminus qplus σ : ℝ) : ℝ :=
+  boostedQMinus qminus σ + boostedQPlus qplus σ
+
 /-- The advertised balance rapidity. -/
 def sigmaStar (qminus qplus : ℝ) : ℝ :=
   (1 / 2 : ℝ) * Real.log (|qminus / qplus|)
@@ -1004,6 +1013,81 @@ theorem boosted_component_squares
     rw [pow_two, ← Real.exp_add]
     congr 1
     ring
+
+
+/-- The manuscript's displayed derivative of the boost defect. -/
+theorem boostDefect_hasDerivAt
+    (qm qp σ : ℝ) :
+    HasDerivAt (boostDefect qm qp)
+      (-2 * (Real.exp (-2 * σ) * qm^2 + Real.exp (2 * σ) * qp^2)) σ := by
+  have hm :
+      HasDerivAt (fun x : ℝ => Real.exp (-2 * x))
+        (-2 * Real.exp (-2 * σ)) σ := by
+    convert (Real.hasDerivAt_exp (-2 * σ)).comp σ
+      (hasDerivAt_const_mul (-2 : ℝ)) using 1 <;> ring
+  have hp :
+      HasDerivAt (fun x : ℝ => Real.exp (2 * x))
+        (2 * Real.exp (2 * σ)) σ := by
+    convert (Real.hasDerivAt_exp (2 * σ)).comp σ
+      (hasDerivAt_const_mul (2 : ℝ)) using 1 <;> ring
+  have h := (hm.mul_const (qm^2)).sub (hp.mul_const (qp^2))
+  simpa [boostDefect] using h
+
+/-- On the resolving non-null sector the defect derivative is strictly negative everywhere. -/
+theorem boostDefect_derivative_negative
+    (qm qp σ : ℝ) (hqm : qm ≠ 0) (hqp : qp ≠ 0) :
+    -2 * (Real.exp (-2 * σ) * qm^2 + Real.exp (2 * σ) * qp^2) < 0 := by
+  have hqm2 : 0 < qm^2 := sq_pos_of_ne_zero hqm
+  have hqp2 : 0 < qp^2 := sq_pos_of_ne_zero hqp
+  have h1 : 0 < Real.exp (-2 * σ) * qm^2 := mul_pos (Real.exp_pos _) hqm2
+  have h2 : 0 < Real.exp (2 * σ) * qp^2 := mul_pos (Real.exp_pos _) hqp2
+  nlinarith
+
+/-- Vanishing rest component always implies boost balance. -/
+theorem restComponent_zero_implies_balance
+    (qm qp σ : ℝ)
+    (hrest : boostedRestComponent qm qp σ = 0) :
+    boostDefect qm qp σ = 0 := by
+  have hs := boosted_component_squares qm qp σ
+  rcases hs with ⟨hm, hp⟩
+  unfold boostedRestComponent boostedQMinus boostedQPlus at hrest
+  unfold boostDefect
+  rw [← hm, ← hp]
+  nlinarith
+
+/-- For a spacelike principal-plane covector, boost balance forces zero timelike/rest component. -/
+theorem balance_implies_restComponent_zero_of_spacelike
+    (qm qp σ : ℝ)
+    (hspace : 0 < nullCovectorNormSq qm qp)
+    (hbal : boostDefect qm qp σ = 0) :
+    boostedRestComponent qm qp σ = 0 := by
+  let A := boostedQMinus qm σ
+  let B := boostedQPlus qp σ
+  have hs := boosted_component_squares qm qp σ
+  have hsq : A^2 = B^2 := by
+    rcases hs with ⟨hm, hp⟩
+    unfold boostDefect at hbal
+    unfold A B boostedQMinus boostedQPlus
+    linarith
+  have hab : A * B < 0 := by
+    unfold A B boostedQMinus boostedQPlus
+    unfold nullCovectorNormSq at hspace
+    have he : 0 < Real.exp (-σ) * Real.exp σ := mul_pos (Real.exp_pos _) (Real.exp_pos _)
+    have hq : qm * qp < 0 := by nlinarith
+    nlinarith [mul_pos_of_pos_of_neg he hq]
+  unfold boostedRestComponent
+  change A + B = 0
+  nlinarith [sq_nonneg (A + B), sq_nonneg (A - B)]
+
+/-- Thus on the spacelike resolving sector the balance equation is exactly the
+zero-radial-boost/rest-frame condition used in the Kerr-Newman specialization. -/
+theorem balance_iff_restComponent_zero_of_spacelike
+    (qm qp σ : ℝ)
+    (hspace : 0 < nullCovectorNormSq qm qp) :
+    boostDefect qm qp σ = 0 ↔ boostedRestComponent qm qp σ = 0 := by
+  constructor
+  · exact balance_implies_restComponent_zero_of_spacelike qm qp σ hspace
+  · exact restComponent_zero_implies_balance qm qp σ
 
 /-- If the boost defect vanishes and both components are nonzero, the rapidity is unique. -/
 theorem boost_balance_unique
@@ -2771,6 +2855,11 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check boostDefect_hasDerivAt
+#check boostDefect_derivative_negative
+#check restComponent_zero_implies_balance
+#check balance_implies_restComponent_zero_of_spacelike
+#check balance_iff_restComponent_zero_of_spacelike
 #check defect_from_on_shell_equation
 #check defect_factorization_identity
 #check defect_first_jet_ne_zero
