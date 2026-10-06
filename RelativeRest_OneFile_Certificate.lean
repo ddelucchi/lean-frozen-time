@@ -2936,6 +2936,43 @@ theorem carrier_bridge_scalar
   field_simp [ne_of_gt Real.pi_pos]
   ring
 
+/-- The characteristic covector prescribed by the manuscript is the negative half of
+the integrated carrier current. -/
+def halfCarrierBulkCurrent
+    (integrate : W →ₗ[ℝ] ℝ)
+    (J : V →ₗ[ℝ] V)
+    (iε : V →ₗ[ℝ] W) :
+    V →ₗ[ℝ] ℝ :=
+  (-1 / 2 : ℝ) • carrierBulkResponse integrate J iε
+
+/-- The field-equation jet forces this negative-half bulk current to be exactly the
+integrated Maxwell stress response.  Hence the factor `-1/2` in `Lambda` is fixed,
+not a normalization convention. -/
+theorem halfCarrierBulkCurrent_eq_stressResponse
+    (integrate : W →ₗ[ℝ] ℝ)
+    (J T : V →ₗ[ℝ] V)
+    (iε : V →ₗ[ℝ] W)
+    (hJ : J = (-16 * Real.pi) • T) :
+    halfCarrierBulkCurrent integrate J iε =
+      stressResponse integrate T iε := by
+  rw [halfCarrierBulkCurrent,
+    carrierBulkResponse_eq_minus_two_stressResponse
+      integrate J T iε hJ]
+  ext v
+  simp
+  ring
+
+/-- Pointwise counterpart: negative one half of the carrier-current coefficient is the
+unscaled stress contraction. -/
+theorem half_carrier_bridge_scalar
+    (J T volumeCoeff ξCoeff : ℝ)
+    (hJ : J = -16 * Real.pi * T) :
+    (-1 / 2 : ℝ) *
+      ((1 / (8 * Real.pi)) * volumeCoeff * J * ξCoeff) =
+      volumeCoeff * T * ξCoeff := by
+  rw [carrier_bridge_scalar J T volumeCoeff ξCoeff hJ]
+  ring
+
 end CarrierCurrentBridge
 
 /-! ### Boundary-compensated Iyer-Wald sign algebra -/
@@ -6858,6 +6895,8 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check halfCarrierBulkCurrent_eq_stressResponse
+#check half_carrier_bridge_scalar
 #check characteristicCurrent_factorization
 #check CharacteristicCurrentData.kernel_invisible
 #check CharacteristicCurrentData.ell_positive
@@ -7317,6 +7356,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.relativeSymplecticMinus_eq_half_derivative
 #print axioms RelativeRest.carrierJetCurrent_eq_stressBridgeCurrent
 #print axioms RelativeRest.carrierBulkResponse_eq_minus_two_stressResponse
+#print axioms RelativeRest.halfCarrierBulkCurrent_eq_stressResponse
 #print axioms RelativeRest.principalLocalClockRatio_forced
 #print axioms RelativeRest.principalPointResponse_ratio_forced
 #print axioms RelativeRest.principalBridgeSpatialCoeff_ratio_forced
