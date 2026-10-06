@@ -7177,6 +7177,154 @@ theorem kerrCoordinateField_components
           kerrTemporalOneFormCoeffs, kerrAxialOneFormCoeffs]
         ring
 
+
+/-- Raised radial-time component computed from the inverse metric and coordinate field. -/
+def kerrRaisedFrt
+    (Q r M a θ : ℝ) : ℝ :=
+  kerrInvGrr r M a Q θ *
+    (kerrInvGtt r M a Q θ *
+        kerrCoordinateField Q r a θ 1 0 +
+      kerrInvGtPhi r M a Q θ *
+        kerrCoordinateField Q r a θ 1 3)
+
+/-- Raised radial-azimuthal component. -/
+def kerrRaisedFrPhi
+    (Q r M a θ : ℝ) : ℝ :=
+  kerrInvGrr r M a Q θ *
+    (kerrInvGtPhi r M a Q θ *
+        kerrCoordinateField Q r a θ 1 0 +
+      kerrInvGPhiPhi r M a Q θ *
+        kerrCoordinateField Q r a θ 1 3)
+
+/-- Raised polar-time component. -/
+def kerrRaisedFthetaT
+    (Q r M a θ : ℝ) : ℝ :=
+  kerrInvGthetaTheta r a θ *
+    (kerrInvGtt r M a Q θ *
+        kerrCoordinateField Q r a θ 2 0 +
+      kerrInvGtPhi r M a Q θ *
+        kerrCoordinateField Q r a θ 2 3)
+
+/-- Raised polar-azimuthal component. -/
+def kerrRaisedFthetaPhi
+    (Q r M a θ : ℝ) : ℝ :=
+  kerrInvGthetaTheta r a θ *
+    (kerrInvGtPhi r M a Q θ *
+        kerrCoordinateField Q r a θ 2 0 +
+      kerrInvGPhiPhi r M a Q θ *
+        kerrCoordinateField Q r a θ 2 3)
+
+/-- Raising the explicit coordinate field produces the standard principal expressions. -/
+theorem kerrRaisedField_components
+    (Q r M a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrRaisedFrt Q r M a θ =
+        -(r^2 + a^2) / Sigma r a θ *
+          kerrPrincipalE Q r a θ ∧
+    kerrRaisedFrPhi Q r M a θ =
+        -a / Sigma r a θ *
+          kerrPrincipalE Q r a θ ∧
+    kerrRaisedFthetaT Q r M a θ =
+        a * Real.sin θ / Sigma r a θ *
+          kerrPrincipalB Q r a θ ∧
+    kerrRaisedFthetaPhi Q r M a θ =
+        1 / (Sigma r a θ * Real.sin θ) *
+          kerrPrincipalB Q r a θ := by
+  rcases kerrCoordinateField_components Q r a θ with
+    ⟨hrt, hrp, hθt, hθp⟩
+  have htrig :
+      (Real.sin θ)^2 = 1 - (Real.cos θ)^2 := by
+    nlinarith [Real.sin_sq_add_cos_sq θ]
+  constructor
+  · unfold kerrRaisedFrt kerrInvGrr kerrInvGtt kerrInvGtPhi
+    rw [hrt, hrp, htrig]
+    field_simp [hsig, hdel]
+    unfold Sigma
+    ring
+  · constructor
+    · unfold kerrRaisedFrPhi kerrInvGrr kerrInvGtPhi kerrInvGPhiPhi
+      rw [hrt, hrp, htrig]
+      field_simp [hsig, hdel, hsin]
+      unfold Sigma
+      ring
+    · constructor
+      · unfold kerrRaisedFthetaT kerrInvGthetaTheta kerrInvGtt kerrInvGtPhi
+        rw [hθt, hθp, htrig]
+        field_simp [hsig, hdel]
+        unfold Sigma
+        ring
+      · unfold kerrRaisedFthetaPhi kerrInvGthetaTheta kerrInvGtPhi kerrInvGPhiPhi
+        rw [hθt, hθp, htrig]
+        field_simp [hsig, hdel, hsin]
+        unfold Sigma
+        ring
+
+/-- Multiplying the raised field by the metric volume density reproduces exactly the
+four densitized fluxes used in the source-free Maxwell equations. -/
+theorem kerrDensitizedField_from_metric
+    (Q r M a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrVolumeDensity r a θ * kerrRaisedFrt Q r M a θ =
+        kerrDensitizedFrt Q r a θ ∧
+    kerrVolumeDensity r a θ * kerrRaisedFrPhi Q r M a θ =
+        kerrDensitizedFrPhi Q r a θ ∧
+    kerrVolumeDensity r a θ * kerrRaisedFthetaT Q r M a θ =
+        kerrDensitizedFthetaT Q r a θ ∧
+    kerrVolumeDensity r a θ * kerrRaisedFthetaPhi Q r M a θ =
+        kerrDensitizedFthetaPhi Q r a θ := by
+  rcases kerrRaisedField_components Q r M a θ hsig hdel hsin with
+    ⟨hrt, hrp, hθt, hθp⟩
+  constructor
+  · rw [hrt]
+    unfold kerrVolumeDensity kerrDensitizedFrt
+    field_simp [hsig]
+    ring
+  · constructor
+    · rw [hrp]
+      unfold kerrVolumeDensity kerrDensitizedFrPhi
+      field_simp [hsig]
+      ring
+    · constructor
+      · rw [hθt]
+        unfold kerrVolumeDensity kerrDensitizedFthetaT
+        field_simp [hsig]
+        ring
+      · rw [hθp]
+        unfold kerrVolumeDensity kerrDensitizedFthetaPhi
+        field_simp [hsig, hsin]
+        ring
+
+/-- The two previously proved divergence identities are therefore literally the
+source-free Maxwell equations for the metric-raised field in the regular
+Boyer-Lindquist chart. -/
+theorem kerrMaxwell_source_free_certificate
+    (Q r M a θ : ℝ)
+    (hsig : Sigma r a θ ≠ 0)
+    (hdel : Delta r M a Q ≠ 0)
+    (hsin : Real.sin θ ≠ 0) :
+    kerrVolumeDensity r a θ * kerrRaisedFrt Q r M a θ =
+        kerrDensitizedFrt Q r a θ ∧
+    kerrVolumeDensity r a θ * kerrRaisedFrPhi Q r M a θ =
+        kerrDensitizedFrPhi Q r a θ ∧
+    kerrVolumeDensity r a θ * kerrRaisedFthetaT Q r M a θ =
+        kerrDensitizedFthetaT Q r a θ ∧
+    kerrVolumeDensity r a θ * kerrRaisedFthetaPhi Q r M a θ =
+        kerrDensitizedFthetaPhi Q r a θ ∧
+    deriv (fun x : ℝ => kerrDensitizedFrt Q x a θ) r +
+        deriv (fun x : ℝ => kerrDensitizedFthetaT Q r a x) θ = 0 ∧
+    deriv (fun x : ℝ => kerrDensitizedFrPhi Q x a θ) r +
+        deriv (fun x : ℝ => kerrDensitizedFthetaPhi Q r a x) θ = 0 := by
+  rcases kerrDensitizedField_from_metric
+    Q r M a θ hsig hdel hsin with
+    ⟨hrt, hrp, hθt, hθp⟩
+  exact ⟨hrt, hrp, hθt, hθp,
+    kerrMaxwell_divergence_t Q r a θ hsig,
+    kerrMaxwell_divergence_phi Q r a θ hsig⟩
+
 /-- Maxwell field written in the Carter orthonormal coframe.  The overall minus sign is
 the orientation induced by `dr∧(dt-a sin²θ dφ)=-e⁰∧e¹`. -/
 def kerrFieldInCarterCoframe
@@ -8509,6 +8657,9 @@ theorem scalar_backbone_from_einstein_maxwell
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check kerrRaisedField_components
+#check kerrDensitizedField_from_metric
+#check kerrMaxwell_source_free_certificate
 #check kerr_stationary_block_det
 #check kerr_metric_det
 #check kerr_stationary_inverse_block
@@ -9109,6 +9260,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerr_metric_det
 #print axioms RelativeRest.kerrMaxwell_divergence_t
 #print axioms RelativeRest.kerrMaxwell_divergence_phi
+#print axioms RelativeRest.kerrMaxwell_source_free_certificate
 #print axioms RelativeRest.kerrCoordinateField_eq_CarterCoframe
 #print axioms RelativeRest.kerrPotential_to_CarterPrincipalField
 #print axioms RelativeRest.kerrPotential_metric_principal_alignment
