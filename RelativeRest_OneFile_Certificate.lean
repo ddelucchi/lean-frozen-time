@@ -614,6 +614,19 @@ theorem residualLinear_DA_eq_jet
 def actionBoost (s : ℝ) (v : R2) : R2 :=
   (Real.exp (-s) * v.1, Real.exp s * v.2)
 
+
+/-- The action boosts form a genuine one-parameter representation. -/
+theorem actionBoost_add (s t : ℝ) (v : R2) :
+    actionBoost (s + t) v = actionBoost s (actionBoost t v) := by
+  rcases v with ⟨x, y⟩
+  ext <;> simp [actionBoost, Real.exp_add] <;> ring
+
+/-- Negative rapidity is the inverse action boost. -/
+theorem actionBoost_neg_inverse (s : ℝ) (v : R2) :
+    actionBoost (-s) (actionBoost s v) = v := by
+  rw [← actionBoost_add]
+  simp [actionBoost]
+
 /-- Exchange reverses the orientation of the action rapidity and nothing else. -/
 theorem JA_actionBoost (s : ℝ) (v : R2) :
     JA (actionBoost s v) = actionBoost (-s) (JA v) := by
@@ -1540,6 +1553,21 @@ def opticalBoost (s : ℝ) (v : R2) : R2 :=
   (Real.cosh s * v.1 + Real.sinh s * v.2,
    Real.sinh s * v.1 + Real.cosh s * v.2)
 
+
+/-- The optical boosts obey the same additive rapidity group law. -/
+theorem opticalBoost_add (s t : ℝ) (v : R2) :
+    opticalBoost (s + t) v = opticalBoost s (opticalBoost t v) := by
+  rcases v with ⟨x, y⟩
+  ext <;>
+    simp [opticalBoost, Real.cosh_add, Real.sinh_add] <;>
+    ring
+
+/-- Negative rapidity is the inverse optical boost. -/
+theorem opticalBoost_neg_inverse (s : ℝ) (v : R2) :
+    opticalBoost (-s) (opticalBoost s v) = v := by
+  rw [← opticalBoost_add]
+  simp [opticalBoost]
+
 /-- Optical exchange reverses rapidity exactly as action-sector exchange does. -/
 theorem JO_opticalBoost (s : ℝ) (v : R2) :
     JO (opticalBoost s v) = opticalBoost (-s) (JO v) := by
@@ -2272,6 +2300,13 @@ theorem optical_covector_norm_scalar
 /-! ## 13. Transport/integrability algebra -/
 
 /-- Scalar coefficient identity behind `D_b ω = (ω/4) D_b log K` when `K=ω⁴`. -/
+/-- The logarithmic differential of `K=ω⁴` is forced algebraically. -/
+theorem quartic_logarithmic_derivative
+    (ω dω : ℝ) (hω : ω ≠ 0) :
+    (4 * ω^3 * dω) / ω^4 = 4 * dω / ω := by
+  field_simp [hω]
+  ring
+
 theorem logarithmic_rate_coefficient (ω dlogK dω : ℝ)
     (hω : ω ≠ 0)
     (h : dlogK = 4 * dω / ω) :
@@ -2590,6 +2625,28 @@ theorem synchronization_total_closed
 
 /-- Standard clock-cover symplectic form on `(Θ,κ)` tangent vectors. -/
 def clockOmega (v w : R2) : ℝ := v.2 * w.1 - v.1 * w.2
+
+
+/-- Coordinate one-form `dΘ` on the finite-dimensional clock cover. -/
+def clockDTheta : R2 →ₗ[ℝ] ℝ where
+  toFun v := v.1
+  map_add' x y := by simp
+  map_smul' c x := by simp
+
+/-- Coordinate one-form `dκ` on the finite-dimensional clock cover. -/
+def clockDKappa : R2 →ₗ[ℝ] ℝ where
+  toFun v := v.2
+  map_add' x y := by simp
+  map_smul' c x := by simp
+
+/-- The symplectic form is literally `dκ ∧ dΘ`. -/
+theorem clockOmega_eq_dKappa_wedge_dTheta (v w : R2) :
+    clockOmega v w =
+      clockDKappa v * clockDTheta w - clockDKappa w * clockDTheta v := by
+  rcases v with ⟨vΘ, vκ⟩
+  rcases w with ⟨wΘ, wκ⟩
+  simp [clockOmega, clockDTheta, clockDKappa]
+  ring
 
 
 /-- Canonical Poisson pairing on clock-cover coordinate differentials. -/
@@ -3007,6 +3064,12 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check actionBoost_add
+#check actionBoost_neg_inverse
+#check opticalBoost_add
+#check opticalBoost_neg_inverse
+#check quartic_logarithmic_derivative
+#check clockOmega_eq_dKappa_wedge_dTheta
 #check pastEndpointE_empty
 #check futureEndpointE_empty
 #check pastEndpointE_mono
