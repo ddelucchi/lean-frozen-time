@@ -1835,9 +1835,11 @@ theorem principalPhysicalU_background_unit
     simp [principalPhysicalU, principalMinkowskiSq,
       principalUhat, principalBasis]
     ring
+  have hω2 : ω^2 ≠ 0 := by
+    rw [← hχrate]
+    exact hχ
   rw [hnorm, hχrate]
-  field_simp [hχ]
-  ring
+  field_simp [hω2]
 
 /-- Thus along the selected physical unit trajectory the local clock differential is
 literally `dΘ = ω dτ`; on the normalized chronometric trajectory it is `dΘ=dτ̂`. -/
