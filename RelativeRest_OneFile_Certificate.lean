@@ -38,6 +38,20 @@ def delta (r : ℝ) : ℝ := (r - 1) / (r + 1)
 @[simp] theorem delta_zero : delta 0 = -1 := by
   norm_num [delta]
 
+/-- On the positive projective sector, relative rest is the unique zero of the defect coordinate. -/
+theorem delta_eq_zero_iff_one (r : ℝ) (hr : 0 < r) :
+    delta r = 0 ↔ r = 1 := by
+  have hden : r + 1 ≠ 0 := by positivity
+  constructor
+  · intro h
+    have hn : r - 1 = 0 := by
+      rcases (div_eq_zero_iff.mp (by simpa [delta] using h)) with hn | hd
+      · exact hn
+      · exact False.elim (hden hd)
+    linarith
+  · rintro rfl
+    exact delta_one
+
 /-- Exchange `r ↦ r⁻¹` reverses the relative defect on the positive sector. -/
 theorem delta_inv (r : ℝ) (hr : 0 < r) : delta r⁻¹ = - delta r := by
   have hr0 : r ≠ 0 := ne_of_gt hr
@@ -236,6 +250,19 @@ theorem character_defect_is_tanh (u s : ℝ) :
     delta (XiMUS u s / XiGUS u s) = Real.tanh s := by
   rw [character_ratio_eq_exp_two]
   exact delta_exp_two s
+
+/-- Equality of the two sector characters occurs at exactly one relative point. -/
+theorem character_rest_iff_zero (u s : ℝ) :
+    XiGUS u s = XiMUS u s ↔ s = 0 := by
+  rw [XiGUS_factorization, XiMUS_factorization]
+  have hku : kappaUS u ≠ 0 := ne_of_gt (Real.exp_pos u)
+  constructor
+  · intro h
+    have he : Real.exp (-s) = Real.exp s := mul_left_cancel₀ hku h
+    have hs : -s = s := Real.exp_injective he
+    linarith
+  · rintro rfl
+    simp
 
 /-! ## 3. Dynamic fixed point and the defect jet -/
 
@@ -767,7 +794,30 @@ theorem conformal_representative_product_invariant
     (χ / Ω^2) * Ω^2 = χ := by
   field_simp [hΩ]
 
+/-- Homogeneity and unit-involution normalization together force the conformal factor itself:
+there is no residual positive multiplicative constant. -/
+theorem conformal_factor_forced
+    (f : ℝ → ℝ)
+    (hhom : ∀ c χ : ℝ, 0 < c → 0 < χ → f (c * χ) = c * f χ)
+    (χ : ℝ) (hχ : 0 < χ)
+    (hC : 0 < f 1)
+    (hunit : χ^2 / (f χ)^2 = 1) :
+    f χ = χ := by
+  have hlin : f χ = f 1 * χ :=
+    homogeneous_conformal_factor f hhom χ hχ
+  have hunit' : χ^2 / (f 1 * χ)^2 = 1 := by
+    rw [← hlin]
+    exact hunit
+  have hCeq : f 1 = 1 :=
+    unit_involution_fixes_conformal_constant (f 1) χ hC hχ hunit'
+  rw [hlin, hCeq, one_mul]
+
 /-! ## 8. Relative rapidity identity -/
+
+/-- Principal future/past null-frequency characters of the normalized optical boost. -/
+def nuPlus (s : ℝ) : ℝ := Real.exp s
+
+def nuMinus (s : ℝ) : ℝ := Real.exp (-s)
 
 /-- Action-character ratio and optical null-frequency ratio are the same exponential. -/
 theorem master_ratio (s : ℝ) :
@@ -784,6 +834,21 @@ theorem optical_defect_is_tanh (s : ℝ) :
   rw [Real.tanh_eq_sinh_div_cosh]
   rw [← Real.cosh_add_sinh s, ← Real.cosh_sub_sinh s]
   ring_nf
+
+/-- The explicitly named optical frequencies carry the same ratio as the action characters. -/
+theorem null_frequency_ratio (s : ℝ) :
+    nuPlus s / nuMinus s = Real.exp (2 * s) := by
+  exact master_ratio s
+
+/-- Their normalized exchange defect is exactly the same projective coordinate. -/
+theorem null_frequency_defect (s : ℝ) :
+    (nuPlus s - nuMinus s) / (nuPlus s + nuMinus s) = Real.tanh s := by
+  exact optical_defect_is_tanh s
+
+/-- The action and null-frequency ratios are identically equal, with no fitted parameter. -/
+theorem character_ratio_eq_null_frequency_ratio (u s : ℝ) :
+    XiMUS u s / XiGUS u s = nuPlus s / nuMinus s := by
+  rw [character_ratio_eq_exp_two, null_frequency_ratio]
 
 /-- Relative rest is the same fixed point in action and optical ratios. -/
 theorem action_rest_iff_zero (s : ℝ) :
@@ -806,6 +871,19 @@ theorem optical_rest_iff_zero (s : ℝ) :
 theorem relative_rest_equivalences (s : ℝ) :
     (Real.exp (-s) = Real.exp s) ↔ (Real.tanh s = 0) := by
   rw [action_rest_iff_zero, optical_rest_iff_zero]
+
+/-- The paper's full relative-rest statement: sector equality, null-frequency equality,
+and vanishing relational velocity are exactly the same condition. -/
+theorem full_relative_rest_equivalence (u s : ℝ) :
+    (XiGUS u s = XiMUS u s) ↔
+      (nuPlus s = nuMinus s ∧ Real.tanh s = 0) := by
+  rw [character_rest_iff_zero]
+  constructor
+  · intro hs
+    subst s
+    simp [nuPlus, nuMinus]
+  · rintro ⟨hnu, hv⟩
+    exact (optical_rest_iff_zero s).mp hv
 
 
 /-! ### Forced action-to-optical intertwiner -/
@@ -1618,6 +1696,13 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check delta_eq_zero_iff_one
+#check character_rest_iff_zero
+#check conformal_factor_forced
+#check null_frequency_ratio
+#check null_frequency_defect
+#check character_ratio_eq_null_frequency_ratio
+#check full_relative_rest_equivalence
 #check XiGUS_factorization
 #check XiMUS_factorization
 #check rho_mul_lambda_eq_kappa
