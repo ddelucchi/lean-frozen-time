@@ -949,6 +949,128 @@ theorem relativeAction_defect_ratio
   field_simp [hS, hc]
   ring
 
+/-! ### Einstein-Maxwell Lagrangian origin of the reciprocal character -/
+
+/-- Einstein-Hilbert density coefficient for `(16π)⁻¹ R ε_g`. -/
+def einsteinHilbertLagrangianDensity
+    (volumeCoeff scalarR : ℝ) : ℝ :=
+  (1 / (16 * Real.pi)) * volumeCoeff * scalarR
+
+/-- Maxwell density coefficient for `-(16π)⁻¹ F² ε_g`. -/
+def maxwellLagrangianDensity
+    (volumeCoeff Fsq : ℝ) : ℝ :=
+  -(1 / (16 * Real.pi)) * volumeCoeff * Fsq
+
+/-- Pointwise Einstein-Maxwell Lagrangian density in the manuscript normalization. -/
+def einsteinMaxwellLagrangianDensity
+    (volumeCoeff scalarR Fsq : ℝ) : ℝ :=
+  (1 / (16 * Real.pi)) * volumeCoeff * (scalarR - Fsq)
+
+theorem einsteinMaxwellLagrangianDensity_decomposition
+    (volumeCoeff scalarR Fsq : ℝ) :
+    einsteinMaxwellLagrangianDensity volumeCoeff scalarR Fsq =
+      einsteinHilbertLagrangianDensity volumeCoeff scalarR +
+        maxwellLagrangianDensity volumeCoeff Fsq := by
+  unfold einsteinMaxwellLagrangianDensity
+    einsteinHilbertLagrangianDensity maxwellLagrangianDensity
+  ring
+
+section LagrangianFunctoriality
+
+variable {L O : Type*}
+  [AddCommGroup L] [Module ℝ L]
+  [AddCommGroup O] [Module ℝ O]
+
+/-- Reciprocal Einstein-Maxwell Lagrangian family after removal of the common character. -/
+def reciprocalLagrangian
+    (LG LM : L) (s : ℝ) : L :=
+  Real.exp (-s) • LG + Real.exp s • LM
+
+theorem reciprocalLagrangian_exchange
+    (LG LM : L) (s : ℝ) :
+    reciprocalLagrangian LM LG (-s) =
+      reciprocalLagrangian LG LM s := by
+  simp [reciprocalLagrangian]
+  module
+
+/-- Fixed-point normal jet of the reciprocal Lagrangian family. -/
+def reciprocalLagrangianNormalJet
+    (LG LM : L) : L :=
+  -LG + LM
+
+/-- Every linear covariant descendant inherits the same reciprocal characters. -/
+theorem linearDescendant_reciprocal
+    (D : L →ₗ[ℝ] O) (LG LM : L) (s : ℝ) :
+    D (reciprocalLagrangian LG LM s) =
+      Real.exp (-s) • D LG + Real.exp s • D LM := by
+  simp [reciprocalLagrangian]
+
+/-- Taking the fixed-point normal jet commutes with every linear Lagrangian descendant. -/
+theorem linearDescendant_normalJet
+    (D : L →ₗ[ℝ] O) (LG LM : L) :
+    D (reciprocalLagrangianNormalJet LG LM) =
+      -D LG + D LM := by
+  simp [reciprocalLagrangianNormalJet]
+
+/-- Opposite sector values force the universal `-2` relative jet. -/
+theorem linearDescendant_normalJet_of_opposite
+    (D : L →ₗ[ℝ] O) (LG LM : L) (ell : O)
+    (hG : D LG = ell)
+    (hM : D LM = -ell) :
+    D (reciprocalLagrangianNormalJet LG LM) = (-2 : ℝ) • ell := by
+  rw [linearDescendant_normalJet D LG LM, hG, hM]
+  module
+
+/-- Scalar descendants admit the literal derivative form of the normal-jet theorem. -/
+theorem linearDescendant_reciprocal_hasDerivAt_zero
+    (D : L →ₗ[ℝ] ℝ) (LG LM : L) :
+    HasDerivAt
+      (fun s : ℝ => D (reciprocalLagrangian LG LM s))
+      (-D LG + D LM) 0 := by
+  have hformula :
+      (fun s : ℝ => D (reciprocalLagrangian LG LM s)) =
+        (fun s : ℝ => Real.exp (-s) * D LG + Real.exp s * D LM) := by
+    funext s
+    rw [linearDescendant_reciprocal D LG LM s]
+    simp [smul_eq_mul]
+  rw [hformula]
+  have hneg : HasDerivAt (fun s : ℝ => -s) (-1) 0 :=
+    (hasDerivAt_id 0).neg
+  have hGexp : HasDerivAt (fun s : ℝ => Real.exp (-s)) (-1) 0 := by
+    simpa using (Real.hasDerivAt_exp 0).comp 0 hneg
+  have hG := hGexp.mul_const (D LG)
+  have hM := (Real.hasDerivAt_exp 0).mul_const (D LM)
+  convert hG.add hM using 1 <;> simp <;> ring
+
+end LagrangianFunctoriality
+
+/-- Four-dimensional sector scaling factors through the common character and the
+reciprocal Lagrangian family. -/
+def scaledEinsteinMaxwellSectorValue
+    (u s SG SM : ℝ) : ℝ :=
+  XiGUS u s * SG + XiMUS u s * SM
+
+theorem scaledEinsteinMaxwellSectorValue_factorization
+    (u s SG SM : ℝ) :
+    scaledEinsteinMaxwellSectorValue u s SG SM =
+      kappaUS u * relativeActionValue SG SM s := by
+  unfold scaledEinsteinMaxwellSectorValue relativeActionValue
+  rw [XiGUS_factorization, XiMUS_factorization]
+  ring
+
+theorem relativeActionValue_eq_reciprocalLagrangian
+    (SG SM s : ℝ) :
+    relativeActionValue SG SM s =
+      reciprocalLagrangian SG SM s := by
+  simp [relativeActionValue, reciprocalLagrangian, smul_eq_mul]
+
+theorem relativeActionDefect_eq_reciprocalLagrangian
+    (S s : ℝ) :
+    relativeActionDefect S s =
+      reciprocalLagrangian S (-S) s := by
+  simp [relativeActionDefect, reciprocalLagrangian, smul_eq_mul]
+  ring
+
 abbrev R2 := ℝ × ℝ
 
 /-- Linearized solution residual on the two action-sector coefficients.
@@ -3545,6 +3667,32 @@ def relativeSymplecticPlusEval
   Real.exp (-s) * ΩG x y +
     Real.exp s * ΩM x y
 
+/-- Linearity in the Lagrangian forces the same reciprocal character on the
+presymplectic current. -/
+theorem relativeSymplecticPlusEval_from_lagrangian
+    {L : Type*} [AddCommGroup L] [Module ℝ L]
+    (omegaOfL : L →ₗ[ℝ] (V →ₗ[ℝ] V →ₗ[ℝ] ℝ))
+    (LG LM : L) (s : ℝ) (x y : V) :
+    relativeSymplecticPlusEval
+        (omegaOfL LG) (omegaOfL LM) s x y =
+      omegaOfL (reciprocalLagrangian LG LM s) x y := by
+  rw [linearDescendant_reciprocal omegaOfL LG LM s]
+  simp [relativeSymplecticPlusEval]
+
+/-- The odd fixed-point presymplectic descendant is the image of the Lagrangian
+normal jet, up to the universal factor one half. -/
+theorem relativeSymplecticMinus_from_lagrangian_normalJet
+    {L : Type*} [AddCommGroup L] [Module ℝ L]
+    (omegaOfL : L →ₗ[ℝ] (V →ₗ[ℝ] V →ₗ[ℝ] ℝ))
+    (LG LM : L) (x y : V) :
+    relativeSymplecticMinusEval
+        (omegaOfL LG) (omegaOfL LM) x y =
+      (1 / 2 : ℝ) *
+        omegaOfL (reciprocalLagrangianNormalJet LG LM) x y := by
+  rw [linearDescendant_normalJet omegaOfL LG LM]
+  simp [relativeSymplecticMinusEval]
+  ring
+
 /-- Exchange-odd half-difference selected at the fixed point. -/
 def relativeSymplecticMinusEval
     (ΩG ΩM : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
@@ -3796,6 +3944,36 @@ end CarrierCurrentBridge
 constraint contributions agree at the fixed point. -/
 def relativeConstraintResidual (ell s : ℝ) : ℝ :=
   Real.exp (-s) * (ell - Real.exp (2 * s) * ell)
+
+/-- The constraint residual is the same reciprocal Lagrangian descendant with
+opposite sector values. -/
+theorem relativeConstraintResidual_eq_reciprocalLagrangian
+    (ell s : ℝ) :
+    relativeConstraintResidual ell s =
+      reciprocalLagrangian ell (-ell) s := by
+  unfold relativeConstraintResidual reciprocalLagrangian
+  simp [smul_eq_mul]
+  rw [show Real.exp (-s) * Real.exp (2 * s) = Real.exp s by
+    rw [← Real.exp_add]
+    congr 1
+    ring]
+  ring
+
+/-- The `-2 ell` constraint variation is therefore the literal normal jet of the
+same reciprocal Lagrangian character. -/
+theorem relativeConstraintResidual_deriv_from_lagrangian
+    (ell : ℝ) :
+    deriv (relativeConstraintResidual ell) 0 = -2 * ell := by
+  have hD : ℝ →ₗ[ℝ] ℝ := LinearMap.id
+  have h := linearDescendant_reciprocal_hasDerivAt_zero hD ell (-ell)
+  have heq :
+      relativeConstraintResidual ell =
+        fun s : ℝ => hD (reciprocalLagrangian ell (-ell) s) := by
+    funext s
+    rw [relativeConstraintResidual_eq_reciprocalLagrangian]
+    rfl
+  rw [heq, h.deriv]
+  simp
 
 /-- Reciprocal relative scaling forces the constraint residual to be the same odd sinh carrier. -/
 theorem relativeConstraintResidual_eq_sinh (ell s : ℝ) :
