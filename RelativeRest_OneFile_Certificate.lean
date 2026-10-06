@@ -1073,6 +1073,19 @@ def TO : R2 := (1, 0)
 /-- Optical odd basis covector. -/
 def RO : R2 := (0, 1)
 
+
+/-- Principal endpoint covectors obtained from the normalized null pair. -/
+def principalThetaPlus : R2 := TO + RO
+def principalThetaMinus : R2 := TO - RO
+
+/-- Half-sum and half-difference of the principal null endpoints recover exactly the
+chronometric and radial covectors. -/
+theorem principal_endpoint_split :
+    (1 / 2 : ℝ) • (principalThetaPlus + principalThetaMinus) = TO ∧
+    (1 / 2 : ℝ) • (principalThetaPlus - principalThetaMinus) = RO := by
+  constructor <;> ext <;>
+    norm_num [principalThetaPlus, principalThetaMinus, TO, RO]
+
 /-- Optical exchange fixes the clock-even axis and reverses the radial-odd axis. -/
 def JO (v : R2) : R2 := (v.1, -v.2)
 
@@ -1794,6 +1807,18 @@ theorem transport_zero_iff
     · rw [hacc]
       ring
 
+
+/-- Scalar carrier of the Frobenius obstruction `T_O ∧ dT_O`: on the positive-rate
+sector its vanishing is exactly vorticity-freeness. -/
+def frobeniusObstruction (ω varpi : ℝ) : ℝ := ω^2 * varpi
+
+theorem frobeniusObstruction_zero_iff
+    (ω varpi : ℝ) (hω : ω ≠ 0) :
+    frobeniusObstruction ω varpi = 0 ↔ varpi = 0 := by
+  unfold frobeniusObstruction
+  have hw2 : ω^2 ≠ 0 := pow_ne_zero 2 hω
+  exact mul_eq_zero_iff_left hw2
+
 /-! ## 14. Null exchange / optical closure -/
 
 /-- Exchange-even radar midpoint. -/
@@ -1813,6 +1838,17 @@ theorem radar_reconstruction (θplus θminus : ℝ) :
     radarTime θplus θminus + radarRadius θplus θminus = θplus ∧
     radarTime θplus θminus - radarRadius θplus θminus = θminus := by
   constructor <;> unfold radarTime radarRadius <;> ring
+
+
+/-- The exchange-even midpoint and exchange-odd defect are the unique pair reconstructing
+the two endpoint values. -/
+theorem radar_decomposition_unique
+    (θplus θminus T R : ℝ)
+    (hplus : T + R = θplus)
+    (hminus : T - R = θminus) :
+    T = radarTime θplus θminus ∧
+    R = radarRadius θplus θminus := by
+  constructor <;> unfold radarTime radarRadius <;> linarith
 
 /-- A common shift changes only the clock origin and leaves the radial defect invariant. -/
 theorem radar_common_shift (θplus θminus C : ℝ) :
@@ -1955,6 +1991,26 @@ def dKappaVec : R2 := (0,1)
     clockOmega dKappaVec dThetaVec = 1 ∧
     clockOmega dThetaVec dKappaVec = -1 := by
   norm_num [clockOmega, dThetaVec, dKappaVec]
+
+
+/-- Euler/common-scale vector on the positive clock cover. -/
+def clockEuler (κ : ℝ) : R2 := (0, κ)
+
+/-- Homogeneous Liouville one-form `κ dΘ` evaluated on a tangent vector. -/
+def clockLiouville (κ : ℝ) (v : R2) : ℝ := κ * v.1
+
+/-- The Liouville one-form is exactly contraction of the clock symplectic form with
+the common-scale Euler direction. -/
+theorem clockLiouville_eq_contraction (κ : ℝ) (v : R2) :
+    clockOmega (clockEuler κ) v = clockLiouville κ v := by
+  rcases v with ⟨vΘ, vκ⟩
+  simp [clockOmega, clockEuler, clockLiouville]
+
+/-- Common-scale dilation acts with weight one on the Liouville primitive. -/
+theorem clockLiouville_homogeneous (c κ : ℝ) (v : R2) :
+    clockLiouville (c * κ) v = c * clockLiouville κ v := by
+  simp [clockLiouville]
+  ring
 
 /-- The clock-cover two-form is skew. -/
 theorem clockOmega_skew (v w : R2) :
@@ -2274,6 +2330,11 @@ theorem scalar_backbone
 #check null_pair_orthogonal
 #check mino_clock_identity
 #check scalar_backbone
+#check radar_decomposition_unique
+#check frobeniusObstruction_zero_iff
+#check principal_endpoint_split
+#check clockLiouville_eq_contraction
+#check clockLiouville_homogeneous
 #check quotientClockCovector
 #check quotientClockCovector_pullback
 #check quotientClockCovector_ker_eq_bot
