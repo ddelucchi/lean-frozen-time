@@ -12634,6 +12634,46 @@ theorem kerrPotential_to_CarterPrincipalField
     (kerrCoordinateField_components Q r a θ).1,
     (kerrCoordinateField_components Q r a θ).2.2.1⟩
 
+/-- Complete regular-chart Kerr-Newman Einstein-Maxwell certificate from the
+Boyer-Lindquist metric and electromagnetic potential: the metric Einstein tensor
+equals the stress of the potential-derived field, the coordinate field is the
+Carter-principal field, and all nontrivial Maxwell equations vanish. -/
+theorem kerrNewman_full_einstein_maxwell_from_potential
+    (Q r M a θ : ℝ)
+    (hsig : 0 < Sigma r a θ)
+    (hdel : 0 < Delta r M a Q)
+    (hsin : Real.sin θ ≠ 0) :
+    (∀ i j : Fin 4,
+      kerrEinsteinCovFromMetric r M a Q θ i j =
+        8 * Real.pi *
+          kerrMaxwellStressCovFromPotential Q r M a θ i j) ∧
+    kerrCoordinateField Q r a θ =
+      kerrFieldInCarterCoframe Q r M a θ ∧
+    (deriv
+        (fun x : ℝ =>
+          -a * Real.sin θ * kerrPrincipalB Q x a θ) r -
+      deriv
+        (fun x : ℝ =>
+          kerrPrincipalE Q r a x) θ = 0 ∧
+     deriv
+        (fun x : ℝ =>
+          (x^2 + a^2) * Real.sin θ *
+            kerrPrincipalB Q x a θ) r -
+      deriv
+        (fun x : ℝ =>
+          -a * (Real.sin x)^2 *
+            kerrPrincipalE Q r a x) θ = 0 ∧
+     deriv (fun x : ℝ => kerrDensitizedFrt Q x a θ) r +
+       deriv (fun x : ℝ => kerrDensitizedFthetaT Q r a x) θ = 0 ∧
+     deriv (fun x : ℝ => kerrDensitizedFrPhi Q x a θ) r +
+       deriv (fun x : ℝ => kerrDensitizedFthetaPhi Q r a x) θ = 0) := by
+  refine ⟨kerrEinsteinCovFromMetric_eq_8pi_MaxwellStress
+      Q r M a θ hsig hdel hsin,
+    kerrCoordinateField_eq_CarterCoframe Q r M a θ hsig hdel, ?_⟩
+  exact kerrMaxwell_equations_scalar_certificate
+    Q r a θ (ne_of_gt hsig)
+
+
 /-- Once the explicit curvature calculation supplies `K=4Q⁴/Σ⁴`, the carrier magnitude follows
 algebraically. -/
 theorem kerrNewman_chi_from_K
