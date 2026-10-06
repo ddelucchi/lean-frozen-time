@@ -5779,6 +5779,12 @@ structure LagrangianVariationNoetherOperators where
     deltaThetaGauge - contractGauge.comp deltaL =
       deltaConstraint + dDeltaCharge
 
+/-- Off-shell constraint descendant with the manuscript sign convention. -/
+def LagrangianVariationNoetherOperators.constraint
+    (D : LagrangianVariationNoetherOperators (L:=L) (C:=C)) :
+    L →ₗ[ℝ] C :=
+  -(D.deltaConstraint + D.contractGauge.comp D.euler)
+
 /-! #### Canonical completion of first variation to the Noether package -/
 
 /-- First-variation and Cartan data before choosing any constraint or Noether-charge
@@ -5960,12 +5966,6 @@ def LagrangianVariationNoetherOperators.dB
     (D : LagrangianVariationNoetherOperators (L:=L) (C:=C)) :
     L →ₗ[ℝ] C :=
   D.dDeltaCharge - D.dContractTheta
-
-/-- Off-shell constraint descendant with the manuscript sign convention. -/
-def LagrangianVariationNoetherOperators.constraint
-    (D : LagrangianVariationNoetherOperators (L:=L) (C:=C)) :
-    L →ₗ[ℝ] C :=
-  -(D.deltaConstraint + D.contractGauge.comp D.euler)
 
 /-- Reversed presymplectic ordering is fixed by antisymmetry. -/
 def LagrangianVariationNoetherOperators.omegaXY
@@ -17328,18 +17328,12 @@ def PrincipalLocalNoetherVariationCharacteristicInput.characteristicCurrent
     (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
   D.toMetricEulerRelativeOrbitInput.characteristicCurrent
 
-/-- Local Noether covariance actually forces the entire compensated Iyer-Wald
-operator, not only its value on the physical relative orbit:
-`ω^{XY}+dB=C_action` on all of the two-sector variation space. -/
-theorem PrincipalLocalNoetherVariationCharacteristicInput.compensatedOperator_eq_actionConstraint
+/-- Locality plus the derivative Noether identity force the entire abstract
+constraint operator to equal the canonical action-derived operator. -/
+theorem PrincipalLocalNoetherVariationCharacteristicInput.constraint_eq_actionConstraint
     (D : PrincipalLocalNoetherVariationCharacteristicInput (P:=P)) :
-    D.variation.omegaXY + D.variation.dB =
+    D.variation.constraint =
       D.carrier.noetherConstraintOperatorFromAction := by
-  ext X
-  rw [show
-      (D.variation.omegaXY + D.variation.dB) X =
-        D.variation.omegaXY X + D.variation.dB X by rfl]
-  rw [D.variation.compensated_eq_constraint]
   have horbit :
       ∀ s : ℝ, ∀ v : Fin 4 → ℝ,
         relativeConstraintOrbitEval D.variation.constraint v s =
@@ -17353,7 +17347,21 @@ theorem PrincipalLocalNoetherVariationCharacteristicInput.compensatedOperator_eq
     (actionConstraintOperator_eq_iff_relative_orbit
       D.variation.constraint D.carrier.metricEulerJetResponse).2 horbit
   simpa [PrincipalCarrierCharacteristicInput.noetherConstraintOperatorFromAction]
-    using LinearMap.congr_fun hC X
+    using hC
+
+/-- Local Noether covariance actually forces the entire compensated Iyer-Wald
+operator, not only its value on the physical relative orbit:
+`ω^{XY}+dB=C_action` on all of the two-sector variation space. -/
+theorem PrincipalLocalNoetherVariationCharacteristicInput.compensatedOperator_eq_actionConstraint
+    (D : PrincipalLocalNoetherVariationCharacteristicInput (P:=P)) :
+    D.variation.omegaXY + D.variation.dB =
+      D.carrier.noetherConstraintOperatorFromAction := by
+  ext X
+  rw [show
+      (D.variation.omegaXY + D.variation.dB) X =
+        D.variation.omegaXY X + D.variation.dB X by rfl]
+  rw [D.variation.compensated_eq_constraint]
+  exact LinearMap.congr_fun D.constraint_eq_actionConstraint X
 
 /-- The actual compensated Iyer-Wald current on the full relative action orbit
 is forced directly by locality and the local diffeomorphism derivative pairing.
@@ -17392,23 +17400,10 @@ theorem PrincipalLocalNoetherVariationCharacteristicInput.compensatedNormal_forc
   have hcomp := D.variation.compensated_eq_constraint DA
   have hcompv := congrArg
     (fun F : (Fin 4 → ℝ) →ₗ[ℝ] ℝ => F v) hcomp
-  have horbit :
-      ∀ s : ℝ, ∀ w : Fin 4 → ℝ,
-        relativeConstraintOrbitEval D.variation.constraint w s =
-          relativeConstraintResidual (D.carrier.metricEulerJetResponse w) s := by
-    intro s w
-    rw [D.constraintOrbit_forced s w]
-    exact D.carrier.metricEulerRelativeOrbitResponse_apply s w
-  have hC0 :
-      D.variation.constraint =
-        actionConstraintResponseLinear D.carrier.metricEulerJetResponse :=
-    (actionConstraintOperator_eq_iff_relative_orbit
-      D.variation.constraint D.carrier.metricEulerJetResponse).2 horbit
   have hC :
       D.variation.constraint =
-        D.carrier.noetherConstraintOperatorFromAction := by
-    simpa [PrincipalCarrierCharacteristicInput.noetherConstraintOperatorFromAction]
-      using hC0
+        D.carrier.noetherConstraintOperatorFromAction :=
+    D.constraint_eq_actionConstraint
   have hDA :=
     D.carrier.noetherConstraintOperatorFromAction_DA
   have hDAv := congrArg
@@ -17477,7 +17472,7 @@ theorem principalLocalNoether_forced_core_chain
   refine ⟨hrest,?_,horbit,?_,hcur,hL,hdim,hnorm⟩
   · intro i j
     exact D.bulkCoeff_forced s i j
-  · exact D.toDisplayedOrbitInput.constraint_eq_canonicalNoether
+  · exact D.constraint_eq_actionConstraint
 
 /-- The single canonical-constraint identity implies the previous finite-orbit
 bridge with no additional sector, sign, jet, or normalization hypothesis. -/
@@ -20022,6 +20017,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.PrincipalDisplayedMetricEulerOrbitVariationCharacteristicInput.constraint_eq_canonicalNoether
 #print axioms RelativeRest.PrincipalLocalNoetherVariationCharacteristicInput.bulkCoeff_forced
 #print axioms RelativeRest.PrincipalLocalNoetherVariationCharacteristicInput.constraintOrbit_forced
+#print axioms RelativeRest.PrincipalLocalNoetherVariationCharacteristicInput.constraint_eq_actionConstraint
 #print axioms RelativeRest.PrincipalLocalNoetherVariationCharacteristicInput.compensatedOperator_eq_actionConstraint
 #print axioms RelativeRest.PrincipalLocalNoetherVariationCharacteristicInput.compensatedOrbit_forced_from_localNoether
 #print axioms RelativeRest.PrincipalLocalNoetherVariationCharacteristicInput.compensatedNormal_forced_from_action
