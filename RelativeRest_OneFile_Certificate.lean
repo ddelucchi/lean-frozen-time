@@ -3178,6 +3178,33 @@ theorem principalMetricEulerNoetherJetResponse_eq_carrier
   intro j hj
   ring
 
+/-- Linear endomorphism whose matrix entries are the Noether bulk
+coefficients `2E^a{}_b[Y]` derived from the displayed metric Euler variation. -/
+def principalMetricEulerNoetherJetLinear
+    (E B : ℝ) : (Fin 4 → ℝ) →ₗ[ℝ] (Fin 4 → ℝ) where
+  toFun v := fun i =>
+    ∑ j : Fin 4,
+      principalMetricEulerNoetherJetCoeff E B i j * v j
+  map_add' x y := by
+    funext i
+    simp [mul_add, Finset.sum_add_distrib]
+  map_smul' a x := by
+    funext i
+    simp [mul_assoc]
+
+/-- The action-derived Noether bulk endomorphism is exactly
+`(8π)⁻¹` times the action-derived carrier endomorphism. -/
+theorem principalMetricEulerNoetherJetLinear_eq_smul_carrier
+    (E B : ℝ) :
+    principalMetricEulerNoetherJetLinear E B =
+      (1 / (8 * Real.pi)) • principalActionEulerJetLinear E B := by
+  ext v i
+  change
+    (∑ j : Fin 4,
+      principalMetricEulerNoetherJetCoeff E B i j * v j) =
+      (1 / (8 * Real.pi)) * principalActionEulerJetLinear E B v i
+  exact principalMetricEulerNoetherJetResponse_eq_carrier E B v i
+
 /-- Full normalized metric-Euler endomorphism along the physical relative orbit.
 Unlike `principalActionEulerJetLinear`, this uses the displayed action Euler
 coefficient at finite rapidity `s`, with the reciprocal gravity character `e^{-s}`
@@ -18522,6 +18549,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalEinsteinMaxwell_onShell_local_first_variation_is_boundary
 #print axioms RelativeRest.principalMetricEulerNoetherJetCoeff_eq_carrier
 #print axioms RelativeRest.principalMetricEulerNoetherJetResponse_eq_carrier
+#print axioms RelativeRest.principalMetricEulerNoetherJetLinear_eq_smul_carrier
 #print axioms RelativeRest.principalDiffeomorphismNoether_decomposition
 #print axioms RelativeRest.principalGeneralizedBianchi_forced_by_diffeomorphism_invariance
 #print axioms RelativeRest.principalMetricEulerDivergence_zero_of_generalizedBianchi_onMaxwellShell
