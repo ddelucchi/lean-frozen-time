@@ -4463,6 +4463,90 @@ theorem relativeConstraintResidual_deriv_zero (ell : ℝ) :
     deriv (relativeConstraintResidual ell) 0 = -2 * ell :=
   (relativeConstraintResidual_hasDerivAt_zero ell).deriv
 
+/-! ### Relative action orbit completely determines the two-sector constraint -/
+
+/-- Evaluation of an arbitrary linear constraint descendant along the physical
+relative action orbit `B_Y(s) C_A`. -/
+def relativeConstraintOrbitEval
+    (F : R2 →ₗ[ℝ] ((Fin 4 → ℝ) →ₗ[ℝ] ℝ))
+    (v : Fin 4 → ℝ) (s : ℝ) : ℝ :=
+  F (actionBoost s CA) v
+
+/-- The tangent of the relative action orbit at the frozen point is literally the
+exchange-odd direction `D_A`, so every linear descendant differentiates to `F D_A`. -/
+theorem relativeConstraintOrbitEval_hasDerivAt_zero
+    (F : R2 →ₗ[ℝ] ((Fin 4 → ℝ) →ₗ[ℝ] ℝ))
+    (v : Fin 4 → ℝ) :
+    HasDerivAt (relativeConstraintOrbitEval F v) (F DA v) 0 := by
+  have hc := (Real.hasDerivAt_cosh 0).mul_const (F CA v)
+  have hs := (Real.hasDerivAt_sinh 0).mul_const (F DA v)
+  have hsum := hc.add hs
+  have heq :
+      relativeConstraintOrbitEval F v =
+        fun s : ℝ =>
+          Real.cosh s * F CA v + Real.sinh s * F DA v := by
+    funext s
+    unfold relativeConstraintOrbitEval
+    rw [actionBoost_CA, map_add, map_smul, map_smul]
+    simp
+  rw [heq]
+  simpa using hsum
+
+theorem relativeConstraintOrbitEval_deriv_zero
+    (F : R2 →ₗ[ℝ] ((Fin 4 → ℝ) →ₗ[ℝ] ℝ))
+    (v : Fin 4 → ℝ) :
+    deriv (relativeConstraintOrbitEval F v) 0 = F DA v :=
+  (relativeConstraintOrbitEval_hasDerivAt_zero F v).deriv
+
+/-- The canonical action-sector response has exactly the reciprocal relative
+character of the Einstein-Maxwell action. -/
+theorem actionConstraintResponseLinear_relative_orbit
+    (ell : (Fin 4 → ℝ) →ₗ[ℝ] ℝ)
+    (v : Fin 4 → ℝ) (s : ℝ) :
+    relativeConstraintOrbitEval
+        (actionConstraintResponseLinear ell) v s =
+      relativeConstraintResidual (ell v) s := by
+  unfold relativeConstraintOrbitEval
+  rw [actionBoost_CA, map_add, map_smul, map_smul,
+    actionConstraintResponseLinear_CA, actionConstraintResponseLinear_DA]
+  simp
+  rw [relativeConstraintResidual_eq_sinh]
+  ring
+
+/-- Main equivalence: a linear covariant constraint descendant is the unique
+Einstein-Maxwell two-sector response iff its restriction to the one-parameter
+relative action orbit has the reciprocal character. Thus the entire operator is
+encoded by the physical relative-scaling curve. -/
+theorem actionConstraintOperator_eq_iff_relative_orbit
+    (F : R2 →ₗ[ℝ] ((Fin 4 → ℝ) →ₗ[ℝ] ℝ))
+    (ell : (Fin 4 → ℝ) →ₗ[ℝ] ℝ) :
+    F = actionConstraintResponseLinear ell ↔
+      ∀ s : ℝ, ∀ v : Fin 4 → ℝ,
+        relativeConstraintOrbitEval F v s =
+          relativeConstraintResidual (ell v) s := by
+  constructor
+  · intro hF s v
+    rw [hF]
+    exact actionConstraintResponseLinear_relative_orbit ell v s
+  · intro horbit
+    have hCA : F CA = 0 := by
+      ext v
+      have h0 := horbit 0 v
+      simp [relativeConstraintOrbitEval, relativeConstraintResidual] at h0
+      exact h0
+    have hDA : F DA = (-2 : ℝ) • ell := by
+      ext v
+      have hfun :
+          relativeConstraintOrbitEval F v =
+            relativeConstraintResidual (ell v) := by
+        funext s
+        exact horbit s v
+      have hder := congrArg (fun f : ℝ → ℝ => deriv f 0) hfun
+      rw [relativeConstraintOrbitEval_deriv_zero F v,
+        relativeConstraintResidual_deriv_zero (ell v)] at hder
+      simpa using hder
+    exact actionConstraintResponseLinear_unique_from_CA_DA ell F hCA hDA
+
 /-! ### First-variation derivation of the Iyer-Wald operator identity -/
 
 section FirstVariationNoetherDerivation
@@ -14932,6 +15016,120 @@ theorem principalActionEulerBasisVariation_forced_core_chain
     hDA,hcur,hL,hdim,hnorm⟩
 
 
+/-! ### Relative-orbit first variation: one action character forces the constraint map -/
+
+/-- Covariant-phase-space interface stated directly on the relative Einstein-Maxwell
+action orbit. Instead of supplying the frozen value, odd jet, sector signs, or full
+constraint operator, one supplies only the statement that the constraint descendant
+along `B_Y(s) C_A` has the reciprocal action character with coefficient fixed by the
+metric Euler jet. Everything else is derived. -/
+structure PrincipalRelativeActionOrbitVariationCharacteristicInput where
+  carrier : PrincipalCarrierCharacteristicInput (P:=P)
+  variation : LagrangianVariationNoetherOperators
+    (L:=R2) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ))
+  relativeActionCharacter :
+    ∀ s : ℝ, ∀ v : Fin 4 → ℝ,
+      relativeConstraintOrbitEval variation.constraint v s =
+        relativeConstraintResidual (carrier.actionEulerResponse v) s
+
+/-- The full two-sector constraint operator follows from the relative action character. -/
+theorem PrincipalRelativeActionOrbitVariationCharacteristicInput.constraint_operator_forced
+    (D : PrincipalRelativeActionOrbitVariationCharacteristicInput (P:=P)) :
+    D.variation.constraint =
+      actionConstraintResponseLinear D.carrier.actionEulerResponse := by
+  exact (actionConstraintOperator_eq_iff_relative_orbit
+    D.variation.constraint D.carrier.actionEulerResponse).2
+      D.relativeActionCharacter
+
+/-- In particular the frozen value is a theorem, not input data. -/
+theorem PrincipalRelativeActionOrbitVariationCharacteristicInput.frozenCommon
+    (D : PrincipalRelativeActionOrbitVariationCharacteristicInput (P:=P)) :
+    D.variation.constraint CA = 0 := by
+  rw [D.constraint_operator_forced]
+  exact actionConstraintResponseLinear_CA _
+
+/-- And the surviving normal is exactly the first derivative of that same orbit. -/
+theorem PrincipalRelativeActionOrbitVariationCharacteristicInput.survivingNormal
+    (D : PrincipalRelativeActionOrbitVariationCharacteristicInput (P:=P)) :
+    D.variation.constraint DA =
+      (-2 : ℝ) • D.carrier.actionEulerResponse := by
+  rw [D.constraint_operator_forced]
+  exact actionConstraintResponseLinear_DA _
+
+/-- The fixed-point/jet package used by the central paper theorem is therefore
+constructed from the single relative-orbit character. -/
+def PrincipalRelativeActionOrbitVariationCharacteristicInput.toFixedPointJetInput
+    (D : PrincipalRelativeActionOrbitVariationCharacteristicInput (P:=P)) :
+    PrincipalFixedPointJetVariationCharacteristicInput (P:=P) where
+  carrier := D.carrier
+  variation := D.variation
+  frozenCommon := D.frozenCommon
+  survivingNormal := D.survivingNormal
+
+def PrincipalRelativeActionOrbitVariationCharacteristicInput.characteristicCurrent
+    (D : PrincipalRelativeActionOrbitVariationCharacteristicInput (P:=P)) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
+  D.toFixedPointJetInput.characteristicCurrent
+
+theorem principalRelativeActionOrbitVariation_current_eq_actionEulerResponse
+    (D : PrincipalRelativeActionOrbitVariationCharacteristicInput (P:=P)) :
+    D.characteristicCurrent = D.carrier.actionEulerResponse :=
+  principalFixedPointJetVariation_current_eq_actionEulerResponse
+    D.toFixedPointJetInput
+
+theorem principalRelativeActionOrbitVariation_clock_chain
+    (D : PrincipalRelativeActionOrbitVariationCharacteristicInput (P:=P)) :
+    D.characteristicCurrent =
+        D.carrier.toCharacteristicCurrentData.current ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    (quotientClockCovector principalTOLinear).comp
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda) =
+      D.carrier.toCharacteristicCurrentData.clockCovector ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat :=
+  principalFixedPointJetVariation_clock_chain D.toFixedPointJetInput
+
+/-- Strongest relative-action-to-clock theorem: a single reciprocal character along
+the physical action orbit forces the frozen value, surviving jet, full constraint
+operator, Iyer-Wald current, quotient dimension and normalized local clock. -/
+theorem principalRelativeActionOrbitVariation_forced_core_chain
+    (D : PrincipalRelativeActionOrbitVariationCharacteristicInput (P:=P))
+    (u s : ℝ) :
+    ((8 * Real.pi * principalFieldEnergyDensity D.carrier.E D.carrier.B =
+        8 * Real.pi *
+          maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+          principalFieldEnergyDensity D.carrier.E D.carrier.B) ↔ s = 0) ∧
+    D.variation.constraint CA = 0 ∧
+    D.variation.constraint DA =
+      (-2 : ℝ) • D.carrier.actionEulerResponse ∧
+    D.variation.constraint =
+      actionConstraintResponseLinear D.carrier.actionEulerResponse ∧
+    D.characteristicCurrent = D.carrier.actionEulerResponse ∧
+    D.carrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.carrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.carrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.carrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.carrier))) =
+      principalUhat := by
+  have h := principalFixedPointJetVariation_forced_core_chain
+    D.toFixedPointJetInput u s
+  rcases h with ⟨hrest,_hJ,hCA,hDA,_hG,_hM,hcur,hL,hdim,hnorm⟩
+  exact ⟨hrest,hCA,hDA,D.constraint_operator_forced,hcur,hL,hdim,hnorm⟩
+
 /-! ### Central manuscript closure certificate -/
 
 /-- A single closure theorem assembling the manuscript's central forced chain.
@@ -16801,6 +16999,10 @@ theorem scalar_backbone_from_einstein_maxwell
 #check actionConstraintResponseLinear_apply_eq_residualLinear
 #check actionConstraintResponseLinear_unique_from_CA_DA
 #check actionConstraintOperator_unique_from_fixed_point_jet
+#check relativeConstraintOrbitEval_hasDerivAt_zero
+#check relativeConstraintOrbitEval_deriv_zero
+#check actionConstraintResponseLinear_relative_orbit
+#check actionConstraintOperator_eq_iff_relative_orbit
 #check JA_CA
 #check JA_DA
 #check JA_actionBoost
