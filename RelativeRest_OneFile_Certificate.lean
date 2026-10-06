@@ -4342,11 +4342,16 @@ theorem kerrPotentialPhi_hasDerivAt_r
     (Q r a θ : ℝ) (hsig : Sigma r a θ ≠ 0) :
     HasDerivAt (fun x : ℝ => kerrPotentialPhi Q x a θ)
       (-a * (Real.sin θ)^2 * kerrPrincipalE Q r a θ) r := by
+  have hQ : HasDerivAt (fun x : ℝ => Q * x) Q r :=
+    (hasDerivAt_id r).const_mul Q
+  have hQa :
+      HasDerivAt (fun x : ℝ => Q * x * a) (Q * a) r := by
+    simpa using hQ.mul_const a
   have hn :
       HasDerivAt
-        (fun x : ℝ => (Q * a * (Real.sin θ)^2) * x)
-        (Q * a * (Real.sin θ)^2) r :=
-    (hasDerivAt_id r).const_mul (Q * a * (Real.sin θ)^2)
+        (fun x : ℝ => Q * x * a * (Real.sin θ)^2)
+        (Q * a * (Real.sin θ)^2) r := by
+    simpa [mul_assoc] using hQa.mul_const ((Real.sin θ)^2)
   have hd := Sigma_hasDerivAt_r r a θ
   have hraw := hn.fun_div hd hsig
   unfold kerrPotentialPhi
