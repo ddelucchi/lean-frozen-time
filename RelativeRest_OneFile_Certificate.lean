@@ -17141,7 +17141,7 @@ structure CanonicalPrincipalFieldForcedCertificate
         maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
         principalFieldEnergyDensity E B) ↔ s = 0
   actionJet :
-    let D := canonicalPrincipalCarrierCharacteristicInput E B hfield
+    let D := canonicalPrincipalLapseCarrierCharacteristicInput E B hfield
     ∀ i j : Fin 4,
       D.J (principalBasis j) i =
         (16 * Real.pi / principalMetricSign i) *
@@ -17160,21 +17160,21 @@ structure CanonicalPrincipalFieldForcedCertificate
     (XiGUS u s = XiMUS u s) ↔
       (nuPlus s = nuMinus s ∧ Real.tanh s = 0)
   compensatedBulkNormal :
-    let D := canonicalPrincipalCarrierCharacteristicInput E B hfield
+    let D := canonicalPrincipalLapseCarrierCharacteristicInput E B hfield
     D.noetherConstraintOperatorFromAction DA =
       D.iε.comp (principalMetricEulerNoetherJetLinear E B)
   characteristicFactorization :
-    let D := canonicalPrincipalCarrierCharacteristicInput E B hfield
+    let D := canonicalPrincipalLapseCarrierCharacteristicInput E B hfield
     D.metricEulerJetResponse =
       D.toCharacteristicCurrentData.current
   contactTransverseDuality :
-    let D := canonicalPrincipalCarrierCharacteristicInput E B hfield
+    let D := canonicalPrincipalLapseCarrierCharacteristicInput E B hfield
     Nonempty
       (ActionRelativeNormalSpace ≃ₗ[ℝ]
         ((D.toCharacteristicCurrentData.K ⧸
             LinearMap.ker D.toCharacteristicCurrentData.Lambda) →ₗ[ℝ] ℝ))
   normalizedClockBridge :
-    let D := canonicalPrincipalCarrierCharacteristicInput E B hfield
+    let D := canonicalPrincipalLapseCarrierCharacteristicInput E B hfield
     principalLocalLift
       (globalToPrincipalLocalClockMap
         D.toCharacteristicCurrentData.Lambda
@@ -17286,13 +17286,13 @@ structure CanonicalPrincipalFieldForcedCertificate
       pastEndpoint P₁ = pastEndpoint P₂ ∧
       futureEndpoint F₁ = futureEndpoint F₂
 
-/-- Construction of the field-only master certificate.  No characteristic
-parameter witness, hypersurface normalization, CPS representative, optical
+/-- Construction of the field-only master certificate.  No arbitrary characteristic
+parameter witness or tangent-space surjectivity, hypersurface normalization, CPS representative, optical
 bilinear form, endpoint covector, clock normalization, or radial split is supplied. -/
 theorem canonicalPrincipalField_forced_certificate
     (E B u s : ℝ) (hfield : E ≠ 0 ∨ B ≠ 0) :
     CanonicalPrincipalFieldForcedCertificate E B u s hfield := by
-  let D := canonicalPrincipalCarrierCharacteristicInput E B hfield
+  let D := canonicalPrincipalLapseCarrierCharacteristicInput E B hfield
   refine {
     fixedPoint := principalField_solution_preserving_iff
       u s E B hfield
