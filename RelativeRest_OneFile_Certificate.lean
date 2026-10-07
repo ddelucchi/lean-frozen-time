@@ -25310,6 +25310,134 @@ theorem generalMaxwellFiniteResolving_regularSynge_realization_forced
       alpha D]
     exact hTR.2
 
+
+/-- The finite-resolver observer rescaled to unit norm in the forced conformal
+metric gHat=chi g. -/
+def generalMaxwellFiniteResolvingConformalU
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    Fin 4 → ℝ :=
+  conformalUnitFactor
+      (generalMaxwellChi Ex Ey Ez Bx By Bz) •
+    resolvingPlaneBalancedU alpha D
+
+theorem generalMaxwellFiniteResolvingConformalU_unit
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellChi Ex Ey Ez Bx By Bz *
+      principalMinkowskiSq
+        (generalMaxwellFiniteResolvingConformalU
+          Ex Ey Ez Bx By Bz alpha D) = -1 := by
+  unfold generalMaxwellFiniteResolvingConformalU
+  rw [principalMinkowskiSq_smul]
+  exact conformal_unit_timelike_normalization
+    (generalMaxwellChi Ex Ey Ez Bx By Bz)
+    (principalMinkowskiSq
+      (resolvingPlaneBalancedU alpha D))
+    (generalMaxwellChi_pos Ex Ey Ez Bx By Bz hnonnull)
+    (resolvingPlaneBalancedFrame_orthonormal alpha D).1
+
+/-- Physical clock one-form for an arbitrary finite resolver. -/
+def generalMaxwellFiniteResolvingChronometricClockCovector
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
+  generalMaxwellClockRate Ex Ey Ez Bx By Bz •
+    generalMaxwellFiniteResolvingClockCovector
+      (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+      (Bx:=Bx) (By:=By) (Bz:=Bz)
+      alpha D
+
+theorem generalMaxwellFiniteResolvingChronometricClockCovector_on_U
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellFiniteResolvingChronometricClockCovector
+        Ex Ey Ez Bx By Bz alpha D
+        (resolvingPlaneBalancedU alpha D) =
+      generalMaxwellClockRate Ex Ey Ez Bx By Bz := by
+  unfold generalMaxwellFiniteResolvingChronometricClockCovector
+  simp only [LinearMap.smul_apply]
+  rw [generalMaxwellFiniteResolvingClockCovector_unit]
+  ring
+
+theorem generalMaxwellFiniteResolvingChronometricClockCovector_on_conformalU
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellFiniteResolvingChronometricClockCovector
+        Ex Ey Ez Bx By Bz alpha D
+        (generalMaxwellFiniteResolvingConformalU
+          Ex Ey Ez Bx By Bz alpha D) = 1 := by
+  unfold generalMaxwellFiniteResolvingConformalU
+  rw [map_smul,
+    generalMaxwellFiniteResolvingChronometricClockCovector_on_U
+      Ex Ey Ez Bx By Bz alpha D]
+  have hs0 :
+      Real.sqrt (generalMaxwellChi Ex Ey Ez Bx By Bz) ≠ 0 :=
+    ne_of_gt
+      (Real.sqrt_pos.2
+        (generalMaxwellChi_pos Ex Ey Ez Bx By Bz hnonnull))
+  unfold conformalUnitFactor generalMaxwellClockRate
+  field_simp [hs0]
+
+/-- The synchronization correction of any unit-rate radar clock vanishes on the
+finite-resolver clock line. -/
+theorem generalMaxwellFiniteResolvingSynchronization_vanishes
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (dRadar : (Fin 4 → ℝ) →ₗ[ℝ] ℝ)
+    (hRadar :
+      dRadar
+        (generalMaxwellFiniteResolvingConformalU
+          Ex Ey Ez Bx By Bz alpha D) = 1) :
+    synchronizationCovector
+      dRadar
+      (generalMaxwellFiniteResolvingChronometricClockCovector
+        Ex Ey Ez Bx By Bz alpha D)
+      (generalMaxwellFiniteResolvingConformalU
+        Ex Ey Ez Bx By Bz alpha D) = 0 := by
+  exact synchronizationCovector_vanishes_on_clock
+    dRadar
+    (generalMaxwellFiniteResolvingChronometricClockCovector
+      Ex Ey Ez Bx By Bz alpha D)
+    (generalMaxwellFiniteResolvingConformalU
+      Ex Ey Ez Bx By Bz alpha D)
+    hRadar
+    (generalMaxwellFiniteResolvingChronometricClockCovector_on_conformalU
+      Ex Ey Ez Bx By Bz alpha hnonnull D)
+
 /-! #### Global/local and compensated-action closure for any finite resolver -/
 
 /-- Local quotient unit selected by an arbitrary finite resolver. -/
@@ -32969,6 +33097,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellFiniteResolvingADMCharacteristic_quotient_finrank_one
 #print axioms RelativeRest.generalMaxwellFiniteResolvingTheta_null
 #print axioms RelativeRest.generalMaxwellFiniteResolving_rapidity_forced
+#print axioms RelativeRest.generalMaxwellFiniteResolvingConformalU_unit
+#print axioms RelativeRest.generalMaxwellFiniteResolvingChronometricClockCovector_on_conformalU
+#print axioms RelativeRest.generalMaxwellFiniteResolvingSynchronization_vanishes
 #print axioms RelativeRest.generalMaxwellFiniteResolvingOpticalCoordinates_surjective
 #print axioms RelativeRest.generalMaxwellFiniteResolving_opticalIFT_normalForm
 #print axioms RelativeRest.generalMaxwellFiniteResolving_regularSynge_realization_forced
