@@ -14990,6 +14990,19 @@ def opticalDualBilinear :
     simp [bil, opticalBilinear, opticalDualCoordinates]
     ring
 
+
+/-- Symmetry survives the canonical pullback to the continuous dual optical
+coordinates.  Hence the canonical regular Synge branch needs no separately
+supplied symmetry witness. -/
+theorem opticalDualBilinear_symmetric
+    (alpha beta : R2 →L[ℝ] ℝ) :
+    bil opticalDualBilinear alpha beta =
+      bil opticalDualBilinear beta alpha := by
+  simpa [opticalDualBilinear] using
+    opticalBilinear_symmetric
+      (opticalDualCoordinates alpha)
+      (opticalDualCoordinates beta)
+
 /-- Linearized future world-function equation
 `σ_+(x,θ)=-Θ_+(x)+θ`. -/
 def canonicalOpticalSigmaPlusDeriv :
@@ -26578,6 +26591,84 @@ theorem paper_resolvedRegularBranch_forced_certificate
     (Bx:=Bx) (By:=By) (Bz:=Bz)
     S I hreal alpha D
 
+
+
+/-- End-to-end paper certificate in the canonical optical normal form.  The
+regular endpoint pair, its IFT derivatives, the optical realization, and the
+bilinear symmetry are all constructed internally.  The only remaining resolver
+input is the first finite carrier-jet covector that actually breaks the residual
+Rainich boost. -/
+theorem paper_canonicalResolvedRegularBranch_forced_certificate
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hmem :
+      principalRaiseCovector alpha ∈
+        LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))
+    (hp : principalMinkowskiCovectorSq alpha ≠ 0) :
+    PaperResolvedRegularBranchForcedCertificate
+      opticalDualBilinear
+      canonicalOpticalRegularSyngePair
+      opticalDualCoordinates
+      Ex Ey Ez Bx By Bz u s
+      dEx dEy dEz dBx dBy dBz
+      alpha hnonnull hmem hp
+      canonicalOpticalRegularSyngePair_realizesCanonicalOpticalJet
+      opticalDualBilinear_symmetric := by
+  exact paper_resolvedRegularBranch_forced_certificate
+    opticalDualBilinear
+    canonicalOpticalRegularSyngePair
+    opticalDualCoordinates
+    Ex Ey Ez Bx By Bz u s
+    dEx dEy dEz dBx dBy dBz
+    alpha hnonnull hmem hp
+    canonicalOpticalRegularSyngePair_realizesCanonicalOpticalJet
+    opticalDualBilinear_symmetric
+
+/-- On the manuscript's generic first-jet resolving stratum, even the resolver
+covector is no longer an input: alpha is exactly P_L d log chi computed from the
+six Maxwell component first jets. -/
+theorem paper_firstJetCanonicalRegularBranch_forced_certificate
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hp :
+      generalMaxwellResolvingNormSq
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz ≠ 0) :
+    PaperResolvedRegularBranchForcedCertificate
+      opticalDualBilinear
+      canonicalOpticalRegularSyngePair
+      opticalDualCoordinates
+      Ex Ey Ez Bx By Bz u s
+      dEx dEy dEz dBx dBy dBz
+      (generalMaxwellResolvingCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz)
+      hnonnull
+      (generalMaxwellResolvingCovector_raised_mem_plusRange
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz
+        hnonnull)
+      hp
+      canonicalOpticalRegularSyngePair_realizesCanonicalOpticalJet
+      opticalDualBilinear_symmetric := by
+  exact paper_canonicalResolvedRegularBranch_forced_certificate
+    Ex Ey Ez Bx By Bz u s
+    dEx dEy dEz dBx dBy dBz
+    (generalMaxwellResolvingCovector
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz)
+    hnonnull
+    (generalMaxwellResolvingCovector_raised_mem_plusRange
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull)
+    hp
+
 end ResolvedRegularSyngePaperCertificate
 
 /-! ### Single arbitrary-field regular-stratum local closure certificate -/
@@ -33533,6 +33624,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.arbitraryMaxwell_resolvedJet_forced_certificate
 #print axioms RelativeRest.arbitraryMaxwell_resolvedRegularStratum_certificate
 #print axioms RelativeRest.paper_resolvedRegularBranch_forced_certificate
+#print axioms RelativeRest.opticalDualBilinear_symmetric
+#print axioms RelativeRest.paper_canonicalResolvedRegularBranch_forced_certificate
+#print axioms RelativeRest.paper_firstJetCanonicalRegularBranch_forced_certificate
 #print axioms RelativeRest.resolvedRainichPlane_certificate
 #print axioms RelativeRest.resolvedRainichPlane_representative_independent
 #print axioms RelativeRest.generalMaxwellResolvingCovector_nullDyad_norm
