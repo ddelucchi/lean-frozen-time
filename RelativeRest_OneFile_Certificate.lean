@@ -21915,8 +21915,24 @@ theorem generalMaxwellClockRadialCovectors_orthogonal
         (generalMaxwellBalancedE
           Ex Ey Ez Bx By Bz
           dEx dEy dEz dBx dBy dBz D) = 0 := by
-    simp [principalMinkowskiBilinear]
-    simpa [principalMinkowskiBilinear] using horth
+    calc
+      principalMinkowskiBilinear
+          (-generalMaxwellBalancedU
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D)
+          (generalMaxwellBalancedE
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D) =
+        -principalMinkowskiBilinear
+          (generalMaxwellBalancedU
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D)
+          (generalMaxwellBalancedE
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D) := by
+              simp [principalMinkowskiBilinear]
+              ring
+      _ = 0 := by rw [horth]; ring
   rw [hneg]
   ring
 
