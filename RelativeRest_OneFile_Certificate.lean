@@ -3853,6 +3853,44 @@ theorem generalMaxwellCarrierLinear_self_adjoint
   field_simp [ne_of_gt Real.pi_pos]
   ring
 
+/-- The same Minkowski pairing as a genuine bilinear linear map. -/
+def principalMinkowskiBilinearLinear :
+    (Fin 4 → ℝ) →ₗ[ℝ] (Fin 4 → ℝ) →ₗ[ℝ] ℝ where
+  toFun v :=
+    { toFun := fun w => principalMinkowskiBilinear v w
+      map_add' := by
+        intro x y
+        simp [principalMinkowskiBilinear]
+        ring
+      map_smul' := by
+        intro c x
+        simp [principalMinkowskiBilinear]
+        ring }
+  map_add' := by
+    intro x y
+    ext w
+    simp [principalMinkowskiBilinear]
+    ring
+  map_smul' := by
+    intro c x
+    ext w
+    simp [principalMinkowskiBilinear]
+    ring
+
+@[simp] theorem principalMinkowskiBilinearLinear_apply
+    (v w : Fin 4 → ℝ) :
+    principalMinkowskiBilinearLinear v w =
+      principalMinkowskiBilinear v w := rfl
+
+/-- Coordinate-sum form of the Lorentzian pairing. -/
+theorem principalMinkowskiBilinear_eq_sum
+    (v w : Fin 4 → ℝ) :
+    principalMinkowskiBilinear v w =
+      ∑ i : Fin 4,
+        principalMetricSign i * v i * w i := by
+  simp [principalMinkowskiBilinear, principalMetricSign]
+  ring
+
 /-- Minkowski quadratic form in the principal orthonormal frame. -/
 def principalMinkowskiSq (v : Fin 4 → ℝ) : ℝ :=
   -(v 0)^2 + (v 1)^2 + (v 2)^2 + (v 3)^2
