@@ -1649,113 +1649,6 @@ theorem generalMaxwellF_principal_specialization
   fin_cases i <;> fin_cases j <;>
     simp [generalMaxwellF, principalMaxwellF]
 
-/-! ### Arbitrary-field Einstein-Maxwell trace and Ricci carrier -/
-
-/-- Mixed trace of the arbitrary Maxwell stress tensor. -/
-def generalMaxwellStressTrace
-    (Ex Ey Ez Bx By Bz : ℝ) : ℝ :=
-  ∑ i : Fin 4,
-    generalMaxwellStressFromF Ex Ey Ez Bx By Bz i i
-
-/-- The full six-component Maxwell stress is trace-free in four dimensions. -/
-theorem generalMaxwellStress_trace_zero
-    (Ex Ey Ez Bx By Bz : ℝ) :
-    generalMaxwellStressTrace Ex Ey Ez Bx By Bz = 0 := by
-  simp [generalMaxwellStressTrace,
-    generalMaxwellStressFromF,
-    generalMaxwellFsq, generalMaxwellF,
-    principalMetricSign]
-  field_simp [ne_of_gt Real.pi_pos]
-  ring
-
-/-- Einstein-Maxwell Ricci endomorphism after the four-dimensional trace equation
-has forced scalar curvature to vanish. -/
-def generalRicciFromEinsteinF
-    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) : ℝ :=
-  8 * Real.pi *
-    generalMaxwellStressFromF Ex Ey Ez Bx By Bz i j
-
-/-- Its trace vanishes directly from the arbitrary Maxwell trace theorem. -/
-def generalRicciFromEinsteinTrace
-    (Ex Ey Ez Bx By Bz : ℝ) : ℝ :=
-  ∑ i : Fin 4,
-    generalRicciFromEinsteinF Ex Ey Ez Bx By Bz i i
-
-theorem generalRicciFromEinstein_trace_zero
-    (Ex Ey Ez Bx By Bz : ℝ) :
-    generalRicciFromEinsteinTrace Ex Ey Ez Bx By Bz = 0 := by
-  unfold generalRicciFromEinsteinTrace generalRicciFromEinsteinF
-  rw [← Finset.mul_sum]
-  rw [generalMaxwellStress_trace_zero]
-  ring
-
-/-- The fixed-point carrier is exactly minus twice the Ricci endomorphism for an
-arbitrary Maxwell field, not merely in the principal representative. -/
-theorem generalMaxwellCarrier_eq_minus_two_EinsteinRicci
-    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) :
-    generalMaxwellCarrier Ex Ey Ez Bx By Bz i j =
-      -2 * generalRicciFromEinsteinF
-        Ex Ey Ez Bx By Bz i j := by
-  unfold generalMaxwellCarrier generalRicciFromEinsteinF
-  ring
-
-/-- Squaring the arbitrary Einstein-Maxwell Ricci endomorphism gives one quarter
-of the Rainich carrier square componentwise. -/
-theorem generalRicciFromEinstein_sq
-    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) :
-    (∑ k : Fin 4,
-      generalRicciFromEinsteinF Ex Ey Ez Bx By Bz i k *
-        generalRicciFromEinsteinF Ex Ey Ez Bx By Bz k j) =
-      (1 / 4 : ℝ) *
-        (generalMaxwellChi Ex Ey Ez Bx By Bz)^2 *
-          (if i = j then 1 else 0) := by
-  have h := generalMaxwellCarrier_rainich
-    Ex Ey Ez Bx By Bz i j
-  rw [← generalMaxwellChi_sq] at h
-  simp_rw [generalMaxwellCarrier_eq_minus_two_EinsteinRicci] at h
-  calc
-    (∑ k : Fin 4,
-      generalRicciFromEinsteinF Ex Ey Ez Bx By Bz i k *
-        generalRicciFromEinsteinF Ex Ey Ez Bx By Bz k j) =
-      (1 / 4 : ℝ) *
-        (∑ k : Fin 4,
-          (-2 * generalRicciFromEinsteinF Ex Ey Ez Bx By Bz i k) *
-          (-2 * generalRicciFromEinsteinF Ex Ey Ez Bx By Bz k j)) := by
-            rw [Finset.mul_sum]
-            apply Finset.sum_congr rfl
-            intro k hk
-            ring
-    _ = (1 / 4 : ℝ) *
-        ((generalMaxwellChi Ex Ey Ez Bx By Bz)^2 *
-          (if i = j then 1 else 0)) := by rw [h]
-    _ = (1 / 4 : ℝ) *
-        (generalMaxwellChi Ex Ey Ez Bx By Bz)^2 *
-          (if i = j then 1 else 0) := by ring
-
-/-- Invariant Ricci square `R^a{}_b R^b{}_a` of the arbitrary electrovac field. -/
-def generalRicciNormFromEinstein
-    (Ex Ey Ez Bx By Bz : ℝ) : ℝ :=
-  ∑ i : Fin 4, ∑ k : Fin 4,
-    generalRicciFromEinsteinF Ex Ey Ez Bx By Bz i k *
-      generalRicciFromEinsteinF Ex Ey Ez Bx By Bz k i
-
-/-- The arbitrary-field Einstein-Maxwell Ricci norm is exactly `χ²`. -/
-theorem generalRicciNormFromEinstein_eq_chi_sq
-    (Ex Ey Ez Bx By Bz : ℝ) :
-    generalRicciNormFromEinstein Ex Ey Ez Bx By Bz =
-      (generalMaxwellChi Ex Ey Ez Bx By Bz)^2 := by
-  unfold generalRicciNormFromEinstein
-  have h0 := generalRicciFromEinstein_sq
-    Ex Ey Ez Bx By Bz (0 : Fin 4) 0
-  have h1 := generalRicciFromEinstein_sq
-    Ex Ey Ez Bx By Bz (1 : Fin 4) 1
-  have h2 := generalRicciFromEinstein_sq
-    Ex Ey Ez Bx By Bz (2 : Fin 4) 2
-  have h3 := generalRicciFromEinstein_sq
-    Ex Ey Ez Bx By Bz (3 : Fin 4) 3
-  simp at h0 h1 h2 h3 ⊢
-  nlinarith
-
 /-! ### Maxwell potential first variation and symplectic potential -/
 
 
@@ -3923,6 +3816,114 @@ theorem generalMaxwellChi_sq
   unfold generalMaxwellChi
   rw [sq_sqrt]
   positivity
+
+/-! ### Arbitrary-field Einstein-Maxwell trace and Ricci carrier -/
+
+/-- Mixed trace of the arbitrary Maxwell stress tensor. -/
+def generalMaxwellStressTrace
+    (Ex Ey Ez Bx By Bz : ℝ) : ℝ :=
+  ∑ i : Fin 4,
+    generalMaxwellStressFromF Ex Ey Ez Bx By Bz i i
+
+/-- The full six-component Maxwell stress is trace-free in four dimensions. -/
+theorem generalMaxwellStress_trace_zero
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    generalMaxwellStressTrace Ex Ey Ez Bx By Bz = 0 := by
+  simp [generalMaxwellStressTrace,
+    generalMaxwellStressFromF,
+    generalMaxwellFsq, generalMaxwellF,
+    principalMetricSign]
+  field_simp [ne_of_gt Real.pi_pos]
+  ring
+
+/-- Einstein-Maxwell Ricci endomorphism after the four-dimensional trace equation
+has forced scalar curvature to vanish. -/
+def generalRicciFromEinsteinF
+    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) : ℝ :=
+  8 * Real.pi *
+    generalMaxwellStressFromF Ex Ey Ez Bx By Bz i j
+
+/-- Its trace vanishes directly from the arbitrary Maxwell trace theorem. -/
+def generalRicciFromEinsteinTrace
+    (Ex Ey Ez Bx By Bz : ℝ) : ℝ :=
+  ∑ i : Fin 4,
+    generalRicciFromEinsteinF Ex Ey Ez Bx By Bz i i
+
+theorem generalRicciFromEinstein_trace_zero
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    generalRicciFromEinsteinTrace Ex Ey Ez Bx By Bz = 0 := by
+  unfold generalRicciFromEinsteinTrace generalRicciFromEinsteinF
+  rw [← Finset.mul_sum]
+  rw [generalMaxwellStress_trace_zero]
+  ring
+
+/-- The fixed-point carrier is exactly minus twice the Ricci endomorphism for an
+arbitrary Maxwell field, not merely in the principal representative. -/
+theorem generalMaxwellCarrier_eq_minus_two_EinsteinRicci
+    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) :
+    generalMaxwellCarrier Ex Ey Ez Bx By Bz i j =
+      -2 * generalRicciFromEinsteinF
+        Ex Ey Ez Bx By Bz i j := by
+  unfold generalMaxwellCarrier generalRicciFromEinsteinF
+  ring
+
+/-- Squaring the arbitrary Einstein-Maxwell Ricci endomorphism gives one quarter
+of the Rainich carrier square componentwise. -/
+theorem generalRicciFromEinstein_sq
+    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) :
+    (∑ k : Fin 4,
+      generalRicciFromEinsteinF Ex Ey Ez Bx By Bz i k *
+        generalRicciFromEinsteinF Ex Ey Ez Bx By Bz k j) =
+      (1 / 4 : ℝ) *
+        (generalMaxwellChi Ex Ey Ez Bx By Bz)^2 *
+          (if i = j then 1 else 0) := by
+  have h := generalMaxwellCarrier_rainich
+    Ex Ey Ez Bx By Bz i j
+  rw [← generalMaxwellChi_sq] at h
+  simp_rw [generalMaxwellCarrier_eq_minus_two_EinsteinRicci] at h
+  calc
+    (∑ k : Fin 4,
+      generalRicciFromEinsteinF Ex Ey Ez Bx By Bz i k *
+        generalRicciFromEinsteinF Ex Ey Ez Bx By Bz k j) =
+      (1 / 4 : ℝ) *
+        (∑ k : Fin 4,
+          (-2 * generalRicciFromEinsteinF Ex Ey Ez Bx By Bz i k) *
+          (-2 * generalRicciFromEinsteinF Ex Ey Ez Bx By Bz k j)) := by
+            rw [Finset.mul_sum]
+            apply Finset.sum_congr rfl
+            intro k hk
+            ring
+    _ = (1 / 4 : ℝ) *
+        ((generalMaxwellChi Ex Ey Ez Bx By Bz)^2 *
+          (if i = j then 1 else 0)) := by rw [h]
+    _ = (1 / 4 : ℝ) *
+        (generalMaxwellChi Ex Ey Ez Bx By Bz)^2 *
+          (if i = j then 1 else 0) := by ring
+
+/-- Invariant Ricci square `R^a{}_b R^b{}_a` of the arbitrary electrovac field. -/
+def generalRicciNormFromEinstein
+    (Ex Ey Ez Bx By Bz : ℝ) : ℝ :=
+  ∑ i : Fin 4, ∑ k : Fin 4,
+    generalRicciFromEinsteinF Ex Ey Ez Bx By Bz i k *
+      generalRicciFromEinsteinF Ex Ey Ez Bx By Bz k i
+
+/-- The arbitrary-field Einstein-Maxwell Ricci norm is exactly `χ²`. -/
+theorem generalRicciNormFromEinstein_eq_chi_sq
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    generalRicciNormFromEinstein Ex Ey Ez Bx By Bz =
+      (generalMaxwellChi Ex Ey Ez Bx By Bz)^2 := by
+  unfold generalRicciNormFromEinstein
+  have h0 := generalRicciFromEinstein_sq
+    Ex Ey Ez Bx By Bz (0 : Fin 4) 0
+  have h1 := generalRicciFromEinstein_sq
+    Ex Ey Ez Bx By Bz (1 : Fin 4) 1
+  have h2 := generalRicciFromEinstein_sq
+    Ex Ey Ez Bx By Bz (2 : Fin 4) 2
+  have h3 := generalRicciFromEinstein_sq
+    Ex Ey Ez Bx By Bz (3 : Fin 4) 3
+  simp at h0 h1 h2 h3 ⊢
+  nlinarith
+
 
 /-- Regular non-null Maxwell condition in invariant form. -/
 def generalMaxwellNonNull
