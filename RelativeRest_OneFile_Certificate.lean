@@ -21574,6 +21574,82 @@ theorem carterObserver_unit_timelike
     _ = -1 := by rw [hc]
 
 
+
+/-! ### Carter stationarity of the curvature multiplier -/
+
+/-- Lift a stationary Boyer-Lindquist (t,phi) vector to the full
+(t,r,theta,phi) coordinate model. -/
+def stationaryVectorLift (v : R2) : Fin 4 → ℝ :=
+  fun i =>
+    if i = 0 then v.1
+    else if i = 3 then v.2
+    else 0
+
+/-- Full coordinate Carter vector.  Its radial and polar components vanish
+definitionally. -/
+def kerrCarterObserver4
+    (r M a Q theta : ℝ) : Fin 4 → ℝ :=
+  stationaryVectorLift (carterObserver r M a Q theta)
+
+/-- Coordinate gradient of the curvature-derived multiplier
+M_KN = Sigma/(sqrt 2 |Q|).  The stationary components vanish because the
+scalar depends only on r and theta. -/
+def kerrMultiplierCoordinateGradient
+    (Q r a theta : ℝ) : Fin 4 → ℝ :=
+  fun i =>
+    if i = 0 then 0
+    else if i = 1 then
+      (2 * r) / (Real.sqrt 2 * |Q|)
+    else if i = 2 then
+      (-2 * a^2 * Real.cos theta * Real.sin theta) /
+        (Real.sqrt 2 * |Q|)
+    else 0
+
+/-- The radial entry of the displayed gradient is the literal derivative of
+the curvature multiplier. -/
+theorem kerrMultiplier_hasDerivAt_r
+    (Q r a theta : ℝ) :
+    HasDerivAt
+      (fun x : ℝ => kerrMultiplier Q (Sigma x a theta))
+      (kerrMultiplierCoordinateGradient Q r a theta 1) r := by
+  have h :=
+    (Sigma_hasDerivAt_r r a theta).const_mul
+      ((Real.sqrt 2 * |Q|)⁻¹)
+  convert h using 1 <;>
+    simp [kerrMultiplierCoordinateGradient, kerrMultiplier,
+      div_eq_mul_inv] <;> ring
+
+/-- The polar entry is likewise the literal derivative. -/
+theorem kerrMultiplier_hasDerivAt_theta
+    (Q r a theta : ℝ) :
+    HasDerivAt
+      (fun x : ℝ => kerrMultiplier Q (Sigma r a x))
+      (kerrMultiplierCoordinateGradient Q r a theta 2) theta := by
+  have h :=
+    (Sigma_hasDerivAt_theta r a theta).const_mul
+      ((Real.sqrt 2 * |Q|)⁻¹)
+  convert h using 1 <;>
+    simp [kerrMultiplierCoordinateGradient, kerrMultiplier,
+      div_eq_mul_inv] <;> ring
+
+/-- Coordinate action of a vector on a scalar first jet. -/
+def coordinateDirectionalDerivative4
+    (v dphi : Fin 4 → ℝ) : ℝ :=
+  v 0 * dphi 0 + v 1 * dphi 1 +
+    v 2 * dphi 2 + v 3 * dphi 3
+
+/-- The field-selected Carter direction is tangent to the level sets of the
+curvature multiplier: u_* M = 0.  This is the manuscript's frame condition,
+now a direct coordinate identity rather than an imported separability fact. -/
+theorem kerrCarterObserver_multiplier_directionalDerivative_zero
+    (Q r M a theta : ℝ) :
+    coordinateDirectionalDerivative4
+      (kerrCarterObserver4 r M a Q theta)
+      (kerrMultiplierCoordinateGradient Q r a theta) = 0 := by
+  simp [coordinateDirectionalDerivative4,
+    kerrCarterObserver4, stationaryVectorLift,
+    kerrMultiplierCoordinateGradient]
+
 /-- Normalized temporal Carter coframe coefficient, written without a square-root quotient:
 `e⁰ = (Δ/sqrt(ΣΔ))(dt-a sin²θ dφ)`. -/
 def carterTemporalCoframeCoeffs
@@ -29770,6 +29846,10 @@ structure KerrNewmanFieldOnlyForcedCertificate
   carterNormalized :
     kerrStationaryNormSq r M a Q θ
       (carterObserver r M a Q θ) = -1
+  carterMultiplierStationary :
+    coordinateDirectionalDerivative4
+      (kerrCarterObserver4 r M a Q θ)
+      (kerrMultiplierCoordinateGradient Q r a θ) = 0
   minoClock :
     kerrClockRateFromPrincipalEM Q r a θ * dt =
       Real.sqrt 2 * |Q| * dlam
@@ -29806,6 +29886,9 @@ theorem kerrNewman_fieldOnly_forced_certificate
     sourceFreeMaxwell := hk.2.2.1
     relativeRestCarter := hk.2.2.2.1
     carterNormalized := hk.2.2.2.2.1
+    carterMultiplierStationary :=
+      kerrCarterObserver_multiplier_directionalDerivative_zero
+        Q r M a θ
     minoClock := hk.2.2.2.2.2
     minoIntrinsicClockParameter := by
       intro Theta0
@@ -34817,6 +34900,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.canonicalPrincipalField_forced_certificate
 #print axioms RelativeRest.kerrIntrinsicClockParameter_bijective
 #print axioms RelativeRest.kerrTrajectoryInIntrinsicClock_recovers_mino
+#print axioms RelativeRest.kerrMultiplier_hasDerivAt_r
+#print axioms RelativeRest.kerrMultiplier_hasDerivAt_theta
+#print axioms RelativeRest.kerrCarterObserver_multiplier_directionalDerivative_zero
 #print axioms RelativeRest.kerrNewman_fieldOnly_forced_certificate
 #print axioms RelativeRest.kerrNewman_fieldOnly_forced_certificate_canonicalMino
 #print axioms RelativeRest.kerrMinoClockFromPrincipalEM_canonical
