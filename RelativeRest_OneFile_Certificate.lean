@@ -17122,6 +17122,19 @@ structure CanonicalPrincipalFieldForcedCertificate
       HasDerivAt O (XF (ϑ - T)) (ϑ - T) →
       deriv (fun z => O (z - T)) ϑ =
         XF (ϑ - T)
+  causalExtendedEndpointMonotonicity :
+    ∀ {Y : Type*} {R : Y → Y → Prop},
+      Transitive R →
+      ∀ (γ : ℝ → Y) {x y : Y}, R x y →
+        pastEndpointE (causalPastParameterSet R γ x) ≤
+            pastEndpointE (causalPastParameterSet R γ y) ∧
+        futureEndpointE (causalFutureParameterSet R γ x) ≤
+            futureEndpointE (causalFutureParameterSet R γ y)
+  causalBranchIndependence :
+    ∀ (P₁ P₂ F₁ F₂ : Set ℝ),
+      P₁ = P₂ → F₁ = F₂ →
+      pastEndpoint P₁ = pastEndpoint P₂ ∧
+      futureEndpoint F₁ = futureEndpoint F₂
 
 /-- Construction of the field-only master certificate.  No characteristic
 parameter witness, hypersurface normalization, CPS representative, optical
@@ -17154,7 +17167,9 @@ theorem canonicalPrincipalField_forced_certificate
     transportClosure := ?_
     synchronizationOnClock := ?_
     clockCoverCanonical := clockCover_canonical_pair_certificate
-    relationalEvolution := ?_ }
+    relationalEvolution := ?_
+    causalExtendedEndpointMonotonicity := ?_
+    causalBranchIndependence := ?_ }
   · exact D.J_basis_eq_actionEulerJet
   · exact D.noetherConstraintOperatorFromAction_DA
   · rw [D.metricEulerJetResponse_eq_stress,
@@ -17174,6 +17189,11 @@ theorem canonicalPrincipalField_forced_certificate
     exact principalSynchronization_vanishes dRadar hRadar
   · intro O XF T ϑ hO
     exact relational_evolution_from_flow_derivative O XF T ϑ hO
+  · intro Y R htrans γ x y hxy
+    exact causal_extended_endpoints_mono_of_transitive
+      htrans γ hxy
+  · intro P₁ P₂ F₁ F₂ hP hF
+    exact causal_endpoints_branch_independent hP hF
 
 /-! ### Kerr-Newman field-only forcing certificate -/
 
