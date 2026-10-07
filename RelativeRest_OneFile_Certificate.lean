@@ -6366,6 +6366,40 @@ theorem mem_fullJetStabilizer_iff
 def nullCovectorNormSq (qminus qplus : ℝ) : ℝ :=
   -2 * qminus * qplus
 
+/-- Minkowski norm of a covector written in orthonormal time/radial coordinates
+on the normalized principal two-plane. -/
+def resolvingCovectorNormSq (p : R2) : ℝ :=
+  -(p.1)^2 + (p.2)^2
+
+/-- Null component q_- of a principal-plane covector. -/
+def resolvingCovectorQMinus (p : R2) : ℝ :=
+  principalInvSqrtTwo * (p.1 + p.2)
+
+/-- Null component q_+ of a principal-plane covector. -/
+def resolvingCovectorQPlus (p : R2) : ℝ :=
+  principalInvSqrtTwo * (p.1 - p.2)
+
+/-- The relation p²=-2 q_- q_+ is not an extra hypothesis.  It follows
+identically from the normalized null change of basis. -/
+theorem resolvingCovector_nullComponents_norm
+    (p : R2) :
+    nullCovectorNormSq
+        (resolvingCovectorQMinus p)
+        (resolvingCovectorQPlus p) =
+      resolvingCovectorNormSq p := by
+  unfold nullCovectorNormSq resolvingCovectorQMinus
+    resolvingCovectorQPlus resolvingCovectorNormSq
+  have hc := principalInvSqrtTwo_sq
+  calc
+    -2 * (principalInvSqrtTwo * (p.1 + p.2)) *
+        (principalInvSqrtTwo * (p.1 - p.2)) =
+      (-2 * principalInvSqrtTwo^2) *
+        ((p.1 + p.2) * (p.1 - p.2)) := by ring
+    _ = -((p.1 + p.2) * (p.1 - p.2)) := by
+      rw [hc]
+      ring
+    _ = -(p.1)^2 + (p.2)^2 := by ring
+
 /-- A non-null principal-plane covector necessarily has both null components nonzero. -/
 theorem nullCovectorNormSq_ne_zero_components
     (qm qp : ℝ)
@@ -6783,6 +6817,32 @@ theorem resolvedRainichPlane_certificate
     exact sigmaStar_balanced_dyad_invariant
       km lp qminus qplus τ hqm hqp
 
+/-- A non-null resolving covector written in orthonormal principal-plane
+coordinates therefore forces the full residual-boost certificate with no separate
+assumption relating its orthonormal and null components. -/
+theorem resolvingCovector_forces_residualBoost
+    (p : R2)
+    (hp : resolvingCovectorNormSq p ≠ 0) :
+    ∃ hresolve :
+        nullCovectorNormSq
+          (resolvingCovectorQMinus p)
+          (resolvingCovectorQPlus p) ≠ 0,
+      ResolvedRainichPlaneCertificate
+        (resolvingCovectorQMinus p)
+        (resolvingCovectorQPlus p)
+        hresolve := by
+  have hresolve :
+      nullCovectorNormSq
+        (resolvingCovectorQMinus p)
+        (resolvingCovectorQPlus p) ≠ 0 := by
+    rw [resolvingCovector_nullComponents_norm]
+    exact hp
+  exact ⟨hresolve,
+    resolvedRainichPlane_certificate
+      (resolvingCovectorQMinus p)
+      (resolvingCovectorQPlus p)
+      hresolve⟩
+
 /-- The resolution certificate itself is invariant under a change of starting
 null representative: the regularity condition is preserved and the new
 balancing rapidity differs exactly by the inverse representative boost. -/
@@ -6852,6 +6912,31 @@ theorem arbitraryMaxwell_action_resolvingJet_forced_certificate
     ?_⟩
   exact resolvingJetNorm_forces_residualBoost
     pSq qminus qplus hcomponents hp
+
+/-- Stronger coordinate-normalized form of the arbitrary-field closure:
+the geometric resolving covector itself supplies its null components, so the
+identity p²=-2q_-q_+ is derived rather than passed as a hypothesis. -/
+theorem arbitraryMaxwell_action_resolvingCovector_forced_certificate
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (p : R2)
+    (hnonnull :
+      generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hp : resolvingCovectorNormSq p ≠ 0) :
+    ArbitraryMaxwellActionForcedCertificate
+        Ex Ey Ez Bx By Bz u s hnonnull ∧
+      ∃ hresolve :
+          nullCovectorNormSq
+            (resolvingCovectorQMinus p)
+            (resolvingCovectorQPlus p) ≠ 0,
+        ResolvedRainichPlaneCertificate
+          (resolvingCovectorQMinus p)
+          (resolvingCovectorQPlus p)
+          hresolve := by
+  refine ⟨
+    arbitraryMaxwell_action_forced_certificate
+      Ex Ey Ez Bx By Bz u s hnonnull,
+    ?_⟩
+  exact resolvingCovector_forces_residualBoost p hp
 
 /-- The finite-jet/full-jet alternative used in the manuscript can be stated without
 smuggling in a preferred representative: either some finite jet already has only the
@@ -25069,8 +25154,11 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.sigmaStar_balanced_dyad_invariant
 #print axioms RelativeRest.resolvedRainichPlane_certificate
 #print axioms RelativeRest.resolvedRainichPlane_representative_independent
+#print axioms RelativeRest.resolvingCovector_nullComponents_norm
+#print axioms RelativeRest.resolvingCovector_forces_residualBoost
 #print axioms RelativeRest.resolvingJetNorm_forces_residualBoost
 #print axioms RelativeRest.arbitraryMaxwell_action_resolvingJet_forced_certificate
+#print axioms RelativeRest.arbitraryMaxwell_action_resolvingCovector_forced_certificate
 #print axioms RelativeRest.finiteJetBreak_or_unbrokenAtEveryFiniteOrder
 #print axioms RelativeRest.characteristicCurrent_factorization
 #print axioms RelativeRest.characteristicCurrent_Lambda_unique
