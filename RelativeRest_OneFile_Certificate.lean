@@ -8505,6 +8505,69 @@ theorem endpointClock_deriv
       ω (τend x) * dτ :=
   (endpointClock_hasDerivAt ω τend τ0 x dτ hω hend).deriv
 
+/-- Endpoint clock specialized to the intrinsic Einstein-Maxwell rate selected
+by the principal field. -/
+def principalEndpointClock
+    (E B τ0 : ℝ) (τend : ℝ → ℝ) (x : ℝ) : ℝ :=
+  endpointClock (fun _ : ℝ => principalClockRate E B) τ0 τend x
+
+/-- Direct form of the manuscript identity
+`dΘ = (R_ab R^ab)^(1/4) dτ`: the endpoint derivative and the curvature
+fourth-root normalization are one theorem. -/
+theorem principalEndpointClock_hasDerivAt_ricci_rate
+    (E B τ0 x dτ : ℝ)
+    (τend : ℝ → ℝ)
+    (hend : HasDerivAt τend dτ x) :
+    HasDerivAt
+      (principalEndpointClock E B τ0 τend)
+      (Real.sqrt
+          (Real.sqrt
+            (principalRicciNormFromCarrier (principalChi E B))) * dτ)
+      x := by
+  unfold principalEndpointClock
+  have h :=
+    endpointClock_hasDerivAt
+      (fun _ : ℝ => principalClockRate E B)
+      τend τ0 x dτ continuous_const hend
+  rw [principalClockRate_eq_ricci_fourth_root E B] at h
+  exact h
+
+theorem principalEndpointClock_deriv_ricci_rate
+    (E B τ0 x dτ : ℝ)
+    (τend : ℝ → ℝ)
+    (hend : HasDerivAt τend dτ x) :
+    deriv (principalEndpointClock E B τ0 τend) x =
+      Real.sqrt
+          (Real.sqrt
+            (principalRicciNormFromCarrier (principalChi E B))) * dτ :=
+  (principalEndpointClock_hasDerivAt_ricci_rate
+    E B τ0 x dτ τend hend).deriv
+
+/-- Both past and future radar endpoints inherit the identical intrinsic curvature
+rate, so their even/odd combinations introduce no second clock normalization. -/
+theorem principalRadarEndpoints_curvature_rate
+    (E B τ0 x dτplus dτminus : ℝ)
+    (τplus τminus : ℝ → ℝ)
+    (hplus : HasDerivAt τplus dτplus x)
+    (hminus : HasDerivAt τminus dτminus x) :
+    HasDerivAt
+        (principalEndpointClock E B τ0 τplus)
+        (Real.sqrt
+            (Real.sqrt
+              (principalRicciNormFromCarrier (principalChi E B))) * dτplus)
+        x ∧
+    HasDerivAt
+        (principalEndpointClock E B τ0 τminus)
+        (Real.sqrt
+            (Real.sqrt
+              (principalRicciNormFromCarrier (principalChi E B))) * dτminus)
+        x := by
+  exact ⟨
+    principalEndpointClock_hasDerivAt_ricci_rate
+      E B τ0 x dτplus τplus hplus,
+    principalEndpointClock_hasDerivAt_ricci_rate
+      E B τ0 x dτminus τminus hminus⟩
+
 /-- Exchange-even radar midpoint. -/
 def radarTime (θplus θminus : ℝ) : ℝ := (θplus + θminus) / 2
 
