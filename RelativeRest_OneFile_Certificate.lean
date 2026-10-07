@@ -3012,6 +3012,110 @@ theorem generalEinsteinMaxwell_bulk_stationarity_iff_field_equations
       (generalEinsteinMaxwellMetricVariationCoeff_from_ricci_eq_zero_iff
         RicCov Ex Ey Ez Bx By Bz i j).2 (hEin i j)
 
+/-! ### Frame-free local Einstein-Maxwell first variation -/
+
+/-- Both indices raised on the arbitrary Maxwell field in the orthonormal
+Lorentzian frame. -/
+def generalMaxwellFUp
+    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) : ℝ :=
+  principalMetricSign i * principalMetricSign j *
+    generalMaxwellF Ex Ey Ez Bx By Bz i j
+
+theorem generalMaxwellFUp_skew
+    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) :
+    generalMaxwellFUp Ex Ey Ez Bx By Bz i j =
+      -generalMaxwellFUp Ex Ey Ez Bx By Bz j i := by
+  unfold generalMaxwellFUp
+  rw [generalMaxwellF_skew Ex Ey Ez Bx By Bz i j]
+  ring
+
+/-- Complete pointwise first-variation identity of the displayed
+Einstein-Maxwell density for a completely arbitrary electromagnetic two-form. -/
+theorem generalEinsteinMaxwell_local_first_variation
+    (RicCov : Fin 4 → Fin 4 → ℝ)
+    (nabla2H : Fin 4 → Fin 4 → Fin 4 → Fin 4 → ℝ)
+    (hsym : ∀ d e a b, nabla2H d e a b = nabla2H d e b a)
+    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4)
+    (nablaF nablaDeltaA : Fin 4 → Fin 4 → ℝ)
+    (deltaA : Fin 4 → ℝ) :
+    deriv
+        (principalEinsteinHilbertLagrangianMetricLineFromRicci
+          RicCov
+          (fun _ _ =>
+            principalPalatiniBoundaryDivergence
+              (principalNablaLinearizedChristoffelFromMetricSecondDerivative
+                nabla2H))
+          i j) 0 +
+      deriv
+        (generalMaxwellLagrangianMetricLine
+          Ex Ey Ez Bx By Bz i j) 0 +
+      deriv
+        (principalMaxwellPotentialLagrangianLine
+          (generalMaxwellFsq Ex Ey Ez Bx By Bz)
+          (generalMaxwellFUp Ex Ey Ez Bx By Bz)
+          nablaDeltaA) 0 =
+    generalEinsteinMaxwellMetricVariationCoeff
+        (principalEinsteinMixedFromRicci RicCov)
+        Ex Ey Ez Bx By Bz i j +
+      principalMaxwellPotentialEulerDensity nablaF deltaA +
+      principalEinsteinHilbertSymplecticPotentialDivergence nabla2H +
+      principalMaxwellSymplecticPotentialDivergence
+        (generalMaxwellFUp Ex Ey Ez Bx By Bz)
+        nablaF nablaDeltaA deltaA := by
+  rw [principalEinsteinHilbert_first_variation_from_metric_second_derivative
+      RicCov nabla2H hsym i j,
+    ← generalMaxwellMetricVariationCoeff_eq_lagrangian_deriv,
+    principalMaxwellPotential_first_variation]
+  unfold generalEinsteinMaxwellMetricVariationCoeff
+  rw [principalEinsteinHilbertMetricVariationCoeff_from_ricci]
+  ring
+
+/-- On a genuine Einstein-Maxwell solution, the arbitrary-field local first
+variation has no bulk part and is exactly the sum of the EH and EM symplectic
+potential divergences. -/
+theorem generalEinsteinMaxwell_onShell_local_first_variation_is_boundary
+    (RicCov : Fin 4 → Fin 4 → ℝ)
+    (nabla2H : Fin 4 → Fin 4 → Fin 4 → Fin 4 → ℝ)
+    (hsym : ∀ d e a b, nabla2H d e a b = nabla2H d e b a)
+    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4)
+    (nablaF nablaDeltaA : Fin 4 → Fin 4 → ℝ)
+    (deltaA : Fin 4 → ℝ)
+    (hEinstein :
+      generalEinsteinMaxwellMetricVariationCoeff
+        (principalEinsteinMixedFromRicci RicCov)
+        Ex Ey Ez Bx By Bz i j = 0)
+    (hMaxwell : ∀ b : Fin 4,
+      principalMaxwellPotentialEulerCoeff nablaF b = 0) :
+    deriv
+        (principalEinsteinHilbertLagrangianMetricLineFromRicci
+          RicCov
+          (fun _ _ =>
+            principalPalatiniBoundaryDivergence
+              (principalNablaLinearizedChristoffelFromMetricSecondDerivative
+                nabla2H))
+          i j) 0 +
+      deriv
+        (generalMaxwellLagrangianMetricLine
+          Ex Ey Ez Bx By Bz i j) 0 +
+      deriv
+        (principalMaxwellPotentialLagrangianLine
+          (generalMaxwellFsq Ex Ey Ez Bx By Bz)
+          (generalMaxwellFUp Ex Ey Ez Bx By Bz)
+          nablaDeltaA) 0 =
+      principalEinsteinHilbertSymplecticPotentialDivergence nabla2H +
+        principalMaxwellSymplecticPotentialDivergence
+          (generalMaxwellFUp Ex Ey Ez Bx By Bz)
+          nablaF nablaDeltaA deltaA := by
+  rw [generalEinsteinMaxwell_local_first_variation
+    RicCov nabla2H hsym Ex Ey Ez Bx By Bz i j
+    nablaF nablaDeltaA deltaA]
+  have hEuler :
+      principalMaxwellPotentialEulerDensity nablaF deltaA = 0 := by
+    rw [principalMaxwellPotentialEulerDensity_eq_divergence_contraction]
+    simp [hMaxwell]
+  rw [hEinstein, hEuler]
+  ring
+
 /-- Principal electromagnetic energy density from the explicit field. -/
 def principalFieldEnergyDensity (E B : ℝ) : ℝ :=
   (E^2 + B^2) / (8 * Real.pi)
@@ -24202,6 +24306,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalEinsteinMaxwellMetricVariationCoeff_factor
 #print axioms RelativeRest.generalEinsteinMaxwellMetricVariationCoeff_eq_zero_iff
 #print axioms RelativeRest.generalEinsteinMaxwell_bulk_stationarity_iff_field_equations
+#print axioms RelativeRest.generalMaxwellFUp_skew
+#print axioms RelativeRest.generalEinsteinMaxwell_local_first_variation
+#print axioms RelativeRest.generalEinsteinMaxwell_onShell_local_first_variation_is_boundary
 #print axioms RelativeRest.principalEinsteinMaxwell_onShell_local_first_variation_is_boundary
 #print axioms RelativeRest.principalMetricEulerNoetherJetCoeff_eq_carrier
 #print axioms RelativeRest.generalMaxwellCarrierLinear_sq
