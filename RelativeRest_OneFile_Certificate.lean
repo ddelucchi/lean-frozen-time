@@ -9771,6 +9771,36 @@ theorem logarithmic_differential_homothety_invariant
   · exact inv_ne_zero (pow_ne_zero 2 hρ)
   · exact hχ
 
+
+/-- Pointwise absolute conformal uniqueness.  No functional ansatz and no
+homogeneity premise are needed: once the physical carrier obeys J²=chi² I,
+requiring a positive conformal metric factor F to make the carrier a unit
+involution forces F=chi at that point.  Hence dimensionless Maxwell
+invariants cannot hide an additional positive conformal normalization. -/
+theorem positive_conformal_scalar_forced_by_unit_involution
+    (F χ : ℝ)
+    (hF : 0 < F) (hχ : 0 < χ)
+    (hunit : χ^2 / F^2 = 1) :
+    F = χ := by
+  have hF0 : F ≠ 0 := ne_of_gt hF
+  have hsq : χ^2 = F^2 := by
+    field_simp [hF0] at hunit
+    nlinarith
+  nlinarith
+
+/-- Functional corollary: a positive field-dependent conformal scalar is forced
+pointwise to equal chi whenever the unit-involution condition holds.  The
+function may depend on arbitrary auxiliary or dimensionless field data; only
+its value enters the normalization equation. -/
+theorem arbitrary_field_dependent_conformal_factor_forced
+    {A : Type*}
+    (F : A → ℝ) (a : A) (χ : ℝ)
+    (hF : 0 < F a) (hχ : 0 < χ)
+    (hunit : χ^2 / (F a)^2 = 1) :
+    F a = χ :=
+  positive_conformal_scalar_forced_by_unit_involution
+    (F a) χ hF hχ hunit
+
 /-- Homogeneity and unit-involution normalization together force the conformal factor itself:
 there is no residual positive multiplicative constant. -/
 theorem conformal_factor_forced
@@ -31998,6 +32028,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.linearDescendant_reciprocal_hasDerivAt_zero
 #print axioms RelativeRest.relativeSymplecticMinus_from_lagrangian_normalJet
 #print axioms RelativeRest.relativeConstraintResidual_deriv_from_lagrangian
+#print axioms RelativeRest.positive_conformal_scalar_forced_by_unit_involution
+#print axioms RelativeRest.arbitrary_field_dependent_conformal_factor_forced
 #print axioms RelativeRest.conformal_factor_forced_from_common_scale
 #print axioms RelativeRest.carrier_chi_common_scale
 #print axioms RelativeRest.normalizedCarrierEndomorphism_common_scale
