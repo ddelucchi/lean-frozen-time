@@ -6647,6 +6647,73 @@ theorem resolvedRainichPlane_representative_independent
     sigmaStar_shift_covariance
       qminus qplus τ hqm hqp⟩
 
+
+/-! ### Einstein-Maxwell field core plus invariant resolving-jet closure -/
+
+/-- A nonzero geometric resolving-jet norm, once expressed in a normalized principal
+null dyad by p²=-2q_-q_+, forces the complete residual-boost certificate.
+The components are not extra frame choices: every pair satisfying the invariant norm
+relation is covered, and representative independence is part of the certificate. -/
+theorem resolvingJetNorm_forces_residualBoost
+    (pSq qminus qplus : ℝ)
+    (hcomponents :
+      pSq = nullCovectorNormSq qminus qplus)
+    (hp : pSq ≠ 0) :
+    ∃ hresolve : nullCovectorNormSq qminus qplus ≠ 0,
+      ResolvedRainichPlaneCertificate
+        qminus qplus hresolve := by
+  have hresolve :
+      nullCovectorNormSq qminus qplus ≠ 0 := by
+    rw [← hcomponents]
+    exact hp
+  exact ⟨hresolve,
+    resolvedRainichPlane_certificate
+      qminus qplus hresolve⟩
+
+/-- On the regular non-null Einstein-Maxwell sector, the action-derived arbitrary-field
+master and the invariant first resolving jet jointly force the complete local algebraic
+clock data and the unique residual Rainich boost. No observer, rapidity, principal
+splitting, stress normalization, or clock rate is independently supplied. -/
+theorem arbitraryMaxwell_action_resolvingJet_forced_certificate
+    (Ex Ey Ez Bx By Bz u s pSq qminus qplus : ℝ)
+    (hnonnull :
+      generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hcomponents :
+      pSq = nullCovectorNormSq qminus qplus)
+    (hp : pSq ≠ 0) :
+    ArbitraryMaxwellActionForcedCertificate
+        Ex Ey Ez Bx By Bz u s hnonnull ∧
+      ∃ hresolve : nullCovectorNormSq qminus qplus ≠ 0,
+        ResolvedRainichPlaneCertificate
+          qminus qplus hresolve := by
+  refine ⟨
+    arbitraryMaxwell_action_forced_certificate
+      Ex Ey Ez Bx By Bz u s hnonnull,
+    ?_⟩
+  exact resolvingJetNorm_forces_residualBoost
+    pSq qminus qplus hcomponents hp
+
+/-- The finite-jet/full-jet alternative used in the manuscript can be stated without
+smuggling in a preferred representative: either some finite jet already has only the
+identity stabilizer, in which case the complete jet does too, or no finite jet has
+yet broken the isotropy. In the latter case the exact residual symmetry is, by
+definition, the intersection fullJetStabilizer. -/
+theorem finiteJetBreak_or_unbrokenAtEveryFiniteOrder
+    (H : ℕ → Set G) (e : G)
+    (he : ∀ n, e ∈ H n) :
+    (∃ m : ℕ,
+        H m = {e} ∧
+          fullJetStabilizer H = {e}) ∨
+      (∀ m : ℕ, H m ≠ {e}) := by
+  by_cases h : ∃ m : ℕ, H m = {e}
+  · left
+    rcases h with ⟨m, hm⟩
+    exact ⟨m, hm,
+      fullJetStabilizer_eq_singleton_of_finite_break
+        H e he m hm⟩
+  · right
+    exact h
+
 /-! ## 7. Conformal normalization uniqueness in the stated carrier-algebraic category -/
 
 /-- Homogeneity `f(cχ)=c f(χ)` forces a one-variable conformal factor to be linear. -/
@@ -24829,6 +24896,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.sigmaStar_balanced_dyad_invariant
 #print axioms RelativeRest.resolvedRainichPlane_certificate
 #print axioms RelativeRest.resolvedRainichPlane_representative_independent
+#print axioms RelativeRest.resolvingJetNorm_forces_residualBoost
+#print axioms RelativeRest.arbitraryMaxwell_action_resolvingJet_forced_certificate
+#print axioms RelativeRest.finiteJetBreak_or_unbrokenAtEveryFiniteOrder
 #print axioms RelativeRest.characteristicCurrent_factorization
 #print axioms RelativeRest.characteristicCurrent_Lambda_unique
 #print axioms RelativeRest.characteristicCurrent_quotient_finrank_one
