@@ -34381,6 +34381,138 @@ theorem einsteinMaxwell_finiteResolverTower_entireFormalizedPaper_forced
       Q r M a theta dt u s
       hQ hsig hdel hsin⟩
 
+
+
+/-- Strongest genuine-branch theorem on the generic first-jet resolving stratum.
+No ambient optical identification, resolver choice, clock normalization, or
+finite symmetry-breaking order is supplied.  The only optical assumption is
+nondegeneracy of the actual two-endpoint plane. -/
+theorem einsteinMaxwell_intrinsicSynge_firstJet_entireFormalizedPaper_forced
+    (Bdual :
+      (X →L[ℝ] ℝ) →ₗ[ℝ] (X →L[ℝ] ℝ) →ₗ[ℝ] ℝ)
+    (S : RegularSyngeEndpointPairSource Bdual)
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hp :
+      generalMaxwellResolvingNormSq
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz ≠ 0)
+    (hind : S.EndpointPairIndependent)
+    (hsym : ∀ a b, bil Bdual a b = bil Bdual b a)
+    (Q r M a theta dt : ℝ)
+    (hQ : Q ≠ 0)
+    (hsig : 0 < Sigma r a theta)
+    (hdel : 0 < Delta r M a Q)
+    (hsin : 0 < Real.sin theta) :
+    PaperIntrinsicEndpointPlaneResolvedBranchForcedCertificate
+        Bdual S
+        Ex Ey Ez Bx By Bz u s
+        dEx dEy dEz dBx dBy dBz
+        (generalMaxwellResolvingCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz)
+        hnonnull
+        (generalMaxwellResolvingCovector_raised_mem_plusRange
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz hnonnull)
+        hp hind hsym ∧
+      KerrNewmanFieldOnlyForcedCertificate
+        Q r M a theta dt (dt / Sigma r a theta) u s
+        hQ hsig hdel hsin (by rfl) ∧
+      (∀ (weight coeff : ℕ → ℕ → ℝ),
+        (∃ m : ℕ,
+            (∀ n : ℕ, n < m →
+              weightedBoostJetStabilizer
+                (weight n) (coeff n) = Set.univ) ∧
+            weightedBoostJetStabilizer
+              (weight m) (coeff m) = {0} ∧
+            fullJetStabilizer
+              (fun n =>
+                weightedBoostJetStabilizer
+                  (weight n) (coeff n)) = {0}) ∨
+          ((∀ n : ℕ,
+              weightedBoostJetStabilizer
+                (weight n) (coeff n) = Set.univ) ∧
+            fullJetStabilizer
+              (fun n =>
+                weightedBoostJetStabilizer
+                  (weight n) (coeff n)) = Set.univ)) := by
+  refine ⟨
+    paper_intrinsicEndpointPlane_firstJet_forced_certificate
+      Bdual S
+      Ex Ey Ez Bx By Bz u s
+      dEx dEy dEz dBx dBy dBz
+      hnonnull hp hind hsym,
+    kerrNewman_fieldOnly_forced_certificate_canonicalMino
+      Q r M a theta dt u s
+      hQ hsig hdel hsin,
+    ?_⟩
+  intro weight coeff
+  exact weightedBoostJetTower_firstBreak_or_exactFullSymmetry
+    weight coeff
+
+/-- Strongest genuine-branch higher-jet theorem.  Once the geometric carrier-jet
+resolver tower exists, Lean selects its first non-null resolver internally; the
+boost-weight stabilizer theorem independently selects the least order at which
+the full jet breaks the residual boost, or proves exact full isotropy. -/
+theorem einsteinMaxwell_intrinsicSynge_finiteResolverTower_entireFormalizedPaper_forced
+    (Bdual :
+      (X →L[ℝ] ℝ) →ₗ[ℝ] (X →L[ℝ] ℝ) →ₗ[ℝ] ℝ)
+    (S : RegularSyngeEndpointPairSource Bdual)
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (T : MaxwellFiniteResolverTower Ex Ey Ez Bx By Bz)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hind : S.EndpointPairIndependent)
+    (hsym : ∀ a b, bil Bdual a b = bil Bdual b a)
+    (Q r M a theta dt : ℝ)
+    (hQ : Q ≠ 0)
+    (hsig : 0 < Sigma r a theta)
+    (hdel : 0 < Delta r M a Q)
+    (hsin : 0 < Real.sin theta) :
+    PaperIntrinsicEndpointPlaneResolvedBranchForcedCertificate
+        Bdual S
+        Ex Ey Ez Bx By Bz u s
+        dEx dEy dEz dBx dBy dBz
+        T.firstCovector
+        hnonnull T.firstCovector_mem T.firstCovector_nonnull
+        hind hsym ∧
+      KerrNewmanFieldOnlyForcedCertificate
+        Q r M a theta dt (dt / Sigma r a theta) u s
+        hQ hsig hdel hsin (by rfl) ∧
+      (∀ (weight coeff : ℕ → ℕ → ℝ),
+        (∃ m : ℕ,
+            (∀ n : ℕ, n < m →
+              weightedBoostJetStabilizer
+                (weight n) (coeff n) = Set.univ) ∧
+            weightedBoostJetStabilizer
+              (weight m) (coeff m) = {0} ∧
+            fullJetStabilizer
+              (fun n =>
+                weightedBoostJetStabilizer
+                  (weight n) (coeff n)) = {0}) ∨
+          ((∀ n : ℕ,
+              weightedBoostJetStabilizer
+                (weight n) (coeff n) = Set.univ) ∧
+            fullJetStabilizer
+              (fun n =>
+                weightedBoostJetStabilizer
+                  (weight n) (coeff n)) = Set.univ)) := by
+  refine ⟨
+    paper_intrinsicEndpointPlane_finiteResolverTower_forced_certificate
+      Bdual S
+      Ex Ey Ez Bx By Bz u s
+      dEx dEy dEz dBx dBy dBz
+      T hnonnull hind hsym,
+    kerrNewman_fieldOnly_forced_certificate_canonicalMino
+      Q r M a theta dt u s
+      hQ hsig hdel hsin,
+    ?_⟩
+  intro weight coeff
+  exact weightedBoostJetTower_firstBreak_or_exactFullSymmetry
+    weight coeff
+
 end StrongestSimultaneousPaperClosure
 
 /-! ## 19. End-to-end dependency record -/
@@ -35502,6 +35634,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.einsteinMaxwell_entireFormalizedPaper_forced
 #print axioms RelativeRest.einsteinMaxwell_firstJet_entireFormalizedPaper_forced
 #print axioms RelativeRest.einsteinMaxwell_finiteResolverTower_entireFormalizedPaper_forced
+#print axioms RelativeRest.einsteinMaxwell_intrinsicSynge_firstJet_entireFormalizedPaper_forced
+#print axioms RelativeRest.einsteinMaxwell_intrinsicSynge_finiteResolverTower_entireFormalizedPaper_forced
 #print axioms RelativeRest.paper_finiteResolverTowerRegularSynge_forced_certificate
 #print axioms RelativeRest.resolvedRainichPlane_certificate
 #print axioms RelativeRest.resolvedRainichPlane_representative_independent
