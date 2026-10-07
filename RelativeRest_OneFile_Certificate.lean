@@ -27068,6 +27068,38 @@ structure ArbitraryMaxwellResolvedRegularStratumCertificate
             -generalMaxwellDLogRicciNormCovector
                 Ex Ey Ez Bx By Bz
                 dEx dEy dEz dBx dBy dBz i.succ / 4)))
+  fullTransportClosure :
+    ∀ (du : Fin 4 → Fin 4 → ℝ),
+      (∀ i : Fin 3,
+        deriv
+          (fun t =>
+            principalMinkowskiCovectorSq
+              (adaptedUnitCovectorLine du i.succ t)) 0 = 0) →
+      ((∀ a b : Fin 4,
+          clockTransportTwoForm
+            (generalMaxwellClockRate Ex Ey Ez Bx By Bz)
+            (generalMaxwellDClockRateCovector
+              Ex Ey Ez Bx By Bz
+              dEx dEy dEz dBx dBy dBz)
+            du a b = 0) ↔
+       ((∀ i j : Fin 3,
+          principalVorticity du i j = 0) ∧
+        (∀ i : Fin 3,
+          principalAcceleration du i =
+            -generalMaxwellDLogRicciNormCovector
+                Ex Ey Ez Bx By Bz
+                dEx dEy dEz dBx dBy dBz i.succ / 4)))
+  fullFrobeniusWedgeClosure :
+    ∀ (du : Fin 4 → Fin 4 → ℝ),
+      (∀ a b c : Fin 4,
+        principalClockFrobeniusThreeForm
+          (generalMaxwellClockRate Ex Ey Ez Bx By Bz)
+          (generalMaxwellDClockRateCovector
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz)
+          du a b c = 0) ↔
+      (∀ i j : Fin 3,
+        principalVorticity du i j = 0)
   frobeniusClosure :
     ∀ (du : Fin 4 → Fin 4 → ℝ),
       (∀ i j : Fin 3,
@@ -27170,6 +27202,8 @@ theorem arbitraryMaxwell_resolvedRegularStratum_certificate
     characteristicBasicDescent := ?_
     contactTransverseDuality := ?_
     transportClosure := ?_
+    fullTransportClosure := ?_
+    fullFrobeniusWedgeClosure := ?_
     frobeniusClosure := ?_
     clockCoverCanonical :=
       clockCover_canonical_pair_certificate
@@ -27222,6 +27256,23 @@ theorem arbitraryMaxwell_resolvedRegularStratum_certificate
       hnonnull du
       (adaptedUnitNormalization_of_unitNorm_stationary
         du hstationary)
+  · intro du hstationary
+    exact generalMaxwell_clockTransportTwoForm_all_zero_iff
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull du
+      (adaptedUnitNormalization_of_unitNorm_stationary
+        du hstationary)
+  · intro du
+    exact principalClockFrobeniusThreeForm_all_zero_iff_vorticity
+      (generalMaxwellClockRate Ex Ey Ez Bx By Bz)
+      (generalMaxwellDClockRateCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz)
+      du
+      (ne_of_gt
+        (generalMaxwellClockRate_pos
+          Ex Ey Ez Bx By Bz hnonnull))
   · intro du
     exact generalMaxwell_frobenius_all_zero_iff
       Ex Ey Ez Bx By Bz
