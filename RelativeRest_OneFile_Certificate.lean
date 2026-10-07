@@ -8342,6 +8342,297 @@ theorem normalizedNullPair_midpoint_orthonormal
         principalMinkowskiBilinear_add_sub, hk, hl]
       ring
 
+
+/-! ### Generic finite-jet resolver inside a Lorentzian Rainich plane -/
+
+/-- Null components of any covector whose raised vector lies in a normalized
+Rainich two-plane.  This abstraction is what allows later finite jets to replace
+the first resolver without changing the balancing construction. -/
+def resolvingPlaneQMinus
+    {P : Submodule ℝ (Fin 4 → ℝ)}
+    (alpha : Fin 4 → ℝ)
+    (D : NormalizedPrincipalNullDyad P) : ℝ :=
+  principalCovectorEval alpha D.k.1
+
+def resolvingPlaneQPlus
+    {P : Submodule ℝ (Fin 4 → ℝ)}
+    (alpha : Fin 4 → ℝ)
+    (D : NormalizedPrincipalNullDyad P) : ℝ :=
+  principalCovectorEval alpha D.l.1
+
+def resolvingPlaneBalancedK
+    {P : Submodule ℝ (Fin 4 → ℝ)}
+    (alpha : Fin 4 → ℝ)
+    (D : NormalizedPrincipalNullDyad P) :
+    Fin 4 → ℝ :=
+  Real.exp
+      (-(sigmaStar
+        (resolvingPlaneQMinus alpha D)
+        (resolvingPlaneQPlus alpha D))) • D.k.1
+
+def resolvingPlaneBalancedL
+    {P : Submodule ℝ (Fin 4 → ℝ)}
+    (alpha : Fin 4 → ℝ)
+    (D : NormalizedPrincipalNullDyad P) :
+    Fin 4 → ℝ :=
+  Real.exp
+      (sigmaStar
+        (resolvingPlaneQMinus alpha D)
+        (resolvingPlaneQPlus alpha D)) • D.l.1
+
+def resolvingPlaneBalancedU
+    {P : Submodule ℝ (Fin 4 → ℝ)}
+    (alpha : Fin 4 → ℝ)
+    (D : NormalizedPrincipalNullDyad P) :
+    Fin 4 → ℝ :=
+  principalInvSqrtTwo •
+    (resolvingPlaneBalancedK alpha D +
+      resolvingPlaneBalancedL alpha D)
+
+def resolvingPlaneBalancedE
+    {P : Submodule ℝ (Fin 4 → ℝ)}
+    (alpha : Fin 4 → ℝ)
+    (D : NormalizedPrincipalNullDyad P) :
+    Fin 4 → ℝ :=
+  principalInvSqrtTwo •
+    (resolvingPlaneBalancedK alpha D -
+      resolvingPlaneBalancedL alpha D)
+
+/-- Balancing preserves the normalized-null-pair relations for any resolving
+covector; no field formula for that covector is needed. -/
+theorem resolvingPlaneBalancedNullPair_normalized
+    {P : Submodule ℝ (Fin 4 → ℝ)}
+    (alpha : Fin 4 → ℝ)
+    (D : NormalizedPrincipalNullDyad P) :
+    principalMinkowskiSq
+        (resolvingPlaneBalancedK alpha D) = 0 ∧
+    principalMinkowskiSq
+        (resolvingPlaneBalancedL alpha D) = 0 ∧
+    principalMinkowskiBilinear
+        (resolvingPlaneBalancedK alpha D)
+        (resolvingPlaneBalancedL alpha D) = -1 := by
+  let σ :=
+    sigmaStar
+      (resolvingPlaneQMinus alpha D)
+      (resolvingPlaneQPlus alpha D)
+  constructor
+  · unfold resolvingPlaneBalancedK
+    rw [principalMinkowskiSq_smul, D.kNull]
+    ring
+  · constructor
+    · unfold resolvingPlaneBalancedL
+      rw [principalMinkowskiSq_smul, D.lNull]
+      ring
+    · unfold resolvingPlaneBalancedK resolvingPlaneBalancedL
+      rw [principalMinkowskiBilinear_smul, D.crossNormalized]
+      have he :
+          Real.exp
+              (-(sigmaStar
+                (resolvingPlaneQMinus alpha D)
+                (resolvingPlaneQPlus alpha D))) *
+            Real.exp
+              (sigmaStar
+                (resolvingPlaneQMinus alpha D)
+                (resolvingPlaneQPlus alpha D)) = 1 := by
+        rw [← Real.exp_add]
+        simp
+      rw [he]
+      ring
+
+/-- The balanced midpoint/half-difference is an orthonormal Lorentz frame. -/
+theorem resolvingPlaneBalancedFrame_orthonormal
+    {P : Submodule ℝ (Fin 4 → ℝ)}
+    (alpha : Fin 4 → ℝ)
+    (D : NormalizedPrincipalNullDyad P) :
+    principalMinkowskiSq
+        (resolvingPlaneBalancedU alpha D) = -1 ∧
+    principalMinkowskiSq
+        (resolvingPlaneBalancedE alpha D) = 1 ∧
+    principalMinkowskiBilinear
+        (resolvingPlaneBalancedU alpha D)
+        (resolvingPlaneBalancedE alpha D) = 0 := by
+  rcases resolvingPlaneBalancedNullPair_normalized alpha D with
+    ⟨hk,hl,hkl⟩
+  exact normalizedNullPair_midpoint_orthonormal
+    (resolvingPlaneBalancedK alpha D)
+    (resolvingPlaneBalancedL alpha D)
+    hk hl hkl
+
+/-- Any non-null covector lying in a two-dimensional Lorentzian Rainich plane
+selects the same balanced timelike observer from every future normalized null
+dyad.  Exchanging the two null lines only reverses the radial orientation.
+This is the jet-order-independent frame-selection theorem used by the
+manuscript's finite-jet fallback. -/
+theorem resolvingPlaneBalancedFrame_independent_future_dyad
+    {P : Submodule ℝ (Fin 4 → ℝ)}
+    (hfin : Module.finrank ℝ P = 2)
+    (alpha : Fin 4 → ℝ)
+    (hmem : principalRaiseCovector alpha ∈ P)
+    (hp : principalMinkowskiCovectorSq alpha ≠ 0)
+    (D E : NormalizedPrincipalNullDyad P)
+    (t : Fin 4 → ℝ)
+    (hD : D.FutureTo t)
+    (hE : E.FutureTo t) :
+    resolvingPlaneBalancedU alpha E =
+        resolvingPlaneBalancedU alpha D ∧
+      (resolvingPlaneBalancedE alpha E =
+          resolvingPlaneBalancedE alpha D ∨
+       resolvingPlaneBalancedE alpha E =
+          -resolvingPlaneBalancedE alpha D) := by
+  let qm := resolvingPlaneQMinus alpha D
+  let qp := resolvingPlaneQPlus alpha D
+  have hnorm :=
+    normalizedNullDyad_covector_norm_identity
+      D hfin alpha hmem
+  have hqnonnull :
+      nullCovectorNormSq qm qp ≠ 0 := by
+    dsimp [qm, qp]
+    unfold nullCovectorNormSq
+    rw [← hnorm]
+    exact hp
+  rcases nullCovectorNormSq_ne_zero_components
+      qm qp hqnonnull with ⟨hqm,hqp⟩
+  rcases futureNormalizedNullDyads_boost_or_exchange
+      D E hfin t hD hE with hboost | hexchange
+  · rcases hboost with ⟨τ,hk,hl⟩
+    have hkval :
+        E.k.1 = Real.exp (-τ) • D.k.1 := by
+      simpa using congrArg Subtype.val hk
+    have hlval :
+        E.l.1 = Real.exp τ • D.l.1 := by
+      simpa using congrArg Subtype.val hl
+    have hqmE :
+        resolvingPlaneQMinus alpha E =
+          Real.exp (-τ) * qm := by
+      unfold resolvingPlaneQMinus
+      rw [hkval, principalCovectorEval_smul_right]
+      rfl
+    have hqpE :
+        resolvingPlaneQPlus alpha E =
+          Real.exp τ * qp := by
+      unfold resolvingPlaneQPlus
+      rw [hlval, principalCovectorEval_smul_right]
+      rfl
+    have hbal :=
+      sigmaStar_balanced_module_dyad_invariant
+        D.k.1 D.l.1 qm qp τ hqm hqp
+    have hK :
+        resolvingPlaneBalancedK alpha E =
+          resolvingPlaneBalancedK alpha D := by
+      unfold resolvingPlaneBalancedK
+      rw [hqmE, hqpE, hkval]
+      exact hbal.1
+    have hL :
+        resolvingPlaneBalancedL alpha E =
+          resolvingPlaneBalancedL alpha D := by
+      unfold resolvingPlaneBalancedL
+      rw [hqmE, hqpE, hlval]
+      exact hbal.2
+    constructor
+    · unfold resolvingPlaneBalancedU
+      rw [hK, hL]
+    · left
+      unfold resolvingPlaneBalancedE
+      rw [hK, hL]
+  · rcases hexchange with ⟨τ,hk,hl⟩
+    have hkval :
+        E.k.1 = Real.exp (-τ) • D.l.1 := by
+      simpa using congrArg Subtype.val hk
+    have hlval :
+        E.l.1 = Real.exp τ • D.k.1 := by
+      simpa using congrArg Subtype.val hl
+    have hqmE :
+        resolvingPlaneQMinus alpha E =
+          Real.exp (-τ) * qp := by
+      unfold resolvingPlaneQMinus
+      rw [hkval, principalCovectorEval_smul_right]
+      rfl
+    have hqpE :
+        resolvingPlaneQPlus alpha E =
+          Real.exp τ * qm := by
+      unfold resolvingPlaneQPlus
+      rw [hlval, principalCovectorEval_smul_right]
+      rfl
+    have hbal :=
+      sigmaStar_balanced_module_dyad_exchange
+        D.k.1 D.l.1 qm qp τ hqm hqp
+    have hK :
+        resolvingPlaneBalancedK alpha E =
+          resolvingPlaneBalancedL alpha D := by
+      unfold resolvingPlaneBalancedK resolvingPlaneBalancedL
+      rw [hqmE, hqpE, hkval]
+      exact hbal.1
+    have hL :
+        resolvingPlaneBalancedL alpha E =
+          resolvingPlaneBalancedK alpha D := by
+      unfold resolvingPlaneBalancedK resolvingPlaneBalancedL
+      rw [hqmE, hqpE, hlval]
+      exact hbal.2
+    constructor
+    · unfold resolvingPlaneBalancedU
+      rw [hK, hL, add_comm]
+    · right
+      unfold resolvingPlaneBalancedE
+      rw [hK, hL]
+      module
+
+/-- Specialization to the arbitrary Maxwell Rainich plane: any later finite
+carrier jet that supplies a non-null covector in the forced +1 plane selects a
+unique future balanced observer, independently of the starting null dyad. -/
+theorem generalMaxwell_finiteResolvingCovector_frame_forced
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hmem :
+      principalRaiseCovector alpha ∈
+        LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))
+    (hp : principalMinkowskiCovectorSq alpha ≠ 0) :
+    ∃ D :
+        NormalizedPrincipalNullDyad
+          (LinearMap.range
+            (generalMaxwellProjectorPlusLinear
+              Ex Ey Ez Bx By Bz)),
+      D.FutureTo
+          (generalMaxwellProjectorPlus
+            Ex Ey Ez Bx By Bz (principalBasis 0)) ∧
+      (principalMinkowskiSq
+          (resolvingPlaneBalancedU alpha D) = -1 ∧
+       principalMinkowskiSq
+          (resolvingPlaneBalancedE alpha D) = 1 ∧
+       principalMinkowskiBilinear
+          (resolvingPlaneBalancedU alpha D)
+          (resolvingPlaneBalancedE alpha D) = 0) ∧
+      (∀ E :
+        NormalizedPrincipalNullDyad
+          (LinearMap.range
+            (generalMaxwellProjectorPlusLinear
+              Ex Ey Ez Bx By Bz)),
+        E.FutureTo
+            (generalMaxwellProjectorPlus
+              Ex Ey Ez Bx By Bz (principalBasis 0)) →
+        resolvingPlaneBalancedU alpha E =
+            resolvingPlaneBalancedU alpha D ∧
+          (resolvingPlaneBalancedE alpha E =
+              resolvingPlaneBalancedE alpha D ∨
+           resolvingPlaneBalancedE alpha E =
+              -resolvingPlaneBalancedE alpha D)) := by
+  rcases
+      generalMaxwellProjectorPlus_futureNormalizedNullDyad_exists
+        Ex Ey Ez Bx By Bz hnonnull with
+    ⟨D,hD⟩
+  refine ⟨D,hD,
+    resolvingPlaneBalancedFrame_orthonormal alpha D, ?_⟩
+  intro E hE
+  exact resolvingPlaneBalancedFrame_independent_future_dyad
+    (generalMaxwellProjectorPlus_range_finrank_two
+      Ex Ey Ez Bx By Bz hnonnull)
+    alpha hmem hp D E
+    (generalMaxwellProjectorPlus
+      Ex Ey Ez Bx By Bz (principalBasis 0))
+    hD hE
+
 /-! ### Regular resolving stratum: the residual boost is not free -/
 
 /-- On a forced Lorentzian Rainich two-plane, the first nonzero invariant resolving
@@ -30956,6 +31247,10 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.actionOpticalMap_intertwines_boost
 #print axioms RelativeRest.rapidity_forced_by_normalized_boost
 #print axioms RelativeRest.sigmaStar_balanced_dyad_invariant
+#print axioms RelativeRest.resolvingPlaneBalancedNullPair_normalized
+#print axioms RelativeRest.resolvingPlaneBalancedFrame_orthonormal
+#print axioms RelativeRest.resolvingPlaneBalancedFrame_independent_future_dyad
+#print axioms RelativeRest.generalMaxwell_finiteResolvingCovector_frame_forced
 #print axioms RelativeRest.resolvedRainichPlane_certificate
 #print axioms RelativeRest.resolvedRainichPlane_representative_independent
 #print axioms RelativeRest.generalMaxwellResolvingCovector_nullDyad_norm
