@@ -17552,6 +17552,15 @@ structure CanonicalPrincipalFieldForcedCertificate
       8 * Real.pi *
         maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
         principalFieldEnergyDensity E B) ↔ s = 0
+  fourDimensionalReciprocity :
+    ∀ d : ℝ,
+      (volumeHomothetyExponent d + scalarCurvatureHomothetyExponent) *
+          (-1 / 2 : ℝ) =
+        -((volumeHomothetyExponent d + maxwellInverseMetricExponent) *
+            (-1 / 2 : ℝ) +
+          maxwellFieldAmplitudeExponent * (1 / 2 : ℝ)) ↔ d = 4
+  hodgeTwoFormFourDimensional :
+    ∀ d : ℝ, hodgeConformalExponent d 2 = 0 ↔ d = 4
   actionJet :
     let D := canonicalPrincipalLapseCarrierCharacteristicInput E B hfield
     ∀ i j : Fin 4,
@@ -17640,6 +17649,31 @@ structure CanonicalPrincipalFieldForcedCertificate
         Real.sqrt
           (Real.sqrt
             (principalRicciNormFromCarrier (principalChi E B)))
+  properTimeBridge :
+    principalTO (principalPhysicalU (principalClockRate E B)) =
+        principalClockRate E B ∧
+      principalTO principalUhat = 1 ∧
+      (principalChi E B)⁻¹ *
+          principalMinkowskiSq
+            (principalPhysicalU (principalClockRate E B)) = -1
+  hamiltonJacobiNorm :
+    (principalClockRate E B)^2 * (-1 : ℝ) =
+      -Real.sqrt (principalRicciNormFromCarrier (principalChi E B))
+  intrinsicClockDerivative :
+    ∀ (τ0 x dτ : ℝ) (τend : ℝ → ℝ),
+      HasDerivAt τend dτ x →
+      HasDerivAt
+        (principalEndpointClock E B τ0 τend)
+        (Real.sqrt
+            (Real.sqrt
+              (principalRicciNormFromCarrier (principalChi E B))) * dτ)
+        x
+  frobeniusCriterion :
+    ∀ (dω : Fin 4 → ℝ) (du : Fin 4 → Fin 4 → ℝ),
+      (∀ i j : Fin 3,
+        principalFrobeniusSpatialComponent
+          (principalClockRate E B) dω du i j = 0) ↔
+      (∀ i j : Fin 3, principalVorticity du i j = 0)
   canonicalOpticalClock :
     canonicalPrincipalSyngeEndpointJetData.clockCovector = TO
   canonicalOpticalRadial :
@@ -17733,6 +17767,10 @@ theorem canonicalPrincipalField_forced_certificate
   refine {
     fixedPoint := principalField_solution_preserving_iff
       u s E B hfield
+    fourDimensionalReciprocity :=
+      primitive_relative_weights_reciprocal_iff_four
+    hodgeTwoFormFourDimensional :=
+      hodge_twoform_conformal_iff_four
     actionJet := ?_
     rainichCarrier := principalJetFromF_rainich E B
     fieldNormalizedInvolution := ?_
@@ -17754,6 +17792,10 @@ theorem canonicalPrincipalField_forced_certificate
     localClockUnit := by
       simpa [principalTOLinear_apply] using principalTO_unit
     clockRate := principalClockRate_three_way E B
+    properTimeBridge := ?_
+    hamiltonJacobiNorm := ?_
+    intrinsicClockDerivative := principalEndpointClock_hasDerivAt_ricci_rate E B
+    frobeniusCriterion := ?_
     canonicalOpticalClock :=
       canonicalPrincipalSyngeEndpointJetData_clock
     canonicalOpticalRadial :=
@@ -17791,6 +17833,19 @@ theorem canonicalPrincipalField_forced_certificate
       (principalClockRate E B) λ v
       (ne_of_gt (Real.sqrt_pos.2 (principalChi_pos E B hfield)))
       hresponse
+  · exact principal_clock_proper_time_bridge
+      (principalChi E B) (principalClockRate E B)
+      (ne_of_gt (principalChi_pos E B hfield))
+      (principalClockRate_sq E B).symm
+  · exact optical_covector_norm_from_carrier
+      (-1) (principalRicciNormFromCarrier (principalChi E B))
+      (principalChi E B) (principalClockRate E B)
+      rfl (principalChi_nonneg E B)
+      (principalRicciNormFromCarrier_eq (principalChi E B)) rfl
+  · intro dω du
+    exact principalFrobenius_all_zero_iff
+      (principalClockRate E B) dω du
+      (ne_of_gt (Real.sqrt_pos.2 (principalChi_pos E B hfield)))
   · intro τ0 x dplus dminus τplus τminus hp hm
     exact principalRadarClock_split_ricci_rate
       E B τ0 x dplus dminus τplus τminus hp hm
@@ -22490,6 +22545,12 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalNormalizedJetFromFApply_eq_involution
 #print axioms RelativeRest.boost_balance_exists_unique_of_nonnull
 #print axioms RelativeRest.conformal_factor_forced_from_common_scale
+#print axioms RelativeRest.primitive_relative_weights_reciprocal_iff_four
+#print axioms RelativeRest.hodge_twoform_conformal_iff_four
+#print axioms RelativeRest.principal_clock_proper_time_bridge
+#print axioms RelativeRest.optical_covector_norm_from_carrier
+#print axioms RelativeRest.principalEndpointClock_hasDerivAt_ricci_rate
+#print axioms RelativeRest.principalFrobenius_all_zero_iff
 #print axioms RelativeRest.canonicalPrincipalField_forced_certificate
 #print axioms RelativeRest.kerrNewman_fieldOnly_forced_certificate
 #print axioms RelativeRest.principalFieldCurrent_Lambda_unique
