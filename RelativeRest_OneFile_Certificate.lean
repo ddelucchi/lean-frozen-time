@@ -26173,6 +26173,70 @@ theorem arbitraryMaxwell_resolvedJet_forced_certificate
     exact finiteJetBreak_or_unbrokenAtEveryFiniteOrder H e he
 
 
+
+/-! ### Canonical selection from a finite resolving-jet tower -/
+
+/-- A sequence of principal-plane covectors extracted from successive finite
+carrier jets.  The structure records only the two properties required by the
+manuscript's residual-boost argument: every candidate belongs to the Rainich
+Lorentzian plane, and some finite order is non-null and therefore resolves the
+boost. -/
+structure MaxwellFiniteResolverTower
+    (Ex Ey Ez Bx By Bz : ℝ) where
+  covector : ℕ → Fin 4 → ℝ
+  inPrincipalPlane :
+    ∀ n : ℕ,
+      principalRaiseCovector (covector n) ∈
+        LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)
+  existsNonNull :
+    ∃ n : ℕ,
+      principalMinkowskiCovectorSq (covector n) ≠ 0
+
+/-- The first finite resolving order is selected by the well-ordering of ℕ,
+not by an observer or coordinate convention. -/
+noncomputable def MaxwellFiniteResolverTower.firstOrder
+    {Ex Ey Ez Bx By Bz : ℝ}
+    (T : MaxwellFiniteResolverTower Ex Ey Ez Bx By Bz) : ℕ :=
+  Nat.find T.existsNonNull
+
+/-- The corresponding first resolving covector. -/
+noncomputable def MaxwellFiniteResolverTower.firstCovector
+    {Ex Ey Ez Bx By Bz : ℝ}
+    (T : MaxwellFiniteResolverTower Ex Ey Ez Bx By Bz) :
+    Fin 4 → ℝ :=
+  T.covector T.firstOrder
+
+theorem MaxwellFiniteResolverTower.firstCovector_mem
+    {Ex Ey Ez Bx By Bz : ℝ}
+    (T : MaxwellFiniteResolverTower Ex Ey Ez Bx By Bz) :
+    principalRaiseCovector T.firstCovector ∈
+      LinearMap.range
+        (generalMaxwellProjectorPlusLinear
+          Ex Ey Ez Bx By Bz) := by
+  exact T.inPrincipalPlane T.firstOrder
+
+theorem MaxwellFiniteResolverTower.firstCovector_nonnull
+    {Ex Ey Ez Bx By Bz : ℝ}
+    (T : MaxwellFiniteResolverTower Ex Ey Ez Bx By Bz) :
+    principalMinkowskiCovectorSq T.firstCovector ≠ 0 := by
+  simpa [MaxwellFiniteResolverTower.firstCovector,
+    MaxwellFiniteResolverTower.firstOrder] using
+      Nat.find_spec T.existsNonNull
+
+/-- Any earlier tower entry is still unresolved.  Hence the selected order is
+literally the first finite jet at which this resolver test succeeds. -/
+theorem MaxwellFiniteResolverTower.before_first_unresolved
+    {Ex Ey Ez Bx By Bz : ℝ}
+    (T : MaxwellFiniteResolverTower Ex Ey Ez Bx By Bz)
+    (n : ℕ) (hn : n < T.firstOrder) :
+    principalMinkowskiCovectorSq (T.covector n) = 0 := by
+  by_contra hne
+  have hle : T.firstOrder ≤ n := by
+    exact Nat.find_min' T.existsNonNull hne
+  omega
+
 /-! ### Resolver-order-independent regular-stratum manuscript closure
 
 This is the broad local theorem matching the manuscript's stated jet-tower
@@ -26668,6 +26732,36 @@ theorem paper_firstJetCanonicalRegularBranch_forced_certificate
       dEx dEy dEz dBx dBy dBz
       hnonnull)
     hp
+
+
+
+/-- Resolver-order-independent end-to-end paper certificate.  Once the actual
+finite carrier-jet resolver tower is supplied, the first successful order and
+its covector are selected canonically; no resolver is chosen by hand. -/
+theorem paper_finiteResolverTowerCanonicalRegularBranch_forced_certificate
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (T : MaxwellFiniteResolverTower Ex Ey Ez Bx By Bz)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
+    PaperResolvedRegularBranchForcedCertificate
+      opticalDualBilinear
+      canonicalOpticalRegularSyngePair
+      opticalDualCoordinates
+      Ex Ey Ez Bx By Bz u s
+      dEx dEy dEz dBx dBy dBz
+      T.firstCovector
+      hnonnull
+      T.firstCovector_mem
+      T.firstCovector_nonnull
+      canonicalOpticalRegularSyngePair_realizesCanonicalOpticalJet
+      opticalDualBilinear_symmetric := by
+  exact paper_canonicalResolvedRegularBranch_forced_certificate
+    Ex Ey Ez Bx By Bz u s
+    dEx dEy dEz dBx dBy dBz
+    T.firstCovector
+    hnonnull
+    T.firstCovector_mem
+    T.firstCovector_nonnull
 
 end ResolvedRegularSyngePaperCertificate
 
@@ -33627,6 +33721,10 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.opticalDualBilinear_symmetric
 #print axioms RelativeRest.paper_canonicalResolvedRegularBranch_forced_certificate
 #print axioms RelativeRest.paper_firstJetCanonicalRegularBranch_forced_certificate
+#print axioms RelativeRest.MaxwellFiniteResolverTower.firstCovector_mem
+#print axioms RelativeRest.MaxwellFiniteResolverTower.firstCovector_nonnull
+#print axioms RelativeRest.MaxwellFiniteResolverTower.before_first_unresolved
+#print axioms RelativeRest.paper_finiteResolverTowerCanonicalRegularBranch_forced_certificate
 #print axioms RelativeRest.resolvedRainichPlane_certificate
 #print axioms RelativeRest.resolvedRainichPlane_representative_independent
 #print axioms RelativeRest.generalMaxwellResolvingCovector_nullDyad_norm
