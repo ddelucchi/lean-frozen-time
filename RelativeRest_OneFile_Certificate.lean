@@ -9929,6 +9929,91 @@ theorem RegularSyngeEndpointPairSource.optical_closure
         D.toSyngeEndpointJetData.radialCovector := by
   exact D.toSyngeEndpointJetData.optical_closure hsym
 
+/-! ### Exact realization frontier for the canonical optical jet -/
+
+/-- An actual regular Synge endpoint pair realizes the canonical action-selected
+optical first jet through a linear identification of its spacetime covectors with
+the normalized clock/radial plane.  This predicate contains only the geometric
+realization statement; it carries no additional normalization freedom. -/
+def RegularSyngeEndpointPairSource.RealizesCanonicalOpticalJet
+    {X : Type*}
+    [NormedAddCommGroup X] [NormedSpace ℝ X] [CompleteSpace X]
+    {Bdual :
+      (X →L[ℝ] ℝ) →ₗ[ℝ] (X →L[ℝ] ℝ) →ₗ[ℝ] ℝ}
+    (D : RegularSyngeEndpointPairSource Bdual)
+    (I : (X →L[ℝ] ℝ) →ₗ[ℝ] R2) : Prop :=
+  I D.toSyngeEndpointJetData.dThetaPlus = principalThetaPlus ∧
+  I D.toSyngeEndpointJetData.dThetaMinus = principalThetaMinus
+
+/-- For a genuine regular Synge pair, matching the canonical null endpoint
+covectors is equivalent to matching the canonical clock midpoint and radial
+half-difference.  Thus there is no residual optical split or normalization to
+choose once the geometric endpoint realization exists. -/
+theorem RegularSyngeEndpointPairSource.realizesCanonicalOpticalJet_iff_clock_radial
+    {X : Type*}
+    [NormedAddCommGroup X] [NormedSpace ℝ X] [CompleteSpace X]
+    {Bdual :
+      (X →L[ℝ] ℝ) →ₗ[ℝ] (X →L[ℝ] ℝ) →ₗ[ℝ] ℝ}
+    (D : RegularSyngeEndpointPairSource Bdual)
+    (I : (X →L[ℝ] ℝ) →ₗ[ℝ] R2) :
+    D.RealizesCanonicalOpticalJet I ↔
+      I D.toSyngeEndpointJetData.clockCovector = TO ∧
+      I D.toSyngeEndpointJetData.radialCovector = RO := by
+  constructor
+  · rintro ⟨hp,hm⟩
+    constructor
+    · unfold SyngeEndpointJetData.clockCovector
+      rw [map_smul, map_add, hp, hm]
+      exact principal_endpoint_split.1
+    · unfold SyngeEndpointJetData.radialCovector
+      rw [map_smul, map_sub, hp, hm]
+      exact principal_endpoint_split.2
+  · rintro ⟨hT,hR⟩
+    have hrec :=
+      D.toSyngeEndpointJetData.toNullEndpointPairData.reconstruction
+    constructor
+    · calc
+        I D.toSyngeEndpointJetData.dThetaPlus =
+            I (D.toSyngeEndpointJetData.clockCovector +
+              D.toSyngeEndpointJetData.radialCovector) := by
+                rw [hrec.1]
+        _ = I D.toSyngeEndpointJetData.clockCovector +
+              I D.toSyngeEndpointJetData.radialCovector := by rw [map_add]
+        _ = TO + RO := by rw [hT,hR]
+        _ = principalThetaPlus := rfl
+    · calc
+        I D.toSyngeEndpointJetData.dThetaMinus =
+            I (D.toSyngeEndpointJetData.clockCovector -
+              D.toSyngeEndpointJetData.radialCovector) := by
+                rw [hrec.2]
+        _ = I D.toSyngeEndpointJetData.clockCovector -
+              I D.toSyngeEndpointJetData.radialCovector := by rw [map_sub]
+        _ = TO - RO := by rw [hT,hR]
+        _ = principalThetaMinus := rfl
+
+/-- Any two regular Synge realizations identified with the same canonical optical
+plane therefore have identical identified endpoint first jets.  Branch geometry
+may differ, but the clock-producing first jet cannot. -/
+theorem regularSynge_canonical_realizations_identified
+    {X₁ X₂ : Type*}
+    [NormedAddCommGroup X₁] [NormedSpace ℝ X₁] [CompleteSpace X₁]
+    [NormedAddCommGroup X₂] [NormedSpace ℝ X₂] [CompleteSpace X₂]
+    {B₁ :
+      (X₁ →L[ℝ] ℝ) →ₗ[ℝ] (X₁ →L[ℝ] ℝ) →ₗ[ℝ] ℝ}
+    {B₂ :
+      (X₂ →L[ℝ] ℝ) →ₗ[ℝ] (X₂ →L[ℝ] ℝ) →ₗ[ℝ] ℝ}
+    (D₁ : RegularSyngeEndpointPairSource B₁)
+    (D₂ : RegularSyngeEndpointPairSource B₂)
+    (I₁ : (X₁ →L[ℝ] ℝ) →ₗ[ℝ] R2)
+    (I₂ : (X₂ →L[ℝ] ℝ) →ₗ[ℝ] R2)
+    (h₁ : D₁.RealizesCanonicalOpticalJet I₁)
+    (h₂ : D₂.RealizesCanonicalOpticalJet I₂) :
+    I₁ D₁.toSyngeEndpointJetData.dThetaPlus =
+        I₂ D₂.toSyngeEndpointJetData.dThetaPlus ∧
+      I₁ D₁.toSyngeEndpointJetData.dThetaMinus =
+        I₂ D₂.toSyngeEndpointJetData.dThetaMinus := by
+  exact ⟨h₁.1.trans h₂.1.symm, h₁.2.trans h₂.2.symm⟩
+
 end SyngeIFTJetBridge
 
 /-! ### Exact two-dimensional optical metric reconstruction -/
@@ -21785,6 +21870,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.RegularSyngeEndpointSource.endpointMap_hasStrictFDerivAt_explicit
 #print axioms RelativeRest.RegularSyngeEndpointSource.endpointMap_eventually_solves
 #print axioms RelativeRest.RegularSyngeEndpointPairSource.optical_closure
+#print axioms RelativeRest.RegularSyngeEndpointPairSource.realizesCanonicalOpticalJet_iff_clock_radial
+#print axioms RelativeRest.regularSynge_canonical_realizations_identified
 #print axioms RelativeRest.syngeImplicitEndpoint_eventually_solves
 #print axioms RelativeRest.syngeImplicitEndpoint_hasStrictFDerivAt
 #print axioms RelativeRest.opticalMetric2_inverse
