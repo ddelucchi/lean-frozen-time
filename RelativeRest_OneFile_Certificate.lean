@@ -7984,6 +7984,138 @@ theorem weightedBoostJetTower_finiteBreak_or_exactFullSymmetry
     ext sigma
     simp [fullJetStabilizer, hall]
 
+
+/-! ### Canonical first symmetry-breaking jet order -/
+
+/-- A finite jet order is active when at least one nonzero component carries a
+nonzero boost weight.  Such an order breaks the connected residual boost
+stabilizer completely. -/
+def weightedBoostJetActiveAt
+    (weight coeff : ℕ → ℕ → ℝ) (n : ℕ) : Prop :=
+  ∃ i : ℕ, weight n i ≠ 0 ∧ coeff n i ≠ 0
+
+/-- A boost-weight jet tower which is known to break the residual symmetry at
+some finite order.  No breaking order is chosen in the data. -/
+structure FiniteBreakingWeightedBoostJetTower where
+  weight : ℕ → ℕ → ℝ
+  coeff : ℕ → ℕ → ℝ
+  existsActive : ∃ n : ℕ, weightedBoostJetActiveAt weight coeff n
+
+/-- The first symmetry-breaking order is selected canonically by well-ordering. -/
+noncomputable def FiniteBreakingWeightedBoostJetTower.firstOrder
+    (T : FiniteBreakingWeightedBoostJetTower) : ℕ :=
+  Nat.find T.existsActive
+
+theorem FiniteBreakingWeightedBoostJetTower.firstOrder_active
+    (T : FiniteBreakingWeightedBoostJetTower) :
+    weightedBoostJetActiveAt T.weight T.coeff T.firstOrder := by
+  simpa [FiniteBreakingWeightedBoostJetTower.firstOrder] using
+    Nat.find_spec T.existsActive
+
+/-- Every strictly earlier order is genuinely inactive. -/
+theorem FiniteBreakingWeightedBoostJetTower.before_first_inactive
+    (T : FiniteBreakingWeightedBoostJetTower)
+    (n : ℕ) (hn : n < T.firstOrder) :
+    ¬ weightedBoostJetActiveAt T.weight T.coeff n := by
+  intro hactive
+  have hle : T.firstOrder ≤ n := by
+    exact Nat.find_min' T.existsActive hactive
+  omega
+
+/-- Therefore every earlier finite jet has the full connected boost stabilizer. -/
+theorem FiniteBreakingWeightedBoostJetTower.before_first_stabilizer_univ
+    (T : FiniteBreakingWeightedBoostJetTower)
+    (n : ℕ) (hn : n < T.firstOrder) :
+    weightedBoostJetStabilizer (T.weight n) (T.coeff n) = Set.univ := by
+  apply weightedBoostJetStabilizer_eq_univ_of_no_active_weight
+  intro i
+  by_cases hw : T.weight n i = 0
+  · exact Or.inl hw
+  · right
+    by_contra hc
+    exact T.before_first_inactive n hn ⟨i, hw, hc⟩
+
+/-- The canonically first active jet kills the continuous boost exactly. -/
+theorem FiniteBreakingWeightedBoostJetTower.first_stabilizer_singleton
+    (T : FiniteBreakingWeightedBoostJetTower) :
+    weightedBoostJetStabilizer
+      (T.weight T.firstOrder) (T.coeff T.firstOrder) = {0} := by
+  rcases T.firstOrder_active with ⟨i, hw, hc⟩
+  exact weightedBoostJetStabilizer_eq_singleton_zero_of_active
+    (T.weight T.firstOrder) (T.coeff T.firstOrder) i hw hc
+
+/-- Hence the complete fixed-point jet also has only the identity rapidity. -/
+theorem FiniteBreakingWeightedBoostJetTower.full_stabilizer_singleton
+    (T : FiniteBreakingWeightedBoostJetTower) :
+    fullJetStabilizer
+      (fun n => weightedBoostJetStabilizer (T.weight n) (T.coeff n)) =
+        {0} := by
+  exact fullJetStabilizer_eq_singleton_of_finite_break
+    (fun n => weightedBoostJetStabilizer (T.weight n) (T.coeff n))
+    0
+    (fun n => weightedBoostJetStabilizer_zero_mem
+      (T.weight n) (T.coeff n))
+    T.firstOrder
+    T.first_stabilizer_singleton
+
+/-- If no finite order is active, every finite jet and therefore the complete
+jet retain the full connected boost group. -/
+theorem weightedBoostJetTower_exactFullSymmetry_of_noActive
+    (weight coeff : ℕ → ℕ → ℝ)
+    (hno : ¬ ∃ n : ℕ, weightedBoostJetActiveAt weight coeff n) :
+    (∀ n : ℕ,
+        weightedBoostJetStabilizer (weight n) (coeff n) = Set.univ) ∧
+      fullJetStabilizer
+        (fun n => weightedBoostJetStabilizer (weight n) (coeff n)) =
+          Set.univ := by
+  have hall :
+      ∀ n : ℕ,
+        weightedBoostJetStabilizer (weight n) (coeff n) = Set.univ := by
+    intro n
+    apply weightedBoostJetStabilizer_eq_univ_of_no_active_weight
+    intro i
+    by_cases hw : weight n i = 0
+    · exact Or.inl hw
+    · right
+      by_contra hc
+      exact hno ⟨n, i, hw, hc⟩
+  refine ⟨hall, ?_⟩
+  ext sigma
+  simp [fullJetStabilizer, hall]
+
+/-- Sharp manuscript form of the jet-tower alternative.  If symmetry breaks at
+finite order, there is a unique least breaking order, all preceding orders have
+the full boost stabilizer, and from that order onward the full-jet stabilizer is
+the identity.  Otherwise the full jet has exact boost isotropy. -/
+theorem weightedBoostJetTower_firstBreak_or_exactFullSymmetry
+    (weight coeff : ℕ → ℕ → ℝ) :
+    (∃ m : ℕ,
+        (∀ n : ℕ, n < m →
+          weightedBoostJetStabilizer (weight n) (coeff n) = Set.univ) ∧
+        weightedBoostJetStabilizer (weight m) (coeff m) = {0} ∧
+        fullJetStabilizer
+          (fun n => weightedBoostJetStabilizer (weight n) (coeff n)) =
+            {0}) ∨
+      ((∀ n : ℕ,
+          weightedBoostJetStabilizer (weight n) (coeff n) = Set.univ) ∧
+        fullJetStabilizer
+          (fun n => weightedBoostJetStabilizer (weight n) (coeff n)) =
+            Set.univ) := by
+  by_cases hactive :
+      ∃ n : ℕ, weightedBoostJetActiveAt weight coeff n
+  · left
+    let T : FiniteBreakingWeightedBoostJetTower :=
+      { weight := weight
+        coeff := coeff
+        existsActive := hactive }
+    refine ⟨T.firstOrder, ?_, T.first_stabilizer_singleton,
+      T.full_stabilizer_singleton⟩
+    intro n hn
+    exact T.before_first_stabilizer_univ n hn
+  · right
+    exact weightedBoostJetTower_exactFullSymmetry_of_noActive
+      weight coeff hactive
+
 /-! ## 6. Unique residual boost balance -/
 
 /-- Principal-plane covector norm in a normalized null basis, with
@@ -35197,6 +35329,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.finiteJetBreak_or_unbrokenAtEveryFiniteOrder
 #print axioms RelativeRest.weightedBoostJetStabilizer_eq_singleton_zero_of_active
 #print axioms RelativeRest.weightedBoostJetStabilizer_eq_univ_of_no_active_weight
+#print axioms RelativeRest.FiniteBreakingWeightedBoostJetTower.first_stabilizer_singleton
+#print axioms RelativeRest.FiniteBreakingWeightedBoostJetTower.full_stabilizer_singleton
+#print axioms RelativeRest.weightedBoostJetTower_firstBreak_or_exactFullSymmetry
 #print axioms RelativeRest.weightedBoostJetTower_finiteBreak_or_exactFullSymmetry
 #print axioms RelativeRest.generalMaxwellCarrierLinear_eq_neg16pi_stressLinear
 #print axioms RelativeRest.generalMaxwellCarrierLinear_balancedU_eigen
