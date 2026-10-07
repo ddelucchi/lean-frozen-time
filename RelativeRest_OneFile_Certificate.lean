@@ -16092,6 +16092,25 @@ structure PrincipalCarrierCharacteristicInput where
   witness_image :
     beta positiveWitness = smear • principalUhat
 
+/-- Canonical pointwise principal characteristic model.  The parameter space is
+the principal tangent model itself and the characteristic map is the identity.
+Thus the positive timelike test direction is constructed rather than supplied.
+Unit smearing and unit oriented volume remove every auxiliary positive scale. -/
+def canonicalPrincipalCarrierCharacteristicInput
+    (E B : ℝ) (hfield : E ≠ 0 ∨ B ≠ 0) :
+    PrincipalCarrierCharacteristicInput
+      (P:=(Fin 4 → ℝ)) where
+  beta := LinearMap.id
+  positiveWitness := principalUhat
+  smear := 1
+  E := E
+  B := B
+  volume := 1
+  smear_pos := by norm_num
+  field_nonzero := hfield
+  volume_pos := by norm_num
+  witness_image := by simp
+
 /-- Field-derived Maxwell stress endomorphism attached to the input. -/
 def PrincipalCarrierCharacteristicInput.T
     (D : PrincipalCarrierCharacteristicInput (P:=P)) :
@@ -16576,6 +16595,57 @@ theorem principalActionBulk_forced_core_chain
     ?_,hL,hdim,hnorm⟩
   rw [D.metricEulerJetResponse_eq_stress,
     principalCarrierCharacteristic_current D]
+
+/-- In the canonical pointwise characteristic model, a nonzero Maxwell field
+alone forces the nonvanishing characteristic clock, the one-dimensional quotient,
+and the uniquely normalized principal timelike representative.  No parameter witness,
+smearing normalization, hypersurface-volume normalization, current, or CPS
+representative is input. -/
+theorem canonicalPrincipalField_forces_clock_chain
+    (E B : ℝ) (hfield : E ≠ 0 ∨ B ≠ 0) :
+    let D := canonicalPrincipalCarrierCharacteristicInput E B hfield
+    D.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.toCharacteristicCurrentData.Lambda) = 1 ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D))) =
+      principalUhat := by
+  let D := canonicalPrincipalCarrierCharacteristicInput E B hfield
+  have h := principalCarrierCharacteristic_clock_chain D
+  exact ⟨h.1, h.2.1, h.2.2.2⟩
+
+/-- The same field-only model also carries the complete representative-free
+action-to-clock bulk chain. -/
+theorem canonicalPrincipalField_forces_action_bulk
+    (E B u s : ℝ) (hfield : E ≠ 0 ∨ B ≠ 0) :
+    let D := canonicalPrincipalCarrierCharacteristicInput E B hfield
+    ((8 * Real.pi * principalFieldEnergyDensity E B =
+        8 * Real.pi *
+          maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+          principalFieldEnergyDensity E B) ↔ s = 0) ∧
+    (∀ i j : Fin 4,
+      D.J (principalBasis j) i =
+        (16 * Real.pi / principalMetricSign i) *
+          deriv (principalScaledMetricEulerCoeffFromAction E B i j) 0) ∧
+    D.noetherConstraintOperatorFromAction CA = 0 ∧
+    D.noetherConstraintOperatorFromAction DA =
+      D.iε.comp (principalMetricEulerNoetherJetLinear E B) ∧
+    D.metricEulerJetResponse =
+      D.toCharacteristicCurrentData.current ∧
+    D.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.toCharacteristicCurrentData.Lambda) = 1) := by
+  let D := canonicalPrincipalCarrierCharacteristicInput E B hfield
+  have h := principalActionBulk_forced_core_chain D u s
+  rcases h with
+    ⟨hrest,hJ,hCA,hDA,_horbit,_hhalf,hcur,hL,hdim,_hnorm⟩
+  exact ⟨hrest,hJ,hCA,hDA,hcur,hL,hdim⟩
 
 /-! ### Lagrangian-backed characteristic clock: covariant phase space to the normalized line -/
 
@@ -20880,6 +20950,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalField_forced_core_chain
 #print axioms RelativeRest.PrincipalCarrierCharacteristicInput.anyCanonicalCompletion_compensated_eq_action
 #print axioms RelativeRest.principalActionBulk_forced_core_chain
+#print axioms RelativeRest.canonicalPrincipalField_forces_clock_chain
+#print axioms RelativeRest.canonicalPrincipalField_forces_action_bulk
 #print axioms RelativeRest.principalFieldCurrent_Lambda_unique
 #print axioms RelativeRest.principalFieldCurrent_quotient_finrank_one
 #print axioms RelativeRest.reeb_direction_unique
