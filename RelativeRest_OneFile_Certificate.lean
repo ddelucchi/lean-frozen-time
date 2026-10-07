@@ -6766,6 +6766,22 @@ theorem principalCovectorEval_eq_raised_pairing
   fin_cases i <;>
     simp [principalRaiseCovector, principalMetricSign]
 
+
+theorem principalCovectorEval_smul_right
+    (alpha : Fin 4 → ℝ) (a : ℝ) (v : Fin 4 → ℝ) :
+    principalCovectorEval alpha (a • v) =
+      a * principalCovectorEval alpha v := by
+  unfold principalCovectorEval
+  calc
+    (∑ i : Fin 4, alpha i * (a • v) i) =
+        ∑ i : Fin 4, a * (alpha i * v i) := by
+          apply Finset.sum_congr rfl
+          intro i hi
+          simp
+          ring
+    _ = a * ∑ i : Fin 4, alpha i * v i := by
+          rw [Finset.mul_sum]
+
 /-- Hence every covector whose raised vector lies in the two-plane obeys the
 same normalized-null-component norm identity. -/
 theorem normalizedNullDyad_covector_norm_identity
@@ -7128,6 +7144,41 @@ theorem generalMaxwellProjectorPlus_normalizedNullDyad_exists
       Ex Ey Ez Bx By Bz hnonnull
   exact lorentzianTwoPlane_has_normalizedNullDyad
     P hfin u hu
+
+/-- The arbitrary Maxwell plane also admits a future-oriented normalized null
+dyad relative to its own field-derived timelike witness. -/
+theorem generalMaxwellProjectorPlus_futureNormalizedNullDyad_exists
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
+    ∃ D :
+        NormalizedPrincipalNullDyad
+          (LinearMap.range
+            (generalMaxwellProjectorPlusLinear
+              Ex Ey Ez Bx By Bz)),
+      D.FutureTo
+        (generalMaxwellProjectorPlus
+          Ex Ey Ez Bx By Bz (principalBasis 0)) := by
+  let P :=
+    LinearMap.range
+      (generalMaxwellProjectorPlusLinear Ex Ey Ez Bx By Bz)
+  let w :=
+    generalMaxwellProjectorPlus
+      Ex Ey Ez Bx By Bz (principalBasis 0)
+  have hwmem : w ∈ P := by
+    refine ⟨principalBasis 0, ?_⟩
+    exact generalMaxwellProjectorPlusLinear_apply
+      Ex Ey Ez Bx By Bz (principalBasis 0)
+  let u : P := ⟨w, hwmem⟩
+  have hu : principalMinkowskiSq u.1 < 0 := by
+    exact generalMaxwellProjectorPlus_basis0_timelike
+      Ex Ey Ez Bx By Bz hnonnull
+  have hfin : Module.finrank ℝ P = 2 := by
+    dsimp [P]
+    exact generalMaxwellProjectorPlus_range_finrank_two
+      Ex Ey Ez Bx By Bz hnonnull
+  rcases lorentzianTwoPlane_has_futureNormalizedNullDyad
+      P hfin u hu with ⟨D, hD⟩
+  exact ⟨D, hD⟩
 
 /-- The arbitrary-field Rainich projectors do more than provide candidate
 eigenspaces: they are the unique decomposition of every vector into its +1 and -1
@@ -8106,6 +8157,79 @@ def generalMaxwellResolvingQPlus
       Ex Ey Ez Bx By Bz
       dEx dEy dEz dBx dBy dBz)
     D.l.1
+
+/-- Changing between any two future-oriented starting null dyads changes
+the field-derived resolving components only by the corresponding proper boost,
+possibly with the discrete exchange q_- ↔ q_+. -/
+theorem generalMaxwellResolvingComponents_change_future_dyad
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D E :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (t : Fin 4 → ℝ)
+    (hD : D.FutureTo t)
+    (hE : E.FutureTo t) :
+    (∃ τ : ℝ,
+        generalMaxwellResolvingQMinus
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz E =
+          Real.exp (-τ) *
+            generalMaxwellResolvingQMinus
+              Ex Ey Ez Bx By Bz
+              dEx dEy dEz dBx dBy dBz D ∧
+        generalMaxwellResolvingQPlus
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz E =
+          Real.exp τ *
+            generalMaxwellResolvingQPlus
+              Ex Ey Ez Bx By Bz
+              dEx dEy dEz dBx dBy dBz D) ∨
+    (∃ τ : ℝ,
+        generalMaxwellResolvingQMinus
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz E =
+          Real.exp (-τ) *
+            generalMaxwellResolvingQPlus
+              Ex Ey Ez Bx By Bz
+              dEx dEy dEz dBx dBy dBz D ∧
+        generalMaxwellResolvingQPlus
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz E =
+          Real.exp τ *
+            generalMaxwellResolvingQMinus
+              Ex Ey Ez Bx By Bz
+              dEx dEy dEz dBx dBy dBz D) := by
+  have hfin :
+      Module.finrank ℝ
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)) = 2 :=
+    generalMaxwellProjectorPlus_range_finrank_two
+      Ex Ey Ez Bx By Bz hnonnull
+  rcases futureNormalizedNullDyads_boost_or_exchange
+      D E hfin t hD hE with h | h
+  · rcases h with ⟨τ, hk, hl⟩
+    left
+    refine ⟨τ, ?_, ?_⟩
+    · unfold generalMaxwellResolvingQMinus
+      have hkval := congrArg Subtype.val hk
+      rw [hkval, principalCovectorEval_smul_right]
+    · unfold generalMaxwellResolvingQPlus
+      have hlval := congrArg Subtype.val hl
+      rw [hlval, principalCovectorEval_smul_right]
+  · rcases h with ⟨τ, hk, hl⟩
+    right
+    refine ⟨τ, ?_, ?_⟩
+    · unfold generalMaxwellResolvingQMinus
+      have hkval := congrArg Subtype.val hk
+      rw [hkval, principalCovectorEval_smul_right]
+    · unfold generalMaxwellResolvingQPlus
+      have hlval := congrArg Subtype.val hl
+      rw [hlval, principalCovectorEval_smul_right]
 
 /-- Once p² is nonzero, every normalized null dyad of the field-derived Rainich
 plane yields a complete residual-boost certificate.  q_- and q_+ are no longer
@@ -26366,6 +26490,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.normalizedNullDyad_covector_norm_identity
 #print axioms RelativeRest.generalMaxwellProjectorPlus_range_has_timelike
 #print axioms RelativeRest.generalMaxwellProjectorPlus_normalizedNullDyad_exists
+#print axioms RelativeRest.generalMaxwellProjectorPlus_futureNormalizedNullDyad_exists
 #print axioms RelativeRest.generalMaxwell_principal_split_unique
 #print axioms RelativeRest.generalMaxwellChi_principal_specialization
 #print axioms RelativeRest.generalMaxwellIAlongJet_hasDerivAt_zero
@@ -26511,6 +26636,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.resolvedRainichPlane_certificate
 #print axioms RelativeRest.resolvedRainichPlane_representative_independent
 #print axioms RelativeRest.generalMaxwellResolvingCovector_nullDyad_norm
+#print axioms RelativeRest.generalMaxwellResolvingComponents_change_future_dyad
 #print axioms RelativeRest.generalMaxwellFirstJet_residualBoost_forced
 #print axioms RelativeRest.generalMaxwellFirstJet_residualBoost_exists
 #print axioms RelativeRest.resolvingCovector_nullComponents_norm
