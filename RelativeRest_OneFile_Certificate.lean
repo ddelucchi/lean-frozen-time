@@ -4647,6 +4647,133 @@ theorem generalMaxwellClockRate_fourth_power
         (generalMaxwellJ Ex Ey Ez Bx By Bz)^2 :=
       generalMaxwellChi_sq Ex Ey Ez Bx By Bz
 
+
+/-! ### First derivatives of the intrinsic arbitrary-field clock rate -/
+
+/-- Directional first jet of the intrinsic rate omega=sqrt(chi). -/
+def generalMaxwellClockRateJet
+    (Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz : ℝ) : ℝ :=
+  generalMaxwellChiJet
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz /
+    (2 * generalMaxwellClockRate Ex Ey Ez Bx By Bz)
+
+/-- The displayed rate jet is the literal derivative of the invariant clock rate. -/
+theorem generalMaxwellClockRateAlongJet_hasDerivAt_zero
+    (Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
+    HasDerivAt
+      (fun t =>
+        generalMaxwellClockRate
+          (affineJetLine Ex dEx t)
+          (affineJetLine Ey dEy t)
+          (affineJetLine Ez dEz t)
+          (affineJetLine Bx dBx t)
+          (affineJetLine By dBy t)
+          (affineJetLine Bz dBz t))
+      (generalMaxwellClockRateJet
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz) 0 := by
+  have hchi :=
+    generalMaxwellChiAlongJet_hasDerivAt_zero
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz hnonnull
+  have hchi0 :
+      generalMaxwellChi Ex Ey Ez Bx By Bz ≠ 0 :=
+    ne_of_gt
+      (generalMaxwellChi_pos
+        Ex Ey Ez Bx By Bz hnonnull)
+  have hs := hchi.sqrt hchi0
+  simpa [generalMaxwellClockRate,
+    generalMaxwellClockRateJet, affineJetLine] using hs
+
+/-- The four spacetime components d_a omega are fixed directly by the six
+Maxwell first-jet component derivatives. -/
+def generalMaxwellDClockRateCovector
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ) :
+    Fin 4 → ℝ :=
+  fun a =>
+    generalMaxwellClockRateJet
+      Ex Ey Ez Bx By Bz
+      (dEx a) (dEy a) (dEz a)
+      (dBx a) (dBy a) (dBz a)
+
+/-- Each component of d omega is an actual directional derivative of the
+field-derived rate, not independently supplied differential data. -/
+theorem generalMaxwellDClockRateCovector_component_hasDerivAt
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (a : Fin 4) :
+    HasDerivAt
+      (fun t =>
+        generalMaxwellClockRate
+          (affineJetLine Ex (dEx a) t)
+          (affineJetLine Ey (dEy a) t)
+          (affineJetLine Ez (dEz a) t)
+          (affineJetLine Bx (dBx a) t)
+          (affineJetLine By (dBy a) t)
+          (affineJetLine Bz (dBz a) t))
+      (generalMaxwellDClockRateCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz a) 0 := by
+  exact generalMaxwellClockRateAlongJet_hasDerivAt_zero
+    Ex Ey Ez Bx By Bz
+    (dEx a) (dEy a) (dEz a)
+    (dBx a) (dBy a) (dBz a)
+    hnonnull
+
+/-- Field-derived logarithmic Ricci-norm first jet.  Since
+K=R_ab R^ab=chi^2, d log K=2 d log chi. -/
+def generalMaxwellDLogRicciNormCovector
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ) :
+    Fin 4 → ℝ :=
+  fun a =>
+    2 *
+      generalMaxwellDLogChiCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz a
+
+/-- The transport identity d log K = 4 d omega / omega is forced by
+omega^2=chi and K=chi^2. -/
+theorem generalMaxwellDLogRicciNorm_eq_four_DClockRate_div
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (a : Fin 4) :
+    generalMaxwellDLogRicciNormCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz a =
+      4 *
+        generalMaxwellDClockRateCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz a /
+        generalMaxwellClockRate Ex Ey Ez Bx By Bz := by
+  have hchi :
+      generalMaxwellChi Ex Ey Ez Bx By Bz ≠ 0 :=
+    ne_of_gt
+      (generalMaxwellChi_pos
+        Ex Ey Ez Bx By Bz hnonnull)
+  have homega :
+      generalMaxwellClockRate Ex Ey Ez Bx By Bz ≠ 0 :=
+    ne_of_gt
+      (generalMaxwellClockRate_pos
+        Ex Ey Ez Bx By Bz hnonnull)
+  have hsquare :=
+    generalMaxwellClockRate_sq Ex Ey Ez Bx By Bz
+  unfold generalMaxwellDLogRicciNormCovector
+    generalMaxwellDClockRateCovector
+    generalMaxwellDLogChiCovector
+    generalMaxwellClockRateJet
+    generalMaxwellLogChiJet
+    generalMaxwellChiJet
+  field_simp [hchi, homega]
+  nlinarith
+
 /-- Linear carrier endomorphism reconstructed directly from the first normal
 derivatives of the Einstein-Maxwell metric Euler coefficients. -/
 def principalActionEulerJetLinear
@@ -29874,6 +30001,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellNormalizedCarrier_basis0_pairing
 #print axioms RelativeRest.generalMaxwellCovectorProjectorPlus_raise
 #print axioms RelativeRest.generalMaxwellDLogChiCovector_component_hasDerivAt
+#print axioms RelativeRest.generalMaxwellClockRateAlongJet_hasDerivAt_zero
+#print axioms RelativeRest.generalMaxwellDClockRateCovector_component_hasDerivAt
+#print axioms RelativeRest.generalMaxwellDLogRicciNorm_eq_four_DClockRate_div
 #print axioms RelativeRest.generalMaxwellResolvingCovector_raised_eigen
 #print axioms RelativeRest.generalMaxwellProjectorPlus_basis0_timelike
 #print axioms RelativeRest.principalMinkowski_orthogonal_to_timelike_spacelike
