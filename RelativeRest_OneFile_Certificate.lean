@@ -21503,6 +21503,27 @@ theorem kerrTrajectoryInIntrinsicClock_recovers_mino
   rw [kerrMinoParameterFromIntrinsicClock_leftInverse
     Q Theta0 hQ lambdaM]
 
+
+/-- Zero charge annihilates both potential-derived principal Maxwell components. -/
+@[simp] theorem kerrPrincipalE_zero_charge
+    (r a theta : ℝ) :
+    kerrPrincipalE 0 r a theta = 0 := by
+  simp [kerrPrincipalE]
+
+@[simp] theorem kerrPrincipalB_zero_charge
+    (r a theta : ℝ) :
+    kerrPrincipalB 0 r a theta = 0 := by
+  simp [kerrPrincipalB]
+
+/-- Consequently the field-derived Einstein-Maxwell clock rate itself vanishes
+at zero charge.  Any useful Mino-type parameter surviving there is therefore
+not the electromagnetic clock constructed in this paper. -/
+@[simp] theorem kerrClockRateFromPrincipalEM_zero_charge
+    (r a theta : ℝ) :
+    kerrClockRateFromPrincipalEM 0 r a theta = 0 := by
+  rw [kerrClockRateFromPrincipalEM_eq_principalClockRate]
+  simp [principalClockRate, principalChi]
+
 /-- At zero charge the Kerr-Newman Ricci carrier vanishes identically in the scalar specialization. -/
 theorem kerrNewman_vacuum_carrier_vanishes
     (sig K χ : ℝ)
@@ -21956,6 +21977,35 @@ theorem kerrNewman_full_field_metric_clock_certificate
     r M a Q θ hsig hdel
   exact ⟨hEin, hField, hMax, hRest.1, hRest.2.2,
     kerrMinoClockFromPrincipalEM Q r a θ dt dlam hQ hsig hmino⟩
+
+
+/-- In the nonrotating specialization the field-selected Carter observer has
+no azimuthal component, hence is the static electrovac direction. -/
+@[simp] theorem carterObserver_reissnerNordstrom_static
+    (r M Q theta : ℝ) :
+    (carterObserver r M 0 Q theta).2 = 0 := by
+  simp [carterObserver, carterNumerator]
+
+/-- Carter angular velocity vanishes identically in the Reissner-Nordstrom limit. -/
+@[simp] theorem carterOmega_reissnerNordstrom
+    (r : ℝ) :
+    carterOmega r 0 = 0 := by
+  simp [carterOmega]
+
+/-- The intrinsic Einstein-Maxwell clock specializes exactly to
+sqrt(2)|Q|/r^2 in Reissner-Nordstrom away from r=0. -/
+theorem kerrClockRateFromPrincipalEM_reissnerNordstrom
+    (Q r theta : ℝ)
+    (hQ : Q ≠ 0)
+    (hr : r ≠ 0) :
+    kerrClockRateFromPrincipalEM Q r 0 theta =
+      Real.sqrt 2 * |Q| / r^2 := by
+  have hsig : 0 < Sigma r 0 theta := by
+    simp [Sigma]
+    exact sq_pos_of_ne_zero hr
+  simpa [Sigma] using
+    kerrClockRateFromPrincipalEM_formula
+      Q r 0 theta hQ hsig
 
 /-- Reissner-Nordström specialization (`a=0`) of `Σ`. -/
 theorem sigma_reissner_nordstrom (r θ : ℝ) : Sigma r 0 θ = r^2 := by
@@ -34950,6 +35000,11 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrMultiplier_eq_inv_clockRateFromPrincipalEM
 #print axioms RelativeRest.kerrMultiplier_eq_inv_ricciFourthRoot
 #print axioms RelativeRest.kerrMultiplier_pos
+#print axioms RelativeRest.kerrPrincipalE_zero_charge
+#print axioms RelativeRest.kerrPrincipalB_zero_charge
+#print axioms RelativeRest.kerrClockRateFromPrincipalEM_zero_charge
+#print axioms RelativeRest.carterObserver_reissnerNordstrom_static
+#print axioms RelativeRest.kerrClockRateFromPrincipalEM_reissnerNordstrom
 #print axioms RelativeRest.kerrNewman_fieldOnly_forced_certificate
 #print axioms RelativeRest.kerrNewman_fieldOnly_forced_certificate_canonicalMino
 #print axioms RelativeRest.kerrMinoClockFromPrincipalEM_canonical
