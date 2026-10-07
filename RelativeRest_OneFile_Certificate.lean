@@ -21315,6 +21315,268 @@ theorem generalMaxwellBalancedCharacteristic_current_eq_actionDerived
           dEx dEy dEz dBx dBy dBz D)
   rw [generalActionDerivedCarrierLinear_eq_generalMaxwellCarrierLinear]
 
+
+
+/-- The normalized chronometric one-form dual to the field-selected observer. -/
+def generalMaxwellBalancedClockCovector
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
+  (-1 : ℝ) •
+    generalMaxwellBalancedFutureFluxUnit
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D
+
+/-- Chronometric normalization is automatic: T_*(u_*)=1. -/
+theorem generalMaxwellBalancedClockCovector_unit
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellBalancedClockCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D
+        (generalMaxwellBalancedU
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) = 1 := by
+  unfold generalMaxwellBalancedClockCovector
+  simp only [LinearMap.smul_apply]
+  rw [generalMaxwellBalancedFutureFluxUnit_on_balancedU
+    Ex Ey Ez Bx By Bz
+    dEx dEy dEz dBx dBy dBz D]
+  norm_num
+
+/-- Self-adjointness plus J u_*=chi u_* moves the carrier through the metric
+pairing and forces its entire response to be chronometric. -/
+theorem generalMaxwellCarrierLinear_balancedU_pairing
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (v : Fin 4 → ℝ) :
+    principalMinkowskiBilinear
+        (generalMaxwellBalancedU
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D)
+        (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz v) =
+      generalMaxwellChi Ex Ey Ez Bx By Bz *
+        principalMinkowskiBilinear
+          (generalMaxwellBalancedU
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D) v := by
+  let U :=
+    generalMaxwellBalancedU
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D
+  calc
+    principalMinkowskiBilinear U
+        (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz v)
+        =
+      principalMinkowskiBilinear
+        (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz v) U := by
+          exact principalMinkowskiBilinear_symm _ _
+    _ =
+      principalMinkowskiBilinear v
+        (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz U) := by
+          exact generalMaxwellCarrierLinear_self_adjoint
+            Ex Ey Ez Bx By Bz v U
+    _ =
+      principalMinkowskiBilinear v
+        (generalMaxwellChi Ex Ey Ez Bx By Bz • U) := by
+          rw [generalMaxwellCarrierLinear_balancedU_eigen
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz hnonnull D]
+    _ =
+      generalMaxwellChi Ex Ey Ez Bx By Bz *
+        principalMinkowskiBilinear v U := by
+          exact principalMinkowskiBilinear_smul_right
+            (generalMaxwellChi Ex Ey Ez Bx By Bz) v U
+    _ =
+      generalMaxwellChi Ex Ey Ez Bx By Bz *
+        principalMinkowskiBilinear U v := by
+          rw [principalMinkowskiBilinear_symm v U]
+
+/-- Exact frame-free current factorization:
+the action-derived characteristic current is chi/(16 pi) times the normalized
+chronometric covector. -/
+theorem generalMaxwellBalancedCharacteristic_current_factor
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    (generalMaxwellBalancedCharacteristicData
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull D).current =
+      (generalMaxwellChi Ex Ey Ez Bx By Bz /
+        (16 * Real.pi)) •
+        generalMaxwellBalancedClockCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D := by
+  ext v
+  change
+    halfCarrierBulkCurrent
+        LinearMap.id
+        (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz)
+        (generalMaxwellBalancedFutureFluxUnit
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) v =
+      ((generalMaxwellChi Ex Ey Ez Bx By Bz /
+        (16 * Real.pi)) •
+        generalMaxwellBalancedClockCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) v
+  unfold halfCarrierBulkCurrent carrierBulkResponse carrierJetCurrent
+  simp only [LinearMap.smul_apply, LinearMap.comp_apply, LinearMap.id_apply]
+  rw [generalMaxwellCarrierLinear_balancedU_pairing
+    Ex Ey Ez Bx By Bz
+    dEx dEy dEz dBx dBy dBz hnonnull D v]
+  unfold generalMaxwellBalancedClockCovector
+    generalMaxwellBalancedFutureFluxUnit
+  simp only [LinearMap.smul_apply]
+  field_simp [ne_of_gt Real.pi_pos]
+  ring
+
+/-- The characteristic kernel is exactly the spatial kernel of the normalized
+chronometric one-form. -/
+theorem generalMaxwellBalancedCharacteristic_kernel_eq_clock
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    LinearMap.ker
+      (generalMaxwellBalancedCharacteristicData
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz
+        hnonnull D).current =
+      LinearMap.ker
+        (generalMaxwellBalancedClockCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) := by
+  rw [generalMaxwellBalancedCharacteristic_current_factor
+    Ex Ey Ez Bx By Bz
+    dEx dEy dEz dBx dBy dBz hnonnull D]
+  ext v
+  simp only [LinearMap.mem_ker, LinearMap.smul_apply]
+  have hc :
+      generalMaxwellChi Ex Ey Ez Bx By Bz /
+          (16 * Real.pi) ≠ 0 := by
+    exact div_ne_zero
+      (ne_of_gt
+        (generalMaxwellChi_pos Ex Ey Ez Bx By Bz hnonnull))
+      (mul_ne_zero (by norm_num) (ne_of_gt Real.pi_pos))
+  exact mul_eq_zero.trans
+    (or_iff_right hc)
+
+/-- The relative response coefficient of any vector against the unit observer
+is uniquely the chronometric covector value. -/
+theorem generalMaxwellBalancedCharacteristic_ratio_forced
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (v : Fin 4 → ℝ) (λ : ℝ)
+    (hresponse :
+      (generalMaxwellBalancedCharacteristicData
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz
+        hnonnull D).current v =
+      λ *
+        (generalMaxwellBalancedCharacteristicData
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz
+          hnonnull D).current
+          (generalMaxwellBalancedU
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D)) :
+    λ =
+      generalMaxwellBalancedClockCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D v := by
+  rw [generalMaxwellBalancedCharacteristic_current_factor
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz hnonnull D] at hresponse
+  simp only [LinearMap.smul_apply] at hresponse
+  rw [generalMaxwellBalancedClockCovector_unit
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D] at hresponse
+  have hc :
+      generalMaxwellChi Ex Ey Ez Bx By Bz /
+          (16 * Real.pi) ≠ 0 := by
+    exact div_ne_zero
+      (ne_of_gt
+        (generalMaxwellChi_pos Ex Ey Ez Bx By Bz hnonnull))
+      (mul_ne_zero (by norm_num) (ne_of_gt Real.pi_pos))
+  have hcancel :
+      (generalMaxwellChi Ex Ey Ez Bx By Bz /
+          (16 * Real.pi)) *
+        generalMaxwellBalancedClockCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D v =
+      (generalMaxwellChi Ex Ey Ez Bx By Bz /
+          (16 * Real.pi)) * λ := by
+    simpa [mul_comm] using hresponse
+  exact (mul_left_cancel₀ hc hcancel).symm
+
+/-- The normalized chronometric one-form is itself independent of every
+future-oriented starting dyad on the resolving stratum. -/
+theorem generalMaxwellBalancedClockCovector_independent
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hp :
+      generalMaxwellResolvingNormSq
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz ≠ 0)
+    (D E :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (t : Fin 4 → ℝ)
+    (hD : D.FutureTo t)
+    (hE : E.FutureTo t) :
+    generalMaxwellBalancedClockCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz E =
+      generalMaxwellBalancedClockCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D := by
+  have hU :=
+    (generalMaxwellBalancedFrame_independent_future_dyad
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull D E t hD hE hp).1
+  ext v
+  unfold generalMaxwellBalancedClockCovector
+    generalMaxwellBalancedFutureFluxUnit
+  simp only [LinearMap.smul_apply]
+  rw [hU]
+
 /-- Frame-free action-to-characteristic-clock certificate on the regular
 first-jet stratum. -/
 structure ArbitraryMaxwellFirstJetClockDescentCertificate
@@ -27849,6 +28111,12 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellBalancedCharacteristic_quotient_finrank_one
 #print axioms RelativeRest.generalMaxwellBalancedCharacteristic_current_independent
 #print axioms RelativeRest.generalMaxwellBalancedCharacteristic_current_eq_actionDerived
+#print axioms RelativeRest.generalMaxwellBalancedClockCovector_unit
+#print axioms RelativeRest.generalMaxwellCarrierLinear_balancedU_pairing
+#print axioms RelativeRest.generalMaxwellBalancedCharacteristic_current_factor
+#print axioms RelativeRest.generalMaxwellBalancedCharacteristic_kernel_eq_clock
+#print axioms RelativeRest.generalMaxwellBalancedCharacteristic_ratio_forced
+#print axioms RelativeRest.generalMaxwellBalancedClockCovector_independent
 #print axioms RelativeRest.arbitraryMaxwell_firstJet_clockDescent_certificate
 #print axioms RelativeRest.characteristicCurrent_factorization
 #print axioms RelativeRest.characteristicCurrent_Lambda_unique
