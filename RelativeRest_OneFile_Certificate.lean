@@ -1517,6 +1517,138 @@ theorem principalMaxwell_form_invariant_magnitude (E B : ℝ) :
     principalMaxwellFStarF_eq_maxwellJ,
     maxwell_invariants_eq_principalChi_sq]
 
+/-! ### General six-component Maxwell field: no principal-frame assumption -/
+
+/-- Completely general covariant electromagnetic two-form in an orthonormal
+Minkowski frame, parameterized by three electric and three magnetic components.
+The convention reduces to `principalMaxwellF E B` when
+`(E⃗,B⃗)=((E,0,0),(B,0,0))`. -/
+def generalMaxwellF
+    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) : ℝ :=
+  if i = 0 ∧ j = 1 then Ex
+  else if i = 1 ∧ j = 0 then -Ex
+  else if i = 0 ∧ j = 2 then Ey
+  else if i = 2 ∧ j = 0 then -Ey
+  else if i = 0 ∧ j = 3 then Ez
+  else if i = 3 ∧ j = 0 then -Ez
+  else if i = 2 ∧ j = 3 then Bx
+  else if i = 3 ∧ j = 2 then -Bx
+  else if i = 3 ∧ j = 1 then By
+  else if i = 1 ∧ j = 3 then -By
+  else if i = 1 ∧ j = 2 then Bz
+  else if i = 2 ∧ j = 1 then -Bz
+  else 0
+
+theorem generalMaxwellF_skew
+    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) :
+    generalMaxwellF Ex Ey Ez Bx By Bz i j =
+      - generalMaxwellF Ex Ey Ez Bx By Bz j i := by
+  fin_cases i <;> fin_cases j <;>
+    simp [generalMaxwellF]
+
+/-- Lorentzian Hodge dual in the same orthonormal convention:
+`⋆(E⃗,B⃗)=(B⃗,-E⃗)`. -/
+def generalMaxwellStarF
+    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) : ℝ :=
+  generalMaxwellF Bx By Bz (-Ex) (-Ey) (-Ez) i j
+
+theorem generalMaxwellStar_sq
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    generalMaxwellStarF
+        Bx By Bz (-Ex) (-Ey) (-Ez) =
+      - generalMaxwellF Ex Ey Ez Bx By Bz := by
+  funext i j
+  fin_cases i <;> fin_cases j <;>
+    simp [generalMaxwellStarF, generalMaxwellF]
+
+/-- Lorentzian scalar contraction `F_ab F^ab`. -/
+def generalMaxwellFsq
+    (Ex Ey Ez Bx By Bz : ℝ) : ℝ :=
+  ∑ i : Fin 4, ∑ j : Fin 4,
+    principalMetricSign i * principalMetricSign j *
+      generalMaxwellF Ex Ey Ez Bx By Bz i j *
+      generalMaxwellF Ex Ey Ez Bx By Bz i j
+
+/-- Pseudoscalar contraction `F_ab (⋆F)^ab`. -/
+def generalMaxwellFStarF
+    (Ex Ey Ez Bx By Bz : ℝ) : ℝ :=
+  ∑ i : Fin 4, ∑ j : Fin 4,
+    principalMetricSign i * principalMetricSign j *
+      generalMaxwellF Ex Ey Ez Bx By Bz i j *
+      generalMaxwellStarF Ex Ey Ez Bx By Bz i j
+
+def generalMaxwellI
+    (Ex Ey Ez Bx By Bz : ℝ) : ℝ :=
+  2 * ((Bx^2 + By^2 + Bz^2) -
+    (Ex^2 + Ey^2 + Ez^2))
+
+def generalMaxwellJ
+    (Ex Ey Ez Bx By Bz : ℝ) : ℝ :=
+  -4 * (Ex * Bx + Ey * By + Ez * Bz)
+
+theorem generalMaxwellFsq_eq_I
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    generalMaxwellFsq Ex Ey Ez Bx By Bz =
+      generalMaxwellI Ex Ey Ez Bx By Bz := by
+  simp [generalMaxwellFsq, principalMetricSign,
+    generalMaxwellF, generalMaxwellI]
+  ring
+
+theorem generalMaxwellFStarF_eq_J
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    generalMaxwellFStarF Ex Ey Ez Bx By Bz =
+      generalMaxwellJ Ex Ey Ez Bx By Bz := by
+  simp [generalMaxwellFStarF, principalMetricSign,
+    generalMaxwellF, generalMaxwellStarF, generalMaxwellJ]
+  ring
+
+/-- Mixed Maxwell stress of the completely general field. -/
+def generalMaxwellStressFromF
+    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) : ℝ :=
+  (1 / (4 * Real.pi)) *
+    (principalMetricSign i *
+        (∑ c : Fin 4,
+          generalMaxwellF Ex Ey Ez Bx By Bz i c *
+            principalMetricSign c *
+            generalMaxwellF Ex Ey Ez Bx By Bz j c)
+      - (1 / 4 : ℝ) * (if i = j then 1 else 0) *
+          generalMaxwellFsq Ex Ey Ez Bx By Bz)
+
+/-- Fixed-point carrier of a general Maxwell field. -/
+def generalMaxwellCarrier
+    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) : ℝ :=
+  -16 * Real.pi *
+    generalMaxwellStressFromF Ex Ey Ez Bx By Bz i j
+
+/-- Four-dimensional Rainich identity for an arbitrary electromagnetic two-form.
+No principal-frame alignment is used: the full six-component carrier squares to
+the invariant scalar `I²+J²` times the identity. -/
+theorem generalMaxwellCarrier_rainich
+    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) :
+    (∑ k : Fin 4,
+      generalMaxwellCarrier Ex Ey Ez Bx By Bz i k *
+        generalMaxwellCarrier Ex Ey Ez Bx By Bz k j) =
+      ((generalMaxwellI Ex Ey Ez Bx By Bz)^2 +
+        (generalMaxwellJ Ex Ey Ez Bx By Bz)^2) *
+        (if i = j then 1 else 0) := by
+  fin_cases i <;> fin_cases j <;>
+    simp [generalMaxwellCarrier, generalMaxwellStressFromF,
+      generalMaxwellFsq_eq_I, generalMaxwellI,
+      generalMaxwellJ, generalMaxwellF,
+      principalMetricSign] <;>
+    field_simp [ne_of_gt Real.pi_pos] <;>
+    ring
+
+/-- The general field reduces exactly to the earlier principal representative when
+only `E_x` and `B_x` are nonzero. -/
+theorem generalMaxwellF_principal_specialization
+    (E B : ℝ) :
+    generalMaxwellF E 0 0 B 0 0 =
+      principalMaxwellF E B := by
+  funext i j
+  fin_cases i <;> fin_cases j <;>
+    simp [generalMaxwellF, principalMaxwellF]
+
 /-! ### Maxwell potential first variation and symplectic potential -/
 
 
@@ -22033,6 +22165,11 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.scalar_backbone
 #print axioms RelativeRest.relativeAction_fixed_point_jet
 #print axioms RelativeRest.einsteinMaxwellLagrangianDensity_decomposition
+#print axioms RelativeRest.generalMaxwellF_skew
+#print axioms RelativeRest.generalMaxwellStar_sq
+#print axioms RelativeRest.generalMaxwellFsq_eq_I
+#print axioms RelativeRest.generalMaxwellFStarF_eq_J
+#print axioms RelativeRest.generalMaxwellCarrier_rainich
 #print axioms RelativeRest.principalMaxwellFUp_skew
 #print axioms RelativeRest.principalMaxwellFsqVariationFromDeltaF_eq_factor_four
 #print axioms RelativeRest.principalMaxwellFsqVariationFromDeltaF_principal
