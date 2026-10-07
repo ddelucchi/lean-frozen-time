@@ -13051,6 +13051,70 @@ def adaptedUnitNormalization
     (du : Fin 4 → Fin 4 → ℝ) : Prop :=
   ∀ i : Fin 3, du i.succ 0 = 0
 
+
+/-- Affine first-order variation of the adapted unit covector with derivative du
+in the spacetime direction a. -/
+def adaptedUnitCovectorLine
+    (du : Fin 4 → Fin 4 → ℝ)
+    (a : Fin 4) (t : ℝ) : Fin 4 → ℝ :=
+  fun b => affineJetLine (principalUFlat b) (du a b) t
+
+/-- Differentiating the Lorentzian norm of the adapted covector gives exactly
+twice the time component of its covariant derivative. -/
+theorem adaptedUnitCovectorLine_norm_hasDerivAt_zero
+    (du : Fin 4 → Fin 4 → ℝ)
+    (a : Fin 4) :
+    HasDerivAt
+      (fun t =>
+        principalMinkowskiCovectorSq
+          (adaptedUnitCovectorLine du a t))
+      (2 * du a 0) 0 := by
+  have h0 :=
+    affineJetLine_hasDerivAt_zero (-1) (du a 0)
+  have h1 :=
+    affineJetLine_hasDerivAt_zero 0 (du a 1)
+  have h2 :=
+    affineJetLine_hasDerivAt_zero 0 (du a 2)
+  have h3 :=
+    affineJetLine_hasDerivAt_zero 0 (du a 3)
+  have h :=
+    (((h0.mul h0).neg.add (h1.mul h1)).add
+      (h2.mul h2)).add (h3.mul h3)
+  convert h using 1 <;>
+    simp [adaptedUnitCovectorLine, principalMinkowskiCovectorSq,
+      principalMinkowskiSq, principalRaiseCovector,
+      principalMetricSign, principalUFlat, affineJetLine] <;>
+    ring
+
+theorem adaptedUnitCovectorLine_norm_deriv_zero
+    (du : Fin 4 → Fin 4 → ℝ)
+    (a : Fin 4) :
+    deriv
+      (fun t =>
+        principalMinkowskiCovectorSq
+          (adaptedUnitCovectorLine du a t)) 0 =
+      2 * du a 0 :=
+  (adaptedUnitCovectorLine_norm_hasDerivAt_zero du a).deriv
+
+/-- Therefore unit normalization is not an independent transport choice.
+For the derivative of any genuinely unit timelike field, stationarity of
+g(u,u)=-1 in the spatial directions forces the adapted normalization condition. -/
+theorem adaptedUnitNormalization_of_unitNorm_stationary
+    (du : Fin 4 → Fin 4 → ℝ)
+    (hstationary :
+      ∀ i : Fin 3,
+        deriv
+          (fun t =>
+            principalMinkowskiCovectorSq
+              (adaptedUnitCovectorLine du i.succ t)) 0 = 0) :
+    adaptedUnitNormalization du := by
+  intro i
+  have hder :=
+    adaptedUnitCovectorLine_norm_deriv_zero du i.succ
+  have hzero := hstationary i
+  rw [hzero] at hder
+  linarith
+
 /-- The purely spatial transport curvature is forced to be `-2ω varpi`. -/
 theorem clockTransport_spatial
     (ω : ℝ) (dω : Fin 4 → ℝ)
@@ -23651,7 +23715,11 @@ structure ArbitraryMaxwellRegularStratumLocalCertificate
             dEx dEy dEz dBx dBy dBz D) = 0)
   transportClosure :
     ∀ (du : Fin 4 → Fin 4 → ℝ),
-      adaptedUnitNormalization du →
+      (∀ i : Fin 3,
+        deriv
+          (fun t =>
+            principalMinkowskiCovectorSq
+              (adaptedUnitCovectorLine du i.succ t)) 0 = 0) →
       (((∀ i j : Fin 3,
           clockTransportTwoForm
             (generalMaxwellClockRate Ex Ey Ez Bx By Bz)
@@ -23809,11 +23877,13 @@ theorem arbitraryMaxwell_regularStratum_local_certificate
       (generalMaxwellChronometricClockCovector_on_conformalU
         Ex Ey Ez Bx By Bz
         dEx dEy dEz dBx dBy dBz hnonnull D)
-  · intro du hunit
+  · intro du hstationary
     exact generalMaxwell_clockTransport_projected_zero_iff
       Ex Ey Ez Bx By Bz
       dEx dEy dEz dBx dBy dBz
-      hnonnull du hunit
+      hnonnull du
+      (adaptedUnitNormalization_of_unitNorm_stationary
+        du hstationary)
   · intro du
     exact generalMaxwell_frobenius_all_zero_iff
       Ex Ey Ez Bx By Bz
@@ -30150,6 +30220,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.clockTransport_spatial
 #print axioms RelativeRest.clockTransport_mixed_logK
 #print axioms RelativeRest.principalFrobeniusSpatialComponent_zero_iff
+#print axioms RelativeRest.adaptedUnitCovectorLine_norm_hasDerivAt_zero
+#print axioms RelativeRest.adaptedUnitNormalization_of_unitNorm_stationary
 #print axioms RelativeRest.clockTransport_projected_zero_iff
 #print axioms RelativeRest.principalFrobenius_all_zero_iff
 #print axioms RelativeRest.principalSynchronization_vanishes
