@@ -17300,6 +17300,31 @@ structure CanonicalPrincipalFieldForcedCertificate
           principalJetFromF E B k j) =
         (principalChi E B)^2 *
           (if i = j then 1 else 0)
+  fieldNormalizedInvolution :
+    ∀ v : Fin 4 → ℝ,
+      principalNormalizedJetFromFApply E B v =
+        principalJetInvolution v
+  lorentzPrincipalPlane :
+    principalNormalizedJetFromFApply E B (principalBasis 0) =
+        principalBasis 0 ∧
+      principalNormalizedJetFromFApply E B (principalBasis 1) =
+        principalBasis 1
+  transversePrincipalPlane :
+    principalNormalizedJetFromFApply E B (principalBasis 2) =
+        -principalBasis 2 ∧
+      principalNormalizedJetFromFApply E B (principalBasis 3) =
+        -principalBasis 3
+  residualBoostUnique :
+    ∀ qm qp : ℝ,
+      nullCovectorNormSq qm qp ≠ 0 →
+      ∃! σ : ℝ, boostDefect qm qp σ = 0
+  conformalScaleForced :
+    ∀ (f : ℝ → ℝ) (χ : ℝ),
+      (∀ r2 χ0 : ℝ,
+        0 < r2 → 0 < χ0 →
+        f (χ0 / r2) * r2 = f χ0) →
+      0 < χ → 0 < f 1 → χ^2 / (f χ)^2 = 1 →
+      f χ = χ
   actionOpticalIntertwiner :
     actionOpticalMap (actionBoost s CA) =
       opticalBoost s TO
@@ -17445,6 +17470,11 @@ theorem canonicalPrincipalField_forced_certificate
       u s E B hfield
     actionJet := ?_
     rainichCarrier := principalJetFromF_rainich E B
+    fieldNormalizedInvolution := ?_
+    lorentzPrincipalPlane := ?_
+    transversePrincipalPlane := ?_
+    residualBoostUnique := boost_balance_exists_unique_of_nonnull
+    conformalScaleForced := ?_
     actionOpticalIntertwiner := by
       simpa [actionOpticalMap_CA] using
         actionOpticalMap_intertwines_boost s CA
@@ -17473,6 +17503,16 @@ theorem canonicalPrincipalField_forced_certificate
     causalExtendedEndpointMonotonicity := ?_
     causalBranchIndependence := ?_ }
   · exact D.J_basis_eq_actionEulerJet
+  · intro v
+    exact principalNormalizedJetFromFApply_eq_involution
+      E B (ne_of_gt (principalChi_pos E B hfield)) v
+  · exact principalFieldDerived_lorentz_basis_eigen_plus
+      E B (ne_of_gt (principalChi_pos E B hfield))
+  · exact principalFieldDerived_transverse_basis_eigen_minus
+      E B (ne_of_gt (principalChi_pos E B hfield))
+  · intro f χ hinv hχ hC hunit
+    exact conformal_factor_forced_from_common_scale
+      f hinv χ hχ hC hunit
   · exact D.noetherConstraintOperatorFromAction_DA
   · rw [D.metricEulerJetResponse_eq_stress,
       principalCarrierCharacteristic_current D]
@@ -22172,6 +22212,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.canonicalPrincipalField_forces_action_bulk
 #print axioms RelativeRest.principalBridgeSpatialCoeff_ratio_forced
 #print axioms RelativeRest.principalTO_ker_eq_spatial
+#print axioms RelativeRest.principalNormalizedJetFromFApply_eq_involution
+#print axioms RelativeRest.boost_balance_exists_unique_of_nonnull
+#print axioms RelativeRest.conformal_factor_forced_from_common_scale
 #print axioms RelativeRest.canonicalPrincipalField_forced_certificate
 #print axioms RelativeRest.kerrNewman_fieldOnly_forced_certificate
 #print axioms RelativeRest.principalFieldCurrent_Lambda_unique
