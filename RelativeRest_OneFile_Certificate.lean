@@ -17574,6 +17574,12 @@ structure CanonicalPrincipalFieldForcedCertificate
           principalJetFromF E B k j) =
         (principalChi E B)^2 *
           (if i = j then 1 else 0)
+  einsteinRicciCarrier :
+    ∀ i j : Fin 4,
+      principalJetFromF E B i j =
+        -2 * principalRicciFromEinsteinF E B i j
+  einsteinRicciTraceFree :
+    principalRicciFromEinsteinTrace E B = 0
   fieldNormalizedInvolution :
     ∀ v : Fin 4 → ℝ,
       principalNormalizedJetFromFApply E B v =
@@ -17773,6 +17779,8 @@ theorem canonicalPrincipalField_forced_certificate
       hodge_twoform_conformal_iff_four
     actionJet := ?_
     rainichCarrier := principalJetFromF_rainich E B
+    einsteinRicciCarrier := principalJetFromF_eq_minus_two_EinsteinRicci E B
+    einsteinRicciTraceFree := principalRicciFromEinstein_trace_zero E B
     fieldNormalizedInvolution := ?_
     lorentzPrincipalPlane := ?_
     transversePrincipalPlane := ?_
@@ -22551,6 +22559,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.optical_covector_norm_from_carrier
 #print axioms RelativeRest.principalEndpointClock_hasDerivAt_ricci_rate
 #print axioms RelativeRest.principalFrobenius_all_zero_iff
+#print axioms RelativeRest.principalJetFromF_eq_minus_two_EinsteinRicci
+#print axioms RelativeRest.principalRicciFromEinstein_trace_zero
 #print axioms RelativeRest.canonicalPrincipalField_forced_certificate
 #print axioms RelativeRest.kerrNewman_fieldOnly_forced_certificate
 #print axioms RelativeRest.principalFieldCurrent_Lambda_unique
