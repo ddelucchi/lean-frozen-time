@@ -4635,6 +4635,80 @@ theorem involution_eigenspaces_orthogonal
       _ = - B x y := by simp
   linarith
 
+/-! ### Canonical principal projectors of the arbitrary Maxwell carrier -/
+
+def generalMaxwellProjectorPlus
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (v : Fin 4 → ℝ) : Fin 4 → ℝ :=
+  involutionProjPlus
+    (generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz) v
+
+def generalMaxwellProjectorMinus
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (v : Fin 4 → ℝ) : Fin 4 → ℝ :=
+  involutionProjMinus
+    (generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz) v
+
+theorem generalMaxwellNormalizedCarrier_apply_sq
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (v : Fin 4 → ℝ) :
+    generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz
+        (generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz v) = v := by
+  have h := LinearMap.congr_fun
+    (generalMaxwellNormalizedCarrier_involution
+      Ex Ey Ez Bx By Bz hnonnull) v
+  simpa using h
+
+/-- The two principal-plane projections reconstruct every vector, now for an
+arbitrary non-null Maxwell field rather than a pre-principalized representative. -/
+theorem generalMaxwellProjectors_sum
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (v : Fin 4 → ℝ) :
+    generalMaxwellProjectorPlus Ex Ey Ez Bx By Bz v +
+      generalMaxwellProjectorMinus Ex Ey Ez Bx By Bz v = v := by
+  exact involution_projectors_sum
+    (generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz) v
+
+theorem generalMaxwellProjectorPlus_eigen
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (v : Fin 4 → ℝ) :
+    generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz
+        (generalMaxwellProjectorPlus Ex Ey Ez Bx By Bz v) =
+      generalMaxwellProjectorPlus Ex Ey Ez Bx By Bz v := by
+  exact involutionProjPlus_eigen
+    (generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz)
+    (generalMaxwellNormalizedCarrier_apply_sq
+      Ex Ey Ez Bx By Bz hnonnull) v
+
+theorem generalMaxwellProjectorMinus_eigen
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (v : Fin 4 → ℝ) :
+    generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz
+        (generalMaxwellProjectorMinus Ex Ey Ez Bx By Bz v) =
+      - generalMaxwellProjectorMinus Ex Ey Ez Bx By Bz v := by
+  exact involutionProjMinus_eigen
+    (generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz)
+    (generalMaxwellNormalizedCarrier_apply_sq
+      Ex Ey Ez Bx By Bz hnonnull) v
+
+theorem generalMaxwellProjectors_idempotent
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (v : Fin 4 → ℝ) :
+    generalMaxwellProjectorPlus Ex Ey Ez Bx By Bz
+        (generalMaxwellProjectorPlus Ex Ey Ez Bx By Bz v) =
+          generalMaxwellProjectorPlus Ex Ey Ez Bx By Bz v ∧
+    generalMaxwellProjectorMinus Ex Ey Ez Bx By Bz
+        (generalMaxwellProjectorMinus Ex Ey Ez Bx By Bz v) =
+          generalMaxwellProjectorMinus Ex Ey Ez Bx By Bz v := by
+  exact involution_projectors_idempotent
+    (generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz)
+    (generalMaxwellNormalizedCarrier_apply_sq
+      Ex Ey Ez Bx By Bz hnonnull) v
+
 /-! ### Full-jet residual stabilizer logic -/
 
 variable {G : Type*}
