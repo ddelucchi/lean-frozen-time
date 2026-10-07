@@ -21621,6 +21621,306 @@ theorem generalMaxwellBalancedClockCovector_unit
     dEx dEy dEz dBx dBy dBz D]
   norm_num
 
+
+/-! ### Frame-free global-to-local characteristic clock identification -/
+
+/-- Local quotient unit selected by the arbitrary-field balanced observer. -/
+def generalMaxwellLocalQuotientUnit
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    (Fin 4 → ℝ) ⧸
+      LinearMap.ker
+        (generalMaxwellBalancedClockCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) :=
+  Submodule.Quotient.mk
+    (generalMaxwellBalancedU
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D)
+
+/-- The descended local covector is normalized on the selected quotient unit. -/
+@[simp] theorem generalMaxwellLocalQuotientUnit_normalized
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    quotientClockCovector
+        (generalMaxwellBalancedClockCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D)
+        (generalMaxwellLocalQuotientUnit
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) = 1 := by
+  have h :=
+    LinearMap.congr_fun
+      (quotientClockCovector_pullback
+        (generalMaxwellBalancedClockCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D))
+      (generalMaxwellBalancedU
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D)
+  change
+    quotientClockCovector
+        (generalMaxwellBalancedClockCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D)
+        (Submodule.Quotient.mk
+          (generalMaxwellBalancedU
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D)) =
+      generalMaxwellBalancedClockCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D
+        (generalMaxwellBalancedU
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) at h
+  rw [generalMaxwellBalancedClockCovector_unit] at h
+  simpa [generalMaxwellLocalQuotientUnit] using h
+
+/-- The arbitrary-field local clock covector is nonzero by its unit normalization. -/
+theorem generalMaxwellBalancedClockCovector_nonzero
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellBalancedClockCovector
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D ≠ 0 := by
+  intro hzero
+  have hu :=
+    generalMaxwellBalancedClockCovector_unit
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D
+  rw [hzero] at hu
+  simp at hu
+
+/-- The arbitrary-field local stress-visible quotient is one-dimensional. -/
+theorem generalMaxwellLocalQuotient_finrank_one
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    Module.finrank ℝ
+      ((Fin 4 → ℝ) ⧸
+        LinearMap.ker
+          (generalMaxwellBalancedClockCovector
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D)) = 1 :=
+  clockQuotient_finrank_one
+    (generalMaxwellBalancedClockCovector
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D)
+    (generalMaxwellBalancedClockCovector_nonzero
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D)
+
+/-- Canonical local lift [v] |-> T_O(v) u_* for the arbitrary field. -/
+def generalMaxwellLocalLift
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    ((Fin 4 → ℝ) ⧸
+      LinearMap.ker
+        (generalMaxwellBalancedClockCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D)) →ₗ[ℝ]
+      (Fin 4 → ℝ) :=
+  (quotientClockCovector
+    (generalMaxwellBalancedClockCovector
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D)).smulRight
+    (generalMaxwellBalancedU
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D)
+
+/-- The selected local quotient unit lifts exactly to u_*. -/
+@[simp] theorem generalMaxwellLocalLift_unit
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellLocalLift
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D
+        (generalMaxwellLocalQuotientUnit
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) =
+      generalMaxwellBalancedU
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D := by
+  unfold generalMaxwellLocalLift
+  rw [LinearMap.smulRight_apply,
+    generalMaxwellLocalQuotientUnit_normalized]
+  simp
+
+/-- Canonical covector-preserving map from any nonzero global characteristic
+clock quotient to the arbitrary-field local stress-visible quotient. -/
+def generalMaxwellGlobalToLocalClockMap
+    {K : Type*} [AddCommGroup K] [Module ℝ K]
+    (Λ : K →ₗ[ℝ] ℝ)
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    (K ⧸ LinearMap.ker Λ) →ₗ[ℝ]
+      ((Fin 4 → ℝ) ⧸
+        LinearMap.ker
+          (generalMaxwellBalancedClockCovector
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D)) :=
+  normalizedClockMap
+    (quotientClockCovector Λ)
+    (generalMaxwellLocalQuotientUnit
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D)
+
+/-- Exact pullback identity: the local T_O descends to precisely the global
+characteristic clock covector, with no scale freedom. -/
+theorem generalMaxwellGlobalToLocalClockMap_pullback
+    {K : Type*} [AddCommGroup K] [Module ℝ K]
+    (Λ : K →ₗ[ℝ] ℝ)
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    (quotientClockCovector
+      (generalMaxwellBalancedClockCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D)).comp
+      (generalMaxwellGlobalToLocalClockMap
+        Λ Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D) =
+      quotientClockCovector Λ := by
+  ext X
+  exact normalizedClockMap_preserves_covector
+    (quotientClockCovector Λ)
+    (quotientClockCovector
+      (generalMaxwellBalancedClockCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D))
+    (generalMaxwellLocalQuotientUnit
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D)
+    (generalMaxwellLocalQuotientUnit_normalized
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D)
+    X
+
+/-- For a nonzero global clock response, the frame-free global/local map is
+automatically a linear equivalence. -/
+theorem generalMaxwellGlobalToLocalClockMap_bijective
+    {K : Type*} [AddCommGroup K] [Module ℝ K]
+    (Λ : K →ₗ[ℝ] ℝ) (hΛ : Λ ≠ 0)
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    Function.Bijective
+      (generalMaxwellGlobalToLocalClockMap
+        Λ Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D) := by
+  exact normalizedClockMap_bijective
+    (quotientClockCovector Λ)
+    (quotientClockCovector
+      (generalMaxwellBalancedClockCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D))
+    (globalClockQuotientUnit Λ hΛ)
+    (generalMaxwellLocalQuotientUnit
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D)
+    (globalClockQuotientUnit_normalized Λ hΛ)
+    (generalMaxwellLocalQuotientUnit_normalized
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D)
+    (clockQuotient_finrank_one Λ hΛ)
+    (generalMaxwellLocalQuotient_finrank_one
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D)
+
+/-- The normalized global clock unit maps to the local class of u_*. -/
+theorem generalMaxwellGlobalClockUnit_maps_to_localUnit
+    {K : Type*} [AddCommGroup K] [Module ℝ K]
+    (Λ : K →ₗ[ℝ] ℝ) (hΛ : Λ ≠ 0)
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellGlobalToLocalClockMap
+        Λ Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D
+        (globalClockQuotientUnit Λ hΛ) =
+      generalMaxwellLocalQuotientUnit
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D := by
+  unfold generalMaxwellGlobalToLocalClockMap
+  rw [normalizedClockMap_apply,
+    globalClockQuotientUnit_normalized]
+  simp
+
+/-- Composing with the canonical local lift sends the normalized global clock
+unit all the way to the arbitrary-field balanced observer u_*. -/
+theorem generalMaxwellGlobalClockUnit_lifts_to_balancedU
+    {K : Type*} [AddCommGroup K] [Module ℝ K]
+    (Λ : K →ₗ[ℝ] ℝ) (hΛ : Λ ≠ 0)
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellLocalLift
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D
+        (generalMaxwellGlobalToLocalClockMap
+          Λ Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D
+          (globalClockQuotientUnit Λ hΛ)) =
+      generalMaxwellBalancedU
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D := by
+  rw [generalMaxwellGlobalClockUnit_maps_to_localUnit
+    Λ hΛ Ex Ey Ez Bx By Bz
+    dEx dEy dEz dBx dBy dBz D]
+  exact generalMaxwellLocalLift_unit
+    Ex Ey Ez Bx By Bz
+    dEx dEy dEz dBx dBy dBz D
+
 /-- Self-adjointness plus J u_*=chi u_* moves the carrier through the metric
 pairing and forces its entire response to be chronometric. -/
 theorem generalMaxwellCarrierLinear_balancedU_pairing
@@ -30337,6 +30637,12 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellBalancedCharacteristic_current_independent
 #print axioms RelativeRest.generalMaxwellBalancedCharacteristic_current_eq_actionDerived
 #print axioms RelativeRest.generalMaxwellBalancedClockCovector_unit
+#print axioms RelativeRest.generalMaxwellLocalQuotientUnit_normalized
+#print axioms RelativeRest.generalMaxwellBalancedClockCovector_nonzero
+#print axioms RelativeRest.generalMaxwellLocalQuotient_finrank_one
+#print axioms RelativeRest.generalMaxwellGlobalToLocalClockMap_pullback
+#print axioms RelativeRest.generalMaxwellGlobalToLocalClockMap_bijective
+#print axioms RelativeRest.generalMaxwellGlobalClockUnit_lifts_to_balancedU
 #print axioms RelativeRest.generalMaxwellCarrierLinear_balancedU_pairing
 #print axioms RelativeRest.generalMaxwellBalancedCharacteristic_current_factor
 #print axioms RelativeRest.generalMaxwellBalancedCharacteristic_kernel_eq_clock
