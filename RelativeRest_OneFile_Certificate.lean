@@ -17716,6 +17716,31 @@ structure CanonicalPrincipalFieldForcedCertificate
     let D := canonicalPrincipalLapseCarrierCharacteristicInput E B hfield
     D.metricEulerJetResponse =
       D.toCharacteristicCurrentData.current
+  lambdaFactorization :
+    let D := canonicalPrincipalLapseCarrierCharacteristicInput E B hfield
+    D.toCharacteristicCurrentData.Lambda.comp
+        D.toCharacteristicCurrentData.beta.rangeRestrict =
+      D.toCharacteristicCurrentData.ell
+  lambdaUnique :
+    let D := canonicalPrincipalLapseCarrierCharacteristicInput E B hfield
+    ∀ Λ' : D.toCharacteristicCurrentData.K →ₗ[ℝ] ℝ,
+      Λ'.comp D.toCharacteristicCurrentData.beta.rangeRestrict =
+          D.toCharacteristicCurrentData.ell →
+      Λ' = D.toCharacteristicCurrentData.Lambda
+  lambdaNonzero :
+    let D := canonicalPrincipalLapseCarrierCharacteristicInput E B hfield
+    D.toCharacteristicCurrentData.Lambda ≠ 0
+  quotientOneDimensional :
+    let D := canonicalPrincipalLapseCarrierCharacteristicInput E B hfield
+    Module.finrank ℝ
+      (D.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.toCharacteristicCurrentData.Lambda) = 1
+  globalLocalClockPullback :
+    let D := canonicalPrincipalLapseCarrierCharacteristicInput E B hfield
+    (quotientClockCovector principalTOLinear).comp
+      (globalToPrincipalLocalClockMap
+        D.toCharacteristicCurrentData.Lambda) =
+      D.toCharacteristicCurrentData.clockCovector
   contactTransverseDuality :
     let D := canonicalPrincipalLapseCarrierCharacteristicInput E B hfield
     Nonempty
@@ -17900,6 +17925,17 @@ theorem canonicalPrincipalField_forced_certificate
     masterRelativeRest := full_relative_rest_equivalence u s
     compensatedBulkNormal := ?_
     characteristicFactorization := ?_
+    lambdaFactorization :=
+      characteristicCurrent_factorization D.toCharacteristicCurrentData
+    lambdaUnique := by
+      intro Λ' hΛ'
+      exact characteristicCurrent_Lambda_unique
+        D.toCharacteristicCurrentData Λ' hΛ'
+    lambdaNonzero := principalCarrierCharacteristic_Lambda_nonzero D
+    quotientOneDimensional :=
+      principalCarrierCharacteristic_quotient_finrank_one D
+    globalLocalClockPullback :=
+      principalCarrierCharacteristic_globalLocal_pullback D
     contactTransverseDuality := ?_
     normalizedClockBridge := ?_
     localPointResponseRatio := ?_
@@ -22673,6 +22709,10 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.actionOpticalMap_intertwines_boost
 #print axioms RelativeRest.rapidity_forced_by_normalized_boost
 #print axioms RelativeRest.sigmaStar_balanced_dyad_invariant
+#print axioms RelativeRest.characteristicCurrent_factorization
+#print axioms RelativeRest.characteristicCurrent_Lambda_unique
+#print axioms RelativeRest.characteristicCurrent_quotient_finrank_one
+#print axioms RelativeRest.principalCarrierCharacteristic_globalLocal_pullback
 #print axioms RelativeRest.canonicalPrincipalField_forced_certificate
 #print axioms RelativeRest.kerrNewman_fieldOnly_forced_certificate
 #print axioms RelativeRest.principalFieldCurrent_Lambda_unique
