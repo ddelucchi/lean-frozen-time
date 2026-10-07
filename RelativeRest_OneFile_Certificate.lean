@@ -5535,6 +5535,126 @@ theorem involution_eigenspaces_orthogonal
       _ = - B x y := by simp
   linarith
 
+
+/-! ### Maxwell positivity fixes the Lorentzian Rainich plane -/
+
+/-- A self-adjoint involution preserves the bilinear form it is self-adjoint for. -/
+theorem selfAdjointInvolution_preserves_bilinear
+    {V : Type*} [AddCommGroup V] [Module ℝ V]
+    (B : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (S : V →ₗ[ℝ] V)
+    (hself : ∀ x y : V, B (S x) y = B x (S y))
+    (hsq : ∀ x : V, S (S x) = x)
+    (v w : V) :
+    B (S v) (S w) = B v w := by
+  rw [hself v (S w), hsq w]
+
+/-- The quadratic form of the canonical + projector is fixed by the original
+vector and its carrier pairing. -/
+theorem selfAdjointInvolution_plus_projector_norm
+    {V : Type*} [AddCommGroup V] [Module ℝ V]
+    (B : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (S : V →ₗ[ℝ] V)
+    (hself : ∀ x y : V, B (S x) y = B x (S y))
+    (hsq : ∀ x : V, S (S x) = x)
+    (v : V) :
+    B (involutionProjPlus S v) (involutionProjPlus S v) =
+      (1 / 2 : ℝ) * (B v v + B v (S v)) := by
+  have hcross : B (S v) v = B v (S v) := hself v v
+  have hiso : B (S v) (S v) = B v v :=
+    selfAdjointInvolution_preserves_bilinear B S hself hsq v v
+  unfold involutionProjPlus
+  simp only [map_smul, map_add, LinearMap.smul_apply,
+    LinearMap.add_apply, smul_eq_mul]
+  rw [hcross, hiso]
+  ring
+
+/-- The arbitrary Maxwell carrier's timelike diagonal entry is fixed by its
+positive energy density. -/
+theorem generalMaxwellCarrier_00
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    generalMaxwellCarrier Ex Ey Ez Bx By Bz 0 0 =
+      16 * Real.pi *
+        generalMaxwellEnergyDensity Ex Ey Ez Bx By Bz := by
+  unfold generalMaxwellCarrier
+  rw [generalMaxwellStressFromF_00]
+  ring
+
+/-- The normalized carrier pairs the background future unit vector negatively
+with itself by the positive energy-to-Rainich-magnitude ratio. -/
+theorem generalMaxwellNormalizedCarrier_basis0_pairing
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
+    principalMinkowskiBilinear
+        (principalBasis 0)
+        (generalMaxwellNormalizedCarrier
+          Ex Ey Ez Bx By Bz (principalBasis 0)) =
+      -(16 * Real.pi *
+          generalMaxwellEnergyDensity Ex Ey Ez Bx By Bz /
+        generalMaxwellChi Ex Ey Ez Bx By Bz) := by
+  have hchi0 :
+      generalMaxwellChi Ex Ey Ez Bx By Bz ≠ 0 :=
+    ne_of_gt
+      (generalMaxwellChi_pos Ex Ey Ez Bx By Bz hnonnull)
+  simp [principalMinkowskiBilinear, principalBasis,
+    generalMaxwellNormalizedCarrier,
+    generalMaxwellCarrier_00, div_eq_mul_inv]
+  field_simp [hchi0]
+  ring
+
+/-- Maxwell positivity selects the +1 Rainich eigenspace as the Lorentzian
+principal two-plane: the canonical projection of the background future unit
+vector is strictly timelike.  This is frame-free and uses only the non-null
+Maxwell condition. -/
+theorem generalMaxwellProjectorPlus_basis0_timelike
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
+    principalMinkowskiSq
+      (generalMaxwellProjectorPlus
+        Ex Ey Ez Bx By Bz (principalBasis 0)) < 0 := by
+  rw [principalMinkowskiSq_eq_bilinear]
+  change
+    principalMinkowskiBilinearLinear
+      (generalMaxwellProjectorPlus
+        Ex Ey Ez Bx By Bz (principalBasis 0))
+      (generalMaxwellProjectorPlus
+        Ex Ey Ez Bx By Bz (principalBasis 0)) < 0
+  rw [show
+      generalMaxwellProjectorPlus
+        Ex Ey Ez Bx By Bz (principalBasis 0) =
+        involutionProjPlus
+          (generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz)
+          (principalBasis 0) by rfl]
+  rw [selfAdjointInvolution_plus_projector_norm
+    principalMinkowskiBilinearLinear
+    (generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz)
+    (fun x y =>
+      generalMaxwellNormalizedCarrier_self_adjoint
+        Ex Ey Ez Bx By Bz x y)
+    (generalMaxwellNormalizedCarrier_apply_sq
+      Ex Ey Ez Bx By Bz hnonnull)
+    (principalBasis 0)]
+  simp only [principalMinkowskiBilinearLinear_apply]
+  have htime :
+      principalMinkowskiBilinear
+        (principalBasis 0) (principalBasis 0) = -1 := by
+    rw [← principalMinkowskiSq_eq_bilinear, principal_time_basis_norm]
+  rw [htime,
+    generalMaxwellNormalizedCarrier_basis0_pairing
+      Ex Ey Ez Bx By Bz hnonnull]
+  have hratio :
+      0 <
+        16 * Real.pi *
+          generalMaxwellEnergyDensity Ex Ey Ez Bx By Bz /
+            generalMaxwellChi Ex Ey Ez Bx By Bz := by
+    exact div_pos
+      (mul_pos
+        (mul_pos (by norm_num) Real.pi_pos)
+        (generalMaxwellEnergyDensity_pos
+          Ex Ey Ez Bx By Bz hnonnull))
+      (generalMaxwellChi_pos Ex Ey Ez Bx By Bz hnonnull)
+  nlinarith
+
 /-! ### Canonical principal projectors of the arbitrary Maxwell carrier -/
 
 def generalMaxwellProjectorPlus
@@ -6036,6 +6156,10 @@ structure ArbitraryMaxwellActionForcedCertificate
         (LinearMap.range
           (generalMaxwellProjectorMinusLinear
             Ex Ey Ez Bx By Bz)) = 2
+  lorentzianPlusWitness :
+    principalMinkowskiSq
+      (generalMaxwellProjectorPlus
+        Ex Ey Ez Bx By Bz (principalBasis 0)) < 0
   principalSplit :
     ∀ v : Fin 4 → ℝ,
       generalMaxwellProjectorPlus Ex Ey Ez Bx By Bz v +
@@ -6122,6 +6246,9 @@ theorem arbitraryMaxwell_action_forced_certificate
           Ex Ey Ez Bx By Bz hnonnull,
         generalMaxwellProjectorMinus_range_finrank_two
           Ex Ey Ez Bx By Bz hnonnull⟩
+    lorentzianPlusWitness :=
+      generalMaxwellProjectorPlus_basis0_timelike
+        Ex Ey Ez Bx By Bz hnonnull
     principalSplit := ?_
     principalSplitUnique := ?_
     clockPositive :=
@@ -24756,6 +24883,11 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellCarrierLinear_trace_zero
 #print axioms RelativeRest.generalMaxwellProjectorPlus_range_finrank_two
 #print axioms RelativeRest.generalMaxwellProjectorMinus_range_finrank_two
+#print axioms RelativeRest.selfAdjointInvolution_preserves_bilinear
+#print axioms RelativeRest.selfAdjointInvolution_plus_projector_norm
+#print axioms RelativeRest.generalMaxwellCarrier_00
+#print axioms RelativeRest.generalMaxwellNormalizedCarrier_basis0_pairing
+#print axioms RelativeRest.generalMaxwellProjectorPlus_basis0_timelike
 #print axioms RelativeRest.generalMaxwell_principal_split_unique
 #print axioms RelativeRest.generalMaxwellChi_principal_specialization
 #print axioms RelativeRest.generalMaxwellClockRate_fourth_power
