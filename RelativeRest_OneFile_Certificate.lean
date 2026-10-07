@@ -17175,6 +17175,88 @@ theorem canonicalPrincipalField_forced_certificate
   · intro O XF T ϑ hO
     exact relational_evolution_from_flow_derivative O XF T ϑ hO
 
+/-! ### Kerr-Newman field-only forcing certificate -/
+
+/-- Kerr-Newman specialization of the field-only master certificate.  The
+principal `E,B` data are not inputs: they are the coefficients derived from the
+Kerr-Newman potential itself.  This bundles the generic Einstein-Maxwell clock
+chain with the explicit metric equation, source-free Maxwell field, Carter rest
+frame, and Mino clock relation. -/
+structure KerrNewmanFieldOnlyForcedCertificate
+    (Q r M a θ dt dlam u s : ℝ)
+    (hQ : Q ≠ 0)
+    (hsig : 0 < Sigma r a θ)
+    (hdel : 0 < Delta r M a Q)
+    (hsin : 0 < Real.sin θ)
+    (hmino : dlam = dt / Sigma r a θ) : Prop where
+  genericFieldCore :
+    CanonicalPrincipalFieldForcedCertificate
+      (kerrPrincipalE Q r a θ)
+      (kerrPrincipalB Q r a θ)
+      u s
+      (kerrPrincipalField_nonzero Q r a θ hQ hsig)
+  metricEinsteinMaxwell :
+    ∀ i j : Fin 4,
+      kerrEinsteinCovFromMetric r M a Q θ i j =
+        8 * Real.pi *
+          kerrMaxwellStressCovFromPotential Q r M a θ i j
+  potentialField :
+    kerrCoordinateField Q r a θ =
+      kerrFieldInCarterCoframe Q r M a θ
+  sourceFreeMaxwell :
+    (kerrVolumeDensity r a θ * kerrRaisedFrt Q r M a θ =
+        kerrDensitizedFrt Q r a θ ∧
+     kerrVolumeDensity r a θ * kerrRaisedFrPhi Q r M a θ =
+        kerrDensitizedFrPhi Q r a θ ∧
+     kerrVolumeDensity r a θ * kerrRaisedFthetaT Q r M a θ =
+        kerrDensitizedFthetaT Q r a θ ∧
+     kerrVolumeDensity r a θ * kerrRaisedFthetaPhi Q r M a θ =
+        kerrDensitizedFthetaPhi Q r a θ ∧
+     deriv (fun x : ℝ => kerrDensitizedFrt Q x a θ) r +
+        deriv (fun x : ℝ => kerrDensitizedFthetaT Q r a x) θ = 0 ∧
+     deriv (fun x : ℝ => kerrDensitizedFrPhi Q x a θ) r +
+        deriv (fun x : ℝ => kerrDensitizedFthetaPhi Q r a x) θ = 0)
+  relativeRestCarter :
+    sigmaStar
+      (kerrResolvingQMinus r a θ)
+      (kerrResolvingQPlus r a θ) = 0
+  carterNormalized :
+    kerrStationaryNormSq r M a Q θ
+      (carterObserver r M a Q θ) = -1
+  minoClock :
+    kerrClockRateFromPrincipalEM Q r a θ * dt =
+      Real.sqrt 2 * |Q| * dlam
+
+/-- Construction of the Kerr-Newman field-only certificate from the potential,
+metric and regular charged-stratum hypotheses. -/
+theorem kerrNewman_fieldOnly_forced_certificate
+    (Q r M a θ dt dlam u s : ℝ)
+    (hQ : Q ≠ 0)
+    (hsig : 0 < Sigma r a θ)
+    (hdel : 0 < Delta r M a Q)
+    (hsin : 0 < Real.sin θ)
+    (hmino : dlam = dt / Sigma r a θ) :
+    KerrNewmanFieldOnlyForcedCertificate
+      Q r M a θ dt dlam u s hQ hsig hdel hsin hmino := by
+  have hfield :=
+    kerrPrincipalField_nonzero Q r a θ hQ hsig
+  have hcore :=
+    canonicalPrincipalField_forced_certificate
+      (kerrPrincipalE Q r a θ)
+      (kerrPrincipalB Q r a θ)
+      u s hfield
+  have hk :=
+    kerrNewman_full_field_metric_clock_certificate
+      Q r M a θ dt dlam hQ hsig hdel hsin hmino
+  refine {
+    genericFieldCore := hcore
+    metricEinsteinMaxwell := hk.1
+    potentialField := hk.2.1
+    sourceFreeMaxwell := hk.2.2.1
+    relativeRestCarter := hk.2.2.2.1
+    carterNormalized := hk.2.2.2.2.1
+    minoClock := hk.2.2.2.2.2 }
+
 /-! ### Lagrangian-backed characteristic clock: covariant phase space to the normalized line -/
 
 section LagrangianBackedCharacteristic
@@ -21755,6 +21837,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.canonicalPrincipalField_forces_clock_chain
 #print axioms RelativeRest.canonicalPrincipalField_forces_action_bulk
 #print axioms RelativeRest.canonicalPrincipalField_forced_certificate
+#print axioms RelativeRest.kerrNewman_fieldOnly_forced_certificate
 #print axioms RelativeRest.principalFieldCurrent_Lambda_unique
 #print axioms RelativeRest.principalFieldCurrent_quotient_finrank_one
 #print axioms RelativeRest.reeb_direction_unique
