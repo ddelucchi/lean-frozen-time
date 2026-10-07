@@ -10838,6 +10838,50 @@ theorem kerrPrincipal_field_magnitude
   unfold Sigma
   ring
 
+/-- On the regular charged Kerr-Newman stratum the explicit principal Maxwell
+field cannot vanish.  This is forced directly by `E²+B²=Q²/Σ²`. -/
+theorem kerrPrincipalField_nonzero
+    (Q r a θ : ℝ)
+    (hQ : Q ≠ 0)
+    (hsig : 0 < Sigma r a θ) :
+    kerrPrincipalE Q r a θ ≠ 0 ∨
+      kerrPrincipalB Q r a θ ≠ 0 := by
+  by_contra hzero
+  push_neg at hzero
+  have hmag :=
+    kerrPrincipal_field_magnitude Q r a θ (ne_of_gt hsig)
+  rw [hzero.1, hzero.2] at hmag
+  norm_num at hmag
+  have hpos : 0 < Q^2 / (Sigma r a θ)^2 := by
+    positivity
+  exact (ne_of_gt hpos) hmag.symm
+
+
+/-- Canonical characteristic input built from the actual Kerr-Newman principal
+Maxwell field.  No independent generic `E,B` data remain. -/
+def kerrCanonicalPrincipalCarrierCharacteristicInput
+    (Q r a θ : ℝ)
+    (hQ : Q ≠ 0)
+    (hsig : 0 < Sigma r a θ) :
+    PrincipalCarrierCharacteristicInput
+      (P:=(Fin 4 → ℝ)) :=
+  canonicalPrincipalCarrierCharacteristicInput
+    (kerrPrincipalE Q r a θ)
+    (kerrPrincipalB Q r a θ)
+    (kerrPrincipalField_nonzero Q r a θ hQ hsig)
+
+@[simp] theorem kerrCanonicalPrincipalCarrierCharacteristicInput_E
+    (Q r a θ : ℝ) (hQ : Q ≠ 0) (hsig : 0 < Sigma r a θ) :
+    (kerrCanonicalPrincipalCarrierCharacteristicInput
+      Q r a θ hQ hsig).E =
+      kerrPrincipalE Q r a θ := rfl
+
+@[simp] theorem kerrCanonicalPrincipalCarrierCharacteristicInput_B
+    (Q r a θ : ℝ) (hQ : Q ≠ 0) (hsig : 0 < Sigma r a θ) :
+    (kerrCanonicalPrincipalCarrierCharacteristicInput
+      Q r a θ hQ hsig).B =
+      kerrPrincipalB Q r a θ := rfl
+
 /-- Hence the general principal Maxwell carrier `2(E²+B²)` becomes the manuscript's
 Kerr-Newman carrier `2Q²/Σ²`. -/
 theorem kerrPrincipalChi_formula
@@ -15297,6 +15341,21 @@ theorem kerrNewman_clock_rate_from_principal_EM
 /-- Intrinsic Kerr-Newman clock rate constructed only from the principal Maxwell field. -/
 def kerrClockRateFromPrincipalEM (Q r a θ : ℝ) : ℝ :=
   Real.sqrt (Real.sqrt (kerrRicciNormScalar Q r a θ))
+
+/-- The named Kerr-Newman intrinsic rate is exactly the generic principal
+Einstein-Maxwell clock rate evaluated on the same potential-derived field. -/
+theorem kerrClockRateFromPrincipalEM_eq_principalClockRate
+    (Q r a θ : ℝ) :
+    kerrClockRateFromPrincipalEM Q r a θ =
+      principalClockRate
+        (kerrPrincipalE Q r a θ)
+        (kerrPrincipalB Q r a θ) := by
+  unfold kerrClockRateFromPrincipalEM
+  symm
+  exact principalClockRate_eq_ricci_fourth_root
+    (kerrPrincipalE Q r a θ)
+    (kerrPrincipalB Q r a θ)
+
 
 /-- The explicit principal Maxwell field forces the intrinsic clock rate
 `sqrt(2)|Q|/Σ` with no curvature input. -/
