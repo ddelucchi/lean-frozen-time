@@ -17559,6 +17559,103 @@ theorem PrincipalLapseReachabilityInput.forces_action_bulk
     ⟨hrest,hJ,hCA,hDA,_horbit,_hhalf,hcur,hL,hdim,_hnorm⟩
   exact ⟨hrest,hJ,hCA,hDA,hcur,hL,hdim⟩
 
+/-- Any two characteristic realizations that contain the canonical pure-lapse
+normal direction produce canonically equivalent clock quotients.  The equivalence
+is fixed solely by the descended clock covectors and their normalized units. -/
+noncomputable def PrincipalLapseReachabilityInput.clockRealizationEquiv
+    {P₁ P₂ : Type*}
+    [AddCommGroup P₁] [Module ℝ P₁]
+    [AddCommGroup P₂] [Module ℝ P₂]
+    (D₁ : PrincipalLapseReachabilityInput P₁)
+    (D₂ : PrincipalLapseReachabilityInput P₂) :
+    (D₁.toCarrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D₁.toCarrier.toCharacteristicCurrentData.Lambda) ≃ₗ[ℝ]
+      (D₂.toCarrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D₂.toCarrier.toCharacteristicCurrentData.Lambda) :=
+  normalizedClockEquiv
+    (quotientClockCovector D₁.toCarrier.toCharacteristicCurrentData.Lambda)
+    (quotientClockCovector D₂.toCarrier.toCharacteristicCurrentData.Lambda)
+    (globalClockQuotientUnit
+      D₁.toCarrier.toCharacteristicCurrentData.Lambda
+      (principalCarrierCharacteristic_Lambda_nonzero D₁.toCarrier))
+    (globalClockQuotientUnit
+      D₂.toCarrier.toCharacteristicCurrentData.Lambda
+      (principalCarrierCharacteristic_Lambda_nonzero D₂.toCarrier))
+    (globalClockQuotientUnit_normalized
+      D₁.toCarrier.toCharacteristicCurrentData.Lambda
+      (principalCarrierCharacteristic_Lambda_nonzero D₁.toCarrier))
+    (globalClockQuotientUnit_normalized
+      D₂.toCarrier.toCharacteristicCurrentData.Lambda
+      (principalCarrierCharacteristic_Lambda_nonzero D₂.toCarrier))
+    (clockQuotient_finrank_one
+      D₁.toCarrier.toCharacteristicCurrentData.Lambda
+      (principalCarrierCharacteristic_Lambda_nonzero D₁.toCarrier))
+    (clockQuotient_finrank_one
+      D₂.toCarrier.toCharacteristicCurrentData.Lambda
+      (principalCarrierCharacteristic_Lambda_nonzero D₂.toCarrier))
+
+/-- The realization equivalence preserves the descended clock covector exactly. -/
+theorem PrincipalLapseReachabilityInput.clockRealizationEquiv_preserves_covector
+    {P₁ P₂ : Type*}
+    [AddCommGroup P₁] [Module ℝ P₁]
+    [AddCommGroup P₂] [Module ℝ P₂]
+    (D₁ : PrincipalLapseReachabilityInput P₁)
+    (D₂ : PrincipalLapseReachabilityInput P₂)
+    (X :
+      D₁.toCarrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D₁.toCarrier.toCharacteristicCurrentData.Lambda) :
+    quotientClockCovector D₂.toCarrier.toCharacteristicCurrentData.Lambda
+        (D₁.clockRealizationEquiv D₂ X) =
+      quotientClockCovector D₁.toCarrier.toCharacteristicCurrentData.Lambda X := by
+  change
+    quotientClockCovector D₂.toCarrier.toCharacteristicCurrentData.Lambda
+      (normalizedClockMap
+        (quotientClockCovector D₁.toCarrier.toCharacteristicCurrentData.Lambda)
+        (globalClockQuotientUnit
+          D₂.toCarrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D₂.toCarrier)) X) =
+    quotientClockCovector D₁.toCarrier.toCharacteristicCurrentData.Lambda X
+  exact normalizedClockMap_preserves_covector
+    (quotientClockCovector D₁.toCarrier.toCharacteristicCurrentData.Lambda)
+    (quotientClockCovector D₂.toCarrier.toCharacteristicCurrentData.Lambda)
+    (globalClockQuotientUnit
+      D₂.toCarrier.toCharacteristicCurrentData.Lambda
+      (principalCarrierCharacteristic_Lambda_nonzero D₂.toCarrier))
+    (globalClockQuotientUnit_normalized
+      D₂.toCarrier.toCharacteristicCurrentData.Lambda
+      (principalCarrierCharacteristic_Lambda_nonzero D₂.toCarrier))
+    X
+
+/-- The realization equivalence also sends the uniquely normalized clock unit to
+the uniquely normalized clock unit. -/
+theorem PrincipalLapseReachabilityInput.clockRealizationEquiv_maps_unit
+    {P₁ P₂ : Type*}
+    [AddCommGroup P₁] [Module ℝ P₁]
+    [AddCommGroup P₂] [Module ℝ P₂]
+    (D₁ : PrincipalLapseReachabilityInput P₁)
+    (D₂ : PrincipalLapseReachabilityInput P₂) :
+    D₁.clockRealizationEquiv D₂
+      (globalClockQuotientUnit
+        D₁.toCarrier.toCharacteristicCurrentData.Lambda
+        (principalCarrierCharacteristic_Lambda_nonzero D₁.toCarrier)) =
+      globalClockQuotientUnit
+        D₂.toCarrier.toCharacteristicCurrentData.Lambda
+        (principalCarrierCharacteristic_Lambda_nonzero D₂.toCarrier) := by
+  change
+    normalizedClockMap
+      (quotientClockCovector D₁.toCarrier.toCharacteristicCurrentData.Lambda)
+      (globalClockQuotientUnit
+        D₂.toCarrier.toCharacteristicCurrentData.Lambda
+        (principalCarrierCharacteristic_Lambda_nonzero D₂.toCarrier))
+      (globalClockQuotientUnit
+        D₁.toCarrier.toCharacteristicCurrentData.Lambda
+        (principalCarrierCharacteristic_Lambda_nonzero D₁.toCarrier)) =
+    globalClockQuotientUnit
+      D₂.toCarrier.toCharacteristicCurrentData.Lambda
+      (principalCarrierCharacteristic_Lambda_nonzero D₂.toCarrier)
+  rw [normalizedClockMap_apply,
+    globalClockQuotientUnit_normalized, one_smul]
+
 /-- In the canonical ADM normal+shift deformation model, the nonzero Maxwell
 field alone is enough to realize the positive clock direction by unit lapse and zero
 shift, and therefore forces the complete characteristic quotient/normalization chain. -/
@@ -22743,6 +22840,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalADMDeformationMap_unitLapse
 #print axioms RelativeRest.PrincipalLapseReachabilityInput.forces_clock_chain
 #print axioms RelativeRest.PrincipalLapseReachabilityInput.forces_action_bulk
+#print axioms RelativeRest.PrincipalLapseReachabilityInput.clockRealizationEquiv_preserves_covector
+#print axioms RelativeRest.PrincipalLapseReachabilityInput.clockRealizationEquiv_maps_unit
 #print axioms RelativeRest.canonicalPrincipalADM_forces_clock_chain
 #print axioms RelativeRest.canonicalPrincipalADM_forces_action_bulk
 #print axioms RelativeRest.canonicalPrincipalField_forces_clock_chain
