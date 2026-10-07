@@ -23559,6 +23559,159 @@ theorem generalMaxwellBalancedOpticalCoordinates_on_E
       generalMaxwellBalancedClockCovector_on_balancedE,
       generalMaxwellBalancedRadialUnitCovector_on_balancedE]
 
+
+/-- Field-selected observer boosted by the action/optical rapidity parameter. -/
+def generalMaxwellBalancedBoostedObserver
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (s : ℝ) : Fin 4 → ℝ :=
+  Real.cosh s •
+      generalMaxwellBalancedU
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D +
+    Real.sinh s •
+      generalMaxwellBalancedE
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D
+
+/-- The six-component field-selected boosted observer has exactly the canonical
+optical boost coordinates. -/
+theorem generalMaxwellBalancedOpticalCoordinates_boostedObserver
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (s : ℝ) :
+    generalMaxwellBalancedOpticalCoordinates
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D
+        (generalMaxwellBalancedBoostedObserver
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D s) =
+      opticalBoost s TO := by
+  unfold generalMaxwellBalancedBoostedObserver
+  rw [map_add, map_smul, map_smul,
+    generalMaxwellBalancedOpticalCoordinates_on_U,
+    generalMaxwellBalancedOpticalCoordinates_on_E]
+  ext <;> simp [opticalBoost, TO, RO]
+
+/-- The finite action boost and the actual field-selected spacetime boost are
+the same descendant in normalized optical coordinates. -/
+theorem generalMaxwell_actionOptical_boost_identification
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (s : ℝ) :
+    actionOpticalMap (actionBoost s CA) =
+      generalMaxwellBalancedOpticalCoordinates
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D
+        (generalMaxwellBalancedBoostedObserver
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D s) := by
+  rw [actionOpticalMap_intertwines_boost,
+    actionOpticalMap_CA,
+    generalMaxwellBalancedOpticalCoordinates_boostedObserver]
+
+/-- No independent optical rapidity remains for an arbitrary Maxwell field:
+matching the field-selected boosted observer forces sigma=s. -/
+theorem generalMaxwell_rapidity_forced
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (s σ : ℝ)
+    (h :
+      opticalBoost σ TO =
+        generalMaxwellBalancedOpticalCoordinates
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D
+          (generalMaxwellBalancedBoostedObserver
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D s)) :
+    σ = s := by
+  rw [generalMaxwellBalancedOpticalCoordinates_boostedObserver] at h
+  exact opticalBoost_TO_injective h
+
+/-- The two principal null covectors measure the field-selected boosted observer
+with the reciprocal frequencies e^s and e^-s. -/
+theorem generalMaxwell_boostedObserver_null_frequencies
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (s : ℝ) :
+    opticalEval principalThetaPlus
+        (generalMaxwellBalancedOpticalCoordinates
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D
+          (generalMaxwellBalancedBoostedObserver
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D s)) =
+      nuPlus s ∧
+    opticalEval principalThetaMinus
+        (generalMaxwellBalancedOpticalCoordinates
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D
+          (generalMaxwellBalancedBoostedObserver
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D s)) =
+      nuMinus s := by
+  rw [generalMaxwellBalancedOpticalCoordinates_boostedObserver]
+  constructor
+  · simp [opticalEval, principalThetaPlus, opticalBoost, TO, RO,
+      nuPlus, ← Real.cosh_add_sinh]
+  · simp [opticalEval, principalThetaMinus, opticalBoost, TO, RO,
+      nuMinus, ← Real.cosh_sub_sinh]
+
+/-- The manuscript's master ratio is therefore a literal arbitrary-field identity. -/
+theorem generalMaxwell_action_null_frequency_ratio
+    (u s Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    XiMUS u s / XiGUS u s =
+      opticalEval principalThetaPlus
+          (generalMaxwellBalancedOpticalCoordinates
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D
+            (generalMaxwellBalancedBoostedObserver
+              Ex Ey Ez Bx By Bz
+              dEx dEy dEz dBx dBy dBz D s)) /
+        opticalEval principalThetaMinus
+          (generalMaxwellBalancedOpticalCoordinates
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D
+            (generalMaxwellBalancedBoostedObserver
+              Ex Ey Ez Bx By Bz
+              dEx dEy dEz dBx dBy dBz D s)) := by
+  rcases generalMaxwell_boostedObserver_null_frequencies
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D s with ⟨hp, hm⟩
+  rw [hp, hm]
+  exact character_ratio_eq_null_ratio u s
+
 /-- The optical coordinate map reaches the entire normalized (T,R) plane. -/
 theorem generalMaxwellBalancedOpticalCoordinates_surjective
     (Ex Ey Ez Bx By Bz : ℝ)
@@ -30671,6 +30824,11 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellThetaCovectors_null
 #print axioms RelativeRest.generalMaxwellThetaCovectors_reconstruct
 #print axioms RelativeRest.generalMaxwellThetaCovectors_independent_up_to_exchange
+#print axioms RelativeRest.generalMaxwellBalancedOpticalCoordinates_boostedObserver
+#print axioms RelativeRest.generalMaxwell_actionOptical_boost_identification
+#print axioms RelativeRest.generalMaxwell_rapidity_forced
+#print axioms RelativeRest.generalMaxwell_boostedObserver_null_frequencies
+#print axioms RelativeRest.generalMaxwell_action_null_frequency_ratio
 #print axioms RelativeRest.generalMaxwellBalancedOpticalCoordinates_surjective
 #print axioms RelativeRest.generalMaxwellThetaPlusCovector_eval_optical
 #print axioms RelativeRest.generalMaxwellThetaMinusCovector_eval_optical
