@@ -15779,9 +15779,12 @@ theorem RegularSyngeEndpointPairSource.endpointPairIndependent_of_realization
   rcases x with ⟨a,b⟩
   rcases y with ⟨c,d⟩
   have h := congrArg I hxy
-  simp only [RegularSyngeEndpointPairSource.endpointCombination,
-    LinearMap.coe_mk, AddHom.coe_mk,
-    map_add, map_smul] at h
+  change
+    I (a • D.toSyngeEndpointJetData.dThetaPlus +
+        b • D.toSyngeEndpointJetData.dThetaMinus) =
+      I (c • D.toSyngeEndpointJetData.dThetaPlus +
+        d • D.toSyngeEndpointJetData.dThetaMinus) at h
+  simp only [map_add, map_smul] at h
   rw [hI.1, hI.2] at h
   have hfst := congrArg Prod.fst h
   have hsnd := congrArg Prod.snd h
@@ -15852,8 +15855,13 @@ noncomputable def RegularSyngeEndpointPairSource.canonicalEndpointPlaneOpticalMa
     D.canonicalEndpointPlaneOpticalMap hind
         (D.endpointPlaneEquiv hind (1,0)) =
       principalThetaPlus := by
-  simp [RegularSyngeEndpointPairSource.canonicalEndpointPlaneOpticalMap,
-    principalEndpointCombination]
+  change
+    principalEndpointCombination
+      ((D.endpointPlaneEquiv hind).symm
+        (D.endpointPlaneEquiv hind (1,0))) =
+      principalThetaPlus
+  rw [LinearEquiv.symm_apply_apply]
+  simp [principalEndpointCombination]
 
 @[simp] theorem RegularSyngeEndpointPairSource.canonicalEndpointPlaneOpticalMap_minus
     {X : Type*}
@@ -15865,8 +15873,13 @@ noncomputable def RegularSyngeEndpointPairSource.canonicalEndpointPlaneOpticalMa
     D.canonicalEndpointPlaneOpticalMap hind
         (D.endpointPlaneEquiv hind (0,1)) =
       principalThetaMinus := by
-  simp [RegularSyngeEndpointPairSource.canonicalEndpointPlaneOpticalMap,
-    principalEndpointCombination]
+  change
+    principalEndpointCombination
+      ((D.endpointPlaneEquiv hind).symm
+        (D.endpointPlaneEquiv hind (0,1))) =
+      principalThetaMinus
+  rw [LinearEquiv.symm_apply_apply]
+  simp [principalEndpointCombination]
 
 /-- The exchange-even endpoint midpoint is sent to the forced clock covector. -/
 @[simp] theorem RegularSyngeEndpointPairSource.canonicalEndpointPlaneOpticalMap_clock
@@ -15879,10 +15892,15 @@ noncomputable def RegularSyngeEndpointPairSource.canonicalEndpointPlaneOpticalMa
     D.canonicalEndpointPlaneOpticalMap hind
         (D.endpointPlaneEquiv hind
           ((1 / 2 : ℝ), (1 / 2 : ℝ))) = TO := by
-  simp [RegularSyngeEndpointPairSource.canonicalEndpointPlaneOpticalMap,
-    principalEndpointCombination, principalThetaPlus,
-    principalThetaMinus, TO, RO]
-  ext <;> norm_num
+  change
+    principalEndpointCombination
+      ((D.endpointPlaneEquiv hind).symm
+        (D.endpointPlaneEquiv hind
+          ((1 / 2 : ℝ), (1 / 2 : ℝ)))) = TO
+  rw [LinearEquiv.symm_apply_apply]
+  ext <;>
+    norm_num [principalEndpointCombination,
+      principalThetaPlus, principalThetaMinus, TO, RO]
 
 /-- The exchange-odd endpoint half-difference is sent to the forced radial covector. -/
 @[simp] theorem RegularSyngeEndpointPairSource.canonicalEndpointPlaneOpticalMap_radial
@@ -15895,10 +15913,15 @@ noncomputable def RegularSyngeEndpointPairSource.canonicalEndpointPlaneOpticalMa
     D.canonicalEndpointPlaneOpticalMap hind
         (D.endpointPlaneEquiv hind
           ((1 / 2 : ℝ), (-1 / 2 : ℝ))) = RO := by
-  simp [RegularSyngeEndpointPairSource.canonicalEndpointPlaneOpticalMap,
-    principalEndpointCombination, principalThetaPlus,
-    principalThetaMinus, TO, RO]
-  ext <;> norm_num
+  change
+    principalEndpointCombination
+      ((D.endpointPlaneEquiv hind).symm
+        (D.endpointPlaneEquiv hind
+          ((1 / 2 : ℝ), (-1 / 2 : ℝ)))) = RO
+  rw [LinearEquiv.symm_apply_apply]
+  ext <;>
+    norm_num [principalEndpointCombination,
+      principalThetaPlus, principalThetaMinus, TO, RO]
 
 /-- Linear maps out of R2 are fixed by their values on its two coordinate basis
 vectors. -/
