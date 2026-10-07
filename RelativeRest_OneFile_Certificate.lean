@@ -7542,6 +7542,13 @@ structure ArbitraryMaxwellActionForcedCertificate
               Ex Ey Ez Bx By Bz i j) ∧
       (∀ b : Fin 4,
         principalMaxwellPotentialEulerCoeff nablaF b = 0))
+  pureGaussBulkResponseZero :
+    ∀ (nablaF : Fin 4 → Fin 4 → ℝ)
+      (gradLambda : Fin 4 → ℝ),
+      (∀ b : Fin 4,
+        principalMaxwellPotentialEulerCoeff nablaF b = 0) →
+      principalMaxwellPotentialEulerDensity
+        nablaF gradLambda = 0
   fullLocalFirstVariation :
     ∀ (RicCov : Fin 4 → Fin 4 → ℝ)
       (nabla2H : Fin 4 → Fin 4 → Fin 4 → Fin 4 → ℝ)
@@ -7700,6 +7707,10 @@ theorem arbitraryMaxwell_action_forced_certificate
     actionStress := ?_
     generalActionBulkStationarityIffFieldEquations :=
       generalEinsteinMaxwell_bulk_stationarity_iff_field_equations
+    pureGaussBulkResponseZero := by
+      intro nablaF gradLambda hMaxwell
+      exact principalMaxwell_pureGauss_bulk_response_zero
+        nablaF gradLambda hMaxwell
     fullLocalFirstVariation := by
       intro RicCov nabla2H hsym i j nablaF nablaDeltaA deltaA
       exact generalEinsteinMaxwell_local_first_variation
@@ -30483,6 +30494,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellNonNull_principal_of_nonzero
 #print axioms RelativeRest.generalEinsteinMaxwell_local_first_variation
 #print axioms RelativeRest.generalEinsteinMaxwell_onShell_local_first_variation_is_boundary
+#print axioms RelativeRest.principalMaxwell_pureGauss_bulk_response_zero
 #print axioms RelativeRest.arbitraryMaxwell_action_forced_certificate
 #print axioms RelativeRest.principalField_has_arbitraryMaxwell_action_certificate
 #print axioms RelativeRest.generalMaxwellCarrier_nilpotent_of_chi_zero
