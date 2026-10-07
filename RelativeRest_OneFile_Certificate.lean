@@ -16571,6 +16571,48 @@ def principalLapseCharacteristicMap :
     principalLapseCharacteristicMap 1 = principalUhat := by
   simp
 
+
+/-! ### ADM normal-deformation kinematics for the characteristic clock -/
+
+/-- Lapse plus spatial shift in the carrier-adapted principal frame.  The shift is
+literally valued in the spatial hyperplane selected by the field-derived clock. -/
+abbrev PrincipalADMDeformationParameter :=
+  ℝ × principalSpatialSubmodule
+
+/-- Geometric hypersurface deformation:
+`(N,N^∥) ↦ N uhat + N^∥`.  This is the kinematic ADM normal+shift decomposition,
+independent of any symplectic representative. -/
+def principalADMDeformationMap :
+    PrincipalADMDeformationParameter →ₗ[ℝ] (Fin 4 → ℝ) where
+  toFun p := p.1 • principalUhat + p.2.1
+  map_add' x y := by
+    ext i
+    simp [add_smul]
+  map_smul' c x := by
+    ext i
+    simp [mul_smul]
+
+/-- Inclusion of a pure lapse, with zero spatial shift. -/
+def principalADMPureLapseLift :
+    ℝ →ₗ[ℝ] PrincipalADMDeformationParameter where
+  toFun N := (N, 0)
+  map_add' x y := by rfl
+  map_smul' c x := by rfl
+
+/-- The ADM normal-deformation kinematics force the pure-lapse characteristic
+direction exactly: no reachability witness or normalization is chosen. -/
+theorem principalADMDeformationMap_pureLapse :
+    principalADMDeformationMap.comp principalADMPureLapseLift =
+      principalLapseCharacteristicMap := by
+  ext N i
+  simp [principalADMDeformationMap, principalADMPureLapseLift,
+    principalLapseCharacteristicMap]
+
+/-- Unit lapse and zero shift generate the normalized principal future direction. -/
+@[simp] theorem principalADMDeformationMap_unitLapse :
+    principalADMDeformationMap (1, 0) = principalUhat := by
+  simp [principalADMDeformationMap]
+
 /-- Canonical characteristic datum built only from the physical pure-lapse normal
 deformation.  Unlike the identity characteristic model, it does not assume that
 all principal-frame tangent directions are gauge-characteristic directions. -/
@@ -16601,6 +16643,20 @@ structure PrincipalLapseReachabilityInput
   field_nonzero : E ≠ 0 ∨ B ≠ 0
   pureLapse :
     beta.comp lapseLift = principalLapseCharacteristicMap
+
+
+/-- Canonical ADM-deformation realization of pure-lapse reachability.  Its only
+physical datum is the nonzero principal Maxwell field; lapse+shift kinematics and
+the pure-lapse lift are constructed. -/
+def canonicalPrincipalADMReachabilityInput
+    (E B : ℝ) (hfield : E ≠ 0 ∨ B ≠ 0) :
+    PrincipalLapseReachabilityInput PrincipalADMDeformationParameter where
+  beta := principalADMDeformationMap
+  lapseLift := principalADMPureLapseLift
+  E := E
+  B := B
+  field_nonzero := hfield
+  pureLapse := principalADMDeformationMap_pureLapse
 
 /-- The pure-lapse reachability statement constructs the positive characteristic
 witness; no independent witness or full tangent-space accessibility is needed. -/
@@ -22108,6 +22164,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.PrincipalCarrierCharacteristicInput.anyCanonicalCompletion_compensated_eq_action
 #print axioms RelativeRest.principalActionBulk_forced_core_chain
 #print axioms RelativeRest.principalLapseCharacteristicMap_one
+#print axioms RelativeRest.principalADMDeformationMap_pureLapse
+#print axioms RelativeRest.principalADMDeformationMap_unitLapse
 #print axioms RelativeRest.PrincipalLapseReachabilityInput.forces_clock_chain
 #print axioms RelativeRest.PrincipalLapseReachabilityInput.forces_action_bulk
 #print axioms RelativeRest.canonicalPrincipalField_forces_clock_chain
