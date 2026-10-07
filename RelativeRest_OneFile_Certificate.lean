@@ -23009,6 +23009,55 @@ theorem generalMaxwell_opticalIFT_normalForm
     canonicalOpticalRegularSyngePair_endpoint_derivatives.1,
     canonicalOpticalRegularSyngePair_endpoint_derivatives.2⟩
 
+
+/-- Any genuine regular Synge realization of the canonical optical jet is forced
+to be the same clock/radial first jet selected by the arbitrary Maxwell field.
+Thus existence of a curved-spacetime world function is geometric regularity
+data, but it carries no independent temporal normalization, observer, radial
+splitting, or endpoint first-jet freedom. -/
+theorem generalMaxwell_regularSynge_realization_forced
+    {X : Type*}
+    [NormedAddCommGroup X] [NormedSpace ℝ X] [CompleteSpace X]
+    {Bdual :
+      (X →L[ℝ] ℝ) →ₗ[ℝ] (X →L[ℝ] ℝ) →ₗ[ℝ] ℝ}
+    (S : RegularSyngeEndpointPairSource Bdual)
+    (I : (X →L[ℝ] ℝ) →ₗ[ℝ] R2)
+    (hreal : S.RealizesCanonicalOpticalJet I)
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    I S.toSyngeEndpointJetData.clockCovector =
+        generalMaxwellBalancedOpticalCoordinates
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D
+          (generalMaxwellBalancedU
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D) ∧
+    I S.toSyngeEndpointJetData.radialCovector =
+        generalMaxwellBalancedOpticalCoordinates
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D
+          (generalMaxwellBalancedE
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D) ∧
+    I S.toSyngeEndpointJetData.dThetaPlus = principalThetaPlus ∧
+    I S.toSyngeEndpointJetData.dThetaMinus = principalThetaMinus := by
+  have hTR :=
+    (S.realizesCanonicalOpticalJet_iff_clock_radial I).mp hreal
+  refine ⟨?_, ?_, hreal.1, hreal.2⟩
+  · rw [generalMaxwellBalancedOpticalCoordinates_on_U
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D]
+    exact hTR.1
+  · rw [generalMaxwellBalancedOpticalCoordinates_on_E
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D]
+    exact hTR.2
+
 /-- Frame-free action-to-characteristic-clock certificate on the regular
 first-jet stratum. -/
 structure ArbitraryMaxwellFirstJetClockDescentCertificate
@@ -29874,6 +29923,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellThetaPlusCovector_eval_optical
 #print axioms RelativeRest.generalMaxwellThetaMinusCovector_eval_optical
 #print axioms RelativeRest.generalMaxwell_opticalIFT_normalForm
+#print axioms RelativeRest.generalMaxwell_regularSynge_realization_forced
 #print axioms RelativeRest.arbitraryMaxwell_firstJet_clockDescent_certificate
 #print axioms RelativeRest.generalMaxwellADMDeformationMap_pureLapse
 #print axioms RelativeRest.generalMaxwellBalancedADMCharacteristic_Lambda_nonzero
