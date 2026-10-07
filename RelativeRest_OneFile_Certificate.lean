@@ -3847,6 +3847,68 @@ theorem generalMaxwellCarrierLinear_sq_chi
   rw [generalMaxwellChi_sq]
   exact generalMaxwellCarrierLinear_sq Ex Ey Ez Bx By Bz
 
+/-! ### Arbitrary-field carrier reconstructed directly from the action derivative -/
+
+/-- The mixed fixed-point carrier of a completely arbitrary Maxwell field is
+uniquely recovered from the derivative of the displayed Maxwell Lagrangian.
+The conversion factor contains only the Einstein-Maxwell normalization and the
+background Lorentzian index-raising sign. -/
+theorem generalMaxwellCarrier_forced_from_actionMetricDerivative
+    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) :
+    generalMaxwellCarrier Ex Ey Ez Bx By Bz i j =
+      (32 * Real.pi / principalMetricSign i) *
+        deriv
+          (generalMaxwellLagrangianMetricLine
+            Ex Ey Ez Bx By Bz i j) 0 := by
+  rw [generalMaxwellLagrangianMetricLine_deriv_eq_neg_half_stress]
+  unfold generalMaxwellStressCovFromF generalMaxwellCarrier
+  have hi := principalMetricSign_ne_zero i
+  field_simp [hi, ne_of_gt Real.pi_pos]
+  ring
+
+/-- Linear endomorphism reconstructed using only those arbitrary-field action
+derivatives. -/
+def generalActionDerivedCarrierLinear
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    (Fin 4 → ℝ) →ₗ[ℝ] (Fin 4 → ℝ) where
+  toFun v := fun i =>
+    ∑ j : Fin 4,
+      ((32 * Real.pi / principalMetricSign i) *
+        deriv
+          (generalMaxwellLagrangianMetricLine
+            Ex Ey Ez Bx By Bz i j) 0) * v j
+  map_add' x y := by
+    funext i
+    simp [mul_add, Finset.sum_add_distrib]
+  map_smul' a x := by
+    funext i
+    simp [mul_assoc]
+
+/-- The action-derived arbitrary-field endomorphism is exactly the Rainich carrier
+constructed directly from the Maxwell stress tensor. -/
+theorem generalActionDerivedCarrierLinear_eq_generalMaxwellCarrierLinear
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    generalActionDerivedCarrierLinear Ex Ey Ez Bx By Bz =
+      generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz := by
+  apply principalLinearMap_ext_on_basis
+  intro j
+  funext i
+  simp [generalActionDerivedCarrierLinear,
+    generalMaxwellCarrierLinear, principalBasis,
+    generalMaxwellCarrier_forced_from_actionMetricDerivative]
+
+/-- Hence the Rainich square law itself is a theorem of the displayed action
+derivative for an arbitrary electromagnetic two-form. -/
+theorem generalActionDerivedCarrierLinear_rainich
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    (generalActionDerivedCarrierLinear Ex Ey Ez Bx By Bz).comp
+        (generalActionDerivedCarrierLinear Ex Ey Ez Bx By Bz) =
+      ((generalMaxwellI Ex Ey Ez Bx By Bz)^2 +
+        (generalMaxwellJ Ex Ey Ez Bx By Bz)^2) •
+        LinearMap.id := by
+  rw [generalActionDerivedCarrierLinear_eq_generalMaxwellCarrierLinear]
+  exact generalMaxwellCarrierLinear_sq Ex Ey Ez Bx By Bz
+
 /-! ### Arbitrary-field intrinsic chronometry before principalization -/
 
 @[simp] theorem generalMaxwellI_principal_specialization
@@ -23532,6 +23594,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellLagrangianMetricLine_hasDerivAt_zero
 #print axioms RelativeRest.generalMaxwellMetricVariationCoeff_eq_neg_half_stress
 #print axioms RelativeRest.generalMaxwellLagrangianMetricLine_deriv_eq_neg_half_stress
+#print axioms RelativeRest.generalMaxwellCarrier_forced_from_actionMetricDerivative
+#print axioms RelativeRest.generalActionDerivedCarrierLinear_eq_generalMaxwellCarrierLinear
+#print axioms RelativeRest.generalActionDerivedCarrierLinear_rainich
 #print axioms RelativeRest.principalPalatini_scalar_boundary_eq_divergence
 #print axioms RelativeRest.principalLinearizedChristoffelFromMetricDerivative_lower_symmetric
 #print axioms RelativeRest.principalEinsteinHilbertThetaNumerator_from_metric_variation
