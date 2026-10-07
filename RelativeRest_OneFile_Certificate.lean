@@ -15567,6 +15567,28 @@ theorem regularSynge_canonical_realizations_identified
         I₂ D₂.toSyngeEndpointJetData.dThetaMinus := by
   exact ⟨h₁.1.trans h₂.1.symm, h₁.2.trans h₂.2.symm⟩
 
+
+/-- Two realizations of the same genuine Synge endpoint pair into the normalized
+optical plane cannot differ on any clock/radial combination.  Hence the ambient
+extension of the identification may vary away from the endpoint-generated plane,
+but the entire optical plane used by the manuscript is forced. -/
+theorem RegularSyngeEndpointPairSource.realizationMap_unique_on_endpointPlane
+    {X : Type*}
+    [NormedAddCommGroup X] [NormedSpace ℝ X] [CompleteSpace X]
+    {Bdual :
+      (X →L[ℝ] ℝ) →ₗ[ℝ] (X →L[ℝ] ℝ) →ₗ[ℝ] ℝ}
+    (D : RegularSyngeEndpointPairSource Bdual)
+    (I J : (X →L[ℝ] ℝ) →ₗ[ℝ] R2)
+    (hI : D.RealizesCanonicalOpticalJet I)
+    (hJ : D.RealizesCanonicalOpticalJet J)
+    (a b : ℝ) :
+    I (a • D.toSyngeEndpointJetData.dThetaPlus +
+        b • D.toSyngeEndpointJetData.dThetaMinus) =
+      J (a • D.toSyngeEndpointJetData.dThetaPlus +
+        b • D.toSyngeEndpointJetData.dThetaMinus) := by
+  simp only [map_add, map_smul]
+  rw [hI.1, hI.2, hJ.1, hJ.2]
+
 end SyngeIFTJetBridge
 
 /-! ### Exact two-dimensional optical metric reconstruction -/
@@ -27540,6 +27562,14 @@ structure PaperResolvedRegularBranchForcedCertificate
   identifiedBranchFirstJetUnique :
     I S.toSyngeEndpointJetData.dThetaPlus = principalThetaPlus ∧
       I S.toSyngeEndpointJetData.dThetaMinus = principalThetaMinus
+  realizationMapUniqueOnEndpointPlane :
+    ∀ J : (X →L[ℝ] ℝ) →ₗ[ℝ] R2,
+      S.RealizesCanonicalOpticalJet J →
+      ∀ a b : ℝ,
+        I (a • S.toSyngeEndpointJetData.dThetaPlus +
+            b • S.toSyngeEndpointJetData.dThetaMinus) =
+          J (a • S.toSyngeEndpointJetData.dThetaPlus +
+            b • S.toSyngeEndpointJetData.dThetaMinus)
 
 theorem paper_resolvedRegularBranch_forced_certificate
     (Bdual :
@@ -27574,7 +27604,11 @@ theorem paper_resolvedRegularBranch_forced_certificate
       S.minus.endpointMap_hasStrictFDerivAt_explicit⟩
     syngeOpticalClosure := S.optical_closure hsym
     fieldForcedSyngeJet := ?_
-    identifiedBranchFirstJetUnique := hreal }
+    identifiedBranchFirstJetUnique := hreal
+    realizationMapUniqueOnEndpointPlane := ?_ }
+  · intro J hJ a b
+    exact S.realizationMap_unique_on_endpointPlane
+      I J hreal hJ a b
   rcases
       generalMaxwell_finiteResolvingCovector_frame_forced
         Ex Ey Ez Bx By Bz alpha hnonnull hmem hp with
@@ -34884,6 +34918,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.arbitraryMaxwell_finiteResolvingClock_certificate
 #print axioms RelativeRest.arbitraryMaxwell_resolvedJet_forced_certificate
 #print axioms RelativeRest.arbitraryMaxwell_resolvedRegularStratum_certificate
+#print axioms RelativeRest.RegularSyngeEndpointPairSource.realizationMap_unique_on_endpointPlane
 #print axioms RelativeRest.paper_resolvedRegularBranch_forced_certificate
 #print axioms RelativeRest.opticalDualBilinear_symmetric
 #print axioms RelativeRest.paper_canonicalResolvedRegularBranch_forced_certificate
