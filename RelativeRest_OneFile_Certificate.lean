@@ -5804,6 +5804,69 @@ structure ArbitraryMaxwellActionForcedCertificate
               Ex Ey Ez Bx By Bz i j) ∧
       (∀ b : Fin 4,
         principalMaxwellPotentialEulerCoeff nablaF b = 0))
+  fullLocalFirstVariation :
+    ∀ (RicCov : Fin 4 → Fin 4 → ℝ)
+      (nabla2H : Fin 4 → Fin 4 → Fin 4 → Fin 4 → ℝ)
+      (hsym : ∀ d e a b, nabla2H d e a b = nabla2H d e b a)
+      (i j : Fin 4)
+      (nablaF nablaDeltaA : Fin 4 → Fin 4 → ℝ)
+      (deltaA : Fin 4 → ℝ),
+    deriv
+        (principalEinsteinHilbertLagrangianMetricLineFromRicci
+          RicCov
+          (fun _ _ =>
+            principalPalatiniBoundaryDivergence
+              (principalNablaLinearizedChristoffelFromMetricSecondDerivative
+                nabla2H))
+          i j) 0 +
+      deriv
+        (generalMaxwellLagrangianMetricLine
+          Ex Ey Ez Bx By Bz i j) 0 +
+      deriv
+        (principalMaxwellPotentialLagrangianLine
+          (generalMaxwellFsq Ex Ey Ez Bx By Bz)
+          (generalMaxwellFUp Ex Ey Ez Bx By Bz)
+          nablaDeltaA) 0 =
+    generalEinsteinMaxwellMetricVariationCoeff
+        (principalEinsteinMixedFromRicci RicCov)
+        Ex Ey Ez Bx By Bz i j +
+      principalMaxwellPotentialEulerDensity nablaF deltaA +
+      principalEinsteinHilbertSymplecticPotentialDivergence nabla2H +
+      principalMaxwellSymplecticPotentialDivergence
+        (generalMaxwellFUp Ex Ey Ez Bx By Bz)
+        nablaF nablaDeltaA deltaA
+  onShellFirstVariationBoundary :
+    ∀ (RicCov : Fin 4 → Fin 4 → ℝ)
+      (nabla2H : Fin 4 → Fin 4 → Fin 4 → Fin 4 → ℝ)
+      (hsym : ∀ d e a b, nabla2H d e a b = nabla2H d e b a)
+      (i j : Fin 4)
+      (nablaF nablaDeltaA : Fin 4 → Fin 4 → ℝ)
+      (deltaA : Fin 4 → ℝ),
+    generalEinsteinMaxwellMetricVariationCoeff
+        (principalEinsteinMixedFromRicci RicCov)
+        Ex Ey Ez Bx By Bz i j = 0 →
+    (∀ b : Fin 4,
+      principalMaxwellPotentialEulerCoeff nablaF b = 0) →
+    deriv
+        (principalEinsteinHilbertLagrangianMetricLineFromRicci
+          RicCov
+          (fun _ _ =>
+            principalPalatiniBoundaryDivergence
+              (principalNablaLinearizedChristoffelFromMetricSecondDerivative
+                nabla2H))
+          i j) 0 +
+      deriv
+        (generalMaxwellLagrangianMetricLine
+          Ex Ey Ez Bx By Bz i j) 0 +
+      deriv
+        (principalMaxwellPotentialLagrangianLine
+          (generalMaxwellFsq Ex Ey Ez Bx By Bz)
+          (generalMaxwellFUp Ex Ey Ez Bx By Bz)
+          nablaDeltaA) 0 =
+      principalEinsteinHilbertSymplecticPotentialDivergence nabla2H +
+        principalMaxwellSymplecticPotentialDivergence
+          (generalMaxwellFUp Ex Ey Ez Bx By Bz)
+          nablaF nablaDeltaA deltaA
   actionCarrier :
     generalActionDerivedCarrierLinear Ex Ey Ez Bx By Bz =
       generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz
@@ -5880,6 +5943,17 @@ theorem arbitraryMaxwell_action_forced_certificate
     actionStress := ?_
     generalActionBulkStationarityIffFieldEquations :=
       generalEinsteinMaxwell_bulk_stationarity_iff_field_equations
+    fullLocalFirstVariation := by
+      intro RicCov nabla2H hsym i j nablaF nablaDeltaA deltaA
+      exact generalEinsteinMaxwell_local_first_variation
+        RicCov nabla2H hsym Ex Ey Ez Bx By Bz i j
+        nablaF nablaDeltaA deltaA
+    onShellFirstVariationBoundary := by
+      intro RicCov nabla2H hsym i j nablaF nablaDeltaA deltaA
+        hEinstein hMaxwell
+      exact generalEinsteinMaxwell_onShell_local_first_variation_is_boundary
+        RicCov nabla2H hsym Ex Ey Ez Bx By Bz i j
+        nablaF nablaDeltaA deltaA hEinstein hMaxwell
     actionCarrier :=
       generalActionDerivedCarrierLinear_eq_generalMaxwellCarrierLinear
         Ex Ey Ez Bx By Bz
@@ -24379,6 +24453,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellNormalizedCarrier_eq_projector_difference
 #print axioms RelativeRest.generalMaxwell_principal_projectors_pointwise_unique
 #print axioms RelativeRest.generalMaxwellNonNull_principal_of_nonzero
+#print axioms RelativeRest.generalEinsteinMaxwell_local_first_variation
+#print axioms RelativeRest.generalEinsteinMaxwell_onShell_local_first_variation_is_boundary
 #print axioms RelativeRest.arbitraryMaxwell_action_forced_certificate
 #print axioms RelativeRest.principalField_has_arbitraryMaxwell_action_certificate
 #print axioms RelativeRest.generalMaxwellCarrier_nilpotent_of_chi_zero
