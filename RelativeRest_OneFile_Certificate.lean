@@ -5578,6 +5578,15 @@ structure ArbitraryMaxwellActionForcedCertificate
   actionCarrier :
     generalActionDerivedCarrierLinear Ex Ey Ez Bx By Bz =
       generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz
+  einsteinRicciTraceFree :
+    generalRicciFromEinsteinTrace Ex Ey Ez Bx By Bz = 0
+  einsteinRicciCarrier :
+    ∀ i j : Fin 4,
+      generalMaxwellCarrier Ex Ey Ez Bx By Bz i j =
+        -2 * generalRicciFromEinsteinF Ex Ey Ez Bx By Bz i j
+  einsteinRicciNorm :
+    generalRicciNormFromEinstein Ex Ey Ez Bx By Bz =
+      (generalMaxwellChi Ex Ey Ez Bx By Bz)^2
   rainichSquare :
     (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz).comp
         (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz) =
@@ -5623,6 +5632,11 @@ structure ArbitraryMaxwellActionForcedCertificate
     (generalMaxwellClockRate Ex Ey Ez Bx By Bz)^4 =
       (generalMaxwellI Ex Ey Ez Bx By Bz)^2 +
         (generalMaxwellJ Ex Ey Ez Bx By Bz)^2
+  clockRicciFourthRoot :
+    generalMaxwellClockRate Ex Ey Ez Bx By Bz =
+      Real.sqrt
+        (Real.sqrt
+          (generalRicciNormFromEinstein Ex Ey Ez Bx By Bz))
 
 /-- Constructor for the frame-free arbitrary-field master. -/
 theorem arbitraryMaxwell_action_forced_certificate
@@ -5637,6 +5651,14 @@ theorem arbitraryMaxwell_action_forced_certificate
     actionStress := ?_
     actionCarrier :=
       generalActionDerivedCarrierLinear_eq_generalMaxwellCarrierLinear
+        Ex Ey Ez Bx By Bz
+    einsteinRicciTraceFree :=
+      generalRicciFromEinstein_trace_zero Ex Ey Ez Bx By Bz
+    einsteinRicciCarrier :=
+      generalMaxwellCarrier_eq_minus_two_EinsteinRicci
+        Ex Ey Ez Bx By Bz
+    einsteinRicciNorm :=
+      generalRicciNormFromEinstein_eq_chi_sq
         Ex Ey Ez Bx By Bz
     rainichSquare :=
       generalMaxwellCarrierLinear_sq_chi
@@ -5659,6 +5681,9 @@ theorem arbitraryMaxwell_action_forced_certificate
         Ex Ey Ez Bx By Bz
     clockFourthPower :=
       generalMaxwellClockRate_fourth_power
+        Ex Ey Ez Bx By Bz
+    clockRicciFourthRoot :=
+      generalMaxwellClockRate_eq_ricci_fourth_root
         Ex Ey Ez Bx By Bz }
   · intro i j
     exact
