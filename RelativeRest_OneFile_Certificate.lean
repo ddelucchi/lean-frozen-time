@@ -5386,42 +5386,6 @@ theorem normalizedNullDyad_vector_norm_identity
       D.crossNormalized, hll]
   ring
 
-/-- Evaluation of a covector on a vector in the local orthonormal chart. -/
-def principalCovectorEval
-    (alpha v : Fin 4 → ℝ) : ℝ :=
-  ∑ i : Fin 4, alpha i * v i
-
-/-- Musical raising converts covector evaluation into the Lorentzian pairing. -/
-theorem principalCovectorEval_eq_raised_pairing
-    (alpha v : Fin 4 → ℝ) :
-    principalCovectorEval alpha v =
-      principalMinkowskiBilinear
-        (principalRaiseCovector alpha) v := by
-  unfold principalCovectorEval
-  rw [principalMinkowskiBilinear_eq_sum]
-  apply Finset.sum_congr rfl
-  intro i hi
-  fin_cases i <;>
-    simp [principalRaiseCovector, principalMetricSign]
-
-/-- Hence every covector whose raised vector lies in the two-plane obeys the
-same normalized-null-component norm identity. -/
-theorem normalizedNullDyad_covector_norm_identity
-    {P : Submodule ℝ (Fin 4 → ℝ)}
-    (D : NormalizedPrincipalNullDyad P)
-    (hfin : Module.finrank ℝ P = 2)
-    (alpha : Fin 4 → ℝ)
-    (hmem : principalRaiseCovector alpha ∈ P) :
-    principalMinkowskiCovectorSq alpha =
-      -2 *
-        principalCovectorEval alpha D.k.1 *
-        principalCovectorEval alpha D.l.1 := by
-  let w : P := ⟨principalRaiseCovector alpha, hmem⟩
-  have hw :=
-    normalizedNullDyad_vector_norm_identity D hfin w
-  simpa [w, principalMinkowskiCovectorSq,
-    principalCovectorEval_eq_raised_pairing] using hw
-
 /-- Canonically normalized future principal null directions of the Lorentzian Rainich plane. -/
 def principalNullK : Fin 4 → ℝ :=
   principalInvSqrtTwo •
@@ -6484,6 +6448,42 @@ def generalMaxwellResolvingNormSq
     (generalMaxwellResolvingCovector
       Ex Ey Ez Bx By Bz
       dEx dEy dEz dBx dBy dBz)
+
+/-- Evaluation of a covector on a vector in the local orthonormal chart. -/
+def principalCovectorEval
+    (alpha v : Fin 4 → ℝ) : ℝ :=
+  ∑ i : Fin 4, alpha i * v i
+
+/-- Musical raising converts covector evaluation into the Lorentzian pairing. -/
+theorem principalCovectorEval_eq_raised_pairing
+    (alpha v : Fin 4 → ℝ) :
+    principalCovectorEval alpha v =
+      principalMinkowskiBilinear
+        (principalRaiseCovector alpha) v := by
+  unfold principalCovectorEval
+  rw [principalMinkowskiBilinear_eq_sum]
+  apply Finset.sum_congr rfl
+  intro i hi
+  fin_cases i <;>
+    simp [principalRaiseCovector, principalMetricSign]
+
+/-- Hence every covector whose raised vector lies in the two-plane obeys the
+same normalized-null-component norm identity. -/
+theorem normalizedNullDyad_covector_norm_identity
+    {P : Submodule ℝ (Fin 4 → ℝ)}
+    (D : NormalizedPrincipalNullDyad P)
+    (hfin : Module.finrank ℝ P = 2)
+    (alpha : Fin 4 → ℝ)
+    (hmem : principalRaiseCovector alpha ∈ P) :
+    principalMinkowskiCovectorSq alpha =
+      -2 *
+        principalCovectorEval alpha D.k.1 *
+        principalCovectorEval alpha D.l.1 := by
+  let w : P := ⟨principalRaiseCovector alpha, hmem⟩
+  have hw :=
+    normalizedNullDyad_vector_norm_identity D hfin w
+  simpa [w, principalMinkowskiCovectorSq,
+    principalCovectorEval_eq_raised_pairing] using hw
 
 /-- The field-derived resolving covector is in the invariant +1 projector range. -/
 theorem generalMaxwellResolvingCovector_raised_mem_plusRange
