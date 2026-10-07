@@ -24316,6 +24316,32 @@ structure ArbitraryMaxwellRegularStratumLocalCertificate
     (∃! v : R2,
       tangentToClockSection v ∧
         clockLiouville 1 v = 1)
+  relationalFlowEvolution :
+    ∀ {X : Type*}
+      (flow : ℝ → X → X) (F XF : X → ℝ) (T : X → ℝ)
+      (θ : ℝ) (x : X),
+      (∀ t : ℝ, ∀ y : X,
+        HasDerivAt (fun z : ℝ => F (flow z y))
+          (XF (flow t y)) t) →
+      deriv (fun ϑ : ℝ =>
+        relationalObservable flow F T ϑ x) θ =
+        relationalGeneratorObservable flow XF T θ x
+  relationalGaugeInvariance :
+    ∀ {X : Type*}
+      (flow : ℝ → X → X) (F : X → ℝ) (T : X → ℝ)
+      (θ t : ℝ) (x : X),
+      (∀ a b : ℝ, ∀ y : X,
+        flow a (flow b y) = flow (a + b) y) →
+      (∀ b : ℝ, ∀ y : X,
+        T (flow b y) = T y + b) →
+      relationalObservable flow F T θ (flow t x) =
+        relationalObservable flow F T θ x
+  relationalClockRecovery :
+    ∀ {X : Type*}
+      (flow : ℝ → X → X) (F : X → ℝ) (T : X → ℝ)
+      (x : X),
+      (∀ y : X, flow 0 y = y) →
+      relationalObservable flow F T (T x) x = F x
   relationalEvolution :
     ∀ (O XF : ℝ → ℝ) (T θ : ℝ),
       HasDerivAt O (XF (θ - T)) (θ - T) →
@@ -24366,6 +24392,9 @@ theorem arbitraryMaxwell_regularStratum_local_certificate
     frobeniusClosure := ?_
     clockCoverCanonical :=
       clockCover_canonical_pair_certificate
+    relationalFlowEvolution := ?_
+    relationalGaugeInvariance := ?_
+    relationalClockRecovery := ?_
     relationalEvolution := ?_
     causalExtendedEndpointMonotonicity := ?_
     causalBranchIndependence := ?_ }
@@ -24494,6 +24523,15 @@ theorem arbitraryMaxwell_regularStratum_local_certificate
       Ex Ey Ez Bx By Bz
       dEx dEy dEz dBx dBy dBz
       hnonnull du
+  · intro X flow F XF T θ x hgen
+    exact relationalObservable_deriv
+      flow F XF T θ x hgen
+  · intro X flow F T θ t x hflow hclock
+    exact relationalObservable_gauge_invariant
+      flow F T θ t x hflow hclock
+  · intro X flow F T x hzero
+    exact relationalObservable_at_clock
+      flow F T x hzero
   · intro O XF T θ hO
     exact relational_evolution_from_flow_derivative
       O XF T θ hO
@@ -30794,6 +30832,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellCarrier_nilpotent_of_chi_zero
 #print axioms RelativeRest.involution_projectors_scale_invariant
 #print axioms RelativeRest.relationalObservable_gauge_invariant
+#print axioms RelativeRest.relationalObservable_at_clock
 #print axioms RelativeRest.relationalObservable_deriv
 #print axioms RelativeRest.paperStructural_forced_certificate
 #print axioms RelativeRest.implicit_endpoint_covector_null
