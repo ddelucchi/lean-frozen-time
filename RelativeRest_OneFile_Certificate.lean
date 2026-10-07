@@ -20027,6 +20027,242 @@ theorem paper_actionBulk_IFT_architecture_certificate
 
 end PaperActionBulkIFTArchitecture
 
+/-! ### Auditable displayed-equation forcing certificate -/
+
+section PaperDisplayedEquationForcing
+
+variable {P : Type*} [AddCommGroup P] [Module ℝ P]
+variable {X : Type*}
+  [NormedAddCommGroup X] [NormedSpace ℝ X] [CompleteSpace X]
+
+/-- One proof object collecting the manuscript's central displayed-equation chain.
+This does not replace the individual theorems; it forces the proof graph to expose
+whether the action/fixed-point, carrier/Rainich, CPS bridge, contact line, clock rate,
+radar/Synge, transport, synchronization, homogeneous cover, relational evolution,
+and Kerr-Newman specialization are simultaneously available from the same data. -/
+structure PaperDisplayedEquationsForcedCertificate
+    (Bdual :
+      (X →L[ℝ] ℝ) →ₗ[ℝ] (X →L[ℝ] ℝ) →ₗ[ℝ] ℝ)
+    (D : PrincipalCarrierCharacteristicInput (P:=P))
+    (S : RegularSyngeEndpointPairSource Bdual)
+    (Q r M a θ dt dlam u s : ℝ) : Prop where
+  fixedPoint :
+    (8 * Real.pi * principalFieldEnergyDensity D.E D.B =
+      8 * Real.pi *
+        maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+        principalFieldEnergyDensity D.E D.B) ↔ s = 0
+  actionJet :
+    ∀ i j : Fin 4,
+      D.J (principalBasis j) i =
+        (16 * Real.pi / principalMetricSign i) *
+          deriv
+            (principalScaledMetricEulerCoeffFromAction
+              D.E D.B i j) 0
+  rainichCarrier :
+    ∀ i j : Fin 4,
+      (∑ k : Fin 4,
+        principalJetFromF D.E D.B i k *
+          principalJetFromF D.E D.B k j) =
+      (principalChi D.E D.B)^2 *
+        (if i = j then 1 else 0)
+  actionOpticalIntertwiner :
+    actionOpticalMap (actionBoost s CA) =
+      opticalBoost s TO
+  masterRelativeRest :
+    (XiGUS u s = XiMUS u s) ↔
+      (nuPlus s = nuMinus s ∧ Real.tanh s = 0)
+  compensatedBulkNormal :
+    D.noetherConstraintOperatorFromAction DA =
+      D.iε.comp
+        (principalMetricEulerNoetherJetLinear D.E D.B)
+  characteristicFactorization :
+    D.metricEulerJetResponse =
+      D.toCharacteristicCurrentData.current
+  contactTransverseDuality :
+    Nonempty
+      (ActionRelativeNormalSpace ≃ₗ[ℝ]
+        ((D.toCharacteristicCurrentData.K ⧸
+            LinearMap.ker D.toCharacteristicCurrentData.Lambda) →ₗ[ℝ] ℝ))
+  normalizedClockBridge :
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D))) =
+      principalUhat
+  clockRate :
+    principalClockRate D.E D.B =
+        4 * Real.sqrt
+          (Real.pi * principalFieldEnergyDensity D.E D.B) ∧
+    principalClockRate D.E D.B =
+        Real.sqrt
+          (Real.sqrt
+            ((maxwellI D.E D.B)^2 + (maxwellJ D.E D.B)^2)) ∧
+    principalClockRate D.E D.B =
+        Real.sqrt
+          (Real.sqrt
+            (principalRicciNormFromCarrier
+              (principalChi D.E D.B)))
+  radarCurvatureRate :
+    ∀ (τ0 x dplus dminus : ℝ)
+      (τplus τminus : ℝ → ℝ),
+      HasDerivAt τplus dplus x →
+      HasDerivAt τminus dminus x →
+      HasDerivAt
+        (principalRadarClockTime
+          D.E D.B τ0 τplus τminus)
+        (Real.sqrt
+            (Real.sqrt
+              (principalRicciNormFromCarrier
+                (principalChi D.E D.B))) *
+          ((dplus + dminus) / 2)) x ∧
+      HasDerivAt
+        (principalRadarClockRadius
+          D.E D.B τ0 τplus τminus)
+        (Real.sqrt
+            (Real.sqrt
+              (principalRicciNormFromCarrier
+                (principalChi D.E D.B))) *
+          ((dplus - dminus) / 2)) x
+  futureEndpointIFT :
+    HasStrictFDerivAt
+      S.plus.endpointMap
+      ((-S.plus.sigmaTheta⁻¹) • S.plus.sigmaX)
+      S.plus.u.1
+  pastEndpointIFT :
+    HasStrictFDerivAt
+      S.minus.endpointMap
+      ((-S.minus.sigmaTheta⁻¹) • S.minus.sigmaX)
+      S.minus.u.1
+  opticalClosure :
+    bil Bdual
+        S.toSyngeEndpointJetData.clockCovector
+        S.toSyngeEndpointJetData.radialCovector = 0 ∧
+    -(bil Bdual
+        S.toSyngeEndpointJetData.clockCovector
+        S.toSyngeEndpointJetData.clockCovector) =
+      bil Bdual
+        S.toSyngeEndpointJetData.radialCovector
+        S.toSyngeEndpointJetData.radialCovector
+  transportClosure :
+    ∀ (ω : ℝ) (dω dlogK : Fin 4 → ℝ)
+      (du : Fin 4 → Fin 4 → ℝ),
+      ω ≠ 0 →
+      adaptedUnitNormalization du →
+      (∀ i : Fin 3,
+        dlogK i.succ = 4 * dω i.succ / ω) →
+      ((∀ i j : Fin 3,
+          clockTransportTwoForm ω dω du i.succ j.succ = 0) ∧
+        (∀ i : Fin 3,
+          clockTransportTwoForm ω dω du 0 i.succ = 0)) ↔
+      ((∀ i j : Fin 3, principalVorticity du i j = 0) ∧
+        (∀ i : Fin 3,
+          principalAcceleration du i =
+            -dlogK i.succ / 4))
+  synchronizationOnClock :
+    ∀ dRadar : (Fin 4 → ℝ) →ₗ[ℝ] ℝ,
+      dRadar principalUhat = 1 →
+      synchronizationCovector dRadar principalTOLinear
+        principalUhat = 0
+  clockCoverCanonical :
+    (∀ v w : R2,
+      clockOmega v w =
+        clockDKappa v * clockDTheta w -
+          clockDKappa w * clockDTheta v) ∧
+    (∀ κ : ℝ, ∀ v : R2,
+      clockOmega (clockEuler κ) v =
+        clockLiouville κ v) ∧
+    (∀ v : R2, clockLiouville 1 v = clockDTheta v) ∧
+    clockPoisson dThetaVec dKappaVec = 1 ∧
+    (∀ κ : ℝ, clockLiouville κ (clockEuler κ) = 0) ∧
+    (∃! v : R2,
+      tangentToClockSection v ∧ clockLiouville 1 v = 1)
+  relationalEvolution :
+    ∀ (O XF : ℝ → ℝ) (T ϑ : ℝ),
+      HasDerivAt O (XF (ϑ - T)) (ϑ - T) →
+      deriv (fun z => O (z - T)) ϑ =
+        XF (ϑ - T)
+  kerrCarterMino :
+    (∀ i j : Fin 4,
+      kerrEinsteinCovFromMetric r M a Q θ i j =
+        8 * Real.pi *
+          kerrMaxwellStressCovFromPotential Q r M a θ i j) ∧
+    kerrCoordinateField Q r a θ =
+      kerrFieldInCarterCoframe Q r M a θ ∧
+    sigmaStar
+      (kerrResolvingQMinus r a θ)
+      (kerrResolvingQPlus r a θ) = 0 ∧
+    kerrStationaryNormSq r M a Q θ
+      (carterObserver r M a Q θ) = -1 ∧
+    kerrClockRateFromPrincipalEM Q r a θ * dt =
+      Real.sqrt 2 * |Q| * dlam
+
+/-- Constructor of the displayed-equation forcing certificate. -/
+theorem paper_displayed_equations_forced_certificate
+    (Bdual :
+      (X →L[ℝ] ℝ) →ₗ[ℝ] (X →L[ℝ] ℝ) →ₗ[ℝ] ℝ)
+    (D : PrincipalCarrierCharacteristicInput (P:=P))
+    (S : RegularSyngeEndpointPairSource Bdual)
+    (hsym : ∀ x y, bil Bdual x y = bil Bdual y x)
+    (Q r M a θ dt dlam u s : ℝ)
+    (hQ : Q ≠ 0)
+    (hsig : 0 < Sigma r a θ)
+    (hdel : 0 < Delta r M a Q)
+    (hsin : 0 < Real.sin θ)
+    (hmino : dlam = dt / Sigma r a θ) :
+    PaperDisplayedEquationsForcedCertificate
+      Bdual D S Q r M a θ dt dlam u s := by
+  refine {
+    fixedPoint :=
+      principalField_solution_preserving_iff
+        u s D.E D.B D.field_nonzero
+    actionJet := D.J_basis_eq_actionEulerJet
+    rainichCarrier := principalJetFromF_rainich D.E D.B
+    actionOpticalIntertwiner := by
+      simpa [actionOpticalMap_CA] using
+        actionOpticalMap_intertwines_boost s CA
+    masterRelativeRest := full_relative_rest_equivalence u s
+    compensatedBulkNormal := D.noetherConstraintOperatorFromAction_DA
+    characteristicFactorization := by
+      rw [D.metricEulerJetResponse_eq_stress,
+        principalCarrierCharacteristic_current D]
+    contactTransverseDuality :=
+      ⟨actionRelativeNormalClockDualEquiv
+        D.toCharacteristicCurrentData.Lambda
+        (principalCarrierCharacteristic_Lambda_nonzero D)⟩
+    normalizedClockBridge :=
+      principalCarrierCharacteristic_normalizationBridge D
+    clockRate := principalClockRate_three_way D.E D.B
+    radarCurvatureRate := ?_
+    futureEndpointIFT :=
+      S.plus.endpointMap_hasStrictFDerivAt_explicit
+    pastEndpointIFT :=
+      S.minus.endpointMap_hasStrictFDerivAt_explicit
+    opticalClosure := S.optical_closure hsym
+    transportClosure := ?_
+    synchronizationOnClock := ?_
+    clockCoverCanonical := clockCover_canonical_pair_certificate
+    relationalEvolution := ?_
+    kerrCarterMino := ?_ }
+  · intro τ0 x dplus dminus τplus τminus hp hm
+    exact principalRadarClock_split_ricci_rate
+      D.E D.B τ0 x dplus dminus τplus τminus hp hm
+  · intro ω dω dlogK du hω hunit hlog
+    exact clockTransport_projected_zero_iff
+      ω dω dlogK du hω hunit hlog
+  · intro dRadar hRadar
+    exact principalSynchronization_vanishes dRadar hRadar
+  · intro O XF T ϑ hO
+    exact relational_evolution_from_flow_derivative O XF T ϑ hO
+  · have hk :=
+      kerrNewman_full_field_metric_clock_certificate
+        Q r M a θ dt dlam hQ hsig hdel hsin hmino
+    exact ⟨hk.1, hk.2.1, hk.2.2.2.1,
+      hk.2.2.2.2.1, hk.2.2.2.2.2⟩
+
+end PaperDisplayedEquationForcing
+
 /-! ## 19. End-to-end dependency record -/
 
 /-- A compact theorem collecting the fully proved scalar backbone: four-dimensional reciprocity,
