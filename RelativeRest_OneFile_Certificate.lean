@@ -4967,6 +4967,21 @@ theorem principalMinkowskiBilinear_symm
   simp [principalMinkowskiBilinear]
   ring
 
+theorem principalMinkowskiBilinear_sub_right
+    (u v w : Fin 4 → ℝ) :
+    principalMinkowskiBilinear u (v - w) =
+      principalMinkowskiBilinear u v -
+        principalMinkowskiBilinear u w := by
+  simp [principalMinkowskiBilinear]
+  ring
+
+theorem principalMinkowskiBilinear_smul_right
+    (a : ℝ) (u v : Fin 4 → ℝ) :
+    principalMinkowskiBilinear u (a • v) =
+      a * principalMinkowskiBilinear u v := by
+  simp [principalMinkowskiBilinear]
+  ring
+
 theorem principalMinkowskiSq_smul
     (a : ℝ) (v : Fin 4 → ℝ) :
     principalMinkowskiSq (a • v) =
@@ -5111,10 +5126,10 @@ theorem lorentzianTwoPlane_has_normalizedNullDyad
     change
       principalMinkowskiBilinear u.1
         (v.1 - coeff • u.1) = 0
+    rw [principalMinkowskiBilinear_sub_right,
+      principalMinkowskiBilinear_smul_right]
     unfold coeff
-    simp [principalMinkowskiBilinear]
     field_simp [hBuu]
-    ring
   have he0 : e ≠ 0 := by
     intro hz
     have hz' : v - coeff • u = 0 := by
