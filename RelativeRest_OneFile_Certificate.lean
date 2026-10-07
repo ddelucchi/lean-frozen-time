@@ -18286,6 +18286,49 @@ structure CanonicalPrincipalFieldForcedCertificate
       (globalToPrincipalLocalClockMap
         D.toCharacteristicCurrentData.Lambda) =
       D.toCharacteristicCurrentData.clockCovector
+  characteristicLeavesGloballySimple :
+    let D := canonicalPrincipalLapseCarrierCharacteristicInput E B hfield
+    ∀ x y : D.toCharacteristicCurrentData.K,
+      SameLinearCharacteristicLeaf
+          (LinearMap.ker D.toCharacteristicCurrentData.Lambda) x y ↔
+        (Submodule.Quotient.mk x :
+          D.toCharacteristicCurrentData.K ⧸
+            LinearMap.ker D.toCharacteristicCurrentData.Lambda) =
+          Submodule.Quotient.mk y
+  characteristicBasicDescent :
+    let D := canonicalPrincipalLapseCarrierCharacteristicInput E B hfield
+    IsBasicCovectorFor
+        (LinearMap.ker D.toCharacteristicCurrentData.Lambda)
+        D.toCharacteristicCurrentData.Lambda ∧
+      ∃! λbar :
+          (D.toCharacteristicCurrentData.K ⧸
+            LinearMap.ker D.toCharacteristicCurrentData.Lambda) →ₗ[ℝ] ℝ,
+        λbar.comp
+            (LinearMap.ker D.toCharacteristicCurrentData.Lambda).mkQ =
+          D.toCharacteristicCurrentData.Lambda
+  clockPotentialOnlyOrigin :
+    let D := canonicalPrincipalLapseCarrierCharacteristicInput E B hfield
+    let Q :=
+      D.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.toCharacteristicCurrentData.Lambda
+    let λ := quotientClockCovector D.toCharacteristicCurrentData.Lambda
+    ∀ (Theta1 Theta2 : Q → ℝ),
+      (∀ x v : Q, Theta1 (x + v) - Theta1 x = λ v) →
+      (∀ x v : Q, Theta2 (x + v) - Theta2 x = λ v) →
+      ∀ x : Q, Theta1 x - Theta2 x = Theta1 0 - Theta2 0
+  normalizedClockPotentialFlow :
+    let D := canonicalPrincipalLapseCarrierCharacteristicInput E B hfield
+    let λ := quotientClockCovector D.toCharacteristicCurrentData.Lambda
+    let clockUnit :=
+      globalClockQuotientUnit
+        D.toCharacteristicCurrentData.Lambda
+        (principalCarrierCharacteristic_Lambda_nonzero D)
+    ∀ (C t : ℝ)
+      (x :
+        D.toCharacteristicCurrentData.K ⧸
+          LinearMap.ker D.toCharacteristicCurrentData.Lambda),
+      clockPotential λ C (x + t • clockUnit) =
+        clockPotential λ C x + t
   contactTransverseDuality :
     let D := canonicalPrincipalLapseCarrierCharacteristicInput E B hfield
     Nonempty
@@ -18497,6 +18540,29 @@ theorem canonicalPrincipalField_forced_certificate
       principalCarrierCharacteristic_quotient_finrank_one D
     globalLocalClockPullback :=
       principalCarrierCharacteristic_globalLocal_pullback D
+    characteristicLeavesGloballySimple := by
+      intro x y
+      exact linearCharacteristicLeaf_iff_same_quotient
+        (LinearMap.ker D.toCharacteristicCurrentData.Lambda) x y
+    characteristicBasicDescent :=
+      kernelClockCovector_basic_and_unique
+        D.toCharacteristicCurrentData.Lambda
+    clockPotentialOnlyOrigin := by
+      intro Theta1 Theta2 h1 h2 x
+      exact clockPotential_unique_up_to_constant
+        (quotientClockCovector D.toCharacteristicCurrentData.Lambda)
+        Theta1 Theta2 h1 h2 x
+    normalizedClockPotentialFlow := by
+      intro C t x
+      exact clockPotential_normalized_flow
+        (quotientClockCovector D.toCharacteristicCurrentData.Lambda)
+        (globalClockQuotientUnit
+          D.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D))
+        (globalClockQuotientUnit_normalized
+          D.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D))
+        C t x
     contactTransverseDuality := ?_
     normalizedClockBridge := ?_
     localPointResponseRatio := ?_
@@ -23303,6 +23369,10 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.canonicalPrincipalADM_forces_action_bulk
 #print axioms RelativeRest.canonicalOpticalRegularSyngePair_realizesCanonicalOpticalJet
 #print axioms RelativeRest.canonicalOpticalRegularSyngePair_endpoint_derivatives
+#print axioms RelativeRest.linearCharacteristicLeaf_iff_same_quotient
+#print axioms RelativeRest.kernelClockCovector_basic_and_unique
+#print axioms RelativeRest.clockPotential_unique_up_to_constant
+#print axioms RelativeRest.clockPotential_normalized_flow
 #print axioms RelativeRest.canonicalPrincipalField_forced_certificate
 #print axioms RelativeRest.kerrNewman_fieldOnly_forced_certificate
 #print axioms RelativeRest.principalFieldCurrent_Lambda_unique
