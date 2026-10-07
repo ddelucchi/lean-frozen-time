@@ -24861,6 +24861,102 @@ theorem generalMaxwellCarrierLinear_finiteBalancedU_eigen
       hS
   simpa [smul_smul, hchi0] using h
 
+
+/-- The stress tensor has every finite-resolver balanced observer as the same
+physical timelike eigenvector, with eigenvalue -chi/(16 pi). -/
+theorem generalMaxwellStressLinear_finiteBalancedU_eigen
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellStressLinear Ex Ey Ez Bx By Bz
+        (resolvingPlaneBalancedU alpha D) =
+      (-(generalMaxwellChi Ex Ey Ez Bx By Bz /
+          (16 * Real.pi))) •
+        resolvingPlaneBalancedU alpha D := by
+  have hJ :=
+    generalMaxwellCarrierLinear_finiteBalancedU_eigen
+      Ex Ey Ez Bx By Bz alpha hnonnull D
+  have hpi : (16 * Real.pi : ℝ) ≠ 0 := by
+    positivity
+  rw [generalMaxwellCarrierLinear_eq_neg16pi_stressLinear] at hJ
+  apply_fun (fun v : Fin 4 → ℝ => (-(1 / (16 * Real.pi))) • v) at hJ
+  simpa [smul_smul, hpi] using hJ
+
+/-- Electromagnetic energy density measured by an observer selected by any
+finite resolving carrier jet. -/
+def generalMaxwellFiniteResolvingRestEnergyDensity
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) : ℝ :=
+  principalMinkowskiBilinear
+    (resolvingPlaneBalancedU alpha D)
+    (generalMaxwellStressLinear Ex Ey Ez Bx By Bz
+      (resolvingPlaneBalancedU alpha D))
+
+theorem generalMaxwellFiniteResolvingRestEnergyDensity_eq
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellFiniteResolvingRestEnergyDensity
+        Ex Ey Ez Bx By Bz alpha D =
+      generalMaxwellChi Ex Ey Ez Bx By Bz /
+        (16 * Real.pi) := by
+  unfold generalMaxwellFiniteResolvingRestEnergyDensity
+  rw [generalMaxwellStressLinear_finiteBalancedU_eigen
+    Ex Ey Ez Bx By Bz alpha hnonnull D,
+    principalMinkowskiBilinear_smul_right,
+    ← principalMinkowskiSq_eq_bilinear,
+    (resolvingPlaneBalancedFrame_orthonormal alpha D).1]
+  ring
+
+/-- The energy-density clock formula is resolver-order independent. -/
+theorem generalMaxwellClockRate_eq_finiteResolvingRestEnergyDensity
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellClockRate Ex Ey Ez Bx By Bz =
+      4 * Real.sqrt
+        (Real.pi *
+          generalMaxwellFiniteResolvingRestEnergyDensity
+            Ex Ey Ez Bx By Bz alpha D) := by
+  have heps :=
+    generalMaxwellFiniteResolvingRestEnergyDensity_eq
+      Ex Ey Ez Bx By Bz alpha hnonnull D
+  have heps_nonneg :
+      0 ≤
+        generalMaxwellFiniteResolvingRestEnergyDensity
+          Ex Ey Ez Bx By Bz alpha D := by
+    rw [heps]
+    positivity
+  apply energy_density_clock_rate_value
+    (generalMaxwellFiniteResolvingRestEnergyDensity
+      Ex Ey Ez Bx By Bz alpha D)
+    (generalMaxwellClockRate Ex Ey Ez Bx By Bz)
+    heps_nonneg
+    (generalMaxwellClockRate_nonneg Ex Ey Ez Bx By Bz)
+  rw [generalMaxwellClockRate_sq, heps]
+  field_simp [ne_of_gt Real.pi_pos]
+  ring
+
 /-- Future hypersurface contraction selected by an arbitrary finite resolver. -/
 def generalMaxwellFiniteResolvingFutureFluxUnit
     (alpha : Fin 4 → ℝ)
@@ -34205,6 +34301,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.resolvingPlaneBalancedFrame_independent_future_dyad
 #print axioms RelativeRest.generalMaxwell_finiteResolvingCovector_frame_forced
 #print axioms RelativeRest.generalMaxwellCarrierLinear_finiteBalancedU_eigen
+#print axioms RelativeRest.generalMaxwellStressLinear_finiteBalancedU_eigen
+#print axioms RelativeRest.generalMaxwellFiniteResolvingRestEnergyDensity_eq
+#print axioms RelativeRest.generalMaxwellClockRate_eq_finiteResolvingRestEnergyDensity
 #print axioms RelativeRest.generalMaxwellFiniteResolvingADMCharacteristic_current_factor
 #print axioms RelativeRest.generalMaxwellFiniteResolvingADMCharacteristic_current_eq_actionDerived
 #print axioms RelativeRest.generalMaxwellFiniteResolvingADMCharacteristic_Lambda_nonzero
