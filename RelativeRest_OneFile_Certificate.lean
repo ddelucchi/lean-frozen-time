@@ -16551,6 +16551,43 @@ def canonicalPrincipalCarrierCharacteristicInput
   volume_pos := by norm_num
   witness_image := by simp
 
+/-- Pure-lapse characteristic map: the scalar lapse profile moves only along the
+already-selected principal future timelike direction.  This is the minimal
+characteristic subfamily needed for the nonvanishing clock response. -/
+def principalLapseCharacteristicMap :
+    ℝ →ₗ[ℝ] (Fin 4 → ℝ) where
+  toFun f := f • principalUhat
+  map_add' x y := by
+    simp [add_smul]
+  map_smul' c x := by
+    simp [mul_smul]
+
+@[simp] theorem principalLapseCharacteristicMap_apply
+    (f : ℝ) :
+    principalLapseCharacteristicMap f =
+      f • principalUhat := rfl
+
+@[simp] theorem principalLapseCharacteristicMap_one :
+    principalLapseCharacteristicMap 1 = principalUhat := by
+  simp
+
+/-- Canonical characteristic datum built only from the physical pure-lapse normal
+deformation.  Unlike the identity characteristic model, it does not assume that
+all principal-frame tangent directions are gauge-characteristic directions. -/
+def canonicalPrincipalLapseCarrierCharacteristicInput
+    (E B : ℝ) (hfield : E ≠ 0 ∨ B ≠ 0) :
+    PrincipalCarrierCharacteristicInput (P:=ℝ) where
+  beta := principalLapseCharacteristicMap
+  positiveWitness := 1
+  smear := 1
+  E := E
+  B := B
+  volume := 1
+  smear_pos := by norm_num
+  field_nonzero := hfield
+  volume_pos := by norm_num
+  witness_image := by simp
+
 /-- Field-derived Maxwell stress endomorphism attached to the input. -/
 def PrincipalCarrierCharacteristicInput.T
     (D : PrincipalCarrierCharacteristicInput (P:=P)) :
@@ -21978,6 +22015,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalField_forced_core_chain
 #print axioms RelativeRest.PrincipalCarrierCharacteristicInput.anyCanonicalCompletion_compensated_eq_action
 #print axioms RelativeRest.principalActionBulk_forced_core_chain
+#print axioms RelativeRest.principalLapseCharacteristicMap_one
 #print axioms RelativeRest.canonicalPrincipalField_forces_clock_chain
 #print axioms RelativeRest.canonicalPrincipalField_forces_action_bulk
 #print axioms RelativeRest.principalBridgeSpatialCoeff_ratio_forced
