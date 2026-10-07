@@ -5896,6 +5896,133 @@ theorem generalMaxwellProjectors_idempotent
       Ex Ey Ez Bx By Bz hnonnull) v
 
 
+/-! ### The resolving covector is constructed from the Maxwell first jet -/
+
+/-- Raise a covector with the local Lorentzian inverse metric. -/
+def principalRaiseCovector
+    (alpha : Fin 4 → ℝ) : Fin 4 → ℝ :=
+  fun i => principalMetricSign i * alpha i
+
+/-- Lower a vector with the local Lorentzian metric. -/
+def principalLowerVector
+    (v : Fin 4 → ℝ) : Fin 4 → ℝ :=
+  fun i => principalMetricSign i * v i
+
+@[simp] theorem principalRaiseCovector_lowerVector
+    (v : Fin 4 → ℝ) :
+    principalRaiseCovector (principalLowerVector v) = v := by
+  funext i
+  fin_cases i <;>
+    simp [principalRaiseCovector, principalLowerVector,
+      principalMetricSign]
+
+@[simp] theorem principalLowerVector_raiseCovector
+    (alpha : Fin 4 → ℝ) :
+    principalLowerVector (principalRaiseCovector alpha) = alpha := by
+  funext i
+  fin_cases i <;>
+    simp [principalRaiseCovector, principalLowerVector,
+      principalMetricSign]
+
+/-- Lorentz-covariant action of the +1 Rainich projector on covectors:
+raise, project the vector, then lower. -/
+def generalMaxwellCovectorProjectorPlus
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ) : Fin 4 → ℝ :=
+  principalLowerVector
+    (generalMaxwellProjectorPlus
+      Ex Ey Ez Bx By Bz
+      (principalRaiseCovector alpha))
+
+/-- Raising the projected covector returns exactly the already-forced vector
+Rainich projection. -/
+theorem generalMaxwellCovectorProjectorPlus_raise
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ) :
+    principalRaiseCovector
+      (generalMaxwellCovectorProjectorPlus
+        Ex Ey Ez Bx By Bz alpha) =
+      generalMaxwellProjectorPlus
+        Ex Ey Ez Bx By Bz
+        (principalRaiseCovector alpha) := by
+  simp [generalMaxwellCovectorProjectorPlus]
+
+/-- The manuscript's p=P_L d log chi, now defined entirely from the Maxwell
+field and its first spacetime jet. -/
+def generalMaxwellResolvingCovector
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ) :
+    Fin 4 → ℝ :=
+  generalMaxwellCovectorProjectorPlus
+    Ex Ey Ez Bx By Bz
+    (generalMaxwellDLogChiCovector
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz)
+
+/-- Each unprojected component used in p is literally the directional derivative
+of log chi along the corresponding spacetime basis direction. -/
+theorem generalMaxwellDLogChiCovector_component_hasDerivAt
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (a : Fin 4) :
+    HasDerivAt
+      (fun t =>
+        Real.log
+          (generalMaxwellChi
+            (affineJetLine Ex (dEx a) t)
+            (affineJetLine Ey (dEy a) t)
+            (affineJetLine Ez (dEz a) t)
+            (affineJetLine Bx (dBx a) t)
+            (affineJetLine By (dBy a) t)
+            (affineJetLine Bz (dBz a) t)))
+      (generalMaxwellDLogChiCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz a) 0 := by
+  exact generalMaxwellLogChiAlongJet_hasDerivAt_zero
+    Ex Ey Ez Bx By Bz
+    (dEx a) (dEy a) (dEz a)
+    (dBx a) (dBy a) (dBz a)
+    hnonnull
+
+/-- The field-derived resolving covector lies in the +1 Rainich plane after
+raising its index; no independent principal-plane covector is supplied. -/
+theorem generalMaxwellResolvingCovector_raised_eigen
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
+    generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz
+      (principalRaiseCovector
+        (generalMaxwellResolvingCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz)) =
+      principalRaiseCovector
+        (generalMaxwellResolvingCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz) := by
+  rw [generalMaxwellResolvingCovector,
+    generalMaxwellCovectorProjectorPlus_raise]
+  exact generalMaxwellProjectorPlus_eigen
+    Ex Ey Ez Bx By Bz hnonnull
+    (principalRaiseCovector
+      (generalMaxwellDLogChiCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz))
+
+/-- Lorentzian squared norm of a covector, defined through the musical map. -/
+def principalMinkowskiCovectorSq
+    (alpha : Fin 4 → ℝ) : ℝ :=
+  principalMinkowskiSq (principalRaiseCovector alpha)
+
+/-- Invariant regularity scalar p² for the field-derived resolving covector. -/
+def generalMaxwellResolvingNormSq
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ) : ℝ :=
+  principalMinkowskiCovectorSq
+    (generalMaxwellResolvingCovector
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz)
+
 /-- Maxwell positivity shows that the +1 Rainich eigenspace is the Lorentzian
 principal two-plane: projecting one background orthonormal-frame timelike basis
 vector gives a strictly timelike element of that invariant range.  The basis
@@ -25230,6 +25357,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.selfAdjointInvolution_plus_projector_norm
 #print axioms RelativeRest.generalMaxwellCarrier_00
 #print axioms RelativeRest.generalMaxwellNormalizedCarrier_basis0_pairing
+#print axioms RelativeRest.generalMaxwellCovectorProjectorPlus_raise
+#print axioms RelativeRest.generalMaxwellDLogChiCovector_component_hasDerivAt
+#print axioms RelativeRest.generalMaxwellResolvingCovector_raised_eigen
 #print axioms RelativeRest.generalMaxwellProjectorPlus_basis0_timelike
 #print axioms RelativeRest.generalMaxwellProjectorPlus_range_has_timelike
 #print axioms RelativeRest.generalMaxwell_principal_split_unique
