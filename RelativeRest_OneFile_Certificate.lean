@@ -18361,6 +18361,20 @@ structure CanonicalPrincipalFieldForcedCertificate
       bil opticalBilinear
         canonicalPrincipalSyngeEndpointJetData.radialCovector
         canonicalPrincipalSyngeEndpointJetData.radialCovector
+  canonicalOpticalIFTRealization :
+    canonicalOpticalRegularSyngePair.RealizesCanonicalOpticalJet
+      opticalDualCoordinates
+  canonicalOpticalIFTDerivatives :
+    HasStrictFDerivAt
+        canonicalOpticalRegularSyngePair.plus.endpointMap
+        ((-canonicalOpticalRegularSyngePair.plus.sigmaTheta⁻¹) •
+          canonicalOpticalRegularSyngePair.plus.sigmaX)
+        canonicalOpticalRegularSyngePair.plus.u.1 ∧
+      HasStrictFDerivAt
+        canonicalOpticalRegularSyngePair.minus.endpointMap
+        ((-canonicalOpticalRegularSyngePair.minus.sigmaTheta⁻¹) •
+          canonicalOpticalRegularSyngePair.minus.sigmaX)
+        canonicalOpticalRegularSyngePair.minus.u.1
   radarCurvatureRate :
     ∀ (τ0 x dplus dminus : ℝ)
       (τplus τminus : ℝ → ℝ),
@@ -18501,6 +18515,10 @@ theorem canonicalPrincipalField_forced_certificate
       canonicalPrincipalSyngeEndpointJetData_radial
     canonicalOpticalClosure :=
       canonicalPrincipalSyngeEndpointJetData_optical_closure
+    canonicalOpticalIFTRealization :=
+      canonicalOpticalRegularSyngePair_realizesCanonicalOpticalJet
+    canonicalOpticalIFTDerivatives :=
+      canonicalOpticalRegularSyngePair_endpoint_derivatives
     radarCurvatureRate := ?_
     transportClosure := ?_
     synchronizationOnClock := ?_
@@ -23283,6 +23301,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalCarrierCharacteristic_globalLocal_pullback
 #print axioms RelativeRest.canonicalPrincipalADM_forces_clock_chain
 #print axioms RelativeRest.canonicalPrincipalADM_forces_action_bulk
+#print axioms RelativeRest.canonicalOpticalRegularSyngePair_realizesCanonicalOpticalJet
+#print axioms RelativeRest.canonicalOpticalRegularSyngePair_endpoint_derivatives
 #print axioms RelativeRest.canonicalPrincipalField_forced_certificate
 #print axioms RelativeRest.kerrNewman_fieldOnly_forced_certificate
 #print axioms RelativeRest.principalFieldCurrent_Lambda_unique
