@@ -9498,6 +9498,16 @@ theorem arbitraryMaxwell_firstJet_forced_certificate
       (generalMaxwellResolvingCovector_nullDyad_norm
         Ex Ey Ez Bx By Bz
         dEx dEy dEz dBx dBy dBz hnonnull D)
+  · intro alpha hmem hpAlpha
+    exact arbitraryMaxwell_finiteResolvingClock_certificate
+      Ex Ey Ez Bx By Bz u s alpha
+      hnonnull hmem hpAlpha
+  · intro F hF hunit
+    exact positive_conformal_scalar_forced_by_unit_involution
+      F (generalMaxwellChi Ex Ey Ez Bx By Bz)
+      hF
+      (generalMaxwellChi_pos Ex Ey Ez Bx By Bz hnonnull)
+      hunit
   · rcases
       generalMaxwellProjectorPlus_futureNormalizedNullDyad_exists
         Ex Ey Ez Bx By Bz hnonnull with
@@ -25327,6 +25337,22 @@ structure ArbitraryMaxwellRegularStratumLocalCertificate
       Ex Ey Ez Bx By Bz u s
       dEx dEy dEz dBx dBy dBz
       hnonnull hp
+  finiteResolvingJetFallback :
+    ∀ (alpha : Fin 4 → ℝ)
+      (hmem :
+        principalRaiseCovector alpha ∈
+          LinearMap.range
+            (generalMaxwellProjectorPlusLinear
+              Ex Ey Ez Bx By Bz))
+      (hpAlpha : principalMinkowskiCovectorSq alpha ≠ 0),
+      ArbitraryMaxwellFiniteResolvingClockCertificate
+        Ex Ey Ez Bx By Bz u s alpha
+        hnonnull hmem hpAlpha
+  pointwiseConformalNormalization :
+    ∀ F : ℝ,
+      0 < F →
+      generalMaxwellChi Ex Ey Ez Bx By Bz ^ 2 / F ^ 2 = 1 →
+      F = generalMaxwellChi Ex Ey Ez Bx By Bz
   boostRapidityClosure :
     ∃ D :
         NormalizedPrincipalNullDyad
@@ -25638,6 +25664,8 @@ theorem arbitraryMaxwell_regularStratum_local_certificate
         Ex Ey Ez Bx By Bz u s
         dEx dEy dEz dBx dBy dBz
         hnonnull hp
+    finiteResolvingJetFallback := ?_
+    pointwiseConformalNormalization := ?_
     boostRapidityClosure := ?_
     admGlobalLocalClock := ?_
     canonicalLocalClock := ?_
