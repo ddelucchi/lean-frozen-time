@@ -5389,6 +5389,51 @@ theorem relativeSymplecticMinus_skew
     hG x y, hM x y, hG y x, hM y x]
   ring
 
+/-- Common-scale homogeneity of the odd presymplectic descendant is not an
+extra normalization: if the common character acts with weight one, its infinitesimal
+generator returns the form itself.  This is the pointwise content of
+`ℒ_D Ω_- = Ω_-`. -/
+def commonScaleRelativeSymplecticMinusEval
+    (ΩG ΩM : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (t : ℝ) (x y : V) : ℝ :=
+  Real.exp t * relativeSymplecticMinus ΩG ΩM x y
+
+theorem commonScaleRelativeSymplecticMinusEval_hasDerivAt_zero
+    (ΩG ΩM : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (x y : V) :
+    HasDerivAt
+      (fun t : ℝ =>
+        commonScaleRelativeSymplecticMinusEval ΩG ΩM t x y)
+      (relativeSymplecticMinus ΩG ΩM x y) 0 := by
+  unfold commonScaleRelativeSymplecticMinusEval
+  simpa using
+    (Real.hasDerivAt_exp 0).mul_const
+      (relativeSymplecticMinus ΩG ΩM x y)
+
+theorem relativeSymplecticMinus_commonScale_deriv_zero
+    (ΩG ΩM : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (x y : V) :
+    deriv
+      (fun t : ℝ =>
+        commonScaleRelativeSymplecticMinusEval ΩG ΩM t x y) 0 =
+      relativeSymplecticMinus ΩG ΩM x y :=
+  (commonScaleRelativeSymplecticMinusEval_hasDerivAt_zero
+    ΩG ΩM x y).deriv
+
+/-- Abstract Cartan closure used in the manuscript's homogeneous reduction.
+Once `ℒ_D Ω = d(ι_D Ω) + ι_D(dΩ)`, closedness kills the second term and
+weight-one homogeneity identifies the Lie derivative with `Ω`; therefore the
+Liouville contraction is forced to be an exact primitive. -/
+theorem cartan_homogeneous_closed_forces_exact
+    {A : Type*} [AddCommGroup A] [Module ℝ A]
+    (Ω dTheta iDdOmega lieDOmega : A)
+    (hCartan : lieDOmega = dTheta + iDdOmega)
+    (hClosed : iDdOmega = 0)
+    (hHomogeneous : lieDOmega = Ω) :
+    dTheta = Ω := by
+  rw [hClosed, add_zero] at hCartan
+  exact hCartan.symm.trans hHomogeneous
+
 /-- Consequently the homogeneous primitive is horizontal on the Euler direction:
 `ι_D Ω_-(D)=0`. -/
 theorem relativeLiouvilleCovector_horizontal
