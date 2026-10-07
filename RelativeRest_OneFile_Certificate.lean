@@ -3669,6 +3669,87 @@ theorem generalMaxwellCarrierLinear_sq_chi
   rw [generalMaxwellChi_sq]
   exact generalMaxwellCarrierLinear_sq Ex Ey Ez Bx By Bz
 
+/-! ### Arbitrary-field intrinsic chronometry before principalization -/
+
+@[simp] theorem generalMaxwellI_principal_specialization
+    (E B : ℝ) :
+    generalMaxwellI E 0 0 B 0 0 = maxwellI E B := by
+  simp [generalMaxwellI, maxwellI]
+  ring
+
+@[simp] theorem generalMaxwellJ_principal_specialization
+    (E B : ℝ) :
+    generalMaxwellJ E 0 0 B 0 0 = maxwellJ E B := by
+  simp [generalMaxwellJ, maxwellJ]
+
+@[simp] theorem generalMaxwellChi_nonneg
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    0 ≤ generalMaxwellChi Ex Ey Ez Bx By Bz :=
+  Real.sqrt_nonneg _
+
+/-- The invariant carrier magnitude of an arbitrary field reduces exactly to the
+principal scalar after principalization. -/
+theorem generalMaxwellChi_principal_specialization
+    (E B : ℝ) :
+    generalMaxwellChi E 0 0 B 0 0 = principalChi E B := by
+  unfold generalMaxwellChi
+  rw [generalMaxwellI_principal_specialization,
+    generalMaxwellJ_principal_specialization,
+    maxwell_invariants_eq_principalChi_sq,
+    Real.sqrt_sq (principalChi_nonneg E B)]
+
+/-- Intrinsic positive clock rate of a completely arbitrary non-null Maxwell
+two-form.  No principal frame appears in this definition. -/
+def generalMaxwellClockRate
+    (Ex Ey Ez Bx By Bz : ℝ) : ℝ :=
+  Real.sqrt (generalMaxwellChi Ex Ey Ez Bx By Bz)
+
+@[simp] theorem generalMaxwellClockRate_nonneg
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    0 ≤ generalMaxwellClockRate Ex Ey Ez Bx By Bz :=
+  Real.sqrt_nonneg _
+
+theorem generalMaxwellClockRate_pos
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
+    0 < generalMaxwellClockRate Ex Ey Ez Bx By Bz := by
+  unfold generalMaxwellClockRate
+  exact Real.sqrt_pos.2
+    (generalMaxwellChi_pos Ex Ey Ez Bx By Bz hnonnull)
+
+theorem generalMaxwellClockRate_sq
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    (generalMaxwellClockRate Ex Ey Ez Bx By Bz)^2 =
+      generalMaxwellChi Ex Ey Ez Bx By Bz := by
+  unfold generalMaxwellClockRate
+  exact Real.sq_sqrt
+    (generalMaxwellChi_nonneg Ex Ey Ez Bx By Bz)
+
+/-- The arbitrary-field clock rate is exactly the positive fourth root of the two
+Lorentz invariants. -/
+theorem generalMaxwellClockRate_fourth_power
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    (generalMaxwellClockRate Ex Ey Ez Bx By Bz)^4 =
+      (generalMaxwellI Ex Ey Ez Bx By Bz)^2 +
+        (generalMaxwellJ Ex Ey Ez Bx By Bz)^2 := by
+  calc
+    (generalMaxwellClockRate Ex Ey Ez Bx By Bz)^4 =
+        ((generalMaxwellClockRate Ex Ey Ez Bx By Bz)^2)^2 := by ring
+    _ = (generalMaxwellChi Ex Ey Ez Bx By Bz)^2 := by
+      rw [generalMaxwellClockRate_sq]
+    _ = (generalMaxwellI Ex Ey Ez Bx By Bz)^2 +
+        (generalMaxwellJ Ex Ey Ez Bx By Bz)^2 :=
+      generalMaxwellChi_sq Ex Ey Ez Bx By Bz
+
+/-- Principal-frame chronometry is therefore a specialization, not an additional
+definition or normalization. -/
+theorem generalMaxwellClockRate_principal_specialization
+    (E B : ℝ) :
+    generalMaxwellClockRate E 0 0 B 0 0 =
+      principalClockRate E B := by
+  unfold generalMaxwellClockRate principalClockRate
+  rw [generalMaxwellChi_principal_specialization]
+
 /-- Linear carrier endomorphism reconstructed directly from the first normal
 derivatives of the Einstein-Maxwell metric Euler coefficients. -/
 def principalActionEulerJetLinear
@@ -23342,6 +23423,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellNormalizedCarrier_self_adjoint
 #print axioms RelativeRest.generalMaxwellProjector_images_orthogonal
 #print axioms RelativeRest.generalMaxwell_principal_split_unique
+#print axioms RelativeRest.generalMaxwellChi_principal_specialization
+#print axioms RelativeRest.generalMaxwellClockRate_fourth_power
+#print axioms RelativeRest.generalMaxwellClockRate_principal_specialization
 #print axioms RelativeRest.generalMaxwell_principal_split_certificate
 #print axioms RelativeRest.generalMaxwellNormalizedCarrier_eq_projector_difference
 #print axioms RelativeRest.generalMaxwell_principal_projectors_pointwise_unique
