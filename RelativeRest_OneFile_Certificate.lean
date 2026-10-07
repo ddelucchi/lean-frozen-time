@@ -20912,6 +20912,511 @@ theorem characteristicCurrent_clockCovector_nonzero
     (characteristicCurrent_Lambda_nonzero D)
 
 
+
+
+/-! ### Frame-free arbitrary-Maxwell characteristic clock descent -/
+
+/-- Every vector in the + Rainich projector range is fixed by the normalized
+carrier. -/
+theorem generalMaxwellNormalizedCarrier_plusRange_eigen
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (v : Fin 4 → ℝ)
+    (hv :
+      v ∈ LinearMap.range
+        (generalMaxwellProjectorPlusLinear
+          Ex Ey Ez Bx By Bz)) :
+    generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz v = v := by
+  rcases hv with ⟨w, rfl⟩
+  rw [generalMaxwellProjectorPlusLinear_apply]
+  exact generalMaxwellProjectorPlus_eigen
+    Ex Ey Ez Bx By Bz hnonnull w
+
+/-- The balanced observer lies in the + Rainich plane. -/
+theorem generalMaxwellBalancedU_mem_plusRange
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellBalancedU
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D ∈
+      LinearMap.range
+        (generalMaxwellProjectorPlusLinear
+          Ex Ey Ez Bx By Bz) := by
+  let P :=
+    LinearMap.range
+      (generalMaxwellProjectorPlusLinear
+        Ex Ey Ez Bx By Bz)
+  have hk :
+      generalMaxwellBalancedK
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D ∈ P := by
+    unfold generalMaxwellBalancedK
+    exact P.smul_mem _ D.k.property
+  have hl :
+      generalMaxwellBalancedL
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D ∈ P := by
+    unfold generalMaxwellBalancedL
+    exact P.smul_mem _ D.l.property
+  unfold generalMaxwellBalancedU
+  exact P.smul_mem _ (P.add_mem hk hl)
+
+/-- Therefore the normalized arbitrary-field carrier fixes the balanced observer. -/
+theorem generalMaxwellNormalizedCarrier_balancedU_eigen
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz
+      (generalMaxwellBalancedU
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D) =
+      generalMaxwellBalancedU
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D := by
+  exact generalMaxwellNormalizedCarrier_plusRange_eigen
+    Ex Ey Ez Bx By Bz hnonnull
+    (generalMaxwellBalancedU
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D)
+    (generalMaxwellBalancedU_mem_plusRange
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D)
+
+/-- Undoing the positive Rainich normalization gives the physical carrier
+eigenvalue J u_* = chi u_*. -/
+theorem generalMaxwellCarrierLinear_balancedU_eigen
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz
+      (generalMaxwellBalancedU
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D) =
+      generalMaxwellChi Ex Ey Ez Bx By Bz •
+        generalMaxwellBalancedU
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D := by
+  have hS :=
+    generalMaxwellNormalizedCarrier_balancedU_eigen
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull D
+  have hchi0 :
+      generalMaxwellChi Ex Ey Ez Bx By Bz ≠ 0 :=
+    ne_of_gt
+      (generalMaxwellChi_pos Ex Ey Ez Bx By Bz hnonnull)
+  unfold generalMaxwellNormalizedCarrier at hS
+  simp only [LinearMap.smul_apply] at hS
+  have h :=
+    congrArg
+      (fun z : Fin 4 → ℝ =>
+        generalMaxwellChi Ex Ey Ez Bx By Bz • z)
+      hS
+  simpa [smul_smul, hchi0] using h
+
+/-- Unit future hypersurface contraction selected by the balanced observer itself.
+No pre-principalized time coordinate is used. -/
+def generalMaxwellBalancedFutureFluxUnit
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ where
+  toFun v :=
+    principalMinkowskiBilinear
+      (generalMaxwellBalancedU
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D) v
+  map_add' x y := by
+    exact principalMinkowskiBilinear_add_right
+      (generalMaxwellBalancedU
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D) x y
+  map_smul' a x := by
+    simpa using
+      (principalMinkowskiBilinear_smul_right
+        a
+        (generalMaxwellBalancedU
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) x)
+
+/-- The selected unit observer evaluates to -1 under its own future contraction. -/
+theorem generalMaxwellBalancedFutureFluxUnit_on_balancedU
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellBalancedFutureFluxUnit
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D
+        (generalMaxwellBalancedU
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) = -1 := by
+  unfold generalMaxwellBalancedFutureFluxUnit
+  rw [← principalMinkowskiSq_eq_bilinear]
+  exact
+    (generalMaxwellBalancedFrame_orthonormal
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D).1
+
+/-- The negative-half action-carrier current evaluated on the selected unit
+observer is the positive Maxwell/Rainich eigenvalue chi/(16 pi). -/
+theorem generalMaxwellBalancedHalfCarrierCurrent_unit
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    halfCarrierBulkCurrent
+        LinearMap.id
+        (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz)
+        (generalMaxwellBalancedFutureFluxUnit
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D)
+        (generalMaxwellBalancedU
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) =
+      generalMaxwellChi Ex Ey Ez Bx By Bz /
+        (16 * Real.pi) := by
+  unfold halfCarrierBulkCurrent carrierBulkResponse carrierJetCurrent
+  simp only [LinearMap.smul_apply, LinearMap.comp_apply, LinearMap.id_apply]
+  rw [generalMaxwellCarrierLinear_balancedU_eigen
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz hnonnull D,
+    map_smul,
+    generalMaxwellBalancedFutureFluxUnit_on_balancedU
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D]
+  field_simp [ne_of_gt Real.pi_pos]
+  ring
+
+/-- Positivity of the arbitrary non-null Maxwell field makes that current
+strictly positive on the field-selected observer. -/
+theorem generalMaxwellBalancedHalfCarrierCurrent_positive
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    0 <
+      halfCarrierBulkCurrent
+        LinearMap.id
+        (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz)
+        (generalMaxwellBalancedFutureFluxUnit
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D)
+        (generalMaxwellBalancedU
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) := by
+  rw [generalMaxwellBalancedHalfCarrierCurrent_unit
+    Ex Ey Ez Bx By Bz
+    dEx dEy dEz dBx dBy dBz hnonnull D]
+  exact div_pos
+    (generalMaxwellChi_pos Ex Ey Ez Bx By Bz hnonnull)
+    (mul_pos (by norm_num) Real.pi_pos)
+
+/-- Characteristic-current data constructed directly from the arbitrary
+six-component field, its action-derived carrier, and the field-selected observer.
+The characteristic map is the identity pointwise model, so no reachability witness
+is supplied. -/
+def generalMaxwellBalancedCharacteristicData
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    CharacteristicCurrentData
+      (P:=(Fin 4 → ℝ)) (KSpace:=(Fin 4 → ℝ)) where
+  beta := LinearMap.id
+  current :=
+    halfCarrierBulkCurrent
+      LinearMap.id
+      (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz)
+      (generalMaxwellBalancedFutureFluxUnit
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D)
+  positiveWitness :=
+    generalMaxwellBalancedU
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D
+  current_positive := by
+    simpa using
+      generalMaxwellBalancedHalfCarrierCurrent_positive
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz hnonnull D
+
+/-- The arbitrary-field characteristic covector is therefore nonzero. -/
+theorem generalMaxwellBalancedCharacteristic_Lambda_nonzero
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    (generalMaxwellBalancedCharacteristicData
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull D).Lambda ≠ 0 :=
+  characteristicCurrent_Lambda_nonzero
+    (generalMaxwellBalancedCharacteristicData
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull D)
+
+/-- Hence its stress-visible characteristic quotient is forced to be one-dimensional. -/
+theorem generalMaxwellBalancedCharacteristic_quotient_finrank_one
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    Module.finrank ℝ
+      ((generalMaxwellBalancedCharacteristicData
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz
+          hnonnull D).K ⧸
+        LinearMap.ker
+          (generalMaxwellBalancedCharacteristicData
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz
+            hnonnull D).Lambda) = 1 :=
+  characteristicCurrent_quotient_finrank_one
+    (generalMaxwellBalancedCharacteristicData
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull D)
+
+/-- The current itself is independent of the arbitrary future starting dyad on
+the resolving stratum.  Thus the characteristic clock descendant is sourced by
+a choice-free current before quotienting. -/
+theorem generalMaxwellBalancedCharacteristic_current_independent
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hp :
+      generalMaxwellResolvingNormSq
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz ≠ 0)
+    (D E :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (t : Fin 4 → ℝ)
+    (hD : D.FutureTo t)
+    (hE : E.FutureTo t) :
+    (generalMaxwellBalancedCharacteristicData
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull D).current =
+    (generalMaxwellBalancedCharacteristicData
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull E).current := by
+  have hU :=
+    (generalMaxwellBalancedFrame_independent_future_dyad
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull D E t hD hE hp).1
+  have hflux :
+      generalMaxwellBalancedFutureFluxUnit
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D =
+        generalMaxwellBalancedFutureFluxUnit
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz E := by
+    ext v
+    simp only [generalMaxwellBalancedFutureFluxUnit]
+    rw [hU]
+  change
+    halfCarrierBulkCurrent
+        LinearMap.id
+        (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz)
+        (generalMaxwellBalancedFutureFluxUnit
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) =
+      halfCarrierBulkCurrent
+        LinearMap.id
+        (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz)
+        (generalMaxwellBalancedFutureFluxUnit
+          Ex Ey Ez Bx dBy dBz D)
+  rw [hflux]
+
+/-- The same current is literally built from the arbitrary-field action metric
+derivative, because the action-derived carrier equals the Maxwell/Rainich carrier. -/
+theorem generalMaxwellBalancedCharacteristic_current_eq_actionDerived
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    (generalMaxwellBalancedCharacteristicData
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull D).current =
+      halfCarrierBulkCurrent
+        LinearMap.id
+        (generalActionDerivedCarrierLinear
+          Ex Ey Ez Bx By Bz)
+        (generalMaxwellBalancedFutureFluxUnit
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) := by
+  change
+    halfCarrierBulkCurrent
+        LinearMap.id
+        (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz)
+        (generalMaxwellBalancedFutureFluxUnit
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) =
+      halfCarrierBulkCurrent
+        LinearMap.id
+        (generalActionDerivedCarrierLinear Ex Ey Ez Bx By Bz)
+        (generalMaxwellBalancedFutureFluxUnit
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D)
+  rw [generalActionDerivedCarrierLinear_eq_generalMaxwellCarrierLinear]
+
+/-- Frame-free action-to-characteristic-clock certificate on the regular
+first-jet stratum. -/
+structure ArbitraryMaxwellFirstJetClockDescentCertificate
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hp :
+      generalMaxwellResolvingNormSq
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz ≠ 0) : Prop where
+  firstJetCore :
+    ArbitraryMaxwellFirstJetForcedCertificate
+      Ex Ey Ez Bx By Bz u s
+      dEx dEy dEz dBx dBy dBz
+      hnonnull hp
+  futureClockDatum :
+    ∃ D :
+        NormalizedPrincipalNullDyad
+          (LinearMap.range
+            (generalMaxwellProjectorPlusLinear
+              Ex Ey Ez Bx By Bz)),
+      D.FutureTo
+          (generalMaxwellProjectorPlus
+            Ex Ey Ez Bx By Bz (principalBasis 0)) ∧
+      let C :=
+        generalMaxwellBalancedCharacteristicData
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz
+          hnonnull D
+      C.Lambda ≠ 0 ∧
+        Module.finrank ℝ
+          (C.K ⧸ LinearMap.ker C.Lambda) = 1 ∧
+        C.clockCovector ≠ 0
+  currentCanonical :
+    ∀ D E :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)),
+      D.FutureTo
+          (generalMaxwellProjectorPlus
+            Ex Ey Ez Bx By Bz (principalBasis 0)) →
+      E.FutureTo
+          (generalMaxwellProjectorPlus
+            Ex Ey Ez Bx By Bz (principalBasis 0)) →
+      (generalMaxwellBalancedCharacteristicData
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz
+        hnonnull D).current =
+      (generalMaxwellBalancedCharacteristicData
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz
+        hnonnull E).current
+
+/-- Constructor: arbitrary Einstein-Maxwell field plus its first jet now reaches
+the unique nonzero characteristic clock quotient without a principal-frame input. -/
+theorem arbitraryMaxwell_firstJet_clockDescent_certificate
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hp :
+      generalMaxwellResolvingNormSq
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz ≠ 0) :
+    ArbitraryMaxwellFirstJetClockDescentCertificate
+      Ex Ey Ez Bx By Bz u s
+      dEx dEy dEz dBx dBy dBz
+      hnonnull hp := by
+  refine {
+    firstJetCore :=
+      arbitraryMaxwell_firstJet_forced_certificate
+        Ex Ey Ez Bx By Bz u s
+        dEx dEy dEz dBx dBy dBz
+        hnonnull hp
+    futureClockDatum := ?_
+    currentCanonical := ?_ }
+  · rcases
+      generalMaxwellProjectorPlus_futureNormalizedNullDyad_exists
+        Ex Ey Ez Bx By Bz hnonnull with
+      ⟨D, hD⟩
+    refine ⟨D, hD, ?_⟩
+    dsimp
+    exact ⟨
+      generalMaxwellBalancedCharacteristic_Lambda_nonzero
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz hnonnull D,
+      generalMaxwellBalancedCharacteristic_quotient_finrank_one
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz hnonnull D,
+      characteristicCurrent_clockCovector_nonzero
+        (generalMaxwellBalancedCharacteristicData
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz
+          hnonnull D)⟩
+  · intro D E hD hE
+    exact generalMaxwellBalancedCharacteristic_current_independent
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull hp D E
+      (generalMaxwellProjectorPlus
+        Ex Ey Ez Bx By Bz (principalBasis 0))
+      hD hE
+
 /-! ### Construction of the characteristic current from the fixed-point carrier -/
 
 section CarrierCharacteristicConstruction
@@ -27337,6 +27842,13 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.arbitraryMaxwell_action_resolvingJet_forced_certificate
 #print axioms RelativeRest.arbitraryMaxwell_action_resolvingCovector_forced_certificate
 #print axioms RelativeRest.finiteJetBreak_or_unbrokenAtEveryFiniteOrder
+#print axioms RelativeRest.generalMaxwellCarrierLinear_balancedU_eigen
+#print axioms RelativeRest.generalMaxwellBalancedHalfCarrierCurrent_positive
+#print axioms RelativeRest.generalMaxwellBalancedCharacteristic_Lambda_nonzero
+#print axioms RelativeRest.generalMaxwellBalancedCharacteristic_quotient_finrank_one
+#print axioms RelativeRest.generalMaxwellBalancedCharacteristic_current_independent
+#print axioms RelativeRest.generalMaxwellBalancedCharacteristic_current_eq_actionDerived
+#print axioms RelativeRest.arbitraryMaxwell_firstJet_clockDescent_certificate
 #print axioms RelativeRest.characteristicCurrent_factorization
 #print axioms RelativeRest.characteristicCurrent_Lambda_unique
 #print axioms RelativeRest.characteristicCurrent_quotient_finrank_one
