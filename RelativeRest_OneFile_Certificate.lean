@@ -33447,6 +33447,164 @@ theorem kerr_paper_displayed_equations_forced_certificate
 
 end PaperDisplayedEquationForcing
 
+
+/-! ### Strongest simultaneous paper closure
+
+This final theorem is deliberately a conjunction of already-proved strongest
+certificates rather than a new interface.  It makes the dependency boundary
+auditable in one statement. -/
+
+section StrongestSimultaneousPaperClosure
+
+variable {X : Type*}
+  [NormedAddCommGroup X] [NormedSpace ℝ X] [CompleteSpace X]
+
+/-- On any genuine regular Synge branch whose first jet realizes the canonical
+optical plane, an arbitrary non-null six-component Einstein-Maxwell field with
+any finite non-null carrier-jet resolver forces the complete local clock chain.
+At the same time the exact boost-jet alternative is proved, and the fully
+field-derived Kerr-Newman specialization has its Mino increment definitionally
+fixed. -/
+theorem einsteinMaxwell_entireFormalizedPaper_forced
+    (Bdual :
+      (X →L[ℝ] ℝ) →ₗ[ℝ] (X →L[ℝ] ℝ) →ₗ[ℝ] ℝ)
+    (S : RegularSyngeEndpointPairSource Bdual)
+    (I : (X →L[ℝ] ℝ) →ₗ[ℝ] R2)
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hmem :
+      principalRaiseCovector alpha ∈
+        LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))
+    (hp : principalMinkowskiCovectorSq alpha ≠ 0)
+    (hreal : S.RealizesCanonicalOpticalJet I)
+    (hsym : ∀ a b, bil Bdual a b = bil Bdual b a)
+    (Q r M a theta dt : ℝ)
+    (hQ : Q ≠ 0)
+    (hsig : 0 < Sigma r a theta)
+    (hdel : 0 < Delta r M a Q)
+    (hsin : 0 < Real.sin theta) :
+    PaperResolvedRegularBranchForcedCertificate
+        Bdual S I
+        Ex Ey Ez Bx By Bz u s
+        dEx dEy dEz dBx dBy dBz
+        alpha hnonnull hmem hp hreal hsym ∧
+      KerrNewmanFieldOnlyForcedCertificate
+        Q r M a theta dt (dt / Sigma r a theta) u s
+        hQ hsig hdel hsin (by rfl) ∧
+      (∀ (weight coeff : ℕ → ℕ → ℝ),
+        (∃ m : ℕ,
+            weightedBoostJetStabilizer
+                (weight m) (coeff m) = {0} ∧
+            fullJetStabilizer
+              (fun n =>
+                weightedBoostJetStabilizer
+                  (weight n) (coeff n)) = {0}) ∨
+          ((∀ n : ℕ,
+              weightedBoostJetStabilizer
+                (weight n) (coeff n) = Set.univ) ∧
+            fullJetStabilizer
+              (fun n =>
+                weightedBoostJetStabilizer
+                  (weight n) (coeff n)) = Set.univ)) := by
+  refine ⟨
+    paper_resolvedRegularBranch_forced_certificate
+      Bdual S I
+      Ex Ey Ez Bx By Bz u s
+      dEx dEy dEz dBx dBy dBz
+      alpha hnonnull hmem hp hreal hsym,
+    kerrNewman_fieldOnly_forced_certificate_canonicalMino
+      Q r M a theta dt u s
+      hQ hsig hdel hsin,
+    ?_⟩
+  intro weight coeff
+  exact weightedBoostJetTower_finiteBreak_or_exactFullSymmetry
+    weight coeff
+
+/-- Generic regular first-jet stratum.  Here the resolver is not an input:
+it is exactly the field-derived projected differential P_L d log chi, and the
+optical IFT normal form is also constructed internally. -/
+theorem einsteinMaxwell_firstJet_entireFormalizedPaper_forced
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hp :
+      generalMaxwellResolvingNormSq
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz ≠ 0)
+    (Q r M a theta dt : ℝ)
+    (hQ : Q ≠ 0)
+    (hsig : 0 < Sigma r a theta)
+    (hdel : 0 < Delta r M a Q)
+    (hsin : 0 < Real.sin theta) :
+    PaperResolvedRegularBranchForcedCertificate
+        opticalDualBilinear
+        canonicalOpticalRegularSyngePair
+        opticalDualCoordinates
+        Ex Ey Ez Bx By Bz u s
+        dEx dEy dEz dBx dBy dBz
+        (generalMaxwellResolvingCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz)
+        hnonnull
+        (generalMaxwellResolvingCovector_raised_mem_plusRange
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz hnonnull)
+        hp
+        canonicalOpticalRegularSyngePair_realizesCanonicalOpticalJet
+        opticalDualBilinear_symmetric ∧
+      KerrNewmanFieldOnlyForcedCertificate
+        Q r M a theta dt (dt / Sigma r a theta) u s
+        hQ hsig hdel hsin (by rfl) := by
+  exact ⟨
+    paper_firstJetCanonicalRegularBranch_forced_certificate
+      Ex Ey Ez Bx By Bz u s
+      dEx dEy dEz dBx dBy dBz
+      hnonnull hp,
+    kerrNewman_fieldOnly_forced_certificate_canonicalMino
+      Q r M a theta dt u s
+      hQ hsig hdel hsin⟩
+
+/-- Higher-jet fallback.  Given the actual finite carrier-jet resolver tower,
+well-ordering chooses its first resolving order and covector; no resolver order,
+observer, or temporal normalization is chosen by hand. -/
+theorem einsteinMaxwell_finiteResolverTower_entireFormalizedPaper_forced
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (T : MaxwellFiniteResolverTower Ex Ey Ez Bx By Bz)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (Q r M a theta dt : ℝ)
+    (hQ : Q ≠ 0)
+    (hsig : 0 < Sigma r a theta)
+    (hdel : 0 < Delta r M a Q)
+    (hsin : 0 < Real.sin theta) :
+    PaperResolvedRegularBranchForcedCertificate
+        opticalDualBilinear
+        canonicalOpticalRegularSyngePair
+        opticalDualCoordinates
+        Ex Ey Ez Bx By Bz u s
+        dEx dEy dEz dBx dBy dBz
+        T.firstCovector
+        hnonnull T.firstCovector_mem T.firstCovector_nonnull
+        canonicalOpticalRegularSyngePair_realizesCanonicalOpticalJet
+        opticalDualBilinear_symmetric ∧
+      KerrNewmanFieldOnlyForcedCertificate
+        Q r M a theta dt (dt / Sigma r a theta) u s
+        hQ hsig hdel hsin (by rfl) := by
+  exact ⟨
+    paper_finiteResolverTowerCanonicalRegularBranch_forced_certificate
+      Ex Ey Ez Bx By Bz u s
+      dEx dEy dEz dBx dBy dBz
+      T hnonnull,
+    kerrNewman_fieldOnly_forced_certificate_canonicalMino
+      Q r M a theta dt u s
+      hQ hsig hdel hsin⟩
+
+end StrongestSimultaneousPaperClosure
+
 /-! ## 19. End-to-end dependency record -/
 
 /-- A compact theorem collecting the fully proved scalar backbone: four-dimensional reciprocity,
@@ -34557,6 +34715,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.MaxwellFiniteResolverTower.firstCovector_nonnull
 #print axioms RelativeRest.MaxwellFiniteResolverTower.before_first_unresolved
 #print axioms RelativeRest.paper_finiteResolverTowerCanonicalRegularBranch_forced_certificate
+#print axioms RelativeRest.einsteinMaxwell_entireFormalizedPaper_forced
+#print axioms RelativeRest.einsteinMaxwell_firstJet_entireFormalizedPaper_forced
+#print axioms RelativeRest.einsteinMaxwell_finiteResolverTower_entireFormalizedPaper_forced
 #print axioms RelativeRest.paper_finiteResolverTowerRegularSynge_forced_certificate
 #print axioms RelativeRest.resolvedRainichPlane_certificate
 #print axioms RelativeRest.resolvedRainichPlane_representative_independent
