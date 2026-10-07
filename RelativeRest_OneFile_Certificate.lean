@@ -7832,6 +7832,127 @@ theorem mem_fullJetStabilizer_iff
     g ∈ fullJetStabilizer H ↔ ∀ n, g ∈ H n := by
   simp [fullJetStabilizer]
 
+
+/-! ### Exact finite/full-jet dichotomy for real boost-weight representations -/
+
+/-- Stabilizer of a family of components transforming with real boost weights:
+the component indexed by i transforms as exp(weight i * sigma) * coeff i. -/
+def weightedBoostJetStabilizer
+    (weight coeff : ℕ → ℝ) : Set ℝ :=
+  {sigma | ∀ i : ℕ,
+    Real.exp (weight i * sigma) * coeff i = coeff i}
+
+@[simp] theorem weightedBoostJetStabilizer_zero_mem
+    (weight coeff : ℕ → ℝ) :
+    0 ∈ weightedBoostJetStabilizer weight coeff := by
+  intro i
+  simp [weightedBoostJetStabilizer]
+
+/-- Any nonzero component carrying nonzero real boost weight kills the residual
+continuous boost exactly: its stabilizer is the identity rapidity sigma=0. -/
+theorem weightedBoostJetStabilizer_eq_singleton_zero_of_active
+    (weight coeff : ℕ → ℝ)
+    (i : ℕ)
+    (hweight : weight i ≠ 0)
+    (hcoeff : coeff i ≠ 0) :
+    weightedBoostJetStabilizer weight coeff = {0} := by
+  ext sigma
+  constructor
+  · intro hsigma
+    have hi := hsigma i
+    have hprod :
+        (Real.exp (weight i * sigma) - 1) * coeff i = 0 := by
+      calc
+        (Real.exp (weight i * sigma) - 1) * coeff i =
+            Real.exp (weight i * sigma) * coeff i - coeff i := by ring
+        _ = 0 := sub_eq_zero.mpr hi
+    have hdiff :
+        Real.exp (weight i * sigma) - 1 = 0 :=
+      (mul_eq_zero.mp hprod).resolve_right hcoeff
+    have hexp :
+        Real.exp (weight i * sigma) = Real.exp 0 := by
+      simpa using sub_eq_zero.mp hdiff
+    have harg : weight i * sigma = 0 :=
+      Real.exp_injective hexp
+    have hs0 : sigma = 0 :=
+      (mul_eq_zero.mp harg).resolve_left hweight
+    simpa [hs0]
+  · intro hsigma
+    have hs0 : sigma = 0 := by simpa using hsigma
+    subst sigma
+    exact weightedBoostJetStabilizer_zero_mem weight coeff
+
+/-- If every nonzero component has zero boost weight, then every rapidity fixes
+the finite jet: the stabilizer is the whole connected boost group. -/
+theorem weightedBoostJetStabilizer_eq_univ_of_no_active_weight
+    (weight coeff : ℕ → ℝ)
+    (h :
+      ∀ i : ℕ, weight i = 0 ∨ coeff i = 0) :
+    weightedBoostJetStabilizer weight coeff = Set.univ := by
+  ext sigma
+  constructor
+  · intro _
+    simp
+  · intro _
+    intro i
+    rcases h i with hw | hc
+    · simp [weightedBoostJetStabilizer, hw]
+    · simp [weightedBoostJetStabilizer, hc]
+
+/-- A tower of finite jets represented by real boost-weight components has the
+sharp alternative used by the manuscript: either some finite order already
+breaks SO^+(1,1) to the identity, or every finite order is exactly boost
+invariant and the complete jet has the full boost group as its exact residual
+symmetry.  In this representation class there is no third "only at infinity"
+loss of isotropy. -/
+theorem weightedBoostJetTower_finiteBreak_or_exactFullSymmetry
+    (weight coeff : ℕ → ℕ → ℝ) :
+    (∃ m : ℕ,
+        weightedBoostJetStabilizer (weight m) (coeff m) = {0} ∧
+        fullJetStabilizer
+          (fun n => weightedBoostJetStabilizer (weight n) (coeff n)) =
+            {0}) ∨
+      ((∀ n : ℕ,
+          weightedBoostJetStabilizer (weight n) (coeff n) = Set.univ) ∧
+        fullJetStabilizer
+          (fun n => weightedBoostJetStabilizer (weight n) (coeff n)) =
+            Set.univ) := by
+  by_cases hactive :
+      ∃ m i : ℕ, weight m i ≠ 0 ∧ coeff m i ≠ 0
+  · left
+    rcases hactive with ⟨m, i, hw, hc⟩
+    have hm :
+        weightedBoostJetStabilizer (weight m) (coeff m) = {0} :=
+      weightedBoostJetStabilizer_eq_singleton_zero_of_active
+        (weight m) (coeff m) i hw hc
+    refine ⟨m, hm, ?_⟩
+    exact
+      fullJetStabilizer_eq_singleton_of_finite_break
+        (fun n => weightedBoostJetStabilizer (weight n) (coeff n))
+        0
+        (fun n => weightedBoostJetStabilizer_zero_mem
+          (weight n) (coeff n))
+        m hm
+  · right
+    have hno :
+        ∀ n i : ℕ, weight n i = 0 ∨ coeff n i = 0 := by
+      intro n i
+      by_cases hw : weight n i = 0
+      · exact Or.inl hw
+      · by_cases hc : coeff n i = 0
+        · exact Or.inr hc
+        · exfalso
+          exact hactive ⟨n, i, hw, hc⟩
+    have hall :
+        ∀ n : ℕ,
+          weightedBoostJetStabilizer (weight n) (coeff n) = Set.univ := by
+      intro n
+      exact weightedBoostJetStabilizer_eq_univ_of_no_active_weight
+        (weight n) (coeff n) (hno n)
+    refine ⟨hall, ?_⟩
+    ext sigma
+    simp [fullJetStabilizer, hall]
+
 /-! ## 6. Unique residual boost balance -/
 
 /-- Principal-plane covector norm in a normalized null basis, with
@@ -26239,6 +26360,18 @@ structure ArbitraryMaxwellResolvedJetForcedCertificate
       (∃ m : ℕ,
           H m = {e} ∧ fullJetStabilizer H = {e}) ∨
         (∀ m : ℕ, H m ≠ {e})
+  weightedBoostJetTowerDichotomy :
+    ∀ (weight coeff : ℕ → ℕ → ℝ),
+      (∃ m : ℕ,
+          weightedBoostJetStabilizer (weight m) (coeff m) = {0} ∧
+          fullJetStabilizer
+            (fun n => weightedBoostJetStabilizer (weight n) (coeff n)) =
+              {0}) ∨
+        ((∀ n : ℕ,
+            weightedBoostJetStabilizer (weight n) (coeff n) = Set.univ) ∧
+          fullJetStabilizer
+            (fun n => weightedBoostJetStabilizer (weight n) (coeff n)) =
+              Set.univ)
 
 /-- Constructor of the resolver-order-independent master.  No first-jet
 resolving hypothesis appears. -/
@@ -26264,7 +26397,8 @@ theorem arbitraryMaxwell_resolvedJet_forced_certificate
         Ex Ey Ez Bx By Bz u s alpha
         hnonnull hmem hp
     absoluteConformalNormalization := ?_
-    jetTowerDichotomy := ?_ }
+    jetTowerDichotomy := ?_
+    weightedBoostJetTowerDichotomy := ?_ }
   · intro F hF hunit
     exact positive_conformal_scalar_forced_by_unit_involution
       F (generalMaxwellChi Ex Ey Ez Bx By Bz)
@@ -26273,6 +26407,9 @@ theorem arbitraryMaxwell_resolvedJet_forced_certificate
       hunit
   · intro G H e he
     exact finiteJetBreak_or_unbrokenAtEveryFiniteOrder H e he
+  · intro weight coeff
+    exact weightedBoostJetTower_finiteBreak_or_exactFullSymmetry
+      weight coeff
 
 
 
@@ -33870,6 +34007,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.arbitraryMaxwell_action_resolvingJet_forced_certificate
 #print axioms RelativeRest.arbitraryMaxwell_action_resolvingCovector_forced_certificate
 #print axioms RelativeRest.finiteJetBreak_or_unbrokenAtEveryFiniteOrder
+#print axioms RelativeRest.weightedBoostJetStabilizer_eq_singleton_zero_of_active
+#print axioms RelativeRest.weightedBoostJetStabilizer_eq_univ_of_no_active_weight
+#print axioms RelativeRest.weightedBoostJetTower_finiteBreak_or_exactFullSymmetry
 #print axioms RelativeRest.generalMaxwellCarrierLinear_balancedU_eigen
 #print axioms RelativeRest.generalMaxwellBalancedHalfCarrierCurrent_positive
 #print axioms RelativeRest.generalMaxwellBalancedCharacteristic_Lambda_nonzero
