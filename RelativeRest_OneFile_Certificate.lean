@@ -1761,6 +1761,41 @@ def principalMaxwellCovariantContraction
 def principalMetricCov (i j : Fin 4) : ℝ :=
   if i = j then principalMetricSign i else 0
 
+/-- Matrix-unit inverse-metric variation `δg^{ab}=δ^a_i δ^b_j` in the
+principal frame. -/
+def principalInverseMetricMatrixUnit
+    (i j a b : Fin 4) : ℝ :=
+  if a = i ∧ b = j then 1 else 0
+
+/-- Algebraic directional differential of the literal contraction
+`F_ab F^ab = g^{ac}g^{bd}F_abF_cd` with respect to an arbitrary inverse-metric
+variation `H^{ab}`.  Both raised-index metric factors are varied explicitly. -/
+def principalMaxwellFsqMetricDifferential
+    (E B : ℝ)
+    (H : Fin 4 → Fin 4 → ℝ) : ℝ :=
+  ∑ a : Fin 4, ∑ b : Fin 4,
+    ∑ c : Fin 4, ∑ d : Fin 4,
+      (H a c * principalMetricCov b d +
+        principalMetricCov a c * H b d) *
+      principalMaxwellF E B a b *
+      principalMaxwellF E B c d
+
+/-- Inserting a single inverse-metric matrix unit forces the two identical
+contributions and therefore the universal factor two.  This derives, rather than
+declares, the coefficient used in the Maxwell metric variation. -/
+theorem principalMaxwellFsqMetricDifferential_matrixUnit
+    (E B : ℝ) (i j : Fin 4) :
+    principalMaxwellFsqMetricDifferential E B
+        (principalInverseMetricMatrixUnit i j) =
+      2 * principalMaxwellCovariantContraction E B i j := by
+  fin_cases i <;> fin_cases j <;>
+    simp [principalMaxwellFsqMetricDifferential,
+      principalInverseMetricMatrixUnit,
+      principalMaxwellCovariantContraction,
+      principalMetricCov, principalMetricSign,
+      principalMaxwellF] <;>
+    ring
+
 /-- The inverse-metric variation of `F^2` contributes the factor two fixed by the
 two inverse metrics in the Maxwell Lagrangian. -/
 def principalMaxwellInverseMetricVariationCoeff
@@ -1784,6 +1819,17 @@ variation. The factor two is forced by the two inverse metrics raising the indic
 def principalMaxwellFsqInverseMetricDerivative
     (E B : ℝ) (i j : Fin 4) : ℝ :=
   2 * principalMaxwellCovariantContraction E B i j
+
+/-- The named inverse-metric derivative is exactly the differential of the literal
+two-metric contraction in the matrix-unit direction. -/
+theorem principalMaxwellFsqInverseMetricDerivative_from_contraction
+    (E B : ℝ) (i j : Fin 4) :
+    principalMaxwellFsqInverseMetricDerivative E B i j =
+      principalMaxwellFsqMetricDifferential E B
+        (principalInverseMetricMatrixUnit i j) := by
+  rw [principalMaxwellFsqMetricDifferential_matrixUnit]
+  rfl
+
 
 /-- Literal one-parameter Maxwell-sector line through the displayed
 Einstein-Maxwell Lagrangian density for the inverse-metric component `ij`. -/
@@ -21154,6 +21200,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalMaxwellPotential_first_variation
 #print axioms RelativeRest.principalMaxwell_pureGauss_bulk_response_zero
 #print axioms RelativeRest.principalMaxwellPotential_onShell_first_variation
+#print axioms RelativeRest.principalMaxwellFsqMetricDifferential_matrixUnit
+#print axioms RelativeRest.principalMaxwellFsqInverseMetricDerivative_from_contraction
 #print axioms RelativeRest.principalMaxwellLagrangianMetricLine_hasDerivAt_zero
 #print axioms RelativeRest.principalMaxwellLagrangianMetricLine_deriv_eq_neg_half_stress
 #print axioms RelativeRest.principalPalatini_scalar_boundary_eq_divergence
