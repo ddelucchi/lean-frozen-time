@@ -4960,6 +4960,253 @@ theorem principalInvSqrtTwo_sq :
   field_simp [hs0]
   nlinarith
 
+theorem principalMinkowskiBilinear_symm
+    (v w : Fin 4 → ℝ) :
+    principalMinkowskiBilinear v w =
+      principalMinkowskiBilinear w v := by
+  simp [principalMinkowskiBilinear]
+  ring
+
+theorem principalMinkowskiSq_smul
+    (a : ℝ) (v : Fin 4 → ℝ) :
+    principalMinkowskiSq (a • v) =
+      a^2 * principalMinkowskiSq v := by
+  simp [principalMinkowskiSq]
+  ring
+
+theorem principalMinkowskiSq_add
+    (v w : Fin 4 → ℝ) :
+    principalMinkowskiSq (v + w) =
+      principalMinkowskiSq v +
+        2 * principalMinkowskiBilinear v w +
+        principalMinkowskiSq w := by
+  simp [principalMinkowskiSq, principalMinkowskiBilinear]
+  ring
+
+theorem principalMinkowskiSq_sub
+    (v w : Fin 4 → ℝ) :
+    principalMinkowskiSq (v - w) =
+      principalMinkowskiSq v -
+        2 * principalMinkowskiBilinear v w +
+        principalMinkowskiSq w := by
+  simp [principalMinkowskiSq, principalMinkowskiBilinear]
+  ring
+
+theorem principalMinkowskiBilinear_add_sub
+    (v w : Fin 4 → ℝ) :
+    principalMinkowskiBilinear (v + w) (v - w) =
+      principalMinkowskiSq v - principalMinkowskiSq w := by
+  simp [principalMinkowskiSq, principalMinkowskiBilinear]
+  ring
+
+/-- In Minkowski signature, every nonzero vector orthogonal to a timelike vector
+is strictly spacelike.  This is the signature fact needed to construct a null
+dyad without choosing a pre-existing principal frame. -/
+theorem principalMinkowski_orthogonal_to_timelike_spacelike
+    (u e : Fin 4 → ℝ)
+    (hu : principalMinkowskiSq u < 0)
+    (horth : principalMinkowskiBilinear u e = 0)
+    (he : e ≠ 0) :
+    0 < principalMinkowskiSq e := by
+  have hu0 : u 0 ≠ 0 := by
+    intro h0
+    have hnonneg : 0 ≤ principalMinkowskiSq u := by
+      simp [principalMinkowskiSq, h0]
+      positivity
+    linarith
+  have hEsp :
+      0 < (e 1)^2 + (e 2)^2 + (e 3)^2 := by
+    have hnonneg :
+        0 ≤ (e 1)^2 + (e 2)^2 + (e 3)^2 := by
+      positivity
+    have hne :
+        (e 1)^2 + (e 2)^2 + (e 3)^2 ≠ 0 := by
+      intro hz
+      have he1 : e 1 = 0 := by
+        nlinarith [sq_nonneg (e 1), sq_nonneg (e 2), sq_nonneg (e 3)]
+      have he2 : e 2 = 0 := by
+        nlinarith [sq_nonneg (e 1), sq_nonneg (e 2), sq_nonneg (e 3)]
+      have he3 : e 3 = 0 := by
+        nlinarith [sq_nonneg (e 1), sq_nonneg (e 2), sq_nonneg (e 3)]
+      have ho := horth
+      simp [principalMinkowskiBilinear, he1, he2, he3] at ho
+      have he0 : e 0 = 0 := by
+        have hmul : u 0 * e 0 = 0 := by linarith
+        exact (mul_eq_zero.mp hmul).resolve_left hu0
+      apply he
+      funext i
+      fin_cases i <;> assumption
+    exact lt_of_le_of_ne hnonneg (Ne.symm hne)
+  have hCS :
+      (u 1 * e 1 + u 2 * e 2 + u 3 * e 3)^2 ≤
+        ((u 1)^2 + (u 2)^2 + (u 3)^2) *
+          ((e 1)^2 + (e 2)^2 + (e 3)^2) := by
+    have hsquares :
+        0 ≤
+          (u 1 * e 2 - u 2 * e 1)^2 +
+          (u 1 * e 3 - u 3 * e 1)^2 +
+          (u 2 * e 3 - u 3 * e 2)^2 := by
+      positivity
+    nlinarith
+  have huGap :
+      0 <
+        (u 0)^2 -
+          ((u 1)^2 + (u 2)^2 + (u 3)^2) := by
+    unfold principalMinkowskiSq at hu
+    nlinarith
+  have hprod :
+      0 <
+        ((u 0)^2 -
+          ((u 1)^2 + (u 2)^2 + (u 3)^2)) *
+        ((e 1)^2 + (e 2)^2 + (e 3)^2) :=
+    mul_pos huGap hEsp
+  have ho := horth
+  unfold principalMinkowskiBilinear at ho
+  unfold principalMinkowskiSq
+  nlinarith
+
+/-- A normalized null dyad internal to a Lorentzian subspace. -/
+structure NormalizedPrincipalNullDyad
+    (P : Submodule ℝ (Fin 4 → ℝ)) where
+  k : P
+  l : P
+  kNull : principalMinkowskiSq k.1 = 0
+  lNull : principalMinkowskiSq l.1 = 0
+  crossNormalized :
+    principalMinkowskiBilinear k.1 l.1 = -1
+
+/-- Every two-dimensional Lorentzian subspace, presented only by its dimension and
+one timelike element, contains a normalized null dyad.  The construction first
+finds a second independent vector, Lorentz-orthogonalizes it, normalizes the
+timelike/spacelike pair, and takes their null sum and difference. -/
+theorem lorentzianTwoPlane_has_normalizedNullDyad
+    (P : Submodule ℝ (Fin 4 → ℝ))
+    (hfin : Module.finrank ℝ P = 2)
+    (u : P)
+    (hu : principalMinkowskiSq u.1 < 0) :
+    Nonempty (NormalizedPrincipalNullDyad P) := by
+  have hu0 : u ≠ 0 := by
+    intro hzero
+    have hv : u.1 = 0 := congrArg Subtype.val hzero
+    rw [hv] at hu
+    norm_num [principalMinkowskiSq] at hu
+  have hdim : 1 < Module.finrank ℝ P := by
+    rw [hfin]
+    norm_num
+  rcases exists_linearIndependent_pair_of_one_lt_finrank
+      hdim hu0 with ⟨v, hli⟩
+  have hnotmul :
+      ∀ a : ℝ, a • u ≠ v :=
+    (LinearIndependent.pair_iff' hu0).mp hli
+  have hBuu :
+      principalMinkowskiBilinear u.1 u.1 ≠ 0 := by
+    rw [← principalMinkowskiSq_eq_bilinear]
+    exact ne_of_lt hu
+  let coeff : ℝ :=
+    principalMinkowskiBilinear u.1 v.1 /
+      principalMinkowskiBilinear u.1 u.1
+  let e : P := v - coeff • u
+  have hue :
+      principalMinkowskiBilinear u.1 e.1 = 0 := by
+    change
+      principalMinkowskiBilinear u.1
+        (v.1 - coeff • u.1) = 0
+    unfold coeff
+    simp [principalMinkowskiBilinear]
+    field_simp [hBuu]
+    ring
+  have he0 : e ≠ 0 := by
+    intro hz
+    have hz' : v - coeff • u = 0 := by
+      simpa [e] using hz
+    have hv : v = coeff • u := sub_eq_zero.mp hz'
+    exact (hnotmul coeff) hv.symm
+  have heSpace :
+      0 < principalMinkowskiSq e.1 :=
+    principalMinkowski_orthogonal_to_timelike_spacelike
+      u.1 e.1 hu hue (by
+        intro hz
+        apply he0
+        apply Subtype.ext
+        exact hz)
+  let su : ℝ := Real.sqrt (-principalMinkowskiSq u.1)
+  let se : ℝ := Real.sqrt (principalMinkowskiSq e.1)
+  have hsuPos : 0 < su := by
+    dsimp [su]
+    exact Real.sqrt_pos.2 (neg_pos.mpr hu)
+  have hsePos : 0 < se := by
+    dsimp [se]
+    exact Real.sqrt_pos.2 heSpace
+  have hsu0 : su ≠ 0 := ne_of_gt hsuPos
+  have hse0 : se ≠ 0 := ne_of_gt hsePos
+  have hsuSq :
+      su^2 = -principalMinkowskiSq u.1 := by
+    dsimp [su]
+    exact Real.sq_sqrt (le_of_lt (neg_pos.mpr hu))
+  have hseSq :
+      se^2 = principalMinkowskiSq e.1 := by
+    dsimp [se]
+    exact Real.sq_sqrt (le_of_lt heSpace)
+  let uhat : P := su⁻¹ • u
+  let ehat : P := se⁻¹ • e
+  have huHat :
+      principalMinkowskiSq uhat.1 = -1 := by
+    change
+      principalMinkowskiSq (su⁻¹ • u.1) = -1
+    rw [principalMinkowskiSq_smul]
+    field_simp [hsu0]
+    nlinarith [hsuSq]
+  have heHat :
+      principalMinkowskiSq ehat.1 = 1 := by
+    change
+      principalMinkowskiSq (se⁻¹ • e.1) = 1
+    rw [principalMinkowskiSq_smul]
+    field_simp [hse0]
+    nlinarith [hseSq]
+  have horthHat :
+      principalMinkowskiBilinear uhat.1 ehat.1 = 0 := by
+    change
+      principalMinkowskiBilinear
+        (su⁻¹ • u.1) (se⁻¹ • e.1) = 0
+    rw [principalMinkowskiBilinear_smul, hue]
+    ring
+  let k : P := principalInvSqrtTwo • (uhat + ehat)
+  let l : P := principalInvSqrtTwo • (uhat - ehat)
+  have hk :
+      principalMinkowskiSq k.1 = 0 := by
+    change
+      principalMinkowskiSq
+        (principalInvSqrtTwo • (uhat.1 + ehat.1)) = 0
+    rw [principalMinkowskiSq_smul,
+      principalMinkowskiSq_add, huHat, heHat, horthHat,
+      principalInvSqrtTwo_sq]
+    ring
+  have hl :
+      principalMinkowskiSq l.1 = 0 := by
+    change
+      principalMinkowskiSq
+        (principalInvSqrtTwo • (uhat.1 - ehat.1)) = 0
+    rw [principalMinkowskiSq_smul,
+      principalMinkowskiSq_sub, huHat, heHat, horthHat,
+      principalInvSqrtTwo_sq]
+    ring
+  have hkl :
+      principalMinkowskiBilinear k.1 l.1 = -1 := by
+    change
+      principalMinkowskiBilinear
+        (principalInvSqrtTwo • (uhat.1 + ehat.1))
+        (principalInvSqrtTwo • (uhat.1 - ehat.1)) = -1
+    rw [principalMinkowskiBilinear_smul,
+      principalMinkowskiBilinear_add_sub,
+      huHat, heHat, principalInvSqrtTwo_sq]
+    ring
+  exact ⟨{
+    k := k
+    l := l
+    kNull := hk
+    lNull := hl
+    crossNormalized := hkl }⟩
+
 /-- Canonically normalized future principal null directions of the Lorentzian Rainich plane. -/
 def principalNullK : Fin 4 → ℝ :=
   principalInvSqrtTwo •
@@ -6265,6 +6512,38 @@ theorem generalMaxwellProjectorMinus_range_finrank_two
       Ex Ey Ez Bx By Bz hnonnull).isProj_range.trace
   rw [generalMaxwellProjectorMinusLinear_trace_two] at hm
   exact_mod_cast hm.symm
+
+/-- Therefore the arbitrary non-null Maxwell +1 Rainich range admits a normalized
+null dyad before any principal-field alignment.  The starting dyad is not unique,
+but the resolving-jet theorem later proves that its balanced representative is. -/
+theorem generalMaxwellProjectorPlus_normalizedNullDyad_exists
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
+    Nonempty
+      (NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) := by
+  let P :=
+    LinearMap.range
+      (generalMaxwellProjectorPlusLinear Ex Ey Ez Bx By Bz)
+  let w :=
+    generalMaxwellProjectorPlus
+      Ex Ey Ez Bx By Bz (principalBasis 0)
+  have hwmem : w ∈ P := by
+    refine ⟨principalBasis 0, ?_⟩
+    exact generalMaxwellProjectorPlusLinear_apply
+      Ex Ey Ez Bx By Bz (principalBasis 0)
+  let u : P := ⟨w, hwmem⟩
+  have hu : principalMinkowskiSq u.1 < 0 := by
+    exact generalMaxwellProjectorPlus_basis0_timelike
+      Ex Ey Ez Bx By Bz hnonnull
+  have hfin : Module.finrank ℝ P = 2 := by
+    dsimp [P]
+    exact generalMaxwellProjectorPlus_range_finrank_two
+      Ex Ey Ez Bx By Bz hnonnull
+  exact lorentzianTwoPlane_has_normalizedNullDyad
+    P hfin u hu
 
 /-- The arbitrary-field Rainich projectors do more than provide candidate
 eigenspaces: they are the unique decomposition of every vector into its +1 and -1
@@ -25361,7 +25640,10 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellDLogChiCovector_component_hasDerivAt
 #print axioms RelativeRest.generalMaxwellResolvingCovector_raised_eigen
 #print axioms RelativeRest.generalMaxwellProjectorPlus_basis0_timelike
+#print axioms RelativeRest.principalMinkowski_orthogonal_to_timelike_spacelike
+#print axioms RelativeRest.lorentzianTwoPlane_has_normalizedNullDyad
 #print axioms RelativeRest.generalMaxwellProjectorPlus_range_has_timelike
+#print axioms RelativeRest.generalMaxwellProjectorPlus_normalizedNullDyad_exists
 #print axioms RelativeRest.generalMaxwell_principal_split_unique
 #print axioms RelativeRest.generalMaxwellChi_principal_specialization
 #print axioms RelativeRest.generalMaxwellIAlongJet_hasDerivAt_zero
