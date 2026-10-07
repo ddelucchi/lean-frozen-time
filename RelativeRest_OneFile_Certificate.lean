@@ -10444,6 +10444,176 @@ theorem RegularSyngeEndpointPairSource.optical_closure
         D.toSyngeEndpointJetData.radialCovector := by
   exact D.toSyngeEndpointJetData.optical_closure hsym
 
+/-! ### Explicit regular IFT realization of the canonical optical normal form -/
+
+/-- Continuous covector representing the future null endpoint in the normalized
+two-dimensional optical plane. -/
+def opticalThetaPlusCLM : R2 →L[ℝ] ℝ :=
+  ContinuousLinearMap.fst ℝ ℝ ℝ +
+    ContinuousLinearMap.snd ℝ ℝ ℝ
+
+/-- Continuous covector representing the past null endpoint. -/
+def opticalThetaMinusCLM : R2 →L[ℝ] ℝ :=
+  ContinuousLinearMap.fst ℝ ℝ ℝ -
+    ContinuousLinearMap.snd ℝ ℝ ℝ
+
+/-- Coordinates of a continuous covector in the forced `(TO,RO)` optical basis. -/
+def opticalDualCoordinates :
+    (R2 →L[ℝ] ℝ) →ₗ[ℝ] R2 where
+  toFun α := (α TO, α RO)
+  map_add' α β := by
+    ext <;> simp
+  map_smul' c α := by
+    ext <;> simp
+
+@[simp] theorem opticalDualCoordinates_thetaPlus :
+    opticalDualCoordinates opticalThetaPlusCLM =
+      principalThetaPlus := by
+  ext <;>
+    simp [opticalDualCoordinates, opticalThetaPlusCLM,
+      principalThetaPlus, TO, RO]
+
+@[simp] theorem opticalDualCoordinates_thetaMinus :
+    opticalDualCoordinates opticalThetaMinusCLM =
+      principalThetaMinus := by
+  ext <;>
+    simp [opticalDualCoordinates, opticalThetaMinusCLM,
+      principalThetaMinus, TO, RO]
+
+/-- Pull the already-forced optical Minkowski bilinear form back to the continuous
+dual of the canonical optical plane. -/
+def opticalDualBilinear :
+    (R2 →L[ℝ] ℝ) →ₗ[ℝ] (R2 →L[ℝ] ℝ) →ₗ[ℝ] ℝ where
+  toFun α :=
+    { toFun := fun β =>
+        bil opticalBilinear
+          (opticalDualCoordinates α)
+          (opticalDualCoordinates β)
+      map_add' := by
+        intro β γ
+        simp [bil, opticalBilinear, opticalDualCoordinates]
+        ring
+      map_smul' := by
+        intro c β
+        simp [bil, opticalBilinear, opticalDualCoordinates]
+        ring }
+  map_add' := by
+    intro α β
+    ext γ
+    simp [bil, opticalBilinear, opticalDualCoordinates]
+    ring
+  map_smul' := by
+    intro c α
+    ext β
+    simp [bil, opticalBilinear, opticalDualCoordinates]
+    ring
+
+/-- Linearized future world-function equation
+`σ_+(x,θ)=-Θ_+(x)+θ`. -/
+def canonicalOpticalSigmaPlusDeriv :
+    (R2 × ℝ) →L[ℝ] ℝ :=
+  (-opticalThetaPlusCLM).comp
+      (ContinuousLinearMap.fst ℝ R2 ℝ) +
+    ContinuousLinearMap.snd ℝ R2 ℝ
+
+/-- Linearized past world-function equation
+`σ_-(x,θ)=-Θ_-(x)+θ`. -/
+def canonicalOpticalSigmaMinusDeriv :
+    (R2 × ℝ) →L[ℝ] ℝ :=
+  (-opticalThetaMinusCLM).comp
+      (ContinuousLinearMap.fst ℝ R2 ℝ) +
+    ContinuousLinearMap.snd ℝ R2 ℝ
+
+def canonicalOpticalSigmaPlus (z : R2 × ℝ) : ℝ :=
+  canonicalOpticalSigmaPlusDeriv z
+
+def canonicalOpticalSigmaMinus (z : R2 × ℝ) : ℝ :=
+  canonicalOpticalSigmaMinusDeriv z
+
+/-- A genuine regular IFT source realizing the future canonical null endpoint. -/
+def canonicalOpticalRegularSyngePlus :
+    RegularSyngeEndpointSource opticalDualBilinear where
+  sigma := canonicalOpticalSigmaPlus
+  u := (0, 0)
+  Dsigma := canonicalOpticalSigmaPlusDeriv
+  strictDeriv := by
+    simpa [canonicalOpticalSigmaPlus] using
+      canonicalOpticalSigmaPlusDeriv.hasStrictFDerivAt
+  thetaInvertible := by
+    have h :
+        (((ContinuousLinearEquiv.refl ℝ ℝ : ℝ ≃L[ℝ] ℝ) :
+          ℝ →L[ℝ] ℝ)).IsInvertible :=
+      ContinuousLinearMap.isInvertible_equiv
+    simpa [canonicalOpticalSigmaPlusDeriv] using h
+  endpoint := by
+    simp [canonicalOpticalSigmaPlus,
+      canonicalOpticalSigmaPlusDeriv]
+  worldEikonal := by
+    simp [canonicalOpticalSigmaPlus,
+      canonicalOpticalSigmaPlusDeriv,
+      opticalDualBilinear, opticalDualCoordinates,
+      opticalThetaPlusCLM, opticalBilinear, bil, TO, RO]
+    ring
+
+/-- A genuine regular IFT source realizing the past canonical null endpoint. -/
+def canonicalOpticalRegularSyngeMinus :
+    RegularSyngeEndpointSource opticalDualBilinear where
+  sigma := canonicalOpticalSigmaMinus
+  u := (0, 0)
+  Dsigma := canonicalOpticalSigmaMinusDeriv
+  strictDeriv := by
+    simpa [canonicalOpticalSigmaMinus] using
+      canonicalOpticalSigmaMinusDeriv.hasStrictFDerivAt
+  thetaInvertible := by
+    have h :
+        (((ContinuousLinearEquiv.refl ℝ ℝ : ℝ ≃L[ℝ] ℝ) :
+          ℝ →L[ℝ] ℝ)).IsInvertible :=
+      ContinuousLinearMap.isInvertible_equiv
+    simpa [canonicalOpticalSigmaMinusDeriv] using h
+  endpoint := by
+    simp [canonicalOpticalSigmaMinus,
+      canonicalOpticalSigmaMinusDeriv]
+  worldEikonal := by
+    simp [canonicalOpticalSigmaMinus,
+      canonicalOpticalSigmaMinusDeriv,
+      opticalDualBilinear, opticalDualCoordinates,
+      opticalThetaMinusCLM, opticalBilinear, bil, TO, RO]
+    ring
+
+/-- Actual regular future/past IFT pair in the canonical optical normal form. -/
+def canonicalOpticalRegularSyngePair :
+    RegularSyngeEndpointPairSource opticalDualBilinear where
+  plus := canonicalOpticalRegularSyngePlus
+  minus := canonicalOpticalRegularSyngeMinus
+
+@[simp] theorem canonicalOpticalRegularSyngePlus_sigmaTheta :
+    canonicalOpticalRegularSyngePlus.sigmaTheta = 1 := by
+  simp [RegularSyngeEndpointSource.sigmaTheta,
+    canonicalOpticalRegularSyngePlus,
+    canonicalOpticalSigmaPlusDeriv]
+
+@[simp] theorem canonicalOpticalRegularSyngeMinus_sigmaTheta :
+    canonicalOpticalRegularSyngeMinus.sigmaTheta = 1 := by
+  simp [RegularSyngeEndpointSource.sigmaTheta,
+    canonicalOpticalRegularSyngeMinus,
+    canonicalOpticalSigmaMinusDeriv]
+
+@[simp] theorem canonicalOpticalRegularSyngePlus_sigmaX :
+    canonicalOpticalRegularSyngePlus.sigmaX =
+      -opticalThetaPlusCLM := by
+  ext x
+  simp [RegularSyngeEndpointSource.sigmaX,
+    canonicalOpticalRegularSyngePlus,
+    canonicalOpticalSigmaPlusDeriv]
+
+@[simp] theorem canonicalOpticalRegularSyngeMinus_sigmaX :
+    canonicalOpticalRegularSyngeMinus.sigmaX =
+      -opticalThetaMinusCLM := by
+  ext x
+  simp [RegularSyngeEndpointSource.sigmaX,
+    canonicalOpticalRegularSyngeMinus,
+    canonicalOpticalSigmaMinusDeriv]
+
 /-! ### Exact realization frontier for the canonical optical jet -/
 
 /-- An actual regular Synge endpoint pair realizes the canonical action-selected
@@ -10459,6 +10629,38 @@ def RegularSyngeEndpointPairSource.RealizesCanonicalOpticalJet
     (I : (X →L[ℝ] ℝ) →ₗ[ℝ] R2) : Prop :=
   I D.toSyngeEndpointJetData.dThetaPlus = principalThetaPlus ∧
   I D.toSyngeEndpointJetData.dThetaMinus = principalThetaMinus
+
+/-- The explicit canonical optical IFT pair realizes the action-selected
+endpoint jet exactly.  Thus local regular endpoint existence in the normalized
+optical normal form is constructed, not assumed. -/
+theorem canonicalOpticalRegularSyngePair_realizesCanonicalOpticalJet :
+    canonicalOpticalRegularSyngePair.RealizesCanonicalOpticalJet
+      opticalDualCoordinates := by
+  constructor
+  · simp [RegularSyngeEndpointPairSource.toSyngeEndpointJetData,
+      SyngeEndpointJetData.dThetaPlus,
+      canonicalOpticalRegularSyngePair,
+      opticalDualCoordinates_thetaPlus]
+  · simp [RegularSyngeEndpointPairSource.toSyngeEndpointJetData,
+      SyngeEndpointJetData.dThetaMinus,
+      canonicalOpticalRegularSyngePair,
+      opticalDualCoordinates_thetaMinus]
+
+/-- Consequently Mathlib's actual implicit endpoint maps for the canonical optical
+normal form have precisely the forced future/past endpoint covectors. -/
+theorem canonicalOpticalRegularSyngePair_endpoint_derivatives :
+    HasStrictFDerivAt
+        canonicalOpticalRegularSyngePair.plus.endpointMap
+        ((-canonicalOpticalRegularSyngePair.plus.sigmaTheta⁻¹) •
+          canonicalOpticalRegularSyngePair.plus.sigmaX)
+        canonicalOpticalRegularSyngePair.plus.u.1 ∧
+      HasStrictFDerivAt
+        canonicalOpticalRegularSyngePair.minus.endpointMap
+        ((-canonicalOpticalRegularSyngePair.minus.sigmaTheta⁻¹) •
+          canonicalOpticalRegularSyngePair.minus.sigmaX)
+        canonicalOpticalRegularSyngePair.minus.u.1 :=
+  ⟨canonicalOpticalRegularSyngePair.plus.endpointMap_hasStrictFDerivAt_explicit,
+    canonicalOpticalRegularSyngePair.minus.endpointMap_hasStrictFDerivAt_explicit⟩
 
 /-- For a genuine regular Synge pair, matching the canonical null endpoint
 covectors is equivalent to matching the canonical clock midpoint and radial
@@ -22974,6 +23176,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.RegularSyngeEndpointSource.endpointMap_hasStrictFDerivAt_explicit
 #print axioms RelativeRest.RegularSyngeEndpointSource.endpointMap_eventually_solves
 #print axioms RelativeRest.RegularSyngeEndpointPairSource.optical_closure
+#print axioms RelativeRest.canonicalOpticalRegularSyngePair_realizesCanonicalOpticalJet
+#print axioms RelativeRest.canonicalOpticalRegularSyngePair_endpoint_derivatives
 #print axioms RelativeRest.RegularSyngeEndpointPairSource.realizesCanonicalOpticalJet_iff_clock_radial
 #print axioms RelativeRest.regularSynge_canonical_realizations_identified
 #print axioms RelativeRest.syngeImplicitEndpoint_eventually_solves
