@@ -9971,12 +9971,30 @@ theorem RegularSyngeEndpointPairSource.realizesCanonicalOpticalJet_iff_clock_rad
   · rintro ⟨hT,hR⟩
     have hrec :=
       D.toSyngeEndpointJetData.toNullEndpointPairData.reconstruction
+    have hplus :
+        D.toSyngeEndpointJetData.clockCovector +
+            D.toSyngeEndpointJetData.radialCovector =
+          D.toSyngeEndpointJetData.dThetaPlus := by
+      simpa [SyngeEndpointJetData.toNullEndpointPairData,
+        NullEndpointPairData.clockCovector,
+        NullEndpointPairData.radialCovector,
+        SyngeEndpointJetData.clockCovector,
+        SyngeEndpointJetData.radialCovector] using hrec.1
+    have hminus :
+        D.toSyngeEndpointJetData.clockCovector -
+            D.toSyngeEndpointJetData.radialCovector =
+          D.toSyngeEndpointJetData.dThetaMinus := by
+      simpa [SyngeEndpointJetData.toNullEndpointPairData,
+        NullEndpointPairData.clockCovector,
+        NullEndpointPairData.radialCovector,
+        SyngeEndpointJetData.clockCovector,
+        SyngeEndpointJetData.radialCovector] using hrec.2
     constructor
     · calc
         I D.toSyngeEndpointJetData.dThetaPlus =
             I (D.toSyngeEndpointJetData.clockCovector +
               D.toSyngeEndpointJetData.radialCovector) := by
-                rw [hrec.1]
+                rw [hplus]
         _ = I D.toSyngeEndpointJetData.clockCovector +
               I D.toSyngeEndpointJetData.radialCovector := by rw [map_add]
         _ = TO + RO := by rw [hT,hR]
@@ -9985,7 +10003,7 @@ theorem RegularSyngeEndpointPairSource.realizesCanonicalOpticalJet_iff_clock_rad
         I D.toSyngeEndpointJetData.dThetaMinus =
             I (D.toSyngeEndpointJetData.clockCovector -
               D.toSyngeEndpointJetData.radialCovector) := by
-                rw [hrec.2]
+                rw [hminus]
         _ = I D.toSyngeEndpointJetData.clockCovector -
               I D.toSyngeEndpointJetData.radialCovector := by rw [map_sub]
         _ = TO - RO := by rw [hT,hR]
