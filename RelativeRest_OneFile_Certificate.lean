@@ -17921,6 +17921,23 @@ structure CanonicalPrincipalFieldForcedCertificate
     let D := canonicalPrincipalLapseCarrierCharacteristicInput E B hfield
     D.metricEulerJetResponse =
       D.toCharacteristicCurrentData.current
+  admPureLapseRealization :
+    let A := canonicalPrincipalADMReachabilityInput E B hfield
+    A.beta.comp A.lapseLift = principalLapseCharacteristicMap ∧
+      A.beta (A.lapseLift 1) = principalUhat
+  admCharacteristicClock :
+    let A := canonicalPrincipalADMReachabilityInput E B hfield
+    A.toCarrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+      Module.finrank ℝ
+        (A.toCarrier.toCharacteristicCurrentData.K ⧸
+          LinearMap.ker A.toCarrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+      principalLocalLift
+        (globalToPrincipalLocalClockMap
+          A.toCarrier.toCharacteristicCurrentData.Lambda
+          (globalClockQuotientUnit
+            A.toCarrier.toCharacteristicCurrentData.Lambda
+            (principalCarrierCharacteristic_Lambda_nonzero A.toCarrier))) =
+        principalUhat
   lambdaFactorization :
     let D := canonicalPrincipalLapseCarrierCharacteristicInput E B hfield
     D.toCharacteristicCurrentData.Lambda.comp
@@ -18130,6 +18147,8 @@ theorem canonicalPrincipalField_forced_certificate
     masterRelativeRest := full_relative_rest_equivalence u s
     compensatedBulkNormal := ?_
     characteristicFactorization := ?_
+    admPureLapseRealization := ?_
+    admCharacteristicClock := ?_
     lambdaFactorization :=
       characteristicCurrent_factorization D.toCharacteristicCurrentData
     lambdaUnique := by
@@ -18180,6 +18199,16 @@ theorem canonicalPrincipalField_forced_certificate
   · exact D.noetherConstraintOperatorFromAction_DA
   · rw [D.metricEulerJetResponse_eq_stress,
       principalCarrierCharacteristic_current D]
+  · let A := canonicalPrincipalADMReachabilityInput E B hfield
+    have hp : A.beta.comp A.lapseLift = principalLapseCharacteristicMap :=
+      A.pureLapse
+    have hu : A.beta (A.lapseLift 1) = principalUhat := by
+      have h := LinearMap.congr_fun A.pureLapse 1
+      simpa [principalLapseCharacteristicMap] using h
+    exact ⟨hp, hu⟩
+  · let A := canonicalPrincipalADMReachabilityInput E B hfield
+    have h := A.forces_clock_chain
+    exact ⟨h.1, h.2.1, h.2.2⟩
   · exact
       ⟨actionRelativeNormalClockDualEquiv
         D.toCharacteristicCurrentData.Lambda
@@ -22923,6 +22952,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.characteristicCurrent_Lambda_unique
 #print axioms RelativeRest.characteristicCurrent_quotient_finrank_one
 #print axioms RelativeRest.principalCarrierCharacteristic_globalLocal_pullback
+#print axioms RelativeRest.canonicalPrincipalADM_forces_clock_chain
+#print axioms RelativeRest.canonicalPrincipalADM_forces_action_bulk
 #print axioms RelativeRest.canonicalPrincipalField_forced_certificate
 #print axioms RelativeRest.kerrNewman_fieldOnly_forced_certificate
 #print axioms RelativeRest.principalFieldCurrent_Lambda_unique
