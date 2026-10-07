@@ -7751,6 +7751,82 @@ noncomputable def clockQuotientDualEquiv
     (quotientClockCovector_nonzero Λ hΛ)
     (clockQuotient_finrank_one Λ hΛ)
 
+/-- Infinitesimal relative-scale covector on the two-sector action algebra.
+It annihilates the diagonal/common direction and normalizes the exchange-odd
+direction exactly as the manuscript's coordinate `s`. -/
+def actionRelativeScaleCovector : R2 →ₗ[ℝ] ℝ where
+  toFun v := (v.2 - v.1) / 2
+  map_add' x y := by
+    rcases x with ⟨x₁,x₂⟩
+    rcases y with ⟨y₁,y₂⟩
+    simp
+    ring
+  map_smul' c x := by
+    rcases x with ⟨x₁,x₂⟩
+    simp
+    ring
+
+@[simp] theorem actionRelativeScaleCovector_CA :
+    actionRelativeScaleCovector CA = 0 := by
+  norm_num [actionRelativeScaleCovector, CA]
+
+@[simp] theorem actionRelativeScaleCovector_DA :
+    actionRelativeScaleCovector DA = 1 := by
+  norm_num [actionRelativeScaleCovector, DA]
+
+theorem actionRelativeScaleCovector_nonzero :
+    actionRelativeScaleCovector ≠ 0 := by
+  intro hzero
+  have h := LinearMap.congr_fun hzero DA
+  rw [actionRelativeScaleCovector_DA] at h
+  simp at h
+
+/-- The manuscript's intrinsic relative-normal space:
+the two-sector scale algebra modulo the tangent to the common-scale diagonal. -/
+abbrev ActionRelativeNormalSpace :=
+  R2 ⧸ LinearMap.ker actionRelativeScaleCovector
+
+/-- The relative-normal quotient is canonically the real relative coordinate line. -/
+noncomputable def actionRelativeNormalEquivReal :
+    ActionRelativeNormalSpace ≃ₗ[ℝ] ℝ :=
+  quotientClockCovectorEquivReal
+    actionRelativeScaleCovector actionRelativeScaleCovector_nonzero
+
+theorem actionRelativeNormal_finrank_one :
+    Module.finrank ℝ ActionRelativeNormalSpace = 1 :=
+  clockQuotient_finrank_one
+    actionRelativeScaleCovector actionRelativeScaleCovector_nonzero
+
+/-- The class of the exchange-odd normal `D_A` is the normalized unit of the
+relative-normal quotient. -/
+@[simp] theorem actionRelativeNormal_DA_normalized :
+    quotientClockCovector actionRelativeScaleCovector
+      (Submodule.Quotient.mk DA : ActionRelativeNormalSpace) = 1 := by
+  have h :=
+    LinearMap.congr_fun
+      (quotientClockCovector_pullback actionRelativeScaleCovector) DA
+  simpa using h
+
+/-- Exact algebraic form of Eq. (contact): the action relative-normal quotient
+itself, not an unnamed copy of `ℝ`, is canonically equivalent to the dual of
+the one-dimensional stress-visible characteristic clock quotient. -/
+noncomputable def actionRelativeNormalClockDualEquiv
+    (Λ : K →ₗ[ℝ] ℝ) (hΛ : Λ ≠ 0) :
+    ActionRelativeNormalSpace ≃ₗ[ℝ]
+      ((K ⧸ LinearMap.ker Λ) →ₗ[ℝ] ℝ) :=
+  actionRelativeNormalEquivReal.trans
+    (clockQuotientDualEquiv Λ hΛ)
+
+/-- Both sides of the contact-transverse identification are forced to be
+one-dimensional. -/
+theorem actionRelativeNormal_clockDual_finrank
+    (Λ : K →ₗ[ℝ] ℝ) (hΛ : Λ ≠ 0) :
+    Module.finrank ℝ ActionRelativeNormalSpace = 1 ∧
+    Module.finrank ℝ (K ⧸ LinearMap.ker Λ) = 1 := by
+  exact ⟨actionRelativeNormal_finrank_one,
+    clockQuotient_finrank_one Λ hΛ⟩
+
+
 end ClockQuotientDuality
 
 /-! ### Exact affine primitive of the descended clock covector -/
@@ -20568,6 +20644,10 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.clockLiouville_unique_of_homogeneity
 #print axioms RelativeRest.clockLiouville_dilation_pullback
 #print axioms RelativeRest.clockQuotientDualEquiv
+#print axioms RelativeRest.actionRelativeScaleCovector_CA
+#print axioms RelativeRest.actionRelativeScaleCovector_DA
+#print axioms RelativeRest.actionRelativeNormal_finrank_one
+#print axioms RelativeRest.actionRelativeNormal_clockDual_finrank
 #print axioms RelativeRest.quotientBilinearForm_unique
 #print axioms RelativeRest.presymplecticReductionForm_left_nondegenerate
 #print axioms RelativeRest.causal_extended_endpoints_mono
