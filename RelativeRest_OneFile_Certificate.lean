@@ -17608,6 +17608,29 @@ structure CanonicalPrincipalFieldForcedCertificate
   actionOpticalIntertwiner :
     actionOpticalMap (actionBoost s CA) =
       opticalBoost s TO
+  actionOpticalMapUnique :
+    ∀ I : R2 →ₗ[ℝ] R2,
+      I CA = TO → I DA = RO → I = actionOpticalMap
+  fullActionOpticalIntertwiner :
+    ∀ τ : ℝ, ∀ v : R2,
+      actionOpticalMap (actionBoost τ v) =
+        opticalBoost τ (actionOpticalMap v)
+  rapidityUnique :
+    ∀ σ : ℝ,
+      opticalBoost σ TO =
+        actionOpticalMap (actionBoost s CA) →
+      σ = s
+  balancedDyadRepresentativeIndependent :
+    ∀ km lp qm qp τ : ℝ,
+      qm ≠ 0 → qp ≠ 0 →
+      (Real.exp
+          (-(sigmaStar (Real.exp (-τ) * qm) (Real.exp τ * qp))) *
+          (Real.exp (-τ) * km) =
+        Real.exp (-(sigmaStar qm qp)) * km) ∧
+      (Real.exp
+          (sigmaStar (Real.exp (-τ) * qm) (Real.exp τ * qp)) *
+          (Real.exp τ * lp) =
+        Real.exp (sigmaStar qm qp) * lp)
   masterRelativeRest :
     (XiGUS u s = XiMUS u s) ↔
       (nuPlus s = nuMinus s ∧ Real.tanh s = 0)
@@ -17789,6 +17812,17 @@ theorem canonicalPrincipalField_forced_certificate
     actionOpticalIntertwiner := by
       simpa [actionOpticalMap_CA] using
         actionOpticalMap_intertwines_boost s CA
+    actionOpticalMapUnique := by
+      intro I hC hD
+      exact actionOpticalMap_unique I hC hD
+    fullActionOpticalIntertwiner := actionOpticalMap_intertwines_boost
+    rapidityUnique := by
+      intro σ h
+      exact rapidity_forced_by_normalized_boost s σ h
+    balancedDyadRepresentativeIndependent := by
+      intro km lp qm qp τ hqm hqp
+      exact sigmaStar_balanced_dyad_invariant
+        km lp qm qp τ hqm hqp
     masterRelativeRest := full_relative_rest_equivalence u s
     compensatedBulkNormal := ?_
     characteristicFactorization := ?_
@@ -22561,6 +22595,10 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalFrobenius_all_zero_iff
 #print axioms RelativeRest.principalJetFromF_eq_minus_two_EinsteinRicci
 #print axioms RelativeRest.principalRicciFromEinstein_trace_zero
+#print axioms RelativeRest.actionOpticalMap_unique
+#print axioms RelativeRest.actionOpticalMap_intertwines_boost
+#print axioms RelativeRest.rapidity_forced_by_normalized_boost
+#print axioms RelativeRest.sigmaStar_balanced_dyad_invariant
 #print axioms RelativeRest.canonicalPrincipalField_forced_certificate
 #print axioms RelativeRest.kerrNewman_fieldOnly_forced_certificate
 #print axioms RelativeRest.principalFieldCurrent_Lambda_unique
