@@ -21040,6 +21040,19 @@ theorem kerrMinoClockFromPrincipalEM
   field_simp [ne_of_gt hsigpos]
   ring
 
+
+/-- Canonical Mino form with no independently supplied d-lambda datum:
+the reparametrization coefficient is definitionally dt/Sigma. -/
+theorem kerrMinoClockFromPrincipalEM_canonical
+    (Q r a theta dt : ℝ)
+    (hQ : Q ≠ 0)
+    (hsigpos : 0 < Sigma r a theta) :
+    kerrClockRateFromPrincipalEM Q r a theta * dt =
+      Real.sqrt 2 * |Q| * (dt / Sigma r a theta) := by
+  exact kerrMinoClockFromPrincipalEM
+    Q r a theta dt (dt / Sigma r a theta)
+    hQ hsigpos rfl
+
 /-- At zero charge the Kerr-Newman Ricci carrier vanishes identically in the scalar specialization. -/
 theorem kerrNewman_vacuum_carrier_vanishes
     (sig K χ : ℝ)
@@ -29003,6 +29016,23 @@ theorem kerrNewman_fieldOnly_forced_certificate
     carterNormalized := hk.2.2.2.2.1
     minoClock := hk.2.2.2.2.2 }
 
+
+/-- Kerr-Newman field-only certificate with the Mino increment fixed
+definitionally.  No separate reparametrization variable or normalization
+equation is supplied. -/
+theorem kerrNewman_fieldOnly_forced_certificate_canonicalMino
+    (Q r M a theta dt u s : ℝ)
+    (hQ : Q ≠ 0)
+    (hsig : 0 < Sigma r a theta)
+    (hdel : 0 < Delta r M a Q)
+    (hsin : 0 < Real.sin theta) :
+    KerrNewmanFieldOnlyForcedCertificate
+      Q r M a theta dt (dt / Sigma r a theta) u s
+      hQ hsig hdel hsin (by rfl) := by
+  exact kerrNewman_fieldOnly_forced_certificate
+    Q r M a theta dt (dt / Sigma r a theta) u s
+    hQ hsig hdel hsin rfl
+
 /-! ### Lagrangian-backed characteristic clock: covariant phase space to the normalized line -/
 
 section LagrangianBackedCharacteristic
@@ -33815,6 +33845,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.arbitraryMaxwell_action_forced_certificate
 #print axioms RelativeRest.canonicalPrincipalField_forced_certificate
 #print axioms RelativeRest.kerrNewman_fieldOnly_forced_certificate
+#print axioms RelativeRest.kerrNewman_fieldOnly_forced_certificate_canonicalMino
+#print axioms RelativeRest.kerrMinoClockFromPrincipalEM_canonical
 #print axioms RelativeRest.principalFieldCurrent_Lambda_unique
 #print axioms RelativeRest.principalFieldCurrent_quotient_finrank_one
 #print axioms RelativeRest.reeb_direction_unique
