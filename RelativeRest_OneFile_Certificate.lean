@@ -25192,6 +25192,384 @@ theorem generalMaxwellFiniteResolving_rapidity_forced
   rw [generalMaxwellFiniteResolvingOpticalCoordinates_boostedObserver] at h
   exact opticalBoost_TO_injective h
 
+
+/-! #### Global/local and compensated-action closure for any finite resolver -/
+
+/-- Local quotient unit selected by an arbitrary finite resolver. -/
+def generalMaxwellFiniteResolvingLocalQuotientUnit
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    (Fin 4 → ℝ) ⧸
+      LinearMap.ker
+        (generalMaxwellFiniteResolvingClockCovector
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D) :=
+  Submodule.Quotient.mk (resolvingPlaneBalancedU alpha D)
+
+@[simp] theorem generalMaxwellFiniteResolvingLocalQuotientUnit_normalized
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    quotientClockCovector
+        (generalMaxwellFiniteResolvingClockCovector
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D)
+        (generalMaxwellFiniteResolvingLocalQuotientUnit
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D) = 1 := by
+  have h :=
+    LinearMap.congr_fun
+      (quotientClockCovector_pullback
+        (generalMaxwellFiniteResolvingClockCovector
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D))
+      (resolvingPlaneBalancedU alpha D)
+  change
+    quotientClockCovector
+        (generalMaxwellFiniteResolvingClockCovector
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D)
+        (Submodule.Quotient.mk
+          (resolvingPlaneBalancedU alpha D)) =
+      generalMaxwellFiniteResolvingClockCovector
+        (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+        (Bx:=Bx) (By:=By) (Bz:=Bz)
+        alpha D (resolvingPlaneBalancedU alpha D) at h
+  simpa [generalMaxwellFiniteResolvingLocalQuotientUnit] using h
+
+theorem generalMaxwellFiniteResolvingClockCovector_nonzero
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellFiniteResolvingClockCovector
+      (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+      (Bx:=Bx) (By:=By) (Bz:=Bz)
+      alpha D ≠ 0 := by
+  intro hzero
+  have hu :=
+    generalMaxwellFiniteResolvingClockCovector_unit
+      (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+      (Bx:=Bx) (By:=By) (Bz:=Bz)
+      alpha D
+  rw [hzero] at hu
+  simp at hu
+
+theorem generalMaxwellFiniteResolvingLocalQuotient_finrank_one
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    Module.finrank ℝ
+      ((Fin 4 → ℝ) ⧸
+        LinearMap.ker
+          (generalMaxwellFiniteResolvingClockCovector
+            (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+            (Bx:=Bx) (By:=By) (Bz:=Bz)
+            alpha D)) = 1 :=
+  clockQuotient_finrank_one
+    (generalMaxwellFiniteResolvingClockCovector
+      (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+      (Bx:=Bx) (By:=By) (Bz:=Bz)
+      alpha D)
+    (generalMaxwellFiniteResolvingClockCovector_nonzero
+      (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+      (Bx:=Bx) (By:=By) (Bz:=Bz)
+      alpha D)
+
+/-- Canonical lift of the local quotient back to the finite-resolver observer line. -/
+def generalMaxwellFiniteResolvingLocalLift
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    ((Fin 4 → ℝ) ⧸
+      LinearMap.ker
+        (generalMaxwellFiniteResolvingClockCovector
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D)) →ₗ[ℝ] (Fin 4 → ℝ) :=
+  (quotientClockCovector
+    (generalMaxwellFiniteResolvingClockCovector
+      (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+      (Bx:=Bx) (By:=By) (Bz:=Bz)
+      alpha D)).smulRight
+    (resolvingPlaneBalancedU alpha D)
+
+@[simp] theorem generalMaxwellFiniteResolvingLocalLift_unit
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellFiniteResolvingLocalLift
+        (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+        (Bx:=Bx) (By:=By) (Bz:=Bz)
+        alpha D
+        (generalMaxwellFiniteResolvingLocalQuotientUnit
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D) =
+      resolvingPlaneBalancedU alpha D := by
+  unfold generalMaxwellFiniteResolvingLocalLift
+  rw [LinearMap.smulRight_apply,
+    generalMaxwellFiniteResolvingLocalQuotientUnit_normalized]
+  simp
+
+/-- Covector-preserving isomorphism from the global finite-resolver
+characteristic quotient to its local observer quotient. -/
+def generalMaxwellFiniteResolvingGlobalToLocalClockMap
+    {K : Type*} [AddCommGroup K] [Module ℝ K]
+    (Λ : K →ₗ[ℝ] ℝ)
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    (K ⧸ LinearMap.ker Λ) →ₗ[ℝ]
+      ((Fin 4 → ℝ) ⧸
+        LinearMap.ker
+          (generalMaxwellFiniteResolvingClockCovector
+            (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+            (Bx:=Bx) (By:=By) (Bz:=Bz)
+            alpha D)) :=
+  normalizedClockMap
+    (quotientClockCovector Λ)
+    (generalMaxwellFiniteResolvingLocalQuotientUnit
+      (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+      (Bx:=Bx) (By:=By) (Bz:=Bz)
+      alpha D)
+
+theorem generalMaxwellFiniteResolvingGlobalToLocalClockMap_pullback
+    {K : Type*} [AddCommGroup K] [Module ℝ K]
+    (Λ : K →ₗ[ℝ] ℝ)
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    (quotientClockCovector
+      (generalMaxwellFiniteResolvingClockCovector
+        (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+        (Bx:=Bx) (By:=By) (Bz:=Bz)
+        alpha D)).comp
+      (generalMaxwellFiniteResolvingGlobalToLocalClockMap
+        Λ
+        (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+        (Bx:=Bx) (By:=By) (Bz:=Bz)
+        alpha D) =
+      quotientClockCovector Λ := by
+  ext X
+  exact normalizedClockMap_preserves_covector
+    (quotientClockCovector Λ)
+    (quotientClockCovector
+      (generalMaxwellFiniteResolvingClockCovector
+        (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+        (Bx:=Bx) (By:=By) (Bz:=Bz)
+        alpha D))
+    (generalMaxwellFiniteResolvingLocalQuotientUnit
+      (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+      (Bx:=Bx) (By:=By) (Bz:=Bz)
+      alpha D)
+    (generalMaxwellFiniteResolvingLocalQuotientUnit_normalized
+      (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+      (Bx:=Bx) (By:=By) (Bz:=Bz)
+      alpha D)
+    X
+
+theorem generalMaxwellFiniteResolvingGlobalToLocalClockMap_bijective
+    {K : Type*} [AddCommGroup K] [Module ℝ K]
+    (Λ : K →ₗ[ℝ] ℝ) (hΛ : Λ ≠ 0)
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    Function.Bijective
+      (generalMaxwellFiniteResolvingGlobalToLocalClockMap
+        Λ
+        (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+        (Bx:=Bx) (By:=By) (Bz:=Bz)
+        alpha D) := by
+  exact normalizedClockMap_bijective
+    (quotientClockCovector Λ)
+    (quotientClockCovector
+      (generalMaxwellFiniteResolvingClockCovector
+        (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+        (Bx:=Bx) (By:=By) (Bz:=Bz)
+        alpha D))
+    (globalClockQuotientUnit Λ hΛ)
+    (generalMaxwellFiniteResolvingLocalQuotientUnit
+      (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+      (Bx:=Bx) (By:=By) (Bz:=Bz)
+      alpha D)
+    (globalClockQuotientUnit_normalized Λ hΛ)
+    (generalMaxwellFiniteResolvingLocalQuotientUnit_normalized
+      (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+      (Bx:=Bx) (By:=By) (Bz:=Bz)
+      alpha D)
+    (clockQuotient_finrank_one Λ hΛ)
+    (generalMaxwellFiniteResolvingLocalQuotient_finrank_one
+      (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+      (Bx:=Bx) (By:=By) (Bz:=Bz)
+      alpha D)
+
+theorem generalMaxwellFiniteResolvingGlobalClockUnit_lifts_to_U
+    {K : Type*} [AddCommGroup K] [Module ℝ K]
+    (Λ : K →ₗ[ℝ] ℝ) (hΛ : Λ ≠ 0)
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellFiniteResolvingLocalLift
+        (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+        (Bx:=Bx) (By:=By) (Bz:=Bz)
+        alpha D
+        (generalMaxwellFiniteResolvingGlobalToLocalClockMap
+          Λ
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D
+          (globalClockQuotientUnit Λ hΛ)) =
+      resolvingPlaneBalancedU alpha D := by
+  unfold generalMaxwellFiniteResolvingGlobalToLocalClockMap
+  rw [normalizedClockMap_apply,
+    globalClockQuotientUnit_normalized]
+  simpa using
+    generalMaxwellFiniteResolvingLocalLift_unit
+      (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+      (Bx:=Bx) (By:=By) (Bz:=Bz)
+      alpha D
+
+/-- Canonical action-space constraint for the finite-resolver ADM current. -/
+def generalMaxwellFiniteResolvingADMActionConstraint
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    R2 →ₗ[ℝ] ((Fin 4 → ℝ) →ₗ[ℝ] ℝ) :=
+  actionConstraintResponseLinear
+    (generalMaxwellFiniteResolvingADMCharacteristicData
+      Ex Ey Ez Bx By Bz alpha hnonnull D).current
+
+@[simp] theorem generalMaxwellFiniteResolvingADMActionConstraint_CA
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellFiniteResolvingADMActionConstraint
+      Ex Ey Ez Bx By Bz alpha hnonnull D CA = 0 := by
+  simp [generalMaxwellFiniteResolvingADMActionConstraint]
+
+@[simp] theorem generalMaxwellFiniteResolvingADMActionConstraint_DA
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellFiniteResolvingADMActionConstraint
+      Ex Ey Ez Bx By Bz alpha hnonnull D DA =
+      (-2 : ℝ) •
+        (generalMaxwellFiniteResolvingADMCharacteristicData
+          Ex Ey Ez Bx By Bz alpha hnonnull D).current := by
+  simp [generalMaxwellFiniteResolvingADMActionConstraint]
+
+/-- Every first-variation/Cartan representative completed with the same
+finite-resolver action constraint has the identical compensated bulk current. -/
+theorem generalMaxwellFiniteResolving_anyCanonicalCompletion_compensated
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (core :
+      LagrangianFirstVariationCartanData
+        (L:=R2) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ))) :
+    let N :=
+      core.toNoetherOperators
+        (generalMaxwellFiniteResolvingADMActionConstraint
+          Ex Ey Ez Bx By Bz alpha hnonnull D)
+    N.omegaXY + N.dB =
+      generalMaxwellFiniteResolvingADMActionConstraint
+        Ex Ey Ez Bx By Bz alpha hnonnull D := by
+  dsimp
+  ext X
+  have hcomp :=
+    (core.toNoetherOperators
+      (generalMaxwellFiniteResolvingADMActionConstraint
+        Ex Ey Ez Bx By Bz alpha hnonnull D)).compensated_eq_constraint X
+  rw [core.toNoetherOperators_constraint
+    (generalMaxwellFiniteResolvingADMActionConstraint
+      Ex Ey Ez Bx By Bz alpha hnonnull D)] at hcomp
+  exact hcomp
+
+/-- Literal finite-resolver form of the paper's compensated Iyer-Wald bridge. -/
+theorem generalMaxwellFiniteResolving_halfCompensated_DA_eq_clockCurrent
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (core :
+      LagrangianFirstVariationCartanData
+        (L:=R2) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ))) :
+    let N :=
+      core.toNoetherOperators
+        (generalMaxwellFiniteResolvingADMActionConstraint
+          Ex Ey Ez Bx By Bz alpha hnonnull D)
+    (-1 / 2 : ℝ) • (N.omegaXY DA + N.dB DA) =
+      (generalMaxwellFiniteResolvingADMCharacteristicData
+        Ex Ey Ez Bx By Bz alpha hnonnull D).current := by
+  dsimp
+  have hcomp :=
+    LinearMap.congr_fun
+      (generalMaxwellFiniteResolving_anyCanonicalCompletion_compensated
+        Ex Ey Ez Bx By Bz alpha hnonnull D core) DA
+  rw [generalMaxwellFiniteResolvingADMActionConstraint_DA] at hcomp
+  rw [hcomp]
+  module
+
 /-- A later finite resolving jet therefore propagates through the full local
 clock chain, not merely through frame selection. -/
 structure ArbitraryMaxwellFiniteResolvingClockCertificate
@@ -32322,6 +32700,11 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellFiniteResolvingADMCharacteristic_quotient_finrank_one
 #print axioms RelativeRest.generalMaxwellFiniteResolvingTheta_null
 #print axioms RelativeRest.generalMaxwellFiniteResolving_rapidity_forced
+#print axioms RelativeRest.generalMaxwellFiniteResolvingGlobalToLocalClockMap_pullback
+#print axioms RelativeRest.generalMaxwellFiniteResolvingGlobalToLocalClockMap_bijective
+#print axioms RelativeRest.generalMaxwellFiniteResolvingGlobalClockUnit_lifts_to_U
+#print axioms RelativeRest.generalMaxwellFiniteResolving_anyCanonicalCompletion_compensated
+#print axioms RelativeRest.generalMaxwellFiniteResolving_halfCompensated_DA_eq_clockCurrent
 #print axioms RelativeRest.arbitraryMaxwell_finiteResolvingClock_certificate
 #print axioms RelativeRest.arbitraryMaxwell_resolvedJet_forced_certificate
 #print axioms RelativeRest.resolvedRainichPlane_certificate
