@@ -21053,6 +21053,95 @@ theorem kerrMinoClockFromPrincipalEM_canonical
     Q r a theta dt (dt / Sigma r a theta)
     hQ hsigpos rfl
 
+
+/-! ### Intrinsic-clock/Mino parameter equivalence -/
+
+/-- The intrinsic Einstein-Maxwell clock parameter obtained from Mino parameter,
+including the physically irrelevant additive clock origin. -/
+def kerrIntrinsicClockParameter
+    (Q Theta0 lambdaM : ℝ) : ℝ :=
+  Theta0 + Real.sqrt 2 * |Q| * lambdaM
+
+/-- The inverse parameter map on the regular charged stratum. -/
+def kerrMinoParameterFromIntrinsicClock
+    (Q Theta0 Theta : ℝ) : ℝ :=
+  (Theta - Theta0) / (Real.sqrt 2 * |Q|)
+
+/-- Nonzero charge makes the field-fixed conversion coefficient nonzero. -/
+theorem kerrIntrinsicClockParameter_coefficient_ne_zero
+    (Q : ℝ) (hQ : Q ≠ 0) :
+    Real.sqrt 2 * |Q| ≠ 0 := by
+  exact mul_ne_zero
+    (ne_of_gt (Real.sqrt_pos.2 (by norm_num)))
+    (abs_ne_zero.mpr hQ)
+
+/-- Converting Mino parameter to the intrinsic clock and back is the identity. -/
+theorem kerrMinoParameterFromIntrinsicClock_leftInverse
+    (Q Theta0 : ℝ) (hQ : Q ≠ 0) :
+    Function.LeftInverse
+      (kerrMinoParameterFromIntrinsicClock Q Theta0)
+      (kerrIntrinsicClockParameter Q Theta0) := by
+  intro lambdaM
+  have hc :=
+    kerrIntrinsicClockParameter_coefficient_ne_zero Q hQ
+  unfold kerrMinoParameterFromIntrinsicClock
+    kerrIntrinsicClockParameter
+  field_simp [hc]
+  ring
+
+/-- Converting the intrinsic clock back to Mino parameter and forward again is
+also the identity. -/
+theorem kerrMinoParameterFromIntrinsicClock_rightInverse
+    (Q Theta0 : ℝ) (hQ : Q ≠ 0) :
+    Function.RightInverse
+      (kerrMinoParameterFromIntrinsicClock Q Theta0)
+      (kerrIntrinsicClockParameter Q Theta0) := by
+  intro Theta
+  have hc :=
+    kerrIntrinsicClockParameter_coefficient_ne_zero Q hQ
+  unfold kerrMinoParameterFromIntrinsicClock
+    kerrIntrinsicClockParameter
+  field_simp [hc]
+  ring
+
+/-- Therefore the intrinsic clock and Mino parameter are globally equivalent
+affine parameters on every regular charged Kerr-Newman branch.  The only freedom
+is the additive clock origin Theta0. -/
+theorem kerrIntrinsicClockParameter_bijective
+    (Q Theta0 : ℝ) (hQ : Q ≠ 0) :
+    Function.Bijective
+      (kerrIntrinsicClockParameter Q Theta0) := by
+  refine ⟨
+    (kerrMinoParameterFromIntrinsicClock_leftInverse
+      Q Theta0 hQ).injective,
+    (kerrMinoParameterFromIntrinsicClock_rightInverse
+      Q Theta0 hQ).surjective⟩
+
+/-- Any trajectory already parameterized by Mino time is therefore literally
+the same trajectory parameterized by the intrinsic Einstein-Maxwell clock.
+No geodesic, Lorentz-force, or separability equation is altered here: this is
+the forced invertible reparametrization that transports any such dynamics. -/
+def kerrTrajectoryInIntrinsicClock
+    {X : Type*}
+    (Q Theta0 : ℝ)
+    (z : ℝ → X)
+    (Theta : ℝ) : X :=
+  z (kerrMinoParameterFromIntrinsicClock Q Theta0 Theta)
+
+theorem kerrTrajectoryInIntrinsicClock_recovers_mino
+    {X : Type*}
+    (Q Theta0 : ℝ)
+    (z : ℝ → X)
+    (hQ : Q ≠ 0)
+    (lambdaM : ℝ) :
+    kerrTrajectoryInIntrinsicClock
+        Q Theta0 z
+        (kerrIntrinsicClockParameter Q Theta0 lambdaM) =
+      z lambdaM := by
+  unfold kerrTrajectoryInIntrinsicClock
+  rw [kerrMinoParameterFromIntrinsicClock_leftInverse
+    Q Theta0 hQ lambdaM]
+
 /-- At zero charge the Kerr-Newman Ricci carrier vanishes identically in the scalar specialization. -/
 theorem kerrNewman_vacuum_carrier_vanishes
     (sig K χ : ℝ)
@@ -28985,6 +29074,10 @@ structure KerrNewmanFieldOnlyForcedCertificate
   minoClock :
     kerrClockRateFromPrincipalEM Q r a θ * dt =
       Real.sqrt 2 * |Q| * dlam
+  minoIntrinsicClockParameter :
+    ∀ Theta0 : ℝ,
+      Function.Bijective
+        (kerrIntrinsicClockParameter Q Theta0)
 
 /-- Construction of the Kerr-Newman field-only certificate from the potential,
 metric and regular charged-stratum hypotheses. -/
@@ -29014,7 +29107,10 @@ theorem kerrNewman_fieldOnly_forced_certificate
     sourceFreeMaxwell := hk.2.2.1
     relativeRestCarter := hk.2.2.2.1
     carterNormalized := hk.2.2.2.2.1
-    minoClock := hk.2.2.2.2.2 }
+    minoClock := hk.2.2.2.2.2
+    minoIntrinsicClockParameter := by
+      intro Theta0
+      exact kerrIntrinsicClockParameter_bijective Q Theta0 hQ }
 
 
 /-- Kerr-Newman field-only certificate with the Mino increment fixed
@@ -33844,6 +33940,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalEinsteinMaxwell_bulk_stationarity_iff_field_equations
 #print axioms RelativeRest.arbitraryMaxwell_action_forced_certificate
 #print axioms RelativeRest.canonicalPrincipalField_forced_certificate
+#print axioms RelativeRest.kerrIntrinsicClockParameter_bijective
+#print axioms RelativeRest.kerrTrajectoryInIntrinsicClock_recovers_mino
 #print axioms RelativeRest.kerrNewman_fieldOnly_forced_certificate
 #print axioms RelativeRest.kerrNewman_fieldOnly_forced_certificate_canonicalMino
 #print axioms RelativeRest.kerrMinoClockFromPrincipalEM_canonical
