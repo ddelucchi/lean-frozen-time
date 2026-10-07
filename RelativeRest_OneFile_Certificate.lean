@@ -5684,6 +5684,22 @@ structure ArbitraryMaxwellActionForcedCertificate
         (-1 / 2 : ℝ) *
           generalMaxwellStressCovFromF
             Ex Ey Ez Bx By Bz i j
+  generalActionBulkStationarityIffFieldEquations :
+    ∀ (RicCov : Fin 4 → Fin 4 → ℝ)
+      (nablaF : Fin 4 → Fin 4 → ℝ),
+    ((∀ i j : Fin 4,
+        generalEinsteinMaxwellMetricVariationCoeff
+          (principalEinsteinMixedFromRicci RicCov)
+          Ex Ey Ez Bx By Bz i j = 0) ∧
+      (∀ deltaA : Fin 4 → ℝ,
+        principalMaxwellPotentialEulerDensity nablaF deltaA = 0)) ↔
+    ((∀ i j : Fin 4,
+        principalEinsteinMixedFromRicci RicCov i j =
+          8 * Real.pi *
+            generalMaxwellStressFromF
+              Ex Ey Ez Bx By Bz i j) ∧
+      (∀ b : Fin 4,
+        principalMaxwellPotentialEulerCoeff nablaF b = 0))
   actionCarrier :
     generalActionDerivedCarrierLinear Ex Ey Ez Bx By Bz =
       generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz
@@ -5758,6 +5774,8 @@ theorem arbitraryMaxwell_action_forced_certificate
       generalMaxwell_solution_preserving_iff
         u s Ex Ey Ez Bx By Bz hnonnull
     actionStress := ?_
+    generalActionBulkStationarityIffFieldEquations :=
+      generalEinsteinMaxwell_bulk_stationarity_iff_field_equations
     actionCarrier :=
       generalActionDerivedCarrierLinear_eq_generalMaxwellCarrierLinear
         Ex Ey Ez Bx By Bz
