@@ -3741,15 +3741,6 @@ theorem generalMaxwellClockRate_fourth_power
         (generalMaxwellJ Ex Ey Ez Bx By Bz)^2 :=
       generalMaxwellChi_sq Ex Ey Ez Bx By Bz
 
-/-- Principal-frame chronometry is therefore a specialization, not an additional
-definition or normalization. -/
-theorem generalMaxwellClockRate_principal_specialization
-    (E B : ℝ) :
-    generalMaxwellClockRate E 0 0 B 0 0 =
-      principalClockRate E B := by
-  unfold generalMaxwellClockRate principalClockRate
-  rw [generalMaxwellChi_principal_specialization]
-
 /-- Linear carrier endomorphism reconstructed directly from the first normal
 derivatives of the Einstein-Maxwell metric Euler coefficients. -/
 def principalActionEulerJetLinear
@@ -8947,6 +8938,15 @@ def principalClockRate (E B : ℝ) : ℝ :=
 @[simp] theorem principalClockRate_nonneg (E B : ℝ) :
     0 ≤ principalClockRate E B :=
   Real.sqrt_nonneg _
+
+/-- Principal-frame chronometry is therefore a specialization, not an additional
+definition or normalization. -/
+theorem generalMaxwellClockRate_principal_specialization
+    (E B : ℝ) :
+    generalMaxwellClockRate E 0 0 B 0 0 =
+      principalClockRate E B := by
+  unfold generalMaxwellClockRate principalClockRate
+  rw [generalMaxwellChi_principal_specialization]
 
 /-- Its square is exactly the Rainich carrier. -/
 theorem principalClockRate_sq (E B : ℝ) :
