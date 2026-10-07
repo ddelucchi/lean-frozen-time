@@ -1810,6 +1810,33 @@ theorem principalMaxwellPotentialEulerDensity_eq_divergence_contraction
   intro b hb
   rw [Finset.sum_mul]
 
+
+/-- Vanishing of the Maxwell bulk Euler pairing for every potential variation is
+equivalent to the source-free Maxwell equation component by component.  Thus the
+Maxwell equation is an Euler-Lagrange consequence, not an extra shell condition. -/
+theorem principalMaxwellPotentialEulerDensity_zero_forall_iff
+    (nablaF : Fin 4 → Fin 4 → ℝ) :
+    (∀ deltaA : Fin 4 → ℝ,
+      principalMaxwellPotentialEulerDensity nablaF deltaA = 0) ↔
+    (∀ b : Fin 4,
+      principalMaxwellPotentialEulerCoeff nablaF b = 0) := by
+  constructor
+  · intro h b
+    have hb := h (principalBasis b)
+    rw [principalMaxwellPotentialEulerDensity_eq_divergence_contraction] at hb
+    have hpi : (4 * Real.pi : ℝ) ≠ 0 :=
+      mul_ne_zero (by norm_num) (ne_of_gt Real.pi_pos)
+    have hsum :
+        (∑ j : Fin 4,
+          principalMaxwellPotentialEulerCoeff nablaF j *
+            principalBasis b j) = 0 := by
+      apply (mul_eq_zero.mp hb).resolve_left
+      exact one_div_ne_zero hpi
+    simpa [principalBasis] using hsum
+  · intro h deltaA
+    rw [principalMaxwellPotentialEulerDensity_eq_divergence_contraction]
+    simp [h]
+
 /-- Maxwell symplectic-potential current coefficient
 `Θ_EM^a=-(4π)⁻¹F^{ab}δA_b`. -/
 def principalMaxwellSymplecticPotentialCoeff
@@ -2664,6 +2691,39 @@ theorem principalEinsteinMaxwellMetricVariationCoeff_from_ricci_eq_zero_iff
         8 * Real.pi * principalStressFromF E B i j :=
   principalEinsteinMaxwellMetricVariationCoeff_eq_zero_iff
     (principalEinsteinMixedFromRicci RicCov) E B i j
+
+
+/-- Complete local bulk stationarity of the displayed Einstein-Maxwell action is
+equivalent to the Einstein equation and source-free Maxwell equation.  Boundary
+terms are not discarded here; this theorem concerns exactly the independently
+variable bulk Euler coefficients isolated by the first-variation identities above. -/
+theorem principalEinsteinMaxwell_bulk_stationarity_iff_field_equations
+    (RicCov : Fin 4 → Fin 4 → ℝ)
+    (E B : ℝ)
+    (nablaF : Fin 4 → Fin 4 → ℝ) :
+    ((∀ i j : Fin 4,
+        principalEinsteinMaxwellMetricVariationCoeff
+          (principalEinsteinMixedFromRicci RicCov) E B i j = 0) ∧
+      (∀ deltaA : Fin 4 → ℝ,
+        principalMaxwellPotentialEulerDensity nablaF deltaA = 0)) ↔
+    ((∀ i j : Fin 4,
+        principalEinsteinMixedFromRicci RicCov i j =
+          8 * Real.pi * principalStressFromF E B i j) ∧
+      (∀ b : Fin 4,
+        principalMaxwellPotentialEulerCoeff nablaF b = 0)) := by
+  constructor
+  · rintro ⟨hmetric,hmax⟩
+    refine ⟨?_, (principalMaxwellPotentialEulerDensity_zero_forall_iff nablaF).1 hmax⟩
+    intro i j
+    exact
+      (principalEinsteinMaxwellMetricVariationCoeff_from_ricci_eq_zero_iff
+        RicCov E B i j).1 (hmetric i j)
+  · rintro ⟨hEin,hMax⟩
+    refine ⟨?_, (principalMaxwellPotentialEulerDensity_zero_forall_iff nablaF).2 hMax⟩
+    intro i j
+    exact
+      (principalEinsteinMaxwellMetricVariationCoeff_from_ricci_eq_zero_iff
+        RicCov E B i j).2 (hEin i j)
 
 /-- Principal electromagnetic energy density from the explicit field. -/
 def principalFieldEnergyDensity (E B : ℝ) : ℝ :=
@@ -22828,7 +22888,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalEinsteinHilbertLagrangianMetricLineFromRicci_hasDerivAt_zero
 #print axioms RelativeRest.principalEinsteinHilbertMetricVariationCoeff_eq_bulk_lagrangian_deriv
 #print axioms RelativeRest.principalEinsteinMaxwell_local_first_variation
+#print axioms RelativeRest.principalMaxwellPotentialEulerDensity_zero_forall_iff
 #print axioms RelativeRest.principalEinsteinMaxwellMetricVariationCoeff_from_ricci_eq_zero_iff
+#print axioms RelativeRest.principalEinsteinMaxwell_bulk_stationarity_iff_field_equations
 #print axioms RelativeRest.principalEinsteinMaxwell_onShell_local_first_variation_is_boundary
 #print axioms RelativeRest.principalMetricEulerNoetherJetCoeff_eq_carrier
 #print axioms RelativeRest.generalMaxwellCarrierLinear_sq
