@@ -2903,6 +2903,115 @@ theorem principalEinsteinMaxwell_bulk_stationarity_iff_field_equations
       (principalEinsteinMaxwellMetricVariationCoeff_from_ricci_eq_zero_iff
         RicCov E B i j).2 (hEin i j)
 
+/-! ### Frame-free Einstein-Maxwell bulk stationarity -/
+
+/-- Total metric Euler coefficient for the Einstein-Hilbert sector plus a completely
+arbitrary six-component Maxwell field. -/
+def generalEinsteinMaxwellMetricVariationCoeff
+    (Gmixed : Fin 4 → Fin 4 → ℝ)
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (i j : Fin 4) : ℝ :=
+  principalEinsteinHilbertMetricVariationCoeff Gmixed i j +
+    generalMaxwellMetricVariationCoeff
+      Ex Ey Ez Bx By Bz i j
+
+/-- The total frame-free coefficient factors by the exact Einstein-Maxwell
+residual `G^i_j-8πT^i_j[F]`. -/
+theorem generalEinsteinMaxwellMetricVariationCoeff_factor
+    (Gmixed : Fin 4 → Fin 4 → ℝ)
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (i j : Fin 4) :
+    generalEinsteinMaxwellMetricVariationCoeff
+        Gmixed Ex Ey Ez Bx By Bz i j =
+      (principalMetricSign i / (16 * Real.pi)) *
+        (Gmixed i j -
+          8 * Real.pi *
+            generalMaxwellStressFromF
+              Ex Ey Ez Bx By Bz i j) := by
+  rw [generalEinsteinMaxwellMetricVariationCoeff,
+    generalMaxwellMetricVariationCoeff_eq_neg_half_stress]
+  unfold principalEinsteinHilbertMetricVariationCoeff
+    generalMaxwellStressCovFromF
+  field_simp [ne_of_gt Real.pi_pos]
+  ring
+
+theorem generalEinsteinMaxwellMetricVariationCoeff_eq_zero_iff
+    (Gmixed : Fin 4 → Fin 4 → ℝ)
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (i j : Fin 4) :
+    generalEinsteinMaxwellMetricVariationCoeff
+        Gmixed Ex Ey Ez Bx By Bz i j = 0 ↔
+      Gmixed i j =
+        8 * Real.pi *
+          generalMaxwellStressFromF
+            Ex Ey Ez Bx By Bz i j := by
+  rw [generalEinsteinMaxwellMetricVariationCoeff_factor]
+  have hc : principalMetricSign i / (16 * Real.pi) ≠ 0 := by
+    exact div_ne_zero (principalMetricSign_ne_zero i)
+      (mul_ne_zero (by norm_num) (ne_of_gt Real.pi_pos))
+  constructor
+  · intro h
+    have hres :
+        Gmixed i j -
+          8 * Real.pi *
+            generalMaxwellStressFromF Ex Ey Ez Bx By Bz i j = 0 :=
+      (mul_eq_zero.mp h).resolve_left hc
+    linarith
+  · intro h
+    rw [h]
+    ring
+
+theorem generalEinsteinMaxwellMetricVariationCoeff_from_ricci_eq_zero_iff
+    (RicCov : Fin 4 → Fin 4 → ℝ)
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (i j : Fin 4) :
+    generalEinsteinMaxwellMetricVariationCoeff
+        (principalEinsteinMixedFromRicci RicCov)
+        Ex Ey Ez Bx By Bz i j = 0 ↔
+      principalEinsteinMixedFromRicci RicCov i j =
+        8 * Real.pi *
+          generalMaxwellStressFromF
+            Ex Ey Ez Bx By Bz i j :=
+  generalEinsteinMaxwellMetricVariationCoeff_eq_zero_iff
+    (principalEinsteinMixedFromRicci RicCov)
+    Ex Ey Ez Bx By Bz i j
+
+/-- Complete local bulk stationarity of the displayed Einstein-Maxwell action for
+an arbitrary electromagnetic two-form is equivalent to the Einstein equation and
+source-free Maxwell equation.  No principal-frame reduction enters. -/
+theorem generalEinsteinMaxwell_bulk_stationarity_iff_field_equations
+    (RicCov : Fin 4 → Fin 4 → ℝ)
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (nablaF : Fin 4 → Fin 4 → ℝ) :
+    ((∀ i j : Fin 4,
+        generalEinsteinMaxwellMetricVariationCoeff
+          (principalEinsteinMixedFromRicci RicCov)
+          Ex Ey Ez Bx By Bz i j = 0) ∧
+      (∀ deltaA : Fin 4 → ℝ,
+        principalMaxwellPotentialEulerDensity nablaF deltaA = 0)) ↔
+    ((∀ i j : Fin 4,
+        principalEinsteinMixedFromRicci RicCov i j =
+          8 * Real.pi *
+            generalMaxwellStressFromF
+              Ex Ey Ez Bx By Bz i j) ∧
+      (∀ b : Fin 4,
+        principalMaxwellPotentialEulerCoeff nablaF b = 0)) := by
+  constructor
+  · rintro ⟨hmetric,hmax⟩
+    refine ⟨?_,
+      (principalMaxwellPotentialEulerDensity_zero_forall_iff nablaF).1 hmax⟩
+    intro i j
+    exact
+      (generalEinsteinMaxwellMetricVariationCoeff_from_ricci_eq_zero_iff
+        RicCov Ex Ey Ez Bx By Bz i j).1 (hmetric i j)
+  · rintro ⟨hEin,hMax⟩
+    refine ⟨?_,
+      (principalMaxwellPotentialEulerDensity_zero_forall_iff nablaF).2 hMax⟩
+    intro i j
+    exact
+      (generalEinsteinMaxwellMetricVariationCoeff_from_ricci_eq_zero_iff
+        RicCov Ex Ey Ez Bx By Bz i j).2 (hEin i j)
+
 /-- Principal electromagnetic energy density from the explicit field. -/
 def principalFieldEnergyDensity (E B : ℝ) : ℝ :=
   (E^2 + B^2) / (8 * Real.pi)
@@ -24072,6 +24181,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalMaxwellPotentialEulerDensity_zero_forall_iff
 #print axioms RelativeRest.principalEinsteinMaxwellMetricVariationCoeff_from_ricci_eq_zero_iff
 #print axioms RelativeRest.principalEinsteinMaxwell_bulk_stationarity_iff_field_equations
+#print axioms RelativeRest.generalEinsteinMaxwellMetricVariationCoeff_factor
+#print axioms RelativeRest.generalEinsteinMaxwellMetricVariationCoeff_eq_zero_iff
+#print axioms RelativeRest.generalEinsteinMaxwell_bulk_stationarity_iff_field_equations
 #print axioms RelativeRest.principalEinsteinMaxwell_onShell_local_first_variation_is_boundary
 #print axioms RelativeRest.principalMetricEulerNoetherJetCoeff_eq_carrier
 #print axioms RelativeRest.generalMaxwellCarrierLinear_sq
