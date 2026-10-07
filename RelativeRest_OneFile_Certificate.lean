@@ -18169,6 +18169,19 @@ structure CanonicalPrincipalFieldForcedCertificate
       D.J (principalBasis j) i =
         (16 * Real.pi / principalMetricSign i) *
           deriv (principalScaledMetricEulerCoeffFromAction E B i j) 0
+  actionBulkStationarityIffFieldEquations :
+    ∀ (RicCov : Fin 4 → Fin 4 → ℝ)
+      (nablaF : Fin 4 → Fin 4 → ℝ),
+    ((∀ i j : Fin 4,
+        principalEinsteinMaxwellMetricVariationCoeff
+          (principalEinsteinMixedFromRicci RicCov) E B i j = 0) ∧
+      (∀ deltaA : Fin 4 → ℝ,
+        principalMaxwellPotentialEulerDensity nablaF deltaA = 0)) ↔
+    ((∀ i j : Fin 4,
+        principalEinsteinMixedFromRicci RicCov i j =
+          8 * Real.pi * principalStressFromF E B i j) ∧
+      (∀ b : Fin 4,
+        principalMaxwellPotentialEulerCoeff nablaF b = 0))
   rainichCarrier :
     ∀ i j : Fin 4,
       (∑ k : Fin 4,
@@ -18502,6 +18515,8 @@ theorem canonicalPrincipalField_forced_certificate
     hodgeTwoFormFourDimensional :=
       hodge_twoform_conformal_iff_four
     actionJet := ?_
+    actionBulkStationarityIffFieldEquations :=
+      principalEinsteinMaxwell_bulk_stationarity_iff_field_equations
     rainichCarrier := principalJetFromF_rainich E B
     einsteinRicciCarrier := principalJetFromF_eq_minus_two_EinsteinRicci E B
     einsteinRicciTraceFree := principalRicciFromEinstein_trace_zero E B
@@ -23373,6 +23388,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kernelClockCovector_basic_and_unique
 #print axioms RelativeRest.clockPotential_unique_up_to_constant
 #print axioms RelativeRest.clockPotential_normalized_flow
+#print axioms RelativeRest.principalEinsteinMaxwell_bulk_stationarity_iff_field_equations
 #print axioms RelativeRest.canonicalPrincipalField_forced_certificate
 #print axioms RelativeRest.kerrNewman_fieldOnly_forced_certificate
 #print axioms RelativeRest.principalFieldCurrent_Lambda_unique
