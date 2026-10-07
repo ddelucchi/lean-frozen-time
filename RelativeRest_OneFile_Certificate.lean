@@ -5413,6 +5413,169 @@ theorem generalMaxwell_principal_projectors_pointwise_unique
       Ex Ey Ez Bx By Bz hnonnull v (Pplus v) (Pminus v)
       (hsum v) (hplus v) (hminus v)).2
 
+/-! ### Arbitrary non-null Maxwell field: action-to-Rainich-to-clock master -/
+
+/-- A principal field is non-null whenever it is nonzero.  This lets the older
+principal-frame chain embed into the new arbitrary-field certificate without an
+extra invariant hypothesis. -/
+theorem generalMaxwellNonNull_principal_of_nonzero
+    (E B : ℝ) (hfield : E ≠ 0 ∨ B ≠ 0) :
+    generalMaxwellNonNull E 0 0 B 0 0 := by
+  unfold generalMaxwellNonNull
+  rw [generalMaxwellI_principal_specialization,
+    generalMaxwellJ_principal_specialization]
+  rcases hfield with hE | hB
+  · by_cases hB0 : B = 0
+    · left
+      unfold maxwellI
+      rw [hB0]
+      have hE2 : E^2 ≠ 0 := pow_ne_zero 2 hE
+      nlinarith
+    · right
+      unfold maxwellJ
+      exact mul_ne_zero
+        (mul_ne_zero (by norm_num) hE) hB0
+  · by_cases hE0 : E = 0
+    · left
+      unfold maxwellI
+      rw [hE0]
+      have hB2 : B^2 ≠ 0 := pow_ne_zero 2 hB
+      nlinarith
+    · right
+      unfold maxwellJ
+      exact mul_ne_zero
+        (mul_ne_zero (by norm_num) hE0) hB
+
+/-- Strong frame-free local certificate.  The only field hypothesis is the
+invariant regular non-null condition.  No principal-frame alignment, stress
+normalization, Rainich splitting, or clock rate is supplied. -/
+structure ArbitraryMaxwellActionForcedCertificate
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) : Prop where
+  relativeFixedPoint :
+    (8 * Real.pi *
+        generalMaxwellEnergyDensity Ex Ey Ez Bx By Bz =
+      8 * Real.pi *
+        maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+        generalMaxwellEnergyDensity Ex Ey Ez Bx By Bz) ↔
+      s = 0
+  actionStress :
+    ∀ i j : Fin 4,
+      deriv
+          (generalMaxwellLagrangianMetricLine
+            Ex Ey Ez Bx By Bz i j) 0 =
+        (-1 / 2 : ℝ) *
+          generalMaxwellStressCovFromF
+            Ex Ey Ez Bx By Bz i j
+  actionCarrier :
+    generalActionDerivedCarrierLinear Ex Ey Ez Bx By Bz =
+      generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz
+  rainichSquare :
+    (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz).comp
+        (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz) =
+      (generalMaxwellChi Ex Ey Ez Bx By Bz)^2 • LinearMap.id
+  chiPositive :
+    0 < generalMaxwellChi Ex Ey Ez Bx By Bz
+  normalizedSelfAdjoint :
+    ∀ v w : Fin 4 → ℝ,
+      principalMinkowskiBilinear
+          (generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz v) w =
+        principalMinkowskiBilinear
+          v (generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz w)
+  normalizedInvolution :
+    (generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz).comp
+        (generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz) =
+      LinearMap.id
+  principalSplit :
+    ∀ v : Fin 4 → ℝ,
+      generalMaxwellProjectorPlus Ex Ey Ez Bx By Bz v +
+          generalMaxwellProjectorMinus Ex Ey Ez Bx By Bz v = v ∧
+      generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz
+          (generalMaxwellProjectorPlus Ex Ey Ez Bx By Bz v) =
+        generalMaxwellProjectorPlus Ex Ey Ez Bx By Bz v ∧
+      generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz
+          (generalMaxwellProjectorMinus Ex Ey Ez Bx By Bz v) =
+        -generalMaxwellProjectorMinus Ex Ey Ez Bx By Bz v ∧
+      principalMinkowskiBilinear
+          (generalMaxwellProjectorPlus Ex Ey Ez Bx By Bz v)
+          (generalMaxwellProjectorMinus Ex Ey Ez Bx By Bz v) = 0
+  principalSplitUnique :
+    ∀ (v vp vm : Fin 4 → ℝ),
+      vp + vm = v →
+      generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz vp = vp →
+      generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz vm = -vm →
+      vp = generalMaxwellProjectorPlus Ex Ey Ez Bx By Bz v ∧
+        vm = generalMaxwellProjectorMinus Ex Ey Ez Bx By Bz v
+  clockPositive :
+    0 < generalMaxwellClockRate Ex Ey Ez Bx By Bz
+  clockSquare :
+    (generalMaxwellClockRate Ex Ey Ez Bx By Bz)^2 =
+      generalMaxwellChi Ex Ey Ez Bx By Bz
+  clockFourthPower :
+    (generalMaxwellClockRate Ex Ey Ez Bx By Bz)^4 =
+      (generalMaxwellI Ex Ey Ez Bx By Bz)^2 +
+        (generalMaxwellJ Ex Ey Ez Bx By Bz)^2
+
+/-- Constructor for the frame-free arbitrary-field master. -/
+theorem arbitraryMaxwell_action_forced_certificate
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
+    ArbitraryMaxwellActionForcedCertificate
+      Ex Ey Ez Bx By Bz u s hnonnull := by
+  refine {
+    relativeFixedPoint :=
+      generalMaxwell_solution_preserving_iff
+        u s Ex Ey Ez Bx By Bz hnonnull
+    actionStress := ?_
+    actionCarrier :=
+      generalActionDerivedCarrierLinear_eq_generalMaxwellCarrierLinear
+        Ex Ey Ez Bx By Bz
+    rainichSquare :=
+      generalMaxwellCarrierLinear_sq_chi
+        Ex Ey Ez Bx By Bz
+    chiPositive :=
+      generalMaxwellChi_pos Ex Ey Ez Bx By Bz hnonnull
+    normalizedSelfAdjoint :=
+      generalMaxwellNormalizedCarrier_self_adjoint
+        Ex Ey Ez Bx By Bz
+    normalizedInvolution :=
+      generalMaxwellNormalizedCarrier_involution
+        Ex Ey Ez Bx By Bz hnonnull
+    principalSplit := ?_
+    principalSplitUnique := ?_
+    clockPositive :=
+      generalMaxwellClockRate_pos
+        Ex Ey Ez Bx By Bz hnonnull
+    clockSquare :=
+      generalMaxwellClockRate_sq
+        Ex Ey Ez Bx By Bz
+    clockFourthPower :=
+      generalMaxwellClockRate_fourth_power
+        Ex Ey Ez Bx By Bz }
+  · intro i j
+    exact
+      generalMaxwellLagrangianMetricLine_deriv_eq_neg_half_stress
+        Ex Ey Ez Bx By Bz i j
+  · intro v
+    exact
+      generalMaxwell_principal_split_certificate
+        Ex Ey Ez Bx By Bz hnonnull v
+  · intro v vp vm hsum hp hm
+    exact
+      generalMaxwell_principal_split_unique
+        Ex Ey Ez Bx By Bz hnonnull v vp vm hsum hp hm
+
+/-- The original principal-field inputs are a literal specialization of the
+frame-free master, not a logically stronger starting point. -/
+theorem principalField_has_arbitraryMaxwell_action_certificate
+    (E B u s : ℝ) (hfield : E ≠ 0 ∨ B ≠ 0) :
+    ArbitraryMaxwellActionForcedCertificate
+      E 0 0 B 0 0 u s
+      (generalMaxwellNonNull_principal_of_nonzero E B hfield) :=
+  arbitraryMaxwell_action_forced_certificate
+    E 0 0 B 0 0 u s
+    (generalMaxwellNonNull_principal_of_nonzero E B hfield)
+
 /-! ### Full-jet residual stabilizer logic -/
 
 variable {G : Type*}
@@ -23803,6 +23966,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwell_principal_split_certificate
 #print axioms RelativeRest.generalMaxwellNormalizedCarrier_eq_projector_difference
 #print axioms RelativeRest.generalMaxwell_principal_projectors_pointwise_unique
+#print axioms RelativeRest.generalMaxwellNonNull_principal_of_nonzero
+#print axioms RelativeRest.arbitraryMaxwell_action_forced_certificate
+#print axioms RelativeRest.principalField_has_arbitraryMaxwell_action_certificate
 #print axioms RelativeRest.generalMaxwellCarrier_nilpotent_of_chi_zero
 #print axioms RelativeRest.involution_projectors_scale_invariant
 #print axioms RelativeRest.relationalObservable_gauge_invariant
