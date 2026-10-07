@@ -26159,6 +26159,244 @@ theorem arbitraryMaxwell_resolvedJet_forced_certificate
   · intro G H e he
     exact finiteJetBreak_or_unbrokenAtEveryFiniteOrder H e he
 
+
+/-! ### Resolver-order-independent regular-stratum manuscript closure
+
+This is the broad local theorem matching the manuscript's stated jet-tower
+fallback.  The Maxwell first derivative fixes the scalar clock-rate gradient,
+while the first finite carrier jet that actually resolves the residual boost is
+represented by alpha.  No assumption says that alpha must be the first
+derivative of log chi. -/
+
+structure ArbitraryMaxwellResolvedRegularStratumCertificate
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hmem :
+      principalRaiseCovector alpha ∈
+        LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))
+    (hp : principalMinkowskiCovectorSq alpha ≠ 0) : Prop where
+  resolvedJetClock :
+    ArbitraryMaxwellResolvedJetForcedCertificate
+      Ex Ey Ez Bx By Bz u s alpha
+      hnonnull hmem hp
+  clockRateFirstJet :
+    ∀ a : Fin 4,
+      HasDerivAt
+        (fun t =>
+          generalMaxwellClockRate
+            (affineJetLine Ex (dEx a) t)
+            (affineJetLine Ey (dEy a) t)
+            (affineJetLine Ez (dEz a) t)
+            (affineJetLine Bx (dBx a) t)
+            (affineJetLine By (dBy a) t)
+            (affineJetLine Bz (dBz a) t))
+        (generalMaxwellDClockRateCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz a) 0
+  synchronizationClosure :
+    ∃ D :
+        NormalizedPrincipalNullDyad
+          (LinearMap.range
+            (generalMaxwellProjectorPlusLinear
+              Ex Ey Ez Bx By Bz)),
+      D.FutureTo
+          (generalMaxwellProjectorPlus
+            Ex Ey Ez Bx By Bz (principalBasis 0)) ∧
+      ∀ dRadar : (Fin 4 → ℝ) →ₗ[ℝ] ℝ,
+        dRadar
+          (generalMaxwellFiniteResolvingConformalU
+            Ex Ey Ez Bx By Bz alpha D) = 1 →
+        synchronizationCovector
+          dRadar
+          (generalMaxwellFiniteResolvingChronometricClockCovector
+            Ex Ey Ez Bx By Bz alpha D)
+          (generalMaxwellFiniteResolvingConformalU
+            Ex Ey Ez Bx By Bz alpha D) = 0
+  transportClosure :
+    ∀ (du : Fin 4 → Fin 4 → ℝ),
+      (∀ i : Fin 3,
+        deriv
+          (fun t =>
+            principalMinkowskiCovectorSq
+              (adaptedUnitCovectorLine du i.succ t)) 0 = 0) →
+      (((∀ i j : Fin 3,
+          clockTransportTwoForm
+            (generalMaxwellClockRate Ex Ey Ez Bx By Bz)
+            (generalMaxwellDClockRateCovector
+              Ex Ey Ez Bx By Bz
+              dEx dEy dEz dBx dBy dBz)
+            du i.succ j.succ = 0) ∧
+        (∀ i : Fin 3,
+          clockTransportTwoForm
+            (generalMaxwellClockRate Ex Ey Ez Bx By Bz)
+            (generalMaxwellDClockRateCovector
+              Ex Ey Ez Bx By Bz
+              dEx dEy dEz dBx dBy dBz)
+            du 0 i.succ = 0)) ↔
+       ((∀ i j : Fin 3,
+          principalVorticity du i j = 0) ∧
+        (∀ i : Fin 3,
+          principalAcceleration du i =
+            -generalMaxwellDLogRicciNormCovector
+                Ex Ey Ez Bx By Bz
+                dEx dEy dEz dBx dBy dBz i.succ / 4)))
+  frobeniusClosure :
+    ∀ (du : Fin 4 → Fin 4 → ℝ),
+      (∀ i j : Fin 3,
+        principalFrobeniusSpatialComponent
+          (generalMaxwellClockRate Ex Ey Ez Bx By Bz)
+          (generalMaxwellDClockRateCovector
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz)
+          du i j = 0) ↔
+      (∀ i j : Fin 3,
+        principalVorticity du i j = 0)
+  clockCoverCanonical :
+    (∀ v w : R2,
+      clockOmega v w =
+        clockDKappa v * clockDTheta w -
+          clockDKappa w * clockDTheta v) ∧
+    (∀ κ : ℝ, ∀ v : R2,
+      clockOmega (clockEuler κ) v =
+        clockLiouville κ v) ∧
+    (∀ v : R2,
+      clockLiouville 1 v = clockDTheta v) ∧
+    clockPoisson dThetaVec dKappaVec = 1 ∧
+    (∀ κ : ℝ,
+      clockLiouville κ (clockEuler κ) = 0) ∧
+    (∃! v : R2,
+      tangentToClockSection v ∧
+        clockLiouville 1 v = 1)
+  relationalFlowEvolution :
+    ∀ {X : Type*}
+      (flow : ℝ → X → X) (F XF : X → ℝ) (T : X → ℝ)
+      (θ : ℝ) (x : X),
+      (∀ t : ℝ, ∀ y : X,
+        HasDerivAt (fun z : ℝ => F (flow z y))
+          (XF (flow t y)) t) →
+      deriv (fun vartheta : ℝ =>
+        relationalObservable flow F T vartheta x) θ =
+        relationalGeneratorObservable flow XF T θ x
+  relationalGaugeInvariance :
+    ∀ {X : Type*}
+      (flow : ℝ → X → X) (F : X → ℝ) (T : X → ℝ)
+      (θ t : ℝ) (x : X),
+      (∀ a b : ℝ, ∀ y : X,
+        flow a (flow b y) = flow (a + b) y) →
+      (∀ b : ℝ, ∀ y : X,
+        T (flow b y) = T y + b) →
+      relationalObservable flow F T θ (flow t x) =
+        relationalObservable flow F T θ x
+  relationalGeneratorGaugeInvariance :
+    ∀ {X : Type*}
+      (flow : ℝ → X → X) (XF : X → ℝ) (T : X → ℝ)
+      (θ t : ℝ) (x : X),
+      (∀ a b : ℝ, ∀ y : X,
+        flow a (flow b y) = flow (a + b) y) →
+      (∀ b : ℝ, ∀ y : X,
+        T (flow b y) = T y + b) →
+      relationalGeneratorObservable flow XF T θ (flow t x) =
+        relationalGeneratorObservable flow XF T θ x
+  relationalClockRecovery :
+    ∀ {X : Type*}
+      (flow : ℝ → X → X) (F : X → ℝ) (T : X → ℝ)
+      (x : X),
+      (∀ y : X, flow 0 y = y) →
+      relationalObservable flow F T (T x) x = F x
+  causalExtendedEndpointMonotonicity :
+    ∀ {X : Type*} {R : X → X → Prop},
+      Transitive R →
+      ∀ (gamma : ℝ → X) {x y : X}, R x y →
+        pastEndpointE (causalPastParameterSet R gamma x) ≤
+            pastEndpointE (causalPastParameterSet R gamma y) ∧
+        futureEndpointE (causalFutureParameterSet R gamma x) ≤
+            futureEndpointE (causalFutureParameterSet R gamma y)
+  causalBranchIndependence :
+    ∀ (P₁ P₂ F₁ F₂ : Set ℝ),
+      P₁ = P₂ → F₁ = F₂ →
+      pastEndpoint P₁ = pastEndpoint P₂ ∧
+      futureEndpoint F₁ = futureEndpoint F₂
+
+theorem arbitraryMaxwell_resolvedRegularStratum_certificate
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hmem :
+      principalRaiseCovector alpha ∈
+        LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))
+    (hp : principalMinkowskiCovectorSq alpha ≠ 0) :
+    ArbitraryMaxwellResolvedRegularStratumCertificate
+      Ex Ey Ez Bx By Bz u s
+      dEx dEy dEz dBx dBy dBz
+      alpha hnonnull hmem hp := by
+  refine {
+    resolvedJetClock :=
+      arbitraryMaxwell_resolvedJet_forced_certificate
+        Ex Ey Ez Bx By Bz u s alpha
+        hnonnull hmem hp
+    clockRateFirstJet := ?_
+    synchronizationClosure := ?_
+    transportClosure := ?_
+    frobeniusClosure := ?_
+    clockCoverCanonical :=
+      clockCover_canonical_pair_certificate
+    relationalFlowEvolution := ?_
+    relationalGaugeInvariance := ?_
+    relationalGeneratorGaugeInvariance := ?_
+    relationalClockRecovery := ?_
+    causalExtendedEndpointMonotonicity := ?_
+    causalBranchIndependence := ?_ }
+  · intro a
+    exact generalMaxwellDClockRateCovector_component_hasDerivAt
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull a
+  · rcases
+      generalMaxwellProjectorPlus_futureNormalizedNullDyad_exists
+        Ex Ey Ez Bx By Bz hnonnull with
+      ⟨D,hD⟩
+    refine ⟨D,hD,?_⟩
+    intro dRadar hRadar
+    exact generalMaxwellFiniteResolvingSynchronization_vanishes
+      Ex Ey Ez Bx By Bz alpha hnonnull D
+      dRadar hRadar
+  · intro du hstationary
+    exact generalMaxwell_clockTransport_projected_zero_iff
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull du
+      (adaptedUnitNormalization_of_unitNorm_stationary
+        du hstationary)
+  · intro du
+    exact generalMaxwell_frobenius_all_zero_iff
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull du
+  · intro X flow F XF T theta x hgen
+    exact relationalObservable_deriv
+      flow F XF T theta x hgen
+  · intro X flow F T theta t x hflow hclock
+    exact relationalObservable_gauge_invariant
+      flow F T theta t x hflow hclock
+  · intro X flow XF T theta t x hflow hclock
+    exact relationalGeneratorObservable_gauge_invariant
+      flow XF T theta t x hflow hclock
+  · intro X flow F T x hzero
+    exact relationalObservable_at_clock
+      flow F T x hzero
+  · intro X R htrans gamma x y hxy
+    exact causal_extended_endpoints_mono_of_transitive
+      htrans gamma hxy
+  · intro P₁ P₂ F₁ F₂ hP hF
+    exact causal_endpoints_branch_independent hP hF
+
 /-! ### Single arbitrary-field regular-stratum local closure certificate -/
 
 /-- On the regular arbitrary Einstein-Maxwell first-jet stratum, every local
@@ -33110,6 +33348,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellFiniteResolving_halfCompensated_DA_eq_clockCurrent
 #print axioms RelativeRest.arbitraryMaxwell_finiteResolvingClock_certificate
 #print axioms RelativeRest.arbitraryMaxwell_resolvedJet_forced_certificate
+#print axioms RelativeRest.arbitraryMaxwell_resolvedRegularStratum_certificate
 #print axioms RelativeRest.resolvedRainichPlane_certificate
 #print axioms RelativeRest.resolvedRainichPlane_representative_independent
 #print axioms RelativeRest.generalMaxwellResolvingCovector_nullDyad_norm
