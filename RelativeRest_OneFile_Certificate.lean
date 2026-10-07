@@ -4774,6 +4774,82 @@ theorem generalMaxwellDLogRicciNorm_eq_four_DClockRate_div
   field_simp [hchi, homega]
   nlinarith
 
+
+/-- Arbitrary-field transport closure with the scalar differential data no
+longer supplied independently.  The only differential input left is du, the
+covariant derivative of the already-selected unit observer field. -/
+theorem generalMaxwell_clockTransport_projected_zero_iff
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (du : Fin 4 → Fin 4 → ℝ)
+    (hunit : adaptedUnitNormalization du) :
+    ((∀ i j : Fin 3,
+        clockTransportTwoForm
+          (generalMaxwellClockRate Ex Ey Ez Bx By Bz)
+          (generalMaxwellDClockRateCovector
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz)
+          du i.succ j.succ = 0) ∧
+      (∀ i : Fin 3,
+        clockTransportTwoForm
+          (generalMaxwellClockRate Ex Ey Ez Bx By Bz)
+          (generalMaxwellDClockRateCovector
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz)
+          du 0 i.succ = 0)) ↔
+    ((∀ i j : Fin 3, principalVorticity du i j = 0) ∧
+      (∀ i : Fin 3,
+        principalAcceleration du i =
+          -generalMaxwellDLogRicciNormCovector
+              Ex Ey Ez Bx By Bz
+              dEx dEy dEz dBx dBy dBz i.succ / 4)) := by
+  apply clockTransport_projected_zero_iff
+    (generalMaxwellClockRate Ex Ey Ez Bx By Bz)
+    (generalMaxwellDClockRateCovector
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz)
+    (generalMaxwellDLogRicciNormCovector
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz)
+    du
+    (ne_of_gt
+      (generalMaxwellClockRate_pos
+        Ex Ey Ez Bx By Bz hnonnull))
+    hunit
+  intro i
+  exact
+    generalMaxwellDLogRicciNorm_eq_four_DClockRate_div
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull i.succ
+
+/-- The Frobenius obstruction likewise uses the actual field-derived rate
+gradient.  Its vanishing is exactly vorticity-freeness of the selected frame. -/
+theorem generalMaxwell_frobenius_all_zero_iff
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (du : Fin 4 → Fin 4 → ℝ) :
+    (∀ i j : Fin 3,
+      principalFrobeniusSpatialComponent
+        (generalMaxwellClockRate Ex Ey Ez Bx By Bz)
+        (generalMaxwellDClockRateCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz)
+        du i j = 0) ↔
+    (∀ i j : Fin 3,
+      principalVorticity du i j = 0) := by
+  exact principalFrobenius_all_zero_iff
+    (generalMaxwellClockRate Ex Ey Ez Bx By Bz)
+    (generalMaxwellDClockRateCovector
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz)
+    du
+    (ne_of_gt
+      (generalMaxwellClockRate_pos
+        Ex Ey Ez Bx By Bz hnonnull))
+
 /-- Linear carrier endomorphism reconstructed directly from the first normal
 derivatives of the Einstein-Maxwell metric Euler coefficients. -/
 def principalActionEulerJetLinear
@@ -23574,33 +23650,38 @@ structure ArbitraryMaxwellRegularStratumLocalCertificate
             Ex Ey Ez Bx By Bz
             dEx dEy dEz dBx dBy dBz D) = 0)
   transportClosure :
-    ∀ (dω dlogK : Fin 4 → ℝ)
-      (du : Fin 4 → Fin 4 → ℝ),
+    ∀ (du : Fin 4 → Fin 4 → ℝ),
       adaptedUnitNormalization du →
-      (∀ i : Fin 3,
-        dlogK i.succ =
-          4 * dω i.succ /
-            generalMaxwellClockRate Ex Ey Ez Bx By Bz) →
       (((∀ i j : Fin 3,
           clockTransportTwoForm
             (generalMaxwellClockRate Ex Ey Ez Bx By Bz)
-            dω du i.succ j.succ = 0) ∧
+            (generalMaxwellDClockRateCovector
+              Ex Ey Ez Bx By Bz
+              dEx dEy dEz dBx dBy dBz)
+            du i.succ j.succ = 0) ∧
         (∀ i : Fin 3,
           clockTransportTwoForm
             (generalMaxwellClockRate Ex Ey Ez Bx By Bz)
-            dω du 0 i.succ = 0)) ↔
+            (generalMaxwellDClockRateCovector
+              Ex Ey Ez Bx By Bz
+              dEx dEy dEz dBx dBy dBz)
+            du 0 i.succ = 0)) ↔
        ((∀ i j : Fin 3,
           principalVorticity du i j = 0) ∧
         (∀ i : Fin 3,
           principalAcceleration du i =
-            -dlogK i.succ / 4)))
+            -generalMaxwellDLogRicciNormCovector
+                Ex Ey Ez Bx By Bz
+                dEx dEy dEz dBx dBy dBz i.succ / 4)))
   frobeniusClosure :
-    ∀ (dω : Fin 4 → ℝ)
-      (du : Fin 4 → Fin 4 → ℝ),
+    ∀ (du : Fin 4 → Fin 4 → ℝ),
       (∀ i j : Fin 3,
         principalFrobeniusSpatialComponent
           (generalMaxwellClockRate Ex Ey Ez Bx By Bz)
-          dω du i j = 0) ↔
+          (generalMaxwellDClockRateCovector
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz)
+          du i j = 0) ↔
       (∀ i j : Fin 3,
         principalVorticity du i j = 0)
   clockCoverCanonical :
@@ -23728,21 +23809,16 @@ theorem arbitraryMaxwell_regularStratum_local_certificate
       (generalMaxwellChronometricClockCovector_on_conformalU
         Ex Ey Ez Bx By Bz
         dEx dEy dEz dBx dBy dBz hnonnull D)
-  · intro dω dlogK du hunit hlog
-    exact clockTransport_projected_zero_iff
-      (generalMaxwellClockRate Ex Ey Ez Bx By Bz)
-      dω dlogK du
-      (ne_of_gt
-        (generalMaxwellClockRate_pos
-          Ex Ey Ez Bx By Bz hnonnull))
-      hunit hlog
-  · intro dω du
-    exact principalFrobenius_all_zero_iff
-      (generalMaxwellClockRate Ex Ey Ez Bx By Bz)
-      dω du
-      (ne_of_gt
-        (generalMaxwellClockRate_pos
-          Ex Ey Ez Bx By Bz hnonnull))
+  · intro du hunit
+    exact generalMaxwell_clockTransport_projected_zero_iff
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull du hunit
+  · intro du
+    exact generalMaxwell_frobenius_all_zero_iff
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull du
   · intro O XF T θ hO
     exact relational_evolution_from_flow_derivative
       O XF T θ hO
@@ -30004,6 +30080,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellClockRateAlongJet_hasDerivAt_zero
 #print axioms RelativeRest.generalMaxwellDClockRateCovector_component_hasDerivAt
 #print axioms RelativeRest.generalMaxwellDLogRicciNorm_eq_four_DClockRate_div
+#print axioms RelativeRest.generalMaxwell_clockTransport_projected_zero_iff
+#print axioms RelativeRest.generalMaxwell_frobenius_all_zero_iff
 #print axioms RelativeRest.generalMaxwellResolvingCovector_raised_eigen
 #print axioms RelativeRest.generalMaxwellProjectorPlus_basis0_timelike
 #print axioms RelativeRest.principalMinkowski_orthogonal_to_timelike_spacelike
