@@ -26216,6 +26216,38 @@ structure ArbitraryMaxwellResolvedRegularStratumCertificate
             Ex Ey Ez Bx By Bz alpha D)
           (generalMaxwellFiniteResolvingConformalU
             Ex Ey Ez Bx By Bz alpha D) = 0
+  characteristicBasicDescent :
+    ∃ D :
+        NormalizedPrincipalNullDyad
+          (LinearMap.range
+            (generalMaxwellProjectorPlusLinear
+              Ex Ey Ez Bx By Bz)),
+      D.FutureTo
+          (generalMaxwellProjectorPlus
+            Ex Ey Ez Bx By Bz (principalBasis 0)) ∧
+      let C :=
+        generalMaxwellFiniteResolvingADMCharacteristicData
+          Ex Ey Ez Bx By Bz alpha hnonnull D
+      IsBasicCovectorFor (LinearMap.ker C.Lambda) C.Lambda ∧
+        ∃! lambdaBar :
+            (C.K ⧸ LinearMap.ker C.Lambda) →ₗ[ℝ] ℝ,
+          lambdaBar.comp (LinearMap.ker C.Lambda).mkQ =
+            C.Lambda
+  contactTransverseDuality :
+    ∃ D :
+        NormalizedPrincipalNullDyad
+          (LinearMap.range
+            (generalMaxwellProjectorPlusLinear
+              Ex Ey Ez Bx By Bz)),
+      D.FutureTo
+          (generalMaxwellProjectorPlus
+            Ex Ey Ez Bx By Bz (principalBasis 0)) ∧
+      let C :=
+        generalMaxwellFiniteResolvingADMCharacteristicData
+          Ex Ey Ez Bx By Bz alpha hnonnull D
+      Nonempty
+        (ActionRelativeNormalSpace ≃ₗ[ℝ]
+          ((C.K ⧸ LinearMap.ker C.Lambda) →ₗ[ℝ] ℝ))
   transportClosure :
     ∀ (du : Fin 4 → Fin 4 → ℝ),
       (∀ i : Fin 3,
@@ -26343,6 +26375,8 @@ theorem arbitraryMaxwell_resolvedRegularStratum_certificate
         hnonnull hmem hp
     clockRateFirstJet := ?_
     synchronizationClosure := ?_
+    characteristicBasicDescent := ?_
+    contactTransverseDuality := ?_
     transportClosure := ?_
     frobeniusClosure := ?_
     clockCoverCanonical :=
@@ -26367,6 +26401,28 @@ theorem arbitraryMaxwell_resolvedRegularStratum_certificate
     exact generalMaxwellFiniteResolvingSynchronization_vanishes
       Ex Ey Ez Bx By Bz alpha hnonnull D
       dRadar hRadar
+  · rcases
+      generalMaxwellProjectorPlus_futureNormalizedNullDyad_exists
+        Ex Ey Ez Bx By Bz hnonnull with
+      ⟨D,hD⟩
+    refine ⟨D,hD,?_⟩
+    dsimp
+    exact
+      kernelClockCovector_basic_and_unique
+        (generalMaxwellFiniteResolvingADMCharacteristicData
+          Ex Ey Ez Bx By Bz alpha hnonnull D).Lambda
+  · rcases
+      generalMaxwellProjectorPlus_futureNormalizedNullDyad_exists
+        Ex Ey Ez Bx By Bz hnonnull with
+      ⟨D,hD⟩
+    refine ⟨D,hD,?_⟩
+    dsimp
+    exact ⟨
+      actionRelativeNormalClockDualEquiv
+        (generalMaxwellFiniteResolvingADMCharacteristicData
+          Ex Ey Ez Bx By Bz alpha hnonnull D).Lambda
+        (generalMaxwellFiniteResolvingADMCharacteristic_Lambda_nonzero
+          Ex Ey Ez Bx By Bz alpha hnonnull D)⟩
   · intro du hstationary
     exact generalMaxwell_clockTransport_projected_zero_iff
       Ex Ey Ez Bx By Bz
