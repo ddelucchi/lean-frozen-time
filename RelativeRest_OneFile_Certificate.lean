@@ -13806,6 +13806,106 @@ theorem clockTransport_projected_zero_iff
         ω dω dlogK du hω hunit hlog i, hmix i]
       ring
 
+
+/-- The projected components used above exhaust the entire antisymmetric
+chronometric transport two-form. -/
+theorem clockTransportTwoForm_all_zero_of_projected
+    (omega : ℝ) (domega : Fin 4 → ℝ)
+    (du : Fin 4 → Fin 4 → ℝ)
+    (hsp :
+      ∀ i j : Fin 3,
+        clockTransportTwoForm
+          omega domega du i.succ j.succ = 0)
+    (hmix :
+      ∀ i : Fin 3,
+        clockTransportTwoForm
+          omega domega du 0 i.succ = 0) :
+    ∀ a b : Fin 4,
+      clockTransportTwoForm omega domega du a b = 0 := by
+  intro a
+  refine Fin.cases ?_ (fun i => ?_) a
+  · intro b
+    refine Fin.cases ?_ (fun j => ?_) b
+    · unfold clockTransportTwoForm
+      ring
+    · exact hmix j
+  · intro b
+    refine Fin.cases ?_ (fun j => ?_) b
+    · rw [clockTransportTwoForm_skew, hmix i]
+      ring
+    · exact hsp i j
+
+/-- Literal full-two-form version of the manuscript's local transport
+integrability criterion. -/
+theorem clockTransportTwoForm_all_zero_iff
+    (omega : ℝ) (domega dlogK : Fin 4 → ℝ)
+    (du : Fin 4 → Fin 4 → ℝ)
+    (homega : omega ≠ 0)
+    (hunit : adaptedUnitNormalization du)
+    (hlog :
+      ∀ i : Fin 3,
+        dlogK i.succ = 4 * domega i.succ / omega) :
+    (∀ a b : Fin 4,
+        clockTransportTwoForm omega domega du a b = 0) ↔
+      ((∀ i j : Fin 3, principalVorticity du i j = 0) ∧
+        (∀ i : Fin 3,
+          principalAcceleration du i =
+            -dlogK i.succ / 4)) := by
+  constructor
+  · intro hall
+    exact
+      (clockTransport_projected_zero_iff
+        omega domega dlogK du homega hunit hlog).1
+        ⟨(fun i j => hall i.succ j.succ),
+          (fun i => hall 0 i.succ)⟩
+  · intro hgeom
+    have hproj :=
+      (clockTransport_projected_zero_iff
+        omega domega dlogK du homega hunit hlog).2 hgeom
+    exact clockTransportTwoForm_all_zero_of_projected
+      omega domega du hproj.1 hproj.2
+
+/-- Arbitrary-Maxwell specialization with both scalar gradients fixed by the
+same six electromagnetic first derivatives. -/
+theorem generalMaxwell_clockTransportTwoForm_all_zero_iff
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (du : Fin 4 → Fin 4 → ℝ)
+    (hunit : adaptedUnitNormalization du) :
+    (∀ a b : Fin 4,
+        clockTransportTwoForm
+          (generalMaxwellClockRate Ex Ey Ez Bx By Bz)
+          (generalMaxwellDClockRateCovector
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz)
+          du a b = 0) ↔
+      ((∀ i j : Fin 3, principalVorticity du i j = 0) ∧
+        (∀ i : Fin 3,
+          principalAcceleration du i =
+            -generalMaxwellDLogRicciNormCovector
+                Ex Ey Ez Bx By Bz
+                dEx dEy dEz dBx dBy dBz i.succ / 4)) := by
+  apply clockTransportTwoForm_all_zero_iff
+    (generalMaxwellClockRate Ex Ey Ez Bx By Bz)
+    (generalMaxwellDClockRateCovector
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz)
+    (generalMaxwellDLogRicciNormCovector
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz)
+    du
+    (ne_of_gt
+      (generalMaxwellClockRate_pos
+        Ex Ey Ez Bx By Bz hnonnull))
+    hunit
+  intro i
+  exact
+    generalMaxwellDLogRicciNorm_eq_four_DClockRate_div
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull i.succ
+
 /-- The weaker Frobenius condition on all spatial components is exactly vanishing
 vorticity, with no acceleration condition. -/
 theorem principalFrobenius_all_zero_iff
@@ -34279,6 +34379,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.adaptedUnitCovectorLine_norm_hasDerivAt_zero
 #print axioms RelativeRest.adaptedUnitNormalization_of_unitNorm_stationary
 #print axioms RelativeRest.clockTransport_projected_zero_iff
+#print axioms RelativeRest.clockTransportTwoForm_all_zero_iff
+#print axioms RelativeRest.generalMaxwell_clockTransportTwoForm_all_zero_iff
 #print axioms RelativeRest.principalFrobenius_all_zero_iff
 #print axioms RelativeRest.principalClockFrobeniusThreeForm_all_zero_iff_vorticity
 #print axioms RelativeRest.principalSynchronization_vanishes
