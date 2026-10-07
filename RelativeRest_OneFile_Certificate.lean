@@ -4158,6 +4158,224 @@ theorem generalMaxwellChi_pos
       sq_pos_of_ne_zero hJ
     nlinarith [sq_nonneg (generalMaxwellI Ex Ey Ez Bx By Bz)]
 
+
+/-! ### First jet of the arbitrary Maxwell Rainich magnitude -/
+
+/-- Affine line realizing one directional first jet of a scalar field component. -/
+def affineJetLine (x dx t : ℝ) : ℝ :=
+  x + t * dx
+
+theorem affineJetLine_hasDerivAt_zero
+    (x dx : ℝ) :
+    HasDerivAt (affineJetLine x dx) dx 0 := by
+  unfold affineJetLine
+  convert (hasDerivAt_const 0 x).add
+    ((hasDerivAt_id 0).mul_const dx) using 1 <;> ring
+
+/-- Directional first jet of the electromagnetic invariant I. -/
+def generalMaxwellIJet
+    (Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz : ℝ) : ℝ :=
+  4 * (Bx * dBx + By * dBy + Bz * dBz -
+    Ex * dEx - Ey * dEy - Ez * dEz)
+
+/-- Directional first jet of the electromagnetic invariant J. -/
+def generalMaxwellJJet
+    (Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz : ℝ) : ℝ :=
+  -4 * (dEx * Bx + Ex * dBx +
+    dEy * By + Ey * dBy +
+    dEz * Bz + Ez * dBz)
+
+/-- The displayed formula for dI is the literal derivative of the six-component
+Maxwell invariant along an arbitrary field first jet. -/
+theorem generalMaxwellIAlongJet_hasDerivAt_zero
+    (Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz : ℝ) :
+    HasDerivAt
+      (fun t =>
+        generalMaxwellI
+          (affineJetLine Ex dEx t)
+          (affineJetLine Ey dEy t)
+          (affineJetLine Ez dEz t)
+          (affineJetLine Bx dBx t)
+          (affineJetLine By dBy t)
+          (affineJetLine Bz dBz t))
+      (generalMaxwellIJet
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz) 0 := by
+  have hEx := affineJetLine_hasDerivAt_zero Ex dEx
+  have hEy := affineJetLine_hasDerivAt_zero Ey dEy
+  have hEz := affineJetLine_hasDerivAt_zero Ez dEz
+  have hBx := affineJetLine_hasDerivAt_zero Bx dBx
+  have hBy := affineJetLine_hasDerivAt_zero By dBy
+  have hBz := affineJetLine_hasDerivAt_zero Bz dBz
+  have hB :
+      HasDerivAt
+        (fun t =>
+          (affineJetLine Bx dBx t)^2 +
+          (affineJetLine By dBy t)^2 +
+          (affineJetLine Bz dBz t)^2)
+        (2 * Bx * dBx + 2 * By * dBy + 2 * Bz * dBz) 0 := by
+    convert ((hBx.mul hBx).add (hBy.mul hBy)).add (hBz.mul hBz)
+      using 1 <;> simp <;> ring
+  have hE :
+      HasDerivAt
+        (fun t =>
+          (affineJetLine Ex dEx t)^2 +
+          (affineJetLine Ey dEy t)^2 +
+          (affineJetLine Ez dEz t)^2)
+        (2 * Ex * dEx + 2 * Ey * dEy + 2 * Ez * dEz) 0 := by
+    convert ((hEx.mul hEx).add (hEy.mul hEy)).add (hEz.mul hEz)
+      using 1 <;> simp <;> ring
+  have h := (hB.sub hE).const_mul 2
+  convert h using 1 <;>
+    simp [generalMaxwellI, generalMaxwellIJet] <;> ring
+
+/-- The displayed formula for dJ is likewise the literal derivative of the
+pseudoscalar Maxwell invariant. -/
+theorem generalMaxwellJAlongJet_hasDerivAt_zero
+    (Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz : ℝ) :
+    HasDerivAt
+      (fun t =>
+        generalMaxwellJ
+          (affineJetLine Ex dEx t)
+          (affineJetLine Ey dEy t)
+          (affineJetLine Ez dEz t)
+          (affineJetLine Bx dBx t)
+          (affineJetLine By dBy t)
+          (affineJetLine Bz dBz t))
+      (generalMaxwellJJet
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz) 0 := by
+  have hEx := affineJetLine_hasDerivAt_zero Ex dEx
+  have hEy := affineJetLine_hasDerivAt_zero Ey dEy
+  have hEz := affineJetLine_hasDerivAt_zero Ez dEz
+  have hBx := affineJetLine_hasDerivAt_zero Bx dBx
+  have hBy := affineJetLine_hasDerivAt_zero By dBy
+  have hBz := affineJetLine_hasDerivAt_zero Bz dBz
+  have h :=
+    (((hEx.mul hBx).add (hEy.mul hBy)).add
+      (hEz.mul hBz)).const_mul (-4)
+  convert h using 1 <;>
+    simp [generalMaxwellJ, generalMaxwellJJet] <;> ring
+
+/-- Directional first jet of the invariant carrier magnitude chi. -/
+def generalMaxwellChiJet
+    (Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz : ℝ) : ℝ :=
+  ((generalMaxwellI Ex Ey Ez Bx By Bz) *
+      generalMaxwellIJet Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz +
+    (generalMaxwellJ Ex Ey Ez Bx By Bz) *
+      generalMaxwellJJet Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz) /
+    generalMaxwellChi Ex Ey Ez Bx By Bz
+
+/-- Directional first jet of log chi.  The denominator is chi² because the
+square-root derivative and logarithmic derivative combine. -/
+def generalMaxwellLogChiJet
+    (Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz : ℝ) : ℝ :=
+  ((generalMaxwellI Ex Ey Ez Bx By Bz) *
+      generalMaxwellIJet Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz +
+    (generalMaxwellJ Ex Ey Ez Bx By Bz) *
+      generalMaxwellJJet Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz) /
+    (generalMaxwellChi Ex Ey Ez Bx By Bz)^2
+
+/-- chi differentiated from the same six electromagnetic components. -/
+theorem generalMaxwellChiAlongJet_hasDerivAt_zero
+    (Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
+    HasDerivAt
+      (fun t =>
+        generalMaxwellChi
+          (affineJetLine Ex dEx t)
+          (affineJetLine Ey dEy t)
+          (affineJetLine Ez dEz t)
+          (affineJetLine Bx dBx t)
+          (affineJetLine By dBy t)
+          (affineJetLine Bz dBz t))
+      (generalMaxwellChiJet
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz) 0 := by
+  have hI :=
+    generalMaxwellIAlongJet_hasDerivAt_zero
+      Ex Ey Ez Bx By Bz dEx dEy dEz dBx dBy dBz
+  have hJ :=
+    generalMaxwellJAlongJet_hasDerivAt_zero
+      Ex Ey Ez Bx By Bz dEx dEy dEz dBx dBy dBz
+  have hK := (hI.mul hI).add (hJ.mul hJ)
+  have hK0 :
+      (generalMaxwellI Ex Ey Ez Bx By Bz)^2 +
+        (generalMaxwellJ Ex Ey Ez Bx By Bz)^2 ≠ 0 := by
+    rw [← generalMaxwellChi_sq]
+    exact pow_ne_zero 2
+      (ne_of_gt
+        (generalMaxwellChi_pos
+          Ex Ey Ez Bx By Bz hnonnull))
+  have hs := hK.sqrt hK0
+  have hchi0 :
+      generalMaxwellChi Ex Ey Ez Bx By Bz ≠ 0 :=
+    ne_of_gt
+      (generalMaxwellChi_pos
+        Ex Ey Ez Bx By Bz hnonnull)
+  convert hs using 1 <;>
+    simp [generalMaxwellChi, generalMaxwellChiJet,
+      affineJetLine] <;>
+    field_simp [hchi0] <;> ring
+
+/-- Consequently d log chi is completely fixed by the first jet of the same
+Maxwell field; it is not an independent covector. -/
+theorem generalMaxwellLogChiAlongJet_hasDerivAt_zero
+    (Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
+    HasDerivAt
+      (fun t =>
+        Real.log
+          (generalMaxwellChi
+            (affineJetLine Ex dEx t)
+            (affineJetLine Ey dEy t)
+            (affineJetLine Ez dEz t)
+            (affineJetLine Bx dBx t)
+            (affineJetLine By dBy t)
+            (affineJetLine Bz dBz t)))
+      (generalMaxwellLogChiJet
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz) 0 := by
+  have hchi :=
+    generalMaxwellChiAlongJet_hasDerivAt_zero
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz hnonnull
+  have hchi0 :
+      generalMaxwellChi Ex Ey Ez Bx By Bz ≠ 0 :=
+    ne_of_gt
+      (generalMaxwellChi_pos
+        Ex Ey Ez Bx By Bz hnonnull)
+  have hlog := hchi.log (by
+    simpa [affineJetLine] using hchi0)
+  convert hlog using 1 <;>
+    simp [generalMaxwellChiJet, generalMaxwellLogChiJet,
+      affineJetLine] <;>
+    field_simp [hchi0] <;> ring
+
+/-- The four covector components d_a log chi are obtained by feeding the six
+Maxwell first-jet component derivatives in each spacetime basis direction. -/
+def generalMaxwellDLogChiCovector
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ) :
+    Fin 4 → ℝ :=
+  fun a =>
+    generalMaxwellLogChiJet
+      Ex Ey Ez Bx By Bz
+      (dEx a) (dEy a) (dEz a)
+      (dBx a) (dBy a) (dBz a)
+
 /-! ### Arbitrary-field stress scaling and unique relative fixed point -/
 
 /-- Electromagnetic energy density of the full six-component Maxwell field in the
@@ -25016,6 +25234,10 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellProjectorPlus_range_has_timelike
 #print axioms RelativeRest.generalMaxwell_principal_split_unique
 #print axioms RelativeRest.generalMaxwellChi_principal_specialization
+#print axioms RelativeRest.generalMaxwellIAlongJet_hasDerivAt_zero
+#print axioms RelativeRest.generalMaxwellJAlongJet_hasDerivAt_zero
+#print axioms RelativeRest.generalMaxwellChiAlongJet_hasDerivAt_zero
+#print axioms RelativeRest.generalMaxwellLogChiAlongJet_hasDerivAt_zero
 #print axioms RelativeRest.generalMaxwellClockRate_fourth_power
 #print axioms RelativeRest.generalMaxwellClockRate_eq_ricci_fourth_root
 #print axioms RelativeRest.generalMaxwellClockRate_invariant_chain
