@@ -4982,6 +4982,15 @@ theorem principalMinkowskiBilinear_smul_right
   simp [principalMinkowskiBilinear]
   ring
 
+
+theorem principalMinkowskiBilinear_add_right
+    (u v w : Fin 4 → ℝ) :
+    principalMinkowskiBilinear u (v + w) =
+      principalMinkowskiBilinear u v +
+        principalMinkowskiBilinear u w := by
+  simp [principalMinkowskiBilinear]
+  ring
+
 theorem principalMinkowskiBilinear_add_left
     (u v w : Fin 4 → ℝ) :
     principalMinkowskiBilinear (u + v) w =
@@ -5386,6 +5395,266 @@ theorem normalizedNullDyad_vector_norm_identity
       D.crossNormalized, hll]
   ring
 
+/-- Any two normalized null dyads of the same Lorentzian two-plane differ
+only by reciprocal null rescaling, possibly composed with exchange of the two
+null lines.  No additional continuous frame freedom exists. -/
+theorem normalizedNullDyads_reciprocal_or_exchange
+    {P : Submodule ℝ (Fin 4 → ℝ)}
+    (D E : NormalizedPrincipalNullDyad P)
+    (hfin : Module.finrank ℝ P = 2) :
+    (∃ a b : ℝ,
+        a * b = 1 ∧
+        E.k = a • D.k ∧
+        E.l = b • D.l) ∨
+    (∃ a b : ℝ,
+        a * b = 1 ∧
+        E.k = a • D.l ∧
+        E.l = b • D.k) := by
+  rcases normalizedNullDyad_exists_coordinates D hfin E.k
+    with ⟨a, b, hk⟩
+  rcases normalizedNullDyad_exists_coordinates D hfin E.l
+    with ⟨cc, d, hl⟩
+  have hkval :
+      E.k.1 = a • D.k.1 + b • D.l.1 :=
+    congrArg Subtype.val hk
+  have hlval :
+      E.l.1 = cc • D.k.1 + d • D.l.1 :=
+    congrArg Subtype.val hl
+  have hkk :
+      principalMinkowskiBilinear D.k.1 D.k.1 = 0 := by
+    rw [← principalMinkowskiSq_eq_bilinear]
+    exact D.kNull
+  have hll :
+      principalMinkowskiBilinear D.l.1 D.l.1 = 0 := by
+    rw [← principalMinkowskiSq_eq_bilinear]
+    exact D.lNull
+  have hlk :
+      principalMinkowskiBilinear D.l.1 D.k.1 = -1 := by
+    rw [principalMinkowskiBilinear_symm]
+    exact D.crossNormalized
+  have hab : a * b = 0 := by
+    have hnull := E.kNull
+    rw [hkval] at hnull
+    rw [principalMinkowskiSq_add,
+      principalMinkowskiSq_smul,
+      principalMinkowskiSq_smul,
+      D.kNull, D.lNull,
+      principalMinkowskiBilinear_smul,
+      D.crossNormalized] at hnull
+    nlinarith
+  have hcd : cc * d = 0 := by
+    have hnull := E.lNull
+    rw [hlval] at hnull
+    rw [principalMinkowskiSq_add,
+      principalMinkowskiSq_smul,
+      principalMinkowskiSq_smul,
+      D.kNull, D.lNull,
+      principalMinkowskiBilinear_smul,
+      D.crossNormalized] at hnull
+    nlinarith
+  have hcross : a * d + b * cc = 1 := by
+    have h := E.crossNormalized
+    rw [hkval, hlval] at h
+    rw [principalMinkowskiBilinear_add_left,
+      principalMinkowskiBilinear_add_right,
+      principalMinkowskiBilinear_add_right,
+      principalMinkowskiBilinear_smul,
+      principalMinkowskiBilinear_smul,
+      principalMinkowskiBilinear_smul,
+      principalMinkowskiBilinear_smul,
+      hkk, hll, D.crossNormalized, hlk] at h
+    nlinarith
+  rcases mul_eq_zero.mp hab with ha | hb
+  · have hbc : b * cc = 1 := by
+      rw [ha] at hcross
+      simpa using hcross
+    have hc0 : cc ≠ 0 := by
+      intro hc
+      rw [hc] at hbc
+      norm_num at hbc
+    have hd : d = 0 :=
+      (mul_eq_zero.mp hcd).resolve_left hc0
+    right
+    refine ⟨b, cc, hbc, ?_, ?_⟩
+    · simpa [ha] using hk
+    · simpa [hd] using hl
+  · have had : a * d = 1 := by
+      rw [hb] at hcross
+      simpa using hcross
+    have hd0 : d ≠ 0 := by
+      intro hd
+      rw [hd] at had
+      norm_num at had
+    have hc : cc = 0 :=
+      (mul_eq_zero.mp hcd).resolve_right hd0
+    left
+    refine ⟨a, d, had, ?_, ?_⟩
+    · simpa [hb] using hk
+    · simpa [hc] using hl
+
+/-- Future orientation of a normalized null dyad relative to a chosen timelike
+orientation vector. -/
+def NormalizedPrincipalNullDyad.FutureTo
+    {P : Submodule ℝ (Fin 4 → ℝ)}
+    (D : NormalizedPrincipalNullDyad P)
+    (t : Fin 4 → ℝ) : Prop :=
+  principalMinkowskiBilinear t D.k.1 < 0 ∧
+    principalMinkowskiBilinear t D.l.1 < 0
+
+/-- Simultaneous sign reversal preserves null normalization. -/
+def NormalizedPrincipalNullDyad.neg
+    {P : Submodule ℝ (Fin 4 → ℝ)}
+    (D : NormalizedPrincipalNullDyad P) :
+    NormalizedPrincipalNullDyad P where
+  k := -D.k
+  l := -D.l
+  kNull := by
+    simpa [principalMinkowskiSq] using D.kNull
+  lNull := by
+    simpa [principalMinkowskiSq] using D.lNull
+  crossNormalized := by
+    simpa [principalMinkowskiBilinear] using D.crossNormalized
+
+/-- Every normalized null dyad can be given the unique common time orientation
+relative to a timelike vector in the same plane. -/
+theorem lorentzianTwoPlane_has_futureNormalizedNullDyad
+    (P : Submodule ℝ (Fin 4 → ℝ))
+    (hfin : Module.finrank ℝ P = 2)
+    (t : P)
+    (ht : principalMinkowskiSq t.1 < 0) :
+    ∃ D : NormalizedPrincipalNullDyad P,
+      D.FutureTo t.1 := by
+  rcases lorentzianTwoPlane_has_normalizedNullDyad P hfin t ht
+    with ⟨D⟩
+  have hnorm :=
+    normalizedNullDyad_vector_norm_identity D hfin t
+  have hprod :
+      0 <
+        principalMinkowskiBilinear t.1 D.k.1 *
+          principalMinkowskiBilinear t.1 D.l.1 := by
+    nlinarith
+  by_cases hk :
+      principalMinkowskiBilinear t.1 D.k.1 < 0
+  · have hl :
+        principalMinkowskiBilinear t.1 D.l.1 < 0 := by
+      by_contra hnl
+      have hln :
+          0 ≤ principalMinkowskiBilinear t.1 D.l.1 :=
+        le_of_not_gt hnl
+      have :
+          principalMinkowskiBilinear t.1 D.k.1 *
+            principalMinkowskiBilinear t.1 D.l.1 ≤ 0 :=
+        mul_nonpos_of_nonpos_of_nonneg (le_of_lt hk) hln
+      linarith
+    exact ⟨D, hk, hl⟩
+  · have hkn :
+        0 ≤ principalMinkowskiBilinear t.1 D.k.1 :=
+      le_of_not_gt hk
+    have hkpos :
+        0 < principalMinkowskiBilinear t.1 D.k.1 := by
+      by_contra hnp
+      have hkzero :
+          principalMinkowskiBilinear t.1 D.k.1 = 0 :=
+        le_antisymm (le_of_not_gt hnp) hkn
+      rw [hkzero, zero_mul] at hprod
+      exact (lt_irrefl 0) hprod
+    have hlpos :
+        0 < principalMinkowskiBilinear t.1 D.l.1 := by
+      by_contra hnp
+      have hln :
+          principalMinkowskiBilinear t.1 D.l.1 ≤ 0 :=
+        le_of_not_gt hnp
+      have :
+          principalMinkowskiBilinear t.1 D.k.1 *
+            principalMinkowskiBilinear t.1 D.l.1 ≤ 0 :=
+        mul_nonpos_of_nonneg_of_nonpos (le_of_lt hkpos) hln
+      linarith
+    refine ⟨D.neg, ?_, ?_⟩
+    · simp [NormalizedPrincipalNullDyad.FutureTo,
+        NormalizedPrincipalNullDyad.neg,
+        principalMinkowskiBilinear]
+      linarith
+    · simp [NormalizedPrincipalNullDyad.FutureTo,
+        NormalizedPrincipalNullDyad.neg,
+        principalMinkowskiBilinear]
+      linarith
+
+/-- Two future-oriented normalized dyads differ only by positive reciprocal
+rescaling, possibly composed with exchange. -/
+theorem futureNormalizedNullDyads_positive_reciprocal_or_exchange
+    {P : Submodule ℝ (Fin 4 → ℝ)}
+    (D E : NormalizedPrincipalNullDyad P)
+    (hfin : Module.finrank ℝ P = 2)
+    (t : Fin 4 → ℝ)
+    (hD : D.FutureTo t)
+    (hE : E.FutureTo t) :
+    (∃ a b : ℝ,
+        0 < a ∧ 0 < b ∧ a * b = 1 ∧
+        E.k = a • D.k ∧ E.l = b • D.l) ∨
+    (∃ a b : ℝ,
+        0 < a ∧ 0 < b ∧ a * b = 1 ∧
+        E.k = a • D.l ∧ E.l = b • D.k) := by
+  rcases normalizedNullDyads_reciprocal_or_exchange D E hfin with
+      h | h
+  · rcases h with ⟨a, b, hab, hk, hl⟩
+    have hkpair :=
+      congrArg
+        (fun z : P =>
+          principalMinkowskiBilinear t z.1) hk
+    have hlpair :=
+      congrArg
+        (fun z : P =>
+          principalMinkowskiBilinear t z.1) hl
+    change
+      principalMinkowskiBilinear t E.k.1 =
+        principalMinkowskiBilinear t (a • D.k.1) at hkpair
+    change
+      principalMinkowskiBilinear t E.l.1 =
+        principalMinkowskiBilinear t (b • D.l.1) at hlpair
+    rw [principalMinkowskiBilinear_smul_right] at hkpair hlpair
+    have ha : 0 < a := by
+      by_contra hna
+      have han : a ≤ 0 := le_of_not_gt hna
+      have hDk := hD.1
+      have hEk := hE.1
+      nlinarith
+    have hb : 0 < b := by
+      by_contra hnb
+      have hbn : b ≤ 0 := le_of_not_gt hnb
+      have hDl := hD.2
+      have hEl := hE.2
+      nlinarith
+    exact Or.inl ⟨a, b, ha, hb, hab, hk, hl⟩
+  · rcases h with ⟨a, b, hab, hk, hl⟩
+    have hkpair :=
+      congrArg
+        (fun z : P =>
+          principalMinkowskiBilinear t z.1) hk
+    have hlpair :=
+      congrArg
+        (fun z : P =>
+          principalMinkowskiBilinear t z.1) hl
+    change
+      principalMinkowskiBilinear t E.k.1 =
+        principalMinkowskiBilinear t (a • D.l.1) at hkpair
+    change
+      principalMinkowskiBilinear t E.l.1 =
+        principalMinkowskiBilinear t (b • D.k.1) at hlpair
+    rw [principalMinkowskiBilinear_smul_right] at hkpair hlpair
+    have ha : 0 < a := by
+      by_contra hna
+      have han : a ≤ 0 := le_of_not_gt hna
+      have hDl := hD.2
+      have hEk := hE.1
+      nlinarith
+    have hb : 0 < b := by
+      by_contra hnb
+      have hbn : b ≤ 0 := le_of_not_gt hnb
+      have hDk := hD.1
+      have hEl := hE.2
+      nlinarith
+    exact Or.inr ⟨a, b, ha, hb, hab, hk, hl⟩
+
 /-- Canonically normalized future principal null directions of the Lorentzian Rainich plane. -/
 def principalNullK : Fin 4 → ℝ :=
   principalInvSqrtTwo •
@@ -5486,6 +5755,36 @@ theorem normalized_null_rescaling_is_boost
   · intro σ hσ
     apply Real.exp_injective
     exact hσ.2.symm.trans (Real.exp_log hb).symm
+
+
+/-- After fixing time orientation, two normalized null dyads in the same
+Lorentzian two-plane are related by one proper boost, possibly followed by the
+discrete exchange of the two null lines.  This closes the starting-dyad freedom. -/
+theorem futureNormalizedNullDyads_boost_or_exchange
+    {P : Submodule ℝ (Fin 4 → ℝ)}
+    (D E : NormalizedPrincipalNullDyad P)
+    (hfin : Module.finrank ℝ P = 2)
+    (t : Fin 4 → ℝ)
+    (hD : D.FutureTo t)
+    (hE : E.FutureTo t) :
+    (∃ σ : ℝ,
+        E.k = Real.exp (-σ) • D.k ∧
+        E.l = Real.exp σ • D.l) ∨
+    (∃ σ : ℝ,
+        E.k = Real.exp (-σ) • D.l ∧
+        E.l = Real.exp σ • D.k) := by
+  rcases futureNormalizedNullDyads_positive_reciprocal_or_exchange
+      D E hfin t hD hE with h | h
+  · rcases h with ⟨a, b, ha, hb, hab, hk, hl⟩
+    rcases normalized_null_rescaling_is_boost a b ha hb hab with
+      ⟨σ, hσ, _⟩
+    exact Or.inl ⟨σ, hk.trans (by rw [hσ.1]),
+      hl.trans (by rw [hσ.2])⟩
+  · rcases h with ⟨a, b, ha, hb, hab, hk, hl⟩
+    rcases normalized_null_rescaling_is_boost a b ha hb hab with
+      ⟨σ, hσ, _⟩
+    exact Or.inr ⟨σ, hk.trans (by rw [hσ.1]),
+      hl.trans (by rw [hσ.2])⟩
 
 /-- The fixed-point jet is minus the principal Maxwell stress endomorphism, so its
 Lorentzian principal plane carries the positive carrier eigenvalue. -/
@@ -26057,6 +26356,10 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellProjectorPlus_basis0_timelike
 #print axioms RelativeRest.principalMinkowski_orthogonal_to_timelike_spacelike
 #print axioms RelativeRest.lorentzianTwoPlane_has_normalizedNullDyad
+#print axioms RelativeRest.normalizedNullDyads_reciprocal_or_exchange
+#print axioms RelativeRest.lorentzianTwoPlane_has_futureNormalizedNullDyad
+#print axioms RelativeRest.futureNormalizedNullDyads_positive_reciprocal_or_exchange
+#print axioms RelativeRest.futureNormalizedNullDyads_boost_or_exchange
 #print axioms RelativeRest.normalizedNullDyadCoordinateMap_injective
 #print axioms RelativeRest.normalizedNullDyadCoordinateMap_surjective
 #print axioms RelativeRest.normalizedNullDyad_vector_norm_identity
