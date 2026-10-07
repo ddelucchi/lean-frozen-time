@@ -6027,6 +6027,15 @@ structure ArbitraryMaxwellActionForcedCertificate
     (generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz).comp
         (generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz) =
       LinearMap.id
+  principalPlaneFinranks :
+    Module.finrank ℝ
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)) = 2 ∧
+      Module.finrank ℝ
+        (LinearMap.range
+          (generalMaxwellProjectorMinusLinear
+            Ex Ey Ez Bx By Bz)) = 2
   principalSplit :
     ∀ v : Fin 4 → ℝ,
       generalMaxwellProjectorPlus Ex Ey Ez Bx By Bz v +
@@ -6108,6 +6117,11 @@ theorem arbitraryMaxwell_action_forced_certificate
     normalizedInvolution :=
       generalMaxwellNormalizedCarrier_involution
         Ex Ey Ez Bx By Bz hnonnull
+    principalPlaneFinranks :=
+      ⟨generalMaxwellProjectorPlus_range_finrank_two
+          Ex Ey Ez Bx By Bz hnonnull,
+        generalMaxwellProjectorMinus_range_finrank_two
+          Ex Ey Ez Bx By Bz hnonnull⟩
     principalSplit := ?_
     principalSplitUnique := ?_
     clockPositive :=
