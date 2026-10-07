@@ -9577,6 +9577,39 @@ def principalClockRate (E B : ℝ) : ℝ :=
     0 ≤ principalClockRate E B :=
   Real.sqrt_nonneg _
 
+/-- Einstein-Maxwell curvature fixes the same arbitrary-field clock rate:
+`ω=(R_ab R^ab)^(1/4)`, before any principal-frame specialization. -/
+theorem generalMaxwellClockRate_eq_ricci_fourth_root
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    generalMaxwellClockRate Ex Ey Ez Bx By Bz =
+      Real.sqrt
+        (Real.sqrt
+          (generalRicciNormFromEinstein
+            Ex Ey Ez Bx By Bz)) := by
+  rw [generalRicciNormFromEinstein_eq_chi_sq,
+    Real.sqrt_sq
+      (generalMaxwellChi_nonneg Ex Ey Ez Bx By Bz)]
+  rfl
+
+/-- The arbitrary-field chronometric chain therefore has the same three invariant
+faces: Maxwell invariants, Rainich magnitude, and Einstein Ricci norm. -/
+theorem generalMaxwellClockRate_invariant_chain
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    (generalMaxwellClockRate Ex Ey Ez Bx By Bz)^2 =
+        generalMaxwellChi Ex Ey Ez Bx By Bz ∧
+    (generalMaxwellClockRate Ex Ey Ez Bx By Bz)^4 =
+        (generalMaxwellI Ex Ey Ez Bx By Bz)^2 +
+          (generalMaxwellJ Ex Ey Ez Bx By Bz)^2 ∧
+    generalMaxwellClockRate Ex Ey Ez Bx By Bz =
+      Real.sqrt
+        (Real.sqrt
+          (generalRicciNormFromEinstein
+            Ex Ey Ez Bx By Bz)) :=
+  ⟨generalMaxwellClockRate_sq Ex Ey Ez Bx By Bz,
+    generalMaxwellClockRate_fourth_power Ex Ey Ez Bx By Bz,
+    generalMaxwellClockRate_eq_ricci_fourth_root
+      Ex Ey Ez Bx By Bz⟩
+
 /-- Principal-frame chronometry is therefore a specialization, not an additional
 definition or normalization. -/
 theorem generalMaxwellClockRate_principal_specialization
@@ -24077,6 +24110,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwell_principal_split_unique
 #print axioms RelativeRest.generalMaxwellChi_principal_specialization
 #print axioms RelativeRest.generalMaxwellClockRate_fourth_power
+#print axioms RelativeRest.generalMaxwellClockRate_eq_ricci_fourth_root
+#print axioms RelativeRest.generalMaxwellClockRate_invariant_chain
 #print axioms RelativeRest.generalMaxwellClockRate_principal_specialization
 #print axioms RelativeRest.generalMaxwell_principal_split_certificate
 #print axioms RelativeRest.generalMaxwellNormalizedCarrier_eq_projector_difference
