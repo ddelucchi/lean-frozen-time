@@ -3516,6 +3516,99 @@ theorem principalLinearMap_ext_on_basis
 
 
 
+/-! ### Arbitrary-field carrier as a linear endomorphism -/
+
+/-- Linear endomorphism associated with the general six-component Maxwell
+carrier matrix. -/
+def generalMaxwellCarrierLinear
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    (Fin 4 → ℝ) →ₗ[ℝ] (Fin 4 → ℝ) where
+  toFun v := fun i =>
+    ∑ j : Fin 4,
+      generalMaxwellCarrier Ex Ey Ez Bx By Bz i j * v j
+  map_add' x y := by
+    funext i
+    simp [mul_add, Finset.sum_add_distrib]
+  map_smul' a x := by
+    funext i
+    simp [mul_assoc]
+
+@[simp] theorem generalMaxwellCarrierLinear_basis
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (j i : Fin 4) :
+    generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz
+        (principalBasis j) i =
+      generalMaxwellCarrier Ex Ey Ez Bx By Bz i j := by
+  simp [generalMaxwellCarrierLinear, principalBasis]
+
+/-- Endomorphism form of the arbitrary-field Rainich identity. -/
+theorem generalMaxwellCarrierLinear_sq
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz).comp
+        (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz) =
+      ((generalMaxwellI Ex Ey Ez Bx By Bz)^2 +
+        (generalMaxwellJ Ex Ey Ez Bx By Bz)^2) •
+        LinearMap.id := by
+  apply principalLinearMap_ext_on_basis
+  intro j
+  funext i
+  change
+    (∑ k : Fin 4,
+      generalMaxwellCarrier Ex Ey Ez Bx By Bz i k *
+        generalMaxwellCarrier Ex Ey Ez Bx By Bz k j) =
+      ((generalMaxwellI Ex Ey Ez Bx By Bz)^2 +
+        (generalMaxwellJ Ex Ey Ez Bx By Bz)^2) *
+        (if i = j then 1 else 0)
+  exact generalMaxwellCarrier_rainich
+    Ex Ey Ez Bx By Bz i j
+
+/-- Invariant carrier magnitude of a completely general Maxwell field. -/
+def generalMaxwellChi
+    (Ex Ey Ez Bx By Bz : ℝ) : ℝ :=
+  Real.sqrt
+    ((generalMaxwellI Ex Ey Ez Bx By Bz)^2 +
+      (generalMaxwellJ Ex Ey Ez Bx By Bz)^2)
+
+/-- The squared general carrier magnitude is exactly the invariant polynomial. -/
+theorem generalMaxwellChi_sq
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    (generalMaxwellChi Ex Ey Ez Bx By Bz)^2 =
+      (generalMaxwellI Ex Ey Ez Bx By Bz)^2 +
+        (generalMaxwellJ Ex Ey Ez Bx By Bz)^2 := by
+  unfold generalMaxwellChi
+  rw [sq_sqrt]
+  positivity
+
+/-- Regular non-null Maxwell condition in invariant form. -/
+def generalMaxwellNonNull
+    (Ex Ey Ez Bx By Bz : ℝ) : Prop :=
+  generalMaxwellI Ex Ey Ez Bx By Bz ≠ 0 ∨
+    generalMaxwellJ Ex Ey Ez Bx By Bz ≠ 0
+
+theorem generalMaxwellChi_pos
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
+    0 < generalMaxwellChi Ex Ey Ez Bx By Bz := by
+  unfold generalMaxwellChi generalMaxwellNonNull at *
+  rw [Real.sqrt_pos_iff]
+  rcases hnonnull with hI | hJ
+  · have hI2 : 0 < (generalMaxwellI Ex Ey Ez Bx By Bz)^2 :=
+      sq_pos_of_ne_zero hI
+    nlinarith [sq_nonneg (generalMaxwellJ Ex Ey Ez Bx By Bz)]
+  · have hJ2 : 0 < (generalMaxwellJ Ex Ey Ez Bx By Bz)^2 :=
+      sq_pos_of_ne_zero hJ
+    nlinarith [sq_nonneg (generalMaxwellI Ex Ey Ez Bx By Bz)]
+
+/-- The arbitrary-field carrier square written with the positive Rainich magnitude. -/
+theorem generalMaxwellCarrierLinear_sq_chi
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz).comp
+        (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz) =
+      (generalMaxwellChi Ex Ey Ez Bx By Bz)^2 •
+        LinearMap.id := by
+  rw [generalMaxwellChi_sq]
+  exact generalMaxwellCarrierLinear_sq Ex Ey Ez Bx By Bz
+
 /-- Linear carrier endomorphism reconstructed directly from the first normal
 derivatives of the Einstein-Maxwell metric Euler coefficients. -/
 def principalActionEulerJetLinear
@@ -22196,6 +22289,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalEinsteinMaxwellMetricVariationCoeff_from_ricci_eq_zero_iff
 #print axioms RelativeRest.principalEinsteinMaxwell_onShell_local_first_variation_is_boundary
 #print axioms RelativeRest.principalMetricEulerNoetherJetCoeff_eq_carrier
+#print axioms RelativeRest.generalMaxwellCarrierLinear_sq
+#print axioms RelativeRest.generalMaxwellChi_pos
+#print axioms RelativeRest.generalMaxwellCarrierLinear_sq_chi
 #print axioms RelativeRest.principalMetricEulerNoetherJetResponse_eq_carrier
 #print axioms RelativeRest.principalMetricEulerNoetherJetLinear_eq_smul_carrier
 #print axioms RelativeRest.principalMetricEulerNoetherRelativeLinear_eq_smul_metricEulerRelative
