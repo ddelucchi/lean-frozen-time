@@ -19826,6 +19826,10 @@ structure CanonicalPrincipalFieldForcedCertificate
     ∀ qm qp : ℝ,
       nullCovectorNormSq qm qp ≠ 0 →
       ∃! σ : ℝ, boostDefect qm qp σ = 0
+  residualBoostCertificate :
+    ∀ (qm qp : ℝ)
+      (hresolve : nullCovectorNormSq qm qp ≠ 0),
+      ResolvedRainichPlaneCertificate qm qp hresolve
   conformalScaleForced :
     ∀ (f : ℝ → ℝ) (χ : ℝ),
       (∀ r2 χ0 : ℝ,
@@ -20140,6 +20144,9 @@ theorem canonicalPrincipalField_forced_certificate
     lorentzPrincipalPlane := ?_
     transversePrincipalPlane := ?_
     residualBoostUnique := boost_balance_exists_unique_of_nonnull
+    residualBoostCertificate := by
+      intro qm qp hresolve
+      exact resolvedRainichPlane_certificate qm qp hresolve
     conformalScaleForced := ?_
     actionOpticalIntertwiner := by
       simpa [actionOpticalMap_CA] using
