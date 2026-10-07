@@ -8003,6 +8003,101 @@ theorem sigmaStar_balanced_dyad_invariant
   rw [sigmaStar_shift_covariance qm qp τ hqm hqp]
   exact balanced_dyad_invariant km lp (sigmaStar qm qp) τ
 
+
+/-- Module-valued form of balanced-dyad invariance.  Once the resolving
+components fix sigmaStar, changing the starting normalized null dyad by a
+proper boost leaves the balanced vectors themselves unchanged, not merely
+their scalar coefficients. -/
+theorem sigmaStar_balanced_module_dyad_invariant
+    {V : Type*} [AddCommGroup V] [Module ℝ V]
+    (k l : V) (qm qp τ : ℝ)
+    (hqm : qm ≠ 0) (hqp : qp ≠ 0) :
+    (Real.exp
+        (-(sigmaStar
+          (Real.exp (-τ) * qm)
+          (Real.exp τ * qp))) •
+        (Real.exp (-τ) • k) =
+      Real.exp (-(sigmaStar qm qp)) • k) ∧
+    (Real.exp
+        (sigmaStar
+          (Real.exp (-τ) * qm)
+          (Real.exp τ * qp)) •
+        (Real.exp τ • l) =
+      Real.exp (sigmaStar qm qp) • l) := by
+  have hs :=
+    sigmaStar_shift_covariance qm qp τ hqm hqp
+  rw [hs]
+  constructor
+  · rw [smul_smul]
+    have hc :
+        Real.exp (-(sigmaStar qm qp - τ)) *
+            Real.exp (-τ) =
+          Real.exp (-(sigmaStar qm qp)) := by
+      rw [← Real.exp_add]
+      congr 1
+      ring
+    rw [hc]
+  · rw [smul_smul]
+    have hc :
+        Real.exp (sigmaStar qm qp - τ) *
+            Real.exp τ =
+          Real.exp (sigmaStar qm qp) := by
+      rw [← Real.exp_add]
+      congr 1
+      ring
+    rw [hc]
+
+/-- If the two future normalized null lines are exchanged as well as boosted,
+the balanced pair is exchanged and nothing else changes.  Consequently its
+timelike midpoint is invariant while its spacelike half-difference reverses
+orientation. -/
+theorem sigmaStar_balanced_module_dyad_exchange
+    {V : Type*} [AddCommGroup V] [Module ℝ V]
+    (k l : V) (qm qp τ : ℝ)
+    (hqm : qm ≠ 0) (hqp : qp ≠ 0) :
+    (Real.exp
+        (-(sigmaStar
+          (Real.exp (-τ) * qp)
+          (Real.exp τ * qm))) •
+        (Real.exp (-τ) • l) =
+      Real.exp (sigmaStar qm qp) • l) ∧
+    (Real.exp
+        (sigmaStar
+          (Real.exp (-τ) * qp)
+          (Real.exp τ * qm)) •
+        (Real.exp τ • k) =
+      Real.exp (-(sigmaStar qm qp)) • k) := by
+  have hs0 :=
+    sigmaStar_shift_covariance qp qm τ hqp hqm
+  have hex :=
+    sigmaStar_exchange qm qp hqm hqp
+  have hs :
+      sigmaStar
+          (Real.exp (-τ) * qp)
+          (Real.exp τ * qm) =
+        -sigmaStar qm qp - τ := by
+    rw [hs0, hex]
+  rw [hs]
+  constructor
+  · rw [smul_smul]
+    have hc :
+        Real.exp (-(-sigmaStar qm qp - τ)) *
+            Real.exp (-τ) =
+          Real.exp (sigmaStar qm qp) := by
+      rw [← Real.exp_add]
+      congr 1
+      ring
+    rw [hc]
+  · rw [smul_smul]
+    have hc :
+        Real.exp (-sigmaStar qm qp - τ) *
+            Real.exp τ =
+          Real.exp (-(sigmaStar qm qp)) := by
+      rw [← Real.exp_add]
+      congr 1
+      ring
+    rw [hc]
+
 /-! ### Regular resolving stratum: the residual boost is not free -/
 
 /-- On a forced Lorentzian Rainich two-plane, the first nonzero invariant resolving
@@ -8157,6 +8252,262 @@ def generalMaxwellResolvingQPlus
       Ex Ey Ez Bx By Bz
       dEx dEy dEz dBx dBy dBz)
     D.l.1
+
+
+/-- The field-derived balanced future null vector associated with a chosen
+normalized Rainich dyad. -/
+def generalMaxwellBalancedK
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    Fin 4 → ℝ :=
+  Real.exp
+      (-(sigmaStar
+        (generalMaxwellResolvingQMinus
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D)
+        (generalMaxwellResolvingQPlus
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D))) •
+    D.k.1
+
+/-- The second field-derived balanced future null vector. -/
+def generalMaxwellBalancedL
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    Fin 4 → ℝ :=
+  Real.exp
+      (sigmaStar
+        (generalMaxwellResolvingQMinus
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D)
+        (generalMaxwellResolvingQPlus
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D)) •
+    D.l.1
+
+/-- The balanced timelike midpoint.  This is the actual field-selected observer
+direction before conformal unit rescaling. -/
+def generalMaxwellBalancedU
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    Fin 4 → ℝ :=
+  principalInvSqrtTwo •
+    (generalMaxwellBalancedK
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D +
+      generalMaxwellBalancedL
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D)
+
+/-- The balanced spacelike principal direction.  It is unique up to the
+discrete exchange orientation. -/
+def generalMaxwellBalancedE
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    Fin 4 → ℝ :=
+  principalInvSqrtTwo •
+    (generalMaxwellBalancedK
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D -
+      generalMaxwellBalancedL
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D)
+
+/-- On the resolving stratum p²≠0, the balanced observer is independent of
+every future-oriented normalized starting null dyad.  The only remaining
+discrete ambiguity is exchange of the two null lines, which leaves U fixed
+and reverses E. -/
+theorem generalMaxwellBalancedFrame_independent_future_dyad
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D E :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (t : Fin 4 → ℝ)
+    (hD : D.FutureTo t)
+    (hE : E.FutureTo t)
+    (hp :
+      generalMaxwellResolvingNormSq
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz ≠ 0) :
+    generalMaxwellBalancedU
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz E =
+      generalMaxwellBalancedU
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D ∧
+    (generalMaxwellBalancedE
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz E =
+      generalMaxwellBalancedE
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D ∨
+     generalMaxwellBalancedE
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz E =
+      -generalMaxwellBalancedE
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D) := by
+  let qm :=
+    generalMaxwellResolvingQMinus
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D
+  let qp :=
+    generalMaxwellResolvingQPlus
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D
+  have hnormD :=
+    generalMaxwellResolvingCovector_nullDyad_norm
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull D
+  have hqnonnull :
+      nullCovectorNormSq qm qp ≠ 0 := by
+    dsimp [qm, qp]
+    unfold nullCovectorNormSq
+    rw [← hnormD]
+    exact hp
+  rcases nullCovectorNormSq_ne_zero_components
+      qm qp hqnonnull with ⟨hqm,hqp⟩
+  have hfin :
+      Module.finrank ℝ
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)) = 2 :=
+    generalMaxwellProjectorPlus_range_finrank_two
+      Ex Ey Ez Bx By Bz hnonnull
+  rcases futureNormalizedNullDyads_boost_or_exchange
+      D E hfin t hD hE with hboost | hexchange
+  · rcases hboost with ⟨τ,hk,hl⟩
+    have hkval :
+        E.k.1 = Real.exp (-τ) • D.k.1 := by
+      simpa using congrArg Subtype.val hk
+    have hlval :
+        E.l.1 = Real.exp τ • D.l.1 := by
+      simpa using congrArg Subtype.val hl
+    have hqmE :
+        generalMaxwellResolvingQMinus
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz E =
+          Real.exp (-τ) * qm := by
+      unfold generalMaxwellResolvingQMinus
+      rw [hkval, principalCovectorEval_smul_right]
+      rfl
+    have hqpE :
+        generalMaxwellResolvingQPlus
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz E =
+          Real.exp τ * qp := by
+      unfold generalMaxwellResolvingQPlus
+      rw [hlval, principalCovectorEval_smul_right]
+      rfl
+    have hbal :=
+      sigmaStar_balanced_module_dyad_invariant
+        D.k.1 D.l.1 qm qp τ hqm hqp
+    have hK :
+        generalMaxwellBalancedK
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz E =
+          generalMaxwellBalancedK
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D := by
+      unfold generalMaxwellBalancedK
+      rw [hqmE, hqpE, hkval]
+      exact hbal.1
+    have hL :
+        generalMaxwellBalancedL
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz E =
+          generalMaxwellBalancedL
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D := by
+      unfold generalMaxwellBalancedL
+      rw [hqmE, hqpE, hlval]
+      exact hbal.2
+    constructor
+    · unfold generalMaxwellBalancedU
+      rw [hK, hL]
+    · left
+      unfold generalMaxwellBalancedE
+      rw [hK, hL]
+  · rcases hexchange with ⟨τ,hk,hl⟩
+    have hkval :
+        E.k.1 = Real.exp (-τ) • D.l.1 := by
+      simpa using congrArg Subtype.val hk
+    have hlval :
+        E.l.1 = Real.exp τ • D.k.1 := by
+      simpa using congrArg Subtype.val hl
+    have hqmE :
+        generalMaxwellResolvingQMinus
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz E =
+          Real.exp (-τ) * qp := by
+      unfold generalMaxwellResolvingQMinus
+      rw [hkval, principalCovectorEval_smul_right]
+      rfl
+    have hqpE :
+        generalMaxwellResolvingQPlus
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz E =
+          Real.exp τ * qm := by
+      unfold generalMaxwellResolvingQPlus
+      rw [hlval, principalCovectorEval_smul_right]
+      rfl
+    have hbal :=
+      sigmaStar_balanced_module_dyad_exchange
+        D.k.1 D.l.1 qm qp τ hqm hqp
+    have hK :
+        generalMaxwellBalancedK
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz E =
+          generalMaxwellBalancedL
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D := by
+      unfold generalMaxwellBalancedK
+        generalMaxwellBalancedL
+      rw [hqmE, hqpE, hkval]
+      exact hbal.1
+    have hL :
+        generalMaxwellBalancedL
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz E =
+          generalMaxwellBalancedK
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D := by
+      unfold generalMaxwellBalancedK
+        generalMaxwellBalancedL
+      rw [hqmE, hqpE, hlval]
+      exact hbal.2
+    constructor
+    · unfold generalMaxwellBalancedU
+      rw [hK, hL, add_comm]
+    · right
+      unfold generalMaxwellBalancedE
+      rw [hK, hL]
+      module
 
 /-- Changing between any two future-oriented starting null dyads changes
 the field-derived resolving components only by the corresponding proper boost,
@@ -26636,6 +26987,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.resolvedRainichPlane_certificate
 #print axioms RelativeRest.resolvedRainichPlane_representative_independent
 #print axioms RelativeRest.generalMaxwellResolvingCovector_nullDyad_norm
+#print axioms RelativeRest.sigmaStar_balanced_module_dyad_invariant
+#print axioms RelativeRest.sigmaStar_balanced_module_dyad_exchange
+#print axioms RelativeRest.generalMaxwellBalancedFrame_independent_future_dyad
 #print axioms RelativeRest.generalMaxwellResolvingComponents_change_future_dyad
 #print axioms RelativeRest.generalMaxwellFirstJet_residualBoost_forced
 #print axioms RelativeRest.generalMaxwellFirstJet_residualBoost_exists
