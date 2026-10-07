@@ -4982,6 +4982,21 @@ theorem principalMinkowskiBilinear_smul_right
   simp [principalMinkowskiBilinear]
   ring
 
+theorem principalMinkowskiBilinear_add_left
+    (u v w : Fin 4 → ℝ) :
+    principalMinkowskiBilinear (u + v) w =
+      principalMinkowskiBilinear u w +
+        principalMinkowskiBilinear v w := by
+  simp [principalMinkowskiBilinear]
+  ring
+
+theorem principalMinkowskiBilinear_smul_left
+    (a : ℝ) (u v : Fin 4 → ℝ) :
+    principalMinkowskiBilinear (a • u) v =
+      a * principalMinkowskiBilinear u v := by
+  simp [principalMinkowskiBilinear]
+  ring
+
 theorem principalMinkowskiSq_smul
     (a : ℝ) (v : Fin 4 → ℝ) :
     principalMinkowskiSq (a • v) =
@@ -5221,6 +5236,191 @@ theorem lorentzianTwoPlane_has_normalizedNullDyad
     kNull := hk
     lNull := hl
     crossNormalized := hkl }⟩
+
+/-- Coordinate map associated with a normalized null dyad. -/
+def normalizedNullDyadCoordinateMap
+    {P : Submodule ℝ (Fin 4 → ℝ)}
+    (D : NormalizedPrincipalNullDyad P) :
+    R2 →ₗ[ℝ] P where
+  toFun x := x.1 • D.k + x.2 • D.l
+  map_add' x y := by
+    apply Subtype.ext
+    simp
+    module
+  map_smul' a x := by
+    apply Subtype.ext
+    simp
+    module
+
+/-- Cross-normalization makes the null-dyad coordinate map injective. -/
+theorem normalizedNullDyadCoordinateMap_injective
+    {P : Submodule ℝ (Fin 4 → ℝ)}
+    (D : NormalizedPrincipalNullDyad P) :
+    Function.Injective
+      (normalizedNullDyadCoordinateMap D) := by
+  have hkk :
+      principalMinkowskiBilinear D.k.1 D.k.1 = 0 := by
+    rw [← principalMinkowskiSq_eq_bilinear]
+    exact D.kNull
+  have hll :
+      principalMinkowskiBilinear D.l.1 D.l.1 = 0 := by
+    rw [← principalMinkowskiSq_eq_bilinear]
+    exact D.lNull
+  have hlk :
+      principalMinkowskiBilinear D.l.1 D.k.1 = -1 := by
+    rw [principalMinkowskiBilinear_symm]
+    exact D.crossNormalized
+  intro x y hxy
+  have hpairL :=
+    congrArg
+      (fun z : P =>
+        principalMinkowskiBilinear z.1 D.l.1)
+      hxy
+  have hpairK :=
+    congrArg
+      (fun z : P =>
+        principalMinkowskiBilinear z.1 D.k.1)
+      hxy
+  change
+    principalMinkowskiBilinear
+      (x.1 • D.k.1 + x.2 • D.l.1) D.l.1 =
+    principalMinkowskiBilinear
+      (y.1 • D.k.1 + y.2 • D.l.1) D.l.1 at hpairL
+  change
+    principalMinkowskiBilinear
+      (x.1 • D.k.1 + x.2 • D.l.1) D.k.1 =
+    principalMinkowskiBilinear
+      (y.1 • D.k.1 + y.2 • D.l.1) D.k.1 at hpairK
+  rw [principalMinkowskiBilinear_add_left,
+      principalMinkowskiBilinear_smul_left,
+      principalMinkowskiBilinear_smul_left,
+      D.crossNormalized, hll,
+      principalMinkowskiBilinear_add_left,
+      principalMinkowskiBilinear_smul_left,
+      principalMinkowskiBilinear_smul_left,
+      D.crossNormalized, hll] at hpairL
+  rw [principalMinkowskiBilinear_add_left,
+      principalMinkowskiBilinear_smul_left,
+      principalMinkowskiBilinear_smul_left,
+      hkk, hlk,
+      principalMinkowskiBilinear_add_left,
+      principalMinkowskiBilinear_smul_left,
+      principalMinkowskiBilinear_smul_left,
+      hkk, hlk] at hpairK
+  apply Prod.ext <;> linarith
+
+/-- In a two-dimensional plane, the normalized null dyad spans the whole plane. -/
+theorem normalizedNullDyadCoordinateMap_surjective
+    {P : Submodule ℝ (Fin 4 → ℝ)}
+    (D : NormalizedPrincipalNullDyad P)
+    (hfin : Module.finrank ℝ P = 2) :
+    Function.Surjective
+      (normalizedNullDyadCoordinateMap D) := by
+  have hdim :
+      Module.finrank ℝ R2 = Module.finrank ℝ P := by
+    rw [hfin]
+    norm_num [R2]
+  exact
+    (LinearMap.injective_iff_surjective_of_finrank_eq_finrank
+      hdim).mp
+      (normalizedNullDyadCoordinateMap_injective D)
+
+/-- Every vector in a two-dimensional normalized-null-dyad plane therefore has
+unique null coordinates. -/
+theorem normalizedNullDyad_exists_coordinates
+    {P : Submodule ℝ (Fin 4 → ℝ)}
+    (D : NormalizedPrincipalNullDyad P)
+    (hfin : Module.finrank ℝ P = 2)
+    (w : P) :
+    ∃ a b : ℝ, w = a • D.k + b • D.l := by
+  rcases normalizedNullDyadCoordinateMap_surjective D hfin w
+    with ⟨x, hx⟩
+  exact ⟨x.1, x.2, hx.symm⟩
+
+/-- The Lorentzian norm in any normalized null dyad is exactly
+-2 g(w,k) g(w,l). -/
+theorem normalizedNullDyad_vector_norm_identity
+    {P : Submodule ℝ (Fin 4 → ℝ)}
+    (D : NormalizedPrincipalNullDyad P)
+    (hfin : Module.finrank ℝ P = 2)
+    (w : P) :
+    principalMinkowskiSq w.1 =
+      -2 *
+        principalMinkowskiBilinear w.1 D.k.1 *
+        principalMinkowskiBilinear w.1 D.l.1 := by
+  rcases normalizedNullDyad_exists_coordinates D hfin w
+    with ⟨a, b, hw⟩
+  have hkk :
+      principalMinkowskiBilinear D.k.1 D.k.1 = 0 := by
+    rw [← principalMinkowskiSq_eq_bilinear]
+    exact D.kNull
+  have hll :
+      principalMinkowskiBilinear D.l.1 D.l.1 = 0 := by
+    rw [← principalMinkowskiSq_eq_bilinear]
+    exact D.lNull
+  have hlk :
+      principalMinkowskiBilinear D.l.1 D.k.1 = -1 := by
+    rw [principalMinkowskiBilinear_symm]
+    exact D.crossNormalized
+  rw [hw]
+  change
+    principalMinkowskiSq (a • D.k.1 + b • D.l.1) =
+      -2 *
+        principalMinkowskiBilinear
+          (a • D.k.1 + b • D.l.1) D.k.1 *
+        principalMinkowskiBilinear
+          (a • D.k.1 + b • D.l.1) D.l.1
+  rw [principalMinkowskiSq_add,
+      principalMinkowskiSq_smul,
+      principalMinkowskiSq_smul,
+      D.kNull, D.lNull,
+      principalMinkowskiBilinear_smul,
+      D.crossNormalized,
+      principalMinkowskiBilinear_add_left,
+      principalMinkowskiBilinear_smul_left,
+      principalMinkowskiBilinear_smul_left,
+      hkk, hlk,
+      principalMinkowskiBilinear_add_left,
+      principalMinkowskiBilinear_smul_left,
+      principalMinkowskiBilinear_smul_left,
+      D.crossNormalized, hll]
+  ring
+
+/-- Evaluation of a covector on a vector in the local orthonormal chart. -/
+def principalCovectorEval
+    (alpha v : Fin 4 → ℝ) : ℝ :=
+  ∑ i : Fin 4, alpha i * v i
+
+/-- Musical raising converts covector evaluation into the Lorentzian pairing. -/
+theorem principalCovectorEval_eq_raised_pairing
+    (alpha v : Fin 4 → ℝ) :
+    principalCovectorEval alpha v =
+      principalMinkowskiBilinear
+        (principalRaiseCovector alpha) v := by
+  unfold principalCovectorEval
+  rw [principalMinkowskiBilinear_eq_sum]
+  apply Finset.sum_congr rfl
+  intro i hi
+  fin_cases i <;>
+    simp [principalRaiseCovector, principalMetricSign]
+
+/-- Hence every covector whose raised vector lies in the two-plane obeys the
+same normalized-null-component norm identity. -/
+theorem normalizedNullDyad_covector_norm_identity
+    {P : Submodule ℝ (Fin 4 → ℝ)}
+    (D : NormalizedPrincipalNullDyad P)
+    (hfin : Module.finrank ℝ P = 2)
+    (alpha : Fin 4 → ℝ)
+    (hmem : principalRaiseCovector alpha ∈ P) :
+    principalMinkowskiCovectorSq alpha =
+      -2 *
+        principalCovectorEval alpha D.k.1 *
+        principalCovectorEval alpha D.l.1 := by
+  let w : P := ⟨principalRaiseCovector alpha, hmem⟩
+  have hw :=
+    normalizedNullDyad_vector_norm_identity D hfin w
+  simpa [w, principalMinkowskiCovectorSq,
+    principalCovectorEval_eq_raised_pairing] using hw
 
 /-- Canonically normalized future principal null directions of the Lorentzian Rainich plane. -/
 def principalNullK : Fin 4 → ℝ :=
@@ -6284,6 +6484,76 @@ def generalMaxwellResolvingNormSq
     (generalMaxwellResolvingCovector
       Ex Ey Ez Bx By Bz
       dEx dEy dEz dBx dBy dBz)
+
+/-- The field-derived resolving covector is in the invariant +1 projector range. -/
+theorem generalMaxwellResolvingCovector_raised_mem_plusRange
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
+    principalRaiseCovector
+      (generalMaxwellResolvingCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz) ∈
+      LinearMap.range
+        (generalMaxwellProjectorPlusLinear
+          Ex Ey Ez Bx By Bz) := by
+  let w :=
+    principalRaiseCovector
+      (generalMaxwellResolvingCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz)
+  have heig :
+      generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz w = w := by
+    dsimp [w]
+    exact generalMaxwellResolvingCovector_raised_eigen
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz hnonnull
+  have hproj :
+      generalMaxwellProjectorPlus Ex Ey Ez Bx By Bz w = w := by
+    unfold generalMaxwellProjectorPlus involutionProjPlus
+    rw [heig]
+    module
+  refine ⟨w, ?_⟩
+  rw [generalMaxwellProjectorPlusLinear_apply]
+  exact hproj
+
+/-- For any normalized null dyad of the arbitrary-field Rainich +1 plane, the
+field-derived resolving covector automatically satisfies the manuscript identity
+p²=-2q_-q_+, with q_-=p(k) and q_+=p(l). -/
+theorem generalMaxwellResolvingCovector_nullDyad_norm
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellResolvingNormSq
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz =
+      -2 *
+        principalCovectorEval
+          (generalMaxwellResolvingCovector
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz)
+          D.k.1 *
+        principalCovectorEval
+          (generalMaxwellResolvingCovector
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz)
+          D.l.1 := by
+  unfold generalMaxwellResolvingNormSq
+  exact normalizedNullDyad_covector_norm_identity
+    D
+    (generalMaxwellProjectorPlus_range_finrank_two
+      Ex Ey Ez Bx By Bz hnonnull)
+    (generalMaxwellResolvingCovector
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz)
+    (generalMaxwellResolvingCovector_raised_mem_plusRange
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz hnonnull)
 
 /-- Maxwell positivity shows that the +1 Rainich eigenspace is the Lorentzian
 principal two-plane: projecting one background orthonormal-frame timelike basis
@@ -7506,6 +7776,136 @@ theorem resolvedRainichPlane_representative_independent
     sigmaStar_shift_covariance
       qminus qplus τ hqm hqp⟩
 
+
+/-- Null component q_- of the field-derived resolving covector in a chosen
+normalized Rainich null dyad. -/
+def generalMaxwellResolvingQMinus
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) : ℝ :=
+  principalCovectorEval
+    (generalMaxwellResolvingCovector
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz)
+    D.k.1
+
+/-- Null component q_+ of the same field-derived resolving covector. -/
+def generalMaxwellResolvingQPlus
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) : ℝ :=
+  principalCovectorEval
+    (generalMaxwellResolvingCovector
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz)
+    D.l.1
+
+/-- Once p² is nonzero, every normalized null dyad of the field-derived Rainich
+plane yields a complete residual-boost certificate.  q_- and q_+ are no longer
+independent inputs. -/
+theorem generalMaxwellFirstJet_residualBoost_forced
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (hp :
+      generalMaxwellResolvingNormSq
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz ≠ 0) :
+    ∃ hresolve :
+        nullCovectorNormSq
+          (generalMaxwellResolvingQMinus
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D)
+          (generalMaxwellResolvingQPlus
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D) ≠ 0,
+      ResolvedRainichPlaneCertificate
+        (generalMaxwellResolvingQMinus
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D)
+        (generalMaxwellResolvingQPlus
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D)
+        hresolve := by
+  have hnorm :=
+    generalMaxwellResolvingCovector_nullDyad_norm
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz hnonnull D
+  have hresolve :
+      nullCovectorNormSq
+        (generalMaxwellResolvingQMinus
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D)
+        (generalMaxwellResolvingQPlus
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) ≠ 0 := by
+    unfold generalMaxwellResolvingQMinus
+      generalMaxwellResolvingQPlus
+      nullCovectorNormSq
+    rw [← hnorm]
+    exact hp
+  exact ⟨hresolve,
+    resolvedRainichPlane_certificate
+      (generalMaxwellResolvingQMinus
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D)
+      (generalMaxwellResolvingQPlus
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D)
+      hresolve⟩
+
+/-- The normalized starting dyad itself is forced to exist by the arbitrary
+non-null Maxwell field.  Therefore field plus first jet plus p²≠0 suffices for
+existence of a complete residual-boost certificate. -/
+theorem generalMaxwellFirstJet_residualBoost_exists
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hp :
+      generalMaxwellResolvingNormSq
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz ≠ 0) :
+    ∃ D :
+        NormalizedPrincipalNullDyad
+          (LinearMap.range
+            (generalMaxwellProjectorPlusLinear
+              Ex Ey Ez Bx By Bz)),
+      ∃ hresolve :
+          nullCovectorNormSq
+            (generalMaxwellResolvingQMinus
+              Ex Ey Ez Bx By Bz
+              dEx dEy dEz dBx dBy dBz D)
+            (generalMaxwellResolvingQPlus
+              Ex Ey Ez Bx By Bz
+              dEx dEy dEz dBx dBy dBz D) ≠ 0,
+        ResolvedRainichPlaneCertificate
+          (generalMaxwellResolvingQMinus
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D)
+          (generalMaxwellResolvingQPlus
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D)
+          hresolve := by
+  rcases generalMaxwellProjectorPlus_normalizedNullDyad_exists
+      Ex Ey Ez Bx By Bz hnonnull with ⟨D⟩
+  refine ⟨D, ?_⟩
+  exact generalMaxwellFirstJet_residualBoost_forced
+    Ex Ey Ez Bx By Bz
+    dEx dEy dEz dBx dBy dBz
+    hnonnull D hp
 
 /-! ### Einstein-Maxwell field core plus invariant resolving-jet closure -/
 
@@ -25657,6 +26057,10 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellProjectorPlus_basis0_timelike
 #print axioms RelativeRest.principalMinkowski_orthogonal_to_timelike_spacelike
 #print axioms RelativeRest.lorentzianTwoPlane_has_normalizedNullDyad
+#print axioms RelativeRest.normalizedNullDyadCoordinateMap_injective
+#print axioms RelativeRest.normalizedNullDyadCoordinateMap_surjective
+#print axioms RelativeRest.normalizedNullDyad_vector_norm_identity
+#print axioms RelativeRest.normalizedNullDyad_covector_norm_identity
 #print axioms RelativeRest.generalMaxwellProjectorPlus_range_has_timelike
 #print axioms RelativeRest.generalMaxwellProjectorPlus_normalizedNullDyad_exists
 #print axioms RelativeRest.generalMaxwell_principal_split_unique
@@ -25803,6 +26207,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.sigmaStar_balanced_dyad_invariant
 #print axioms RelativeRest.resolvedRainichPlane_certificate
 #print axioms RelativeRest.resolvedRainichPlane_representative_independent
+#print axioms RelativeRest.generalMaxwellResolvingCovector_nullDyad_norm
+#print axioms RelativeRest.generalMaxwellFirstJet_residualBoost_forced
+#print axioms RelativeRest.generalMaxwellFirstJet_residualBoost_exists
 #print axioms RelativeRest.resolvingCovector_nullComponents_norm
 #print axioms RelativeRest.resolvingCovector_forces_residualBoost
 #print axioms RelativeRest.resolvingJetNorm_forces_residualBoost
