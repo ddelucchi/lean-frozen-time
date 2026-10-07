@@ -5678,10 +5678,11 @@ theorem generalMaxwellProjectors_idempotent
       Ex Ey Ez Bx By Bz hnonnull) v
 
 
-/-- Maxwell positivity selects the +1 Rainich eigenspace as the Lorentzian
-principal two-plane: the canonical projection of the background future unit
-vector is strictly timelike.  This is frame-free and uses only the non-null
-Maxwell condition. -/
+/-- Maxwell positivity shows that the +1 Rainich eigenspace is the Lorentzian
+principal two-plane: projecting one background orthonormal-frame timelike basis
+vector gives a strictly timelike element of that invariant range.  The basis
+vector is used only as an existence witness; it does not define the resolved
+physical observer, which is fixed later by the invariant resolving jet. -/
 theorem generalMaxwellProjectorPlus_basis0_timelike
     (Ex Ey Ez Bx By Bz : ℝ)
     (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
@@ -5731,9 +5732,31 @@ theorem generalMaxwellProjectorPlus_basis0_timelike
       (generalMaxwellChi_pos Ex Ey Ez Bx By Bz hnonnull)
   nlinarith
 
+/-- The invariant +1 projector range itself therefore contains a timelike vector.
+This packages Lorentzianity as a statement about the canonical Rainich subspace,
+rather than about a preferred coordinate representative. -/
+theorem generalMaxwellProjectorPlus_range_has_timelike
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
+    ∃ v :
+        LinearMap.range
+          (generalMaxwellProjectorPlusLinear Ex Ey Ez Bx By Bz),
+      principalMinkowskiSq v.1 < 0 := by
+  let w :=
+    generalMaxwellProjectorPlus
+      Ex Ey Ez Bx By Bz (principalBasis 0)
+  have hw :
+      principalMinkowskiSq w < 0 :=
+    generalMaxwellProjectorPlus_basis0_timelike
+      Ex Ey Ez Bx By Bz hnonnull
+  refine ⟨⟨w, ?_⟩, hw⟩
+  refine ⟨principalBasis 0, ?_⟩
+  exact generalMaxwellProjectorPlusLinear_apply
+    Ex Ey Ez Bx By Bz (principalBasis 0)
+
 /-- The two canonical principal-plane images of an arbitrary non-null Maxwell
-field are Lorentz-orthogonal.  This is the frame-free principal-plane splitting
-used by the manuscript. -/
+field are Lorentz-orthogonal.  No principal alignment of the Maxwell field is
+used in constructing these projectors. -/
 theorem generalMaxwellProjector_images_orthogonal
     (Ex Ey Ez Bx By Bz : ℝ)
     (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
@@ -6161,6 +6184,12 @@ structure ArbitraryMaxwellActionForcedCertificate
     principalMinkowskiSq
       (generalMaxwellProjectorPlus
         Ex Ey Ez Bx By Bz (principalBasis 0)) < 0
+  lorentzianPlusRangeWitness :
+    ∃ v :
+        LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz),
+      principalMinkowskiSq v.1 < 0
   principalSplit :
     ∀ v : Fin 4 → ℝ,
       generalMaxwellProjectorPlus Ex Ey Ez Bx By Bz v +
@@ -6249,6 +6278,9 @@ theorem arbitraryMaxwell_action_forced_certificate
           Ex Ey Ez Bx By Bz hnonnull⟩
     lorentzianPlusWitness :=
       generalMaxwellProjectorPlus_basis0_timelike
+        Ex Ey Ez Bx By Bz hnonnull
+    lorentzianPlusRangeWitness :=
+      generalMaxwellProjectorPlus_range_has_timelike
         Ex Ey Ez Bx By Bz hnonnull
     principalSplit := ?_
     principalSplitUnique := ?_
@@ -24896,6 +24928,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellCarrier_00
 #print axioms RelativeRest.generalMaxwellNormalizedCarrier_basis0_pairing
 #print axioms RelativeRest.generalMaxwellProjectorPlus_basis0_timelike
+#print axioms RelativeRest.generalMaxwellProjectorPlus_range_has_timelike
 #print axioms RelativeRest.generalMaxwell_principal_split_unique
 #print axioms RelativeRest.generalMaxwellChi_principal_specialization
 #print axioms RelativeRest.generalMaxwellClockRate_fourth_power
