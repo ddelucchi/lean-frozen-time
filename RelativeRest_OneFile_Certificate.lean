@@ -3836,6 +3836,23 @@ def principalMinkowskiBilinear
     (v w : Fin 4 → ℝ) : ℝ :=
   -v 0 * w 0 + v 1 * w 1 + v 2 * w 2 + v 3 * w 3
 
+
+/-- The arbitrary Maxwell carrier is metric-self-adjoint before any principal-frame
+diagonalization.  This is the invariant symmetry of the lowered stress tensor written
+for the full six-component field. -/
+theorem generalMaxwellCarrierLinear_self_adjoint
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (v w : Fin 4 → ℝ) :
+    principalMinkowskiBilinear
+        (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz v) w =
+      principalMinkowskiBilinear
+        v (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz w) := by
+  simp [principalMinkowskiBilinear, generalMaxwellCarrierLinear,
+    generalMaxwellCarrier, generalMaxwellStressFromF,
+    generalMaxwellFsq, generalMaxwellF, principalMetricSign]
+  field_simp [ne_of_gt Real.pi_pos]
+  ring
+
 /-- Minkowski quadratic form in the principal orthonormal frame. -/
 def principalMinkowskiSq (v : Fin 4 → ℝ) : ℝ :=
   -(v 0)^2 + (v 1)^2 + (v 2)^2 + (v 3)^2
@@ -22687,6 +22704,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalEinsteinMaxwell_onShell_local_first_variation_is_boundary
 #print axioms RelativeRest.principalMetricEulerNoetherJetCoeff_eq_carrier
 #print axioms RelativeRest.generalMaxwellCarrierLinear_sq
+#print axioms RelativeRest.generalMaxwellCarrierLinear_self_adjoint
 #print axioms RelativeRest.generalMaxwellChi_pos
 #print axioms RelativeRest.generalMaxwellCarrierLinear_sq_chi
 #print axioms RelativeRest.principalMetricEulerNoetherJetResponse_eq_carrier
