@@ -10850,11 +10850,17 @@ theorem kerrPrincipalField_nonzero
   push_neg at hzero
   have hmag :=
     kerrPrincipal_field_magnitude Q r a θ (ne_of_gt hsig)
-  rw [hzero.1, hzero.2] at hmag
-  norm_num at hmag
+  have hleft :
+      (kerrPrincipalE Q r a θ)^2 +
+          (kerrPrincipalB Q r a θ)^2 = 0 := by
+    rw [hzero.1, hzero.2]
+    norm_num
+  have hright : Q^2 / (Sigma r a θ)^2 = 0 := by
+    rw [← hmag]
+    exact hleft
   have hpos : 0 < Q^2 / (Sigma r a θ)^2 := by
     positivity
-  exact (ne_of_gt hpos) hmag.symm
+  exact (ne_of_gt hpos) hright
 
 
 /-- Canonical characteristic input built from the actual Kerr-Newman principal
@@ -20319,6 +20325,35 @@ theorem paper_displayed_equations_forced_certificate
         Q r M a θ dt dlam hQ hsig hdel hsin hmino
     exact ⟨hk.1, hk.2.1, hk.2.2.2.1,
       hk.2.2.2.2.1, hk.2.2.2.2.2⟩
+
+/-- Kerr-Newman specialization of the displayed-equation master certificate
+with no independent generic principal field.  The characteristic datum is constructed
+from the same potential-derived Kerr-Newman field that appears in the metric and
+Maxwell specialization. -/
+theorem kerr_paper_displayed_equations_forced_certificate
+    {X : Type*}
+    [NormedAddCommGroup X] [NormedSpace ℝ X] [CompleteSpace X]
+    (Bdual :
+      (X →L[ℝ] ℝ) →ₗ[ℝ] (X →L[ℝ] ℝ) →ₗ[ℝ] ℝ)
+    (S : RegularSyngeEndpointPairSource Bdual)
+    (hsym : ∀ x y, bil Bdual x y = bil Bdual y x)
+    (Q r M a θ dt dlam u s : ℝ)
+    (hQ : Q ≠ 0)
+    (hsig : 0 < Sigma r a θ)
+    (hdel : 0 < Delta r M a Q)
+    (hsin : 0 < Real.sin θ)
+    (hmino : dlam = dt / Sigma r a θ) :
+    PaperDisplayedEquationsForcedCertificate
+      Bdual
+      (kerrCanonicalPrincipalCarrierCharacteristicInput
+        Q r a θ hQ hsig)
+      S Q r M a θ dt dlam u s := by
+  exact paper_displayed_equations_forced_certificate
+    Bdual
+    (kerrCanonicalPrincipalCarrierCharacteristicInput
+      Q r a θ hQ hsig)
+    S hsym Q r M a θ dt dlam u s
+    hQ hsig hdel hsin hmino
 
 end PaperDisplayedEquationForcing
 
