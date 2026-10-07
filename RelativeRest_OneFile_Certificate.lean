@@ -9665,6 +9665,87 @@ theorem SyngeEndpointJetData.optical_closure
     NullEndpointPairData.radialCovector,
     SyngeEndpointJetData.toNullEndpointPairData] using h
 
+/-! ### Canonical Einstein-Maxwell optical first jet -/
+
+/-- The optical bilinear form already selected by the action-to-optical
+intertwiner is symmetric.  Thus symmetry is not extra optical input in the
+canonical two-dimensional clock/radial plane. -/
+theorem opticalBilinear_symmetric
+    (x y : R2) :
+    bil opticalBilinear x y = bil opticalBilinear y x := by
+  rcases x with ⟨x₀,x₁⟩
+  rcases y with ⟨y₀,y₁⟩
+  simp [bil, opticalBilinear]
+  ring
+
+/-- The canonical null pair itself determines a complete regular first-jet Synge
+datum algebraically.  The endpoint-parameter derivative is normalized to `-1`,
+so the implicit-function formula returns the already-forced principal null
+covectors exactly.  This removes every algebraic optical choice; only existence
+of an actual curved-spacetime world function realizing this jet remains a
+geometric regularity question. -/
+def canonicalPrincipalSyngeEndpointJetData :
+    SyngeEndpointJetData opticalBilinear where
+  sigmaPlus := 0
+  sigmaMinus := 0
+  sigmaXPlus := principalThetaPlus
+  sigmaXMinus := principalThetaMinus
+  sigmaThetaPlus := -1
+  sigmaThetaMinus := -1
+  endpointPlus := rfl
+  endpointMinus := rfl
+  worldEikonalPlus := by
+    simpa [bil] using principal_endpoint_covectors_null.1
+  worldEikonalMinus := by
+    simpa [bil] using principal_endpoint_covectors_null.2
+  sigmaThetaPlus_ne := by norm_num
+  sigmaThetaMinus_ne := by norm_num
+
+@[simp] theorem canonicalPrincipalSyngeEndpointJetData_dThetaPlus :
+    canonicalPrincipalSyngeEndpointJetData.dThetaPlus =
+      principalThetaPlus := by
+  simp [canonicalPrincipalSyngeEndpointJetData,
+    SyngeEndpointJetData.dThetaPlus]
+
+@[simp] theorem canonicalPrincipalSyngeEndpointJetData_dThetaMinus :
+    canonicalPrincipalSyngeEndpointJetData.dThetaMinus =
+      principalThetaMinus := by
+  simp [canonicalPrincipalSyngeEndpointJetData,
+    SyngeEndpointJetData.dThetaMinus]
+
+/-- The exchange-even Synge midpoint is exactly the unique chronometric covector
+already selected by the Einstein-Maxwell action normalization. -/
+theorem canonicalPrincipalSyngeEndpointJetData_clock :
+    canonicalPrincipalSyngeEndpointJetData.clockCovector = TO := by
+  unfold SyngeEndpointJetData.clockCovector
+  rw [canonicalPrincipalSyngeEndpointJetData_dThetaPlus,
+    canonicalPrincipalSyngeEndpointJetData_dThetaMinus]
+  exact principal_endpoint_split.1
+
+/-- The exchange-odd Synge half-difference is exactly the forced radial covector. -/
+theorem canonicalPrincipalSyngeEndpointJetData_radial :
+    canonicalPrincipalSyngeEndpointJetData.radialCovector = RO := by
+  unfold SyngeEndpointJetData.radialCovector
+  rw [canonicalPrincipalSyngeEndpointJetData_dThetaPlus,
+    canonicalPrincipalSyngeEndpointJetData_dThetaMinus]
+  exact principal_endpoint_split.2
+
+/-- Hence the canonical optical first jet has no residual normalization or split
+freedom: its clock/radial closure is a theorem of the same action-selected
+Minkowski plane. -/
+theorem canonicalPrincipalSyngeEndpointJetData_optical_closure :
+    bil opticalBilinear
+        canonicalPrincipalSyngeEndpointJetData.clockCovector
+        canonicalPrincipalSyngeEndpointJetData.radialCovector = 0 ∧
+    -(bil opticalBilinear
+        canonicalPrincipalSyngeEndpointJetData.clockCovector
+        canonicalPrincipalSyngeEndpointJetData.clockCovector) =
+      bil opticalBilinear
+        canonicalPrincipalSyngeEndpointJetData.radialCovector
+        canonicalPrincipalSyngeEndpointJetData.radialCovector := by
+  exact canonicalPrincipalSyngeEndpointJetData.optical_closure
+    opticalBilinear_symmetric
+
 /-- Thus the optical lapse norm is not independent endpoint data: the two norms are the
 same scalar with opposite sign. -/
 theorem NullEndpointPairData.equal_norm_forced
@@ -21401,6 +21482,10 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.SyngeEndpointJetData.firstJet_forced_unique
 #print axioms RelativeRest.SyngeEndpointJetData.endpoint_eikonals_null
 #print axioms RelativeRest.SyngeEndpointJetData.optical_closure
+#print axioms RelativeRest.opticalBilinear_symmetric
+#print axioms RelativeRest.canonicalPrincipalSyngeEndpointJetData_clock
+#print axioms RelativeRest.canonicalPrincipalSyngeEndpointJetData_radial
+#print axioms RelativeRest.canonicalPrincipalSyngeEndpointJetData_optical_closure
 #print axioms RelativeRest.RegularSyngeEndpointSource.sigmaTheta_ne
 #print axioms RelativeRest.RegularSyngeEndpointSource.thetaInverse_apply
 #print axioms RelativeRest.RegularSyngeEndpointSource.implicitDerivative_eq_explicit
