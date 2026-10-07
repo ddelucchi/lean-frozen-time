@@ -8821,6 +8821,40 @@ def pastEndpoint (S : Set ℝ) : ℝ := sSup S
 def futureEndpoint (S : Set ℝ) : ℝ := sInf S
 
 
+/-- Worldline parameter values chronologically before a spacetime event. -/
+def causalPastParameterSet
+    {X : Type*} (R : X → X → Prop)
+    (γ : ℝ → X) (x : X) : Set ℝ :=
+  {θ | R (γ θ) x}
+
+/-- Worldline parameter values chronologically after a spacetime event. -/
+def causalFutureParameterSet
+    {X : Type*} (R : X → X → Prop)
+    (γ : ℝ → X) (x : X) : Set ℝ :=
+  {θ | R x (γ θ)}
+
+/-- Causal push-up for past endpoint sets follows directly from transitivity:
+if `x R y`, every worldline event before `x` is also before `y`. -/
+theorem causalPastParameterSet_mono_of_transitive
+    {X : Type*} {R : X → X → Prop}
+    (htrans : Transitive R)
+    (γ : ℝ → X) {x y : X} (hxy : R x y) :
+    causalPastParameterSet R γ x ⊆
+      causalPastParameterSet R γ y := by
+  intro θ hθ
+  exact htrans hθ hxy
+
+/-- Dually, if `x R y`, every worldline event after `y` is also after `x`;
+the future parameter set therefore shrinks along the causal order. -/
+theorem causalFutureParameterSet_reverse_mono_of_transitive
+    {X : Type*} {R : X → X → Prop}
+    (htrans : Transitive R)
+    (γ : ℝ → X) {x y : X} (hxy : R x y) :
+    causalFutureParameterSet R γ y ⊆
+      causalFutureParameterSet R γ x := by
+  intro θ hθ
+  exact htrans hxy hθ
+
 /-- Extended-real past endpoint, including the paper's empty-set convention automatically. -/
 def pastEndpointE (S : Set ℝ) : EReal :=
   sSup ((fun θ : ℝ => (θ : EReal)) '' S)
@@ -8859,6 +8893,21 @@ theorem causal_extended_endpoints_mono
     futureEndpointE F₁ ≤ futureEndpointE F₂ :=
   ⟨pastEndpointE_mono hP, futureEndpointE_mono_of_reverse_inclusion hF⟩
 
+/-- Globalized causal-order endpoint monotonicity from transitivity itself; no
+set-inclusion premise remains.  This is the abstract causal push-up step used in
+the manuscript's branch-independent endpoint construction. -/
+theorem causal_extended_endpoints_mono_of_transitive
+    {X : Type*} {R : X → X → Prop}
+    (htrans : Transitive R)
+    (γ : ℝ → X) {x y : X} (hxy : R x y) :
+    pastEndpointE (causalPastParameterSet R γ x) ≤
+        pastEndpointE (causalPastParameterSet R γ y) ∧
+      futureEndpointE (causalFutureParameterSet R γ x) ≤
+        futureEndpointE (causalFutureParameterSet R γ y) := by
+  exact causal_extended_endpoints_mono
+    (causalPastParameterSet_mono_of_transitive htrans γ hxy)
+    (causalFutureParameterSet_reverse_mono_of_transitive htrans γ hxy)
+
 /-- Enlargement of a nonempty bounded-above chronological past can only increase its endpoint. -/
 theorem pastEndpoint_mono
     {S T : Set ℝ}
@@ -8890,6 +8939,28 @@ theorem causal_radar_clock_mono
     futureEndpoint_mono_of_reverse_inclusion hF₁bdd hF₂ne hF
   unfold radarTime
   linarith
+
+/-- On the finite endpoint domain, transitivity of the causal relation alone
+forces monotonicity of the radar midpoint along the causal order. -/
+theorem causal_radar_clock_mono_of_transitive
+    {X : Type*} {R : X → X → Prop}
+    (htrans : Transitive R)
+    (γ : ℝ → X) {x y : X} (hxy : R x y)
+    (hPybdd : BddAbove (causalPastParameterSet R γ y))
+    (hPxne : (causalPastParameterSet R γ x).Nonempty)
+    (hFxbdd : BddBelow (causalFutureParameterSet R γ x))
+    (hFyne : (causalFutureParameterSet R γ y).Nonempty) :
+    radarTime
+        (futureEndpoint (causalFutureParameterSet R γ x))
+        (pastEndpoint (causalPastParameterSet R γ x)) ≤
+      radarTime
+        (futureEndpoint (causalFutureParameterSet R γ y))
+        (pastEndpoint (causalPastParameterSet R γ y)) := by
+  exact causal_radar_clock_mono
+    hPybdd hPxne
+    (causalPastParameterSet_mono_of_transitive htrans γ hxy)
+    hFxbdd hFyne
+    (causalFutureParameterSet_reverse_mono_of_transitive htrans γ hxy)
 
 
 /-- Endpoint values depend only on the causal-order sets, not on any choice of connecting
