@@ -5645,6 +5645,138 @@ theorem generalMaxwellProjector_images_orthogonal
   · exact generalMaxwellProjectorMinus_eigen
       Ex Ey Ez Bx By Bz hnonnull w
 
+/-! ### The forced Rainich eigenspaces are exactly two-dimensional -/
+
+/-- The arbitrary Maxwell carrier has zero endomorphism trace because the Maxwell
+stress tensor is trace-free. -/
+theorem generalMaxwellCarrierLinear_trace_zero
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    LinearMap.trace ℝ (Fin 4 → ℝ)
+        (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz) = 0 := by
+  rw [LinearMap.trace_eq_matrix_trace ℝ (Pi.basisFun ℝ (Fin 4)),
+    Matrix.trace]
+  simp_rw [LinearMap.toMatrix_apply, Pi.basisFun_repr]
+  change
+    (∑ i : Fin 4,
+      generalMaxwellCarrier Ex Ey Ez Bx By Bz i i) = 0
+  unfold generalMaxwellCarrier
+  rw [← Finset.mul_sum]
+  change
+    (-16 * Real.pi) *
+      generalMaxwellStressTrace Ex Ey Ez Bx By Bz = 0
+  rw [generalMaxwellStress_trace_zero, mul_zero]
+
+/-- The normalized Rainich involution therefore also has zero trace. -/
+theorem generalMaxwellNormalizedCarrier_trace_zero
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    LinearMap.trace ℝ (Fin 4 → ℝ)
+        (generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz) = 0 := by
+  unfold generalMaxwellNormalizedCarrier
+  simp [generalMaxwellCarrierLinear_trace_zero]
+
+/-- Linear +1 Rainich projector. -/
+def generalMaxwellProjectorPlusLinear
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    (Fin 4 → ℝ) →ₗ[ℝ] (Fin 4 → ℝ) :=
+  (1 / 2 : ℝ) •
+    (LinearMap.id +
+      generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz)
+
+/-- Linear -1 Rainich projector. -/
+def generalMaxwellProjectorMinusLinear
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    (Fin 4 → ℝ) →ₗ[ℝ] (Fin 4 → ℝ) :=
+  (1 / 2 : ℝ) •
+    (LinearMap.id -
+      generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz)
+
+@[simp] theorem generalMaxwellProjectorPlusLinear_apply
+    (Ex Ey Ez Bx By Bz : ℝ) (v : Fin 4 → ℝ) :
+    generalMaxwellProjectorPlusLinear Ex Ey Ez Bx By Bz v =
+      generalMaxwellProjectorPlus Ex Ey Ez Bx By Bz v := by
+  simp [generalMaxwellProjectorPlusLinear,
+    generalMaxwellProjectorPlus, involutionProjPlus]
+
+@[simp] theorem generalMaxwellProjectorMinusLinear_apply
+    (Ex Ey Ez Bx By Bz : ℝ) (v : Fin 4 → ℝ) :
+    generalMaxwellProjectorMinusLinear Ex Ey Ez Bx By Bz v =
+      generalMaxwellProjectorMinus Ex Ey Ez Bx By Bz v := by
+  simp [generalMaxwellProjectorMinusLinear,
+    generalMaxwellProjectorMinus, involutionProjMinus]
+  module
+
+/-- Both linear Rainich projectors are genuine idempotents on the non-null sector. -/
+theorem generalMaxwellProjectorPlusLinear_idempotent
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
+    IsIdempotentElem
+      (generalMaxwellProjectorPlusLinear Ex Ey Ez Bx By Bz) := by
+  ext v
+  simp only [Module.End.mul_apply]
+  rw [generalMaxwellProjectorPlusLinear_apply,
+    generalMaxwellProjectorPlusLinear_apply,
+    generalMaxwellProjectorPlusLinear_apply]
+  exact generalMaxwellProjectors_idempotent
+    Ex Ey Ez Bx By Bz hnonnull v |>.1
+
+theorem generalMaxwellProjectorMinusLinear_idempotent
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
+    IsIdempotentElem
+      (generalMaxwellProjectorMinusLinear Ex Ey Ez Bx By Bz) := by
+  ext v
+  simp only [Module.End.mul_apply]
+  rw [generalMaxwellProjectorMinusLinear_apply,
+    generalMaxwellProjectorMinusLinear_apply,
+    generalMaxwellProjectorMinusLinear_apply]
+  exact generalMaxwellProjectors_idempotent
+    Ex Ey Ez Bx By Bz hnonnull v |>.2
+
+/-- Trace zero of the involution forces each complementary projector to have trace 2. -/
+theorem generalMaxwellProjectorPlusLinear_trace_two
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    LinearMap.trace ℝ (Fin 4 → ℝ)
+        (generalMaxwellProjectorPlusLinear Ex Ey Ez Bx By Bz) = 2 := by
+  unfold generalMaxwellProjectorPlusLinear
+  rw [map_smul, map_add, LinearMap.trace_id,
+    generalMaxwellNormalizedCarrier_trace_zero]
+  norm_num
+
+theorem generalMaxwellProjectorMinusLinear_trace_two
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    LinearMap.trace ℝ (Fin 4 → ℝ)
+        (generalMaxwellProjectorMinusLinear Ex Ey Ez Bx By Bz) = 2 := by
+  unfold generalMaxwellProjectorMinusLinear
+  rw [map_smul, map_sub, LinearMap.trace_id,
+    generalMaxwellNormalizedCarrier_trace_zero]
+  norm_num
+
+/-- Hence the +1 Rainich eigenspace is literally a two-plane. -/
+theorem generalMaxwellProjectorPlus_range_finrank_two
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
+    Module.finrank ℝ
+      (LinearMap.range
+        (generalMaxwellProjectorPlusLinear Ex Ey Ez Bx By Bz)) = 2 := by
+  have hp :=
+    (generalMaxwellProjectorPlusLinear_idempotent
+      Ex Ey Ez Bx By Bz hnonnull).isProj_range.trace
+  rw [generalMaxwellProjectorPlusLinear_trace_two] at hp
+  exact_mod_cast hp.symm
+
+/-- And the complementary -1 Rainich eigenspace is also exactly a two-plane. -/
+theorem generalMaxwellProjectorMinus_range_finrank_two
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
+    Module.finrank ℝ
+      (LinearMap.range
+        (generalMaxwellProjectorMinusLinear Ex Ey Ez Bx By Bz)) = 2 := by
+  have hm :=
+    (generalMaxwellProjectorMinusLinear_idempotent
+      Ex Ey Ez Bx By Bz hnonnull).isProj_range.trace
+  rw [generalMaxwellProjectorMinusLinear_trace_two] at hm
+  exact_mod_cast hm.symm
+
 /-- The arbitrary-field Rainich projectors do more than provide candidate
 eigenspaces: they are the unique decomposition of every vector into its +1 and -1
 carrier parts.  Thus the principal splitting is forced before any frame choice. -/
@@ -24443,6 +24575,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellNormalizedCarrier_involution
 #print axioms RelativeRest.generalMaxwellNormalizedCarrier_self_adjoint
 #print axioms RelativeRest.generalMaxwellProjector_images_orthogonal
+#print axioms RelativeRest.generalMaxwellCarrierLinear_trace_zero
+#print axioms RelativeRest.generalMaxwellProjectorPlus_range_finrank_two
+#print axioms RelativeRest.generalMaxwellProjectorMinus_range_finrank_two
 #print axioms RelativeRest.generalMaxwell_principal_split_unique
 #print axioms RelativeRest.generalMaxwellChi_principal_specialization
 #print axioms RelativeRest.generalMaxwellClockRate_fourth_power
