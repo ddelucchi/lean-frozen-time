@@ -9783,6 +9783,32 @@ theorem synchronization_total_closed
   exact add_neg_cancel _
 
 
+/-- Complete algebraic synchronization certificate.  Once the radar differential
+is exact, the correction is not extra structure: it is uniquely `β=dT-TO`, its
+curvature is forced to cancel that of the local chronometric covector, and the
+corrected total is closed. -/
+theorem synchronization_forced_certificate
+    {W Z : Type*} [AddCommGroup W] [AddCommGroup Z]
+    (d : W →+ Z) (dT TO : W)
+    (hexact : d dT = 0) :
+    let β := dT - TO
+    dT = TO + β ∧
+    d β = - d TO ∧
+    d TO + d β = 0 ∧
+    (∀ β' : W, dT = TO + β' → β' = β) := by
+  dsimp
+  have hdecomp : dT = TO + (dT - TO) := by
+    module
+  have hcurv :
+      d (dT - TO) = - d TO := by
+    exact synchronization_curvature_cancellation
+      d dT TO (dT - TO) rfl hexact
+  refine ⟨hdecomp, hcurv, ?_, ?_⟩
+  · exact synchronization_total_closed d TO (dT - TO) hcurv
+  · intro β' hβ'
+    exact synchronization_correction_unique
+      dT TO β' (dT - TO) hβ' hdecomp
+
 /-! ### Covector-level synchronization and principal-orbit normalization -/
 
 section SynchronizationCovector
