@@ -2202,6 +2202,184 @@ theorem principalMaxwellLagrangianMetricLine_deriv_eq_neg_half_stress
     principalMaxwellMetricVariationCoeff_eq_neg_half_stress]
 
 
+/-! ### Arbitrary-field Maxwell metric variation from the displayed action -/
+
+/-- Covariant quadratic contraction `F_{ic}F_j{}^c` for the completely general
+six-component Maxwell field. -/
+def generalMaxwellCovariantContraction
+    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) : ℝ :=
+  ∑ c : Fin 4,
+    generalMaxwellF Ex Ey Ez Bx By Bz i c *
+      principalMetricSign c *
+      generalMaxwellF Ex Ey Ez Bx By Bz j c
+
+/-- Literal directional differential of `F_{ab}F^{ab}` for the arbitrary field
+under an inverse-metric variation `H^{ab}`. -/
+def generalMaxwellFsqMetricDifferential
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (H : Fin 4 → Fin 4 → ℝ) : ℝ :=
+  ∑ a : Fin 4, ∑ b : Fin 4,
+    ∑ c : Fin 4, ∑ d : Fin 4,
+      (H a c * principalMetricCov b d +
+        principalMetricCov a c * H b d) *
+      generalMaxwellF Ex Ey Ez Bx By Bz a b *
+      generalMaxwellF Ex Ey Ez Bx By Bz c d
+
+/-- Varying either inverse metric produces the same contraction, forcing the
+universal factor two for a completely arbitrary electromagnetic two-form. -/
+theorem generalMaxwellFsqMetricDifferential_matrixUnit
+    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) :
+    generalMaxwellFsqMetricDifferential Ex Ey Ez Bx By Bz
+        (principalInverseMetricMatrixUnit i j) =
+      2 * generalMaxwellCovariantContraction
+        Ex Ey Ez Bx By Bz i j := by
+  fin_cases i <;> fin_cases j <;>
+    simp [generalMaxwellFsqMetricDifferential,
+      principalInverseMetricMatrixUnit,
+      generalMaxwellCovariantContraction,
+      principalMetricCov, principalMetricSign,
+      generalMaxwellF] <;>
+    ring
+
+def generalMaxwellFsqInverseMetricDerivative
+    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) : ℝ :=
+  2 * generalMaxwellCovariantContraction
+    Ex Ey Ez Bx By Bz i j
+
+theorem generalMaxwellFsqInverseMetricDerivative_from_contraction
+    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) :
+    generalMaxwellFsqInverseMetricDerivative
+        Ex Ey Ez Bx By Bz i j =
+      generalMaxwellFsqMetricDifferential
+        Ex Ey Ez Bx By Bz
+        (principalInverseMetricMatrixUnit i j) := by
+  rw [generalMaxwellFsqMetricDifferential_matrixUnit]
+  rfl
+
+def generalMaxwellInverseMetricVariationCoeff
+    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) : ℝ :=
+  -(1 / (8 * Real.pi)) *
+    generalMaxwellCovariantContraction Ex Ey Ez Bx By Bz i j
+
+def generalMaxwellVolumeVariationCoeff
+    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) : ℝ :=
+  (1 / (32 * Real.pi)) *
+    principalMetricCov i j *
+      generalMaxwellFsq Ex Ey Ez Bx By Bz
+
+/-- Literal arbitrary-field Maxwell-sector line through the displayed
+Einstein-Maxwell density. -/
+def generalMaxwellLagrangianMetricLine
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (i j : Fin 4) (s : ℝ) : ℝ :=
+  einsteinMaxwellLagrangianDensity
+    (1 + s * principalInverseMetricVolumeDerivative i j)
+    0
+    (generalMaxwellFsq Ex Ey Ez Bx By Bz +
+      s * generalMaxwellFsqInverseMetricDerivative
+        Ex Ey Ez Bx By Bz i j)
+
+theorem generalMaxwellLagrangianMetricLine_hasDerivAt_zero
+    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) :
+    HasDerivAt
+      (generalMaxwellLagrangianMetricLine
+        Ex Ey Ez Bx By Bz i j)
+      (generalMaxwellInverseMetricVariationCoeff
+          Ex Ey Ez Bx By Bz i j +
+        generalMaxwellVolumeVariationCoeff
+          Ex Ey Ez Bx By Bz i j) 0 := by
+  have h := einsteinMaxwellLagrangianDensity_hasDerivAt_line_zero
+    1 0 (generalMaxwellFsq Ex Ey Ez Bx By Bz)
+    (principalInverseMetricVolumeDerivative i j)
+    0
+    (generalMaxwellFsqInverseMetricDerivative
+      Ex Ey Ez Bx By Bz i j)
+  unfold generalMaxwellLagrangianMetricLine
+    principalInverseMetricVolumeDerivative
+    generalMaxwellFsqInverseMetricDerivative
+    generalMaxwellInverseMetricVariationCoeff
+    generalMaxwellVolumeVariationCoeff
+  convert h using 1 <;>
+    field_simp [ne_of_gt Real.pi_pos] <;> ring
+
+def generalMaxwellMetricVariationCoeff
+    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) : ℝ :=
+  generalMaxwellInverseMetricVariationCoeff
+      Ex Ey Ez Bx By Bz i j +
+    generalMaxwellVolumeVariationCoeff
+      Ex Ey Ez Bx By Bz i j
+
+/-- Covariant stress obtained from the arbitrary-field mixed Maxwell stress by
+lowering the first index. -/
+def generalMaxwellStressCovFromF
+    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) : ℝ :=
+  principalMetricSign i *
+    generalMaxwellStressFromF Ex Ey Ez Bx By Bz i j
+
+/-- For an arbitrary Maxwell two-form, the two metric-variation pieces combine
+to exactly `-1/2 T_ij[F]`.  Principal-frame alignment is nowhere assumed. -/
+theorem generalMaxwellMetricVariationCoeff_eq_neg_half_stress
+    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) :
+    generalMaxwellMetricVariationCoeff
+        Ex Ey Ez Bx By Bz i j =
+      (-1 / 2 : ℝ) *
+        generalMaxwellStressCovFromF
+          Ex Ey Ez Bx By Bz i j := by
+  fin_cases i <;> fin_cases j <;>
+    simp [generalMaxwellMetricVariationCoeff,
+      generalMaxwellInverseMetricVariationCoeff,
+      generalMaxwellVolumeVariationCoeff,
+      generalMaxwellCovariantContraction,
+      generalMaxwellStressCovFromF,
+      generalMaxwellStressFromF,
+      principalMetricCov, principalMetricSign,
+      generalMaxwellF, generalMaxwellFsq,
+      generalMaxwellI] <;>
+    field_simp [ne_of_gt Real.pi_pos] <;>
+    ring
+
+theorem generalMaxwellMetricVariationCoeff_eq_lagrangian_deriv
+    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) :
+    generalMaxwellMetricVariationCoeff
+        Ex Ey Ez Bx By Bz i j =
+      deriv
+        (generalMaxwellLagrangianMetricLine
+          Ex Ey Ez Bx By Bz i j) 0 := by
+  rw [(generalMaxwellLagrangianMetricLine_hasDerivAt_zero
+    Ex Ey Ez Bx By Bz i j).deriv]
+  rfl
+
+/-- Frame-free action-to-stress bridge: differentiating the displayed Maxwell
+density in an arbitrary inverse-metric component direction gives exactly
+`-1/2 T_ij[F]`. -/
+theorem generalMaxwellLagrangianMetricLine_deriv_eq_neg_half_stress
+    (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) :
+    deriv
+        (generalMaxwellLagrangianMetricLine
+          Ex Ey Ez Bx By Bz i j) 0 =
+      (-1 / 2 : ℝ) *
+        generalMaxwellStressCovFromF
+          Ex Ey Ez Bx By Bz i j := by
+  rw [← generalMaxwellMetricVariationCoeff_eq_lagrangian_deriv,
+    generalMaxwellMetricVariationCoeff_eq_neg_half_stress]
+
+/-- The arbitrary-field action derivative specializes exactly to the earlier
+principal-frame derivative. -/
+theorem generalMaxwellLagrangianMetricLine_principal_specialization
+    (E B : ℝ) (i j : Fin 4) :
+    generalMaxwellLagrangianMetricLine E 0 0 B 0 0 i j =
+      principalMaxwellLagrangianMetricLine E B i j := by
+  funext s
+  simp [generalMaxwellLagrangianMetricLine,
+    principalMaxwellLagrangianMetricLine,
+    generalMaxwellFsqInverseMetricDerivative,
+    principalMaxwellFsqInverseMetricDerivative,
+    generalMaxwellCovariantContraction,
+    principalMaxwellCovariantContraction,
+    generalMaxwellFsq,
+    principalMaxwellFsq,
+    generalMaxwellF, principalMaxwellF]
+
 /-- Einstein-Hilbert metric-variation coefficient in mixed-index form after
 lowering the first index with the principal metric. -/
 def principalEinsteinHilbertMetricVariationCoeff
@@ -23350,6 +23528,10 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalMaxwellFsqInverseMetricDerivative_from_contraction
 #print axioms RelativeRest.principalMaxwellLagrangianMetricLine_hasDerivAt_zero
 #print axioms RelativeRest.principalMaxwellLagrangianMetricLine_deriv_eq_neg_half_stress
+#print axioms RelativeRest.generalMaxwellFsqMetricDifferential_matrixUnit
+#print axioms RelativeRest.generalMaxwellLagrangianMetricLine_hasDerivAt_zero
+#print axioms RelativeRest.generalMaxwellMetricVariationCoeff_eq_neg_half_stress
+#print axioms RelativeRest.generalMaxwellLagrangianMetricLine_deriv_eq_neg_half_stress
 #print axioms RelativeRest.principalPalatini_scalar_boundary_eq_divergence
 #print axioms RelativeRest.principalLinearizedChristoffelFromMetricDerivative_lower_symmetric
 #print axioms RelativeRest.principalEinsteinHilbertThetaNumerator_from_metric_variation
