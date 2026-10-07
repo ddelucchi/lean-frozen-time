@@ -3984,6 +3984,37 @@ def generalMaxwellCarrierLinear
     funext i
     simp [mul_assoc]
 
+
+/-- Mixed Maxwell stress as a linear endomorphism for a completely arbitrary
+six-component electromagnetic field. -/
+def generalMaxwellStressLinear
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    (Fin 4 → ℝ) →ₗ[ℝ] (Fin 4 → ℝ) where
+  toFun v := fun i =>
+    ∑ j : Fin 4,
+      generalMaxwellStressFromF Ex Ey Ez Bx By Bz i j * v j
+  map_add' x y := by
+    funext i
+    simp [mul_add, Finset.sum_add_distrib]
+  map_smul' a x := by
+    funext i
+    simp [mul_assoc]
+
+/-- The fixed-point carrier is exactly minus sixteen pi times the physical
+Maxwell stress endomorphism, with no frame specialization. -/
+theorem generalMaxwellCarrierLinear_eq_neg16pi_stressLinear
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz =
+      (-16 * Real.pi) •
+        generalMaxwellStressLinear Ex Ey Ez Bx By Bz := by
+  apply principalLinearMap_ext_on_basis
+  intro j
+  funext i
+  simp [generalMaxwellCarrierLinear,
+    generalMaxwellStressLinear,
+    generalMaxwellCarrier,
+    principalBasis]
+
 @[simp] theorem generalMaxwellCarrierLinear_basis
     (Ex Ey Ez Bx By Bz : ℝ)
     (j i : Fin 4) :
@@ -21874,6 +21905,130 @@ theorem generalMaxwellCarrierLinear_balancedU_eigen
       hS
   simpa [smul_smul, hchi0] using h
 
+
+/-- The physical Maxwell stress has the selected balanced observer as a
+timelike eigenvector with eigenvalue -chi/(16 pi). -/
+theorem generalMaxwellStressLinear_balancedU_eigen
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellStressLinear Ex Ey Ez Bx By Bz
+        (generalMaxwellBalancedU
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) =
+      (-(generalMaxwellChi Ex Ey Ez Bx By Bz /
+          (16 * Real.pi))) •
+        generalMaxwellBalancedU
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D := by
+  have hJ :=
+    generalMaxwellCarrierLinear_balancedU_eigen
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz hnonnull D
+  have hpi : (16 * Real.pi : ℝ) ≠ 0 := by
+    positivity
+  rw [generalMaxwellCarrierLinear_eq_neg16pi_stressLinear] at hJ
+  apply_fun (fun v : Fin 4 → ℝ => (-(1 / (16 * Real.pi))) • v) at hJ
+  simpa [smul_smul, hpi] using hJ
+
+/-- Rest-frame electromagnetic energy density measured by the observer selected
+from the Maxwell first jet. -/
+def generalMaxwellBalancedRestEnergyDensity
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) : ℝ :=
+  principalMinkowskiBilinear
+    (generalMaxwellBalancedU
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D)
+    (generalMaxwellStressLinear Ex Ey Ez Bx By Bz
+      (generalMaxwellBalancedU
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D))
+
+/-- The selected rest energy density is forced to chi/(16 pi). -/
+theorem generalMaxwellBalancedRestEnergyDensity_eq
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellBalancedRestEnergyDensity
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D =
+      generalMaxwellChi Ex Ey Ez Bx By Bz /
+        (16 * Real.pi) := by
+  unfold generalMaxwellBalancedRestEnergyDensity
+  rw [generalMaxwellStressLinear_balancedU_eigen
+    Ex Ey Ez Bx By Bz
+    dEx dEy dEz dBx dBy dBz hnonnull D,
+    principalMinkowskiBilinear_smul_right,
+    ← principalMinkowskiSq_eq_bilinear,
+    (generalMaxwellBalancedFrame_orthonormal
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D).1]
+  ring
+
+/-- Arbitrary-field version of the manuscript's energy-density clock formula:
+the intrinsic positive rate is exactly 4 sqrt(pi epsilon_EM) in the field-selected
+rest frame. -/
+theorem generalMaxwellClockRate_eq_balancedRestEnergyDensity
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellClockRate Ex Ey Ez Bx By Bz =
+      4 * Real.sqrt
+        (Real.pi *
+          generalMaxwellBalancedRestEnergyDensity
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D) := by
+  have hchi :
+      0 < generalMaxwellChi Ex Ey Ez Bx By Bz :=
+    generalMaxwellChi_pos Ex Ey Ez Bx By Bz hnonnull
+  have heps :
+      generalMaxwellBalancedRestEnergyDensity
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D =
+        generalMaxwellChi Ex Ey Ez Bx By Bz /
+          (16 * Real.pi) :=
+    generalMaxwellBalancedRestEnergyDensity_eq
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz hnonnull D
+  have heps_nonneg :
+      0 ≤
+        generalMaxwellBalancedRestEnergyDensity
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D := by
+    rw [heps]
+    positivity
+  apply energy_density_clock_rate_value
+    (generalMaxwellBalancedRestEnergyDensity
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D)
+    (generalMaxwellClockRate Ex Ey Ez Bx By Bz)
+    heps_nonneg
+    (generalMaxwellClockRate_nonneg Ex Ey Ez Bx By Bz)
+  rw [generalMaxwellClockRate_sq, heps]
+  field_simp [ne_of_gt Real.pi_pos]
+  ring
+
 /-- Unit future hypersurface contraction selected by the balanced observer itself.
 No pre-principalized time coordinate is used. -/
 def generalMaxwellBalancedFutureFluxUnit
@@ -34101,7 +34256,11 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.weightedBoostJetStabilizer_eq_singleton_zero_of_active
 #print axioms RelativeRest.weightedBoostJetStabilizer_eq_univ_of_no_active_weight
 #print axioms RelativeRest.weightedBoostJetTower_finiteBreak_or_exactFullSymmetry
+#print axioms RelativeRest.generalMaxwellCarrierLinear_eq_neg16pi_stressLinear
 #print axioms RelativeRest.generalMaxwellCarrierLinear_balancedU_eigen
+#print axioms RelativeRest.generalMaxwellStressLinear_balancedU_eigen
+#print axioms RelativeRest.generalMaxwellBalancedRestEnergyDensity_eq
+#print axioms RelativeRest.generalMaxwellClockRate_eq_balancedRestEnergyDensity
 #print axioms RelativeRest.generalMaxwellBalancedHalfCarrierCurrent_positive
 #print axioms RelativeRest.generalMaxwellBalancedCharacteristic_Lambda_nonzero
 #print axioms RelativeRest.generalMaxwellBalancedCharacteristic_quotient_finrank_one
