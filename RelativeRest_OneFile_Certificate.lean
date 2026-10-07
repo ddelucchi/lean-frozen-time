@@ -8630,6 +8630,89 @@ theorem radarClockRadius_hasDerivAt
   simpa [div_eq_mul_inv, mul_assoc, mul_left_comm, mul_comm] using
     (hp'.sub hm').const_mul (1 / 2 : ℝ)
 
+/-- Intrinsic Einstein-Maxwell radar midpoint using the unique field-derived rate. -/
+def principalRadarClockTime
+    (E B τ0 : ℝ) (τplus τminus : ℝ → ℝ) (x : ℝ) : ℝ :=
+  radarClockTime
+    (fun _ : ℝ => principalClockRate E B) τ0 τplus τminus x
+
+/-- Intrinsic Einstein-Maxwell radar radius using the same rate. -/
+def principalRadarClockRadius
+    (E B τ0 : ℝ) (τplus τminus : ℝ → ℝ) (x : ℝ) : ℝ :=
+  radarClockRadius
+    (fun _ : ℝ => principalClockRate E B) τ0 τplus τminus x
+
+/-- The exchange-even midpoint derivative is the Ricci fourth-root rate times the
+even endpoint derivative. -/
+theorem principalRadarClockTime_hasDerivAt_ricci_rate
+    (E B τ0 x dplus dminus : ℝ)
+    (τplus τminus : ℝ → ℝ)
+    (hp : HasDerivAt τplus dplus x)
+    (hm : HasDerivAt τminus dminus x) :
+    HasDerivAt
+      (principalRadarClockTime E B τ0 τplus τminus)
+      (Real.sqrt
+          (Real.sqrt
+            (principalRicciNormFromCarrier (principalChi E B))) *
+        ((dplus + dminus) / 2))
+      x := by
+  unfold principalRadarClockTime
+  have h :=
+    radarClockTime_hasDerivAt
+      (fun _ : ℝ => principalClockRate E B)
+      τplus τminus τ0 x dplus dminus continuous_const hp hm
+  rw [principalClockRate_eq_ricci_fourth_root E B] at h
+  convert h using 1 <;> ring
+
+/-- The exchange-odd radial derivative is the same Ricci fourth-root rate times
+the odd endpoint derivative. -/
+theorem principalRadarClockRadius_hasDerivAt_ricci_rate
+    (E B τ0 x dplus dminus : ℝ)
+    (τplus τminus : ℝ → ℝ)
+    (hp : HasDerivAt τplus dplus x)
+    (hm : HasDerivAt τminus dminus x) :
+    HasDerivAt
+      (principalRadarClockRadius E B τ0 τplus τminus)
+      (Real.sqrt
+          (Real.sqrt
+            (principalRicciNormFromCarrier (principalChi E B))) *
+        ((dplus - dminus) / 2))
+      x := by
+  unfold principalRadarClockRadius
+  have h :=
+    radarClockRadius_hasDerivAt
+      (fun _ : ℝ => principalClockRate E B)
+      τplus τminus τ0 x dplus dminus continuous_const hp hm
+  rw [principalClockRate_eq_ricci_fourth_root E B] at h
+  convert h using 1 <;> ring
+
+/-- The complete differential radar split is therefore forced by the same single
+curvature rate. -/
+theorem principalRadarClock_split_ricci_rate
+    (E B τ0 x dplus dminus : ℝ)
+    (τplus τminus : ℝ → ℝ)
+    (hp : HasDerivAt τplus dplus x)
+    (hm : HasDerivAt τminus dminus x) :
+    HasDerivAt
+      (principalRadarClockTime E B τ0 τplus τminus)
+      (Real.sqrt
+          (Real.sqrt
+            (principalRicciNormFromCarrier (principalChi E B))) *
+        ((dplus + dminus) / 2))
+      x ∧
+    HasDerivAt
+      (principalRadarClockRadius E B τ0 τplus τminus)
+      (Real.sqrt
+          (Real.sqrt
+            (principalRicciNormFromCarrier (principalChi E B))) *
+        ((dplus - dminus) / 2))
+      x := by
+  exact ⟨
+    principalRadarClockTime_hasDerivAt_ricci_rate
+      E B τ0 x dplus dminus τplus τminus hp hm,
+    principalRadarClockRadius_hasDerivAt_ricci_rate
+      E B τ0 x dplus dminus τplus τminus hp hm⟩
+
 /-- On the generating orbit, coincident endpoint parameters force zero synchronized radius. -/
 theorem radarClockRadius_zero_of_coincident_endpoint
     (ω : ℝ → ℝ) (τ0 τ : ℝ)
