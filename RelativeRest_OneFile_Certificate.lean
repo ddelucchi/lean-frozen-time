@@ -24339,6 +24339,938 @@ theorem arbitraryMaxwell_firstJet_clockDescent_certificate
 
 
 
+
+/-! ### Finite-resolving-jet downstream clock closure
+
+The manuscript allows the first resolving covector to vanish or remain null and
+then passes to the first later finite carrier jet that breaks the residual
+SO⁺(1,1) stabilizer.  The frame theorem above already treats an arbitrary
+non-null resolving covector.  The following results propagate that arbitrary
+finite resolver through the carrier current, ADM characteristic quotient,
+chronometric normalization, optical null pair, and rapidity map. -/
+
+/-- The balanced observer built from any resolver remains inside the forced
+Rainich +1 plane. -/
+theorem resolvingPlaneBalancedU_mem
+    {P : Submodule ℝ (Fin 4 → ℝ)}
+    (alpha : Fin 4 → ℝ)
+    (D : NormalizedPrincipalNullDyad P) :
+    resolvingPlaneBalancedU alpha D ∈ P := by
+  have hk : resolvingPlaneBalancedK alpha D ∈ P := by
+    unfold resolvingPlaneBalancedK
+    exact P.smul_mem _ D.k.property
+  have hl : resolvingPlaneBalancedL alpha D ∈ P := by
+    unfold resolvingPlaneBalancedL
+    exact P.smul_mem _ D.l.property
+  unfold resolvingPlaneBalancedU
+  exact P.smul_mem _ (P.add_mem hk hl)
+
+/-- Likewise the balanced radial direction lies in the same principal plane. -/
+theorem resolvingPlaneBalancedE_mem
+    {P : Submodule ℝ (Fin 4 → ℝ)}
+    (alpha : Fin 4 → ℝ)
+    (D : NormalizedPrincipalNullDyad P) :
+    resolvingPlaneBalancedE alpha D ∈ P := by
+  have hk : resolvingPlaneBalancedK alpha D ∈ P := by
+    unfold resolvingPlaneBalancedK
+    exact P.smul_mem _ D.k.property
+  have hl : resolvingPlaneBalancedL alpha D ∈ P := by
+    unfold resolvingPlaneBalancedL
+    exact P.smul_mem _ D.l.property
+  unfold resolvingPlaneBalancedE
+  exact P.smul_mem _ (P.sub_mem hk hl)
+
+/-- Any finite-resolver balanced observer is a +1 eigenvector of the normalized
+arbitrary Maxwell carrier. -/
+theorem generalMaxwellNormalizedCarrier_finiteBalancedU_eigen
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz
+        (resolvingPlaneBalancedU alpha D) =
+      resolvingPlaneBalancedU alpha D := by
+  exact generalMaxwellNormalizedCarrier_plusRange_eigen
+    Ex Ey Ez Bx By Bz hnonnull
+    (resolvingPlaneBalancedU alpha D)
+    (resolvingPlaneBalancedU_mem alpha D)
+
+/-- Hence the physical carrier has the forced positive eigenvalue chi on every
+finite-resolver balanced observer. -/
+theorem generalMaxwellCarrierLinear_finiteBalancedU_eigen
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz
+        (resolvingPlaneBalancedU alpha D) =
+      generalMaxwellChi Ex Ey Ez Bx By Bz •
+        resolvingPlaneBalancedU alpha D := by
+  have hS :=
+    generalMaxwellNormalizedCarrier_finiteBalancedU_eigen
+      Ex Ey Ez Bx By Bz alpha hnonnull D
+  have hchi0 :
+      generalMaxwellChi Ex Ey Ez Bx By Bz ≠ 0 :=
+    ne_of_gt
+      (generalMaxwellChi_pos Ex Ey Ez Bx By Bz hnonnull)
+  unfold generalMaxwellNormalizedCarrier at hS
+  simp only [LinearMap.smul_apply] at hS
+  have h :=
+    congrArg
+      (fun z : Fin 4 → ℝ =>
+        generalMaxwellChi Ex Ey Ez Bx By Bz • z)
+      hS
+  simpa [smul_smul, hchi0] using h
+
+/-- Future hypersurface contraction selected by an arbitrary finite resolver. -/
+def generalMaxwellFiniteResolvingFutureFluxUnit
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ where
+  toFun v :=
+    principalMinkowskiBilinear
+      (resolvingPlaneBalancedU alpha D) v
+  map_add' x y := by
+    exact principalMinkowskiBilinear_add_right
+      (resolvingPlaneBalancedU alpha D) x y
+  map_smul' a x := by
+    simpa using
+      (principalMinkowskiBilinear_smul_right
+        a (resolvingPlaneBalancedU alpha D) x)
+
+/-- The finite-resolver observer has unit future contraction. -/
+@[simp] theorem generalMaxwellFiniteResolvingFutureFluxUnit_on_U
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellFiniteResolvingFutureFluxUnit
+        (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+        (Bx:=Bx) (By:=By) (Bz:=Bz)
+        alpha D
+        (resolvingPlaneBalancedU alpha D) = -1 := by
+  unfold generalMaxwellFiniteResolvingFutureFluxUnit
+  rw [← principalMinkowskiSq_eq_bilinear]
+  exact (resolvingPlaneBalancedFrame_orthonormal alpha D).1
+
+/-- Unit clock covector selected by an arbitrary finite resolving jet. -/
+def generalMaxwellFiniteResolvingClockCovector
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
+  (-1 : ℝ) •
+    generalMaxwellFiniteResolvingFutureFluxUnit
+      (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+      (Bx:=Bx) (By:=By) (Bz:=Bz)
+      alpha D
+
+@[simp] theorem generalMaxwellFiniteResolvingClockCovector_unit
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellFiniteResolvingClockCovector
+        (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+        (Bx:=Bx) (By:=By) (Bz:=Bz)
+        alpha D
+        (resolvingPlaneBalancedU alpha D) = 1 := by
+  unfold generalMaxwellFiniteResolvingClockCovector
+  simp
+
+/-- Self-adjointness transports the carrier eigenvalue through the pairing for
+any finite-resolver observer. -/
+theorem generalMaxwellCarrierLinear_finiteBalancedU_pairing
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (v : Fin 4 → ℝ) :
+    principalMinkowskiBilinear
+        (resolvingPlaneBalancedU alpha D)
+        (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz v) =
+      generalMaxwellChi Ex Ey Ez Bx By Bz *
+        principalMinkowskiBilinear
+          (resolvingPlaneBalancedU alpha D) v := by
+  let U := resolvingPlaneBalancedU alpha D
+  calc
+    principalMinkowskiBilinear U
+        (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz v)
+        =
+      principalMinkowskiBilinear
+        (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz v) U := by
+          exact principalMinkowskiBilinear_symm _ _
+    _ =
+      principalMinkowskiBilinear v
+        (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz U) := by
+          exact generalMaxwellCarrierLinear_self_adjoint
+            Ex Ey Ez Bx By Bz v U
+    _ =
+      principalMinkowskiBilinear v
+        (generalMaxwellChi Ex Ey Ez Bx By Bz • U) := by
+          rw [generalMaxwellCarrierLinear_finiteBalancedU_eigen
+            Ex Ey Ez Bx By Bz alpha hnonnull D]
+    _ =
+      generalMaxwellChi Ex Ey Ez Bx By Bz *
+        principalMinkowskiBilinear v U := by
+          exact principalMinkowskiBilinear_smul_right
+            (generalMaxwellChi Ex Ey Ez Bx By Bz) v U
+    _ =
+      generalMaxwellChi Ex Ey Ez Bx By Bz *
+        principalMinkowskiBilinear U v := by
+          rw [principalMinkowskiBilinear_symm v U]
+
+/-- The negative-half carrier current has the same positive unit response for
+every finite resolver. -/
+theorem generalMaxwellFiniteResolvingHalfCarrierCurrent_unit
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    halfCarrierBulkCurrent
+        LinearMap.id
+        (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz)
+        (generalMaxwellFiniteResolvingFutureFluxUnit
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D)
+        (resolvingPlaneBalancedU alpha D) =
+      generalMaxwellChi Ex Ey Ez Bx By Bz /
+        (16 * Real.pi) := by
+  unfold halfCarrierBulkCurrent carrierBulkResponse carrierJetCurrent
+  simp only [LinearMap.smul_apply, LinearMap.comp_apply, LinearMap.id_apply]
+  rw [generalMaxwellCarrierLinear_finiteBalancedU_eigen
+      Ex Ey Ez Bx By Bz alpha hnonnull D,
+    map_smul,
+    generalMaxwellFiniteResolvingFutureFluxUnit_on_U]
+  field_simp [ne_of_gt Real.pi_pos]
+  ring
+
+theorem generalMaxwellFiniteResolvingHalfCarrierCurrent_positive
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    0 <
+      halfCarrierBulkCurrent
+        LinearMap.id
+        (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz)
+        (generalMaxwellFiniteResolvingFutureFluxUnit
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D)
+        (resolvingPlaneBalancedU alpha D) := by
+  rw [generalMaxwellFiniteResolvingHalfCarrierCurrent_unit
+    Ex Ey Ez Bx By Bz alpha hnonnull D]
+  exact div_pos
+    (generalMaxwellChi_pos Ex Ey Ez Bx By Bz hnonnull)
+    (mul_pos (by norm_num) Real.pi_pos)
+
+/-- Spatial shifts for the finite-resolver clock. -/
+abbrev GeneralMaxwellFiniteResolvingSpatialSubmodule
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :=
+  LinearMap.ker
+    (generalMaxwellFiniteResolvingClockCovector
+      (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+      (Bx:=Bx) (By:=By) (Bz:=Bz)
+      alpha D)
+
+abbrev GeneralMaxwellFiniteResolvingADMParameter
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :=
+  ℝ ×
+    GeneralMaxwellFiniteResolvingSpatialSubmodule
+      (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+      (Bx:=Bx) (By:=By) (Bz:=Bz)
+      alpha D
+
+/-- Actual normal-plus-shift deformation for an arbitrary finite resolver. -/
+def generalMaxwellFiniteResolvingADMDeformationMap
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    GeneralMaxwellFiniteResolvingADMParameter
+      (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+      (Bx:=Bx) (By:=By) (Bz:=Bz)
+      alpha D →ₗ[ℝ] (Fin 4 → ℝ) where
+  toFun p :=
+    p.1 • resolvingPlaneBalancedU alpha D + p.2.1
+  map_add' x y := by
+    ext i
+    simp [add_smul]
+  map_smul' a x := by
+    ext i
+    simp [mul_smul]
+
+@[simp] theorem generalMaxwellFiniteResolvingADMDeformationMap_unitLapse
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellFiniteResolvingADMDeformationMap
+        (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+        (Bx:=Bx) (By:=By) (Bz:=Bz)
+        alpha D (1, 0) =
+      resolvingPlaneBalancedU alpha D := by
+  ext i
+  simp [generalMaxwellFiniteResolvingADMDeformationMap]
+
+@[simp] theorem generalMaxwellFiniteResolvingADMDeformationMap_spatialShift
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (S :
+      GeneralMaxwellFiniteResolvingSpatialSubmodule
+        (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+        (Bx:=Bx) (By:=By) (Bz:=Bz)
+        alpha D) :
+    generalMaxwellFiniteResolvingADMDeformationMap
+        (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+        (Bx:=Bx) (By:=By) (Bz:=Bz)
+        alpha D (0, S) = S.1 := by
+  ext i
+  simp [generalMaxwellFiniteResolvingADMDeformationMap]
+
+/-- Characteristic current constructed from the finite-resolver ADM map. -/
+def generalMaxwellFiniteResolvingADMCharacteristicData
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    CharacteristicCurrentData
+      (P:=
+        GeneralMaxwellFiniteResolvingADMParameter
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D)
+      (KSpace:=(Fin 4 → ℝ)) where
+  beta :=
+    generalMaxwellFiniteResolvingADMDeformationMap
+      (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+      (Bx:=Bx) (By:=By) (Bz:=Bz)
+      alpha D
+  current :=
+    halfCarrierBulkCurrent
+      LinearMap.id
+      (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz)
+      (generalMaxwellFiniteResolvingFutureFluxUnit
+        (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+        (Bx:=Bx) (By:=By) (Bz:=Bz)
+        alpha D)
+  positiveWitness := (1, 0)
+  current_positive := by
+    change
+      0 <
+        halfCarrierBulkCurrent
+          LinearMap.id
+          (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz)
+          (generalMaxwellFiniteResolvingFutureFluxUnit
+            (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+            (Bx:=Bx) (By:=By) (Bz:=Bz)
+            alpha D)
+          (generalMaxwellFiniteResolvingADMDeformationMap
+            (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+            (Bx:=Bx) (By:=By) (Bz:=Bz)
+            alpha D (1, 0))
+    rw [generalMaxwellFiniteResolvingADMDeformationMap_unitLapse]
+    exact generalMaxwellFiniteResolvingHalfCarrierCurrent_positive
+      Ex Ey Ez Bx By Bz alpha hnonnull D
+
+/-- The finite-resolver ADM current is exactly chi/(16pi) times its normalized
+clock covector. -/
+theorem generalMaxwellFiniteResolvingADMCharacteristic_current_factor
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    (generalMaxwellFiniteResolvingADMCharacteristicData
+      Ex Ey Ez Bx By Bz alpha hnonnull D).current =
+      (generalMaxwellChi Ex Ey Ez Bx By Bz /
+        (16 * Real.pi)) •
+        generalMaxwellFiniteResolvingClockCovector
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D := by
+  ext v
+  change
+    halfCarrierBulkCurrent
+        LinearMap.id
+        (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz)
+        (generalMaxwellFiniteResolvingFutureFluxUnit
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D) v =
+      ((generalMaxwellChi Ex Ey Ez Bx By Bz /
+        (16 * Real.pi)) •
+        generalMaxwellFiniteResolvingClockCovector
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D) v
+  unfold halfCarrierBulkCurrent carrierBulkResponse carrierJetCurrent
+  simp only [LinearMap.smul_apply, LinearMap.comp_apply, LinearMap.id_apply]
+  rw [generalMaxwellCarrierLinear_finiteBalancedU_pairing
+    Ex Ey Ez Bx By Bz alpha hnonnull D v]
+  unfold generalMaxwellFiniteResolvingClockCovector
+    generalMaxwellFiniteResolvingFutureFluxUnit
+  simp only [LinearMap.smul_apply]
+  field_simp [ne_of_gt Real.pi_pos]
+  ring
+
+theorem generalMaxwellFiniteResolvingADMCharacteristic_Lambda_nonzero
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    (generalMaxwellFiniteResolvingADMCharacteristicData
+      Ex Ey Ez Bx By Bz alpha hnonnull D).Lambda ≠ 0 :=
+  characteristicCurrent_Lambda_nonzero
+    (generalMaxwellFiniteResolvingADMCharacteristicData
+      Ex Ey Ez Bx By Bz alpha hnonnull D)
+
+theorem generalMaxwellFiniteResolvingADMCharacteristic_quotient_finrank_one
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    Module.finrank ℝ
+      ((generalMaxwellFiniteResolvingADMCharacteristicData
+          Ex Ey Ez Bx By Bz alpha hnonnull D).K ⧸
+        LinearMap.ker
+          (generalMaxwellFiniteResolvingADMCharacteristicData
+            Ex Ey Ez Bx By Bz alpha hnonnull D).Lambda) = 1 :=
+  characteristicCurrent_quotient_finrank_one
+    (generalMaxwellFiniteResolvingADMCharacteristicData
+      Ex Ey Ez Bx By Bz alpha hnonnull D)
+
+/-- Every finite-resolver spatial shift is stress-clock invisible. -/
+theorem generalMaxwellFiniteResolvingADMCharacteristic_spatialShift_invisible
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (S :
+      GeneralMaxwellFiniteResolvingSpatialSubmodule
+        (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+        (Bx:=Bx) (By:=By) (Bz:=Bz)
+        alpha D) :
+    (generalMaxwellFiniteResolvingADMCharacteristicData
+      Ex Ey Ez Bx By Bz alpha hnonnull D).current
+      ((generalMaxwellFiniteResolvingADMCharacteristicData
+        Ex Ey Ez Bx By Bz alpha hnonnull D).beta (0, S)) = 0 := by
+  rw [generalMaxwellFiniteResolvingADMCharacteristic_current_factor
+    Ex Ey Ez Bx By Bz alpha hnonnull D]
+  change
+    (generalMaxwellChi Ex Ey Ez Bx By Bz /
+        (16 * Real.pi)) *
+      generalMaxwellFiniteResolvingClockCovector
+        (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+        (Bx:=Bx) (By:=By) (Bz:=Bz)
+        alpha D
+        (generalMaxwellFiniteResolvingADMDeformationMap
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D (0, S)) = 0
+  rw [generalMaxwellFiniteResolvingADMDeformationMap_spatialShift]
+  rw [S.2]
+  ring
+
+/-- Physical chronometric covector selected by a finite resolver. -/
+def generalMaxwellFiniteResolvingChronometricComponents
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    Fin 4 → ℝ :=
+  generalMaxwellClockRate Ex Ey Ez Bx By Bz •
+    principalLowerVector (-(resolvingPlaneBalancedU alpha D))
+
+def generalMaxwellFiniteResolvingRadialComponents
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    Fin 4 → ℝ :=
+  generalMaxwellClockRate Ex Ey Ez Bx By Bz •
+    principalLowerVector (resolvingPlaneBalancedE alpha D)
+
+theorem generalMaxwellFiniteResolvingChronometric_norm
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    principalMinkowskiCovectorSq
+      (generalMaxwellFiniteResolvingChronometricComponents
+        Ex Ey Ez Bx By Bz alpha D) =
+      -generalMaxwellChi Ex Ey Ez Bx By Bz := by
+  unfold principalMinkowskiCovectorSq
+    generalMaxwellFiniteResolvingChronometricComponents
+  rw [principalRaiseCovector_smul_lowerVector,
+    principalMinkowskiSq_smul]
+  have hneg :
+      principalMinkowskiSq
+        (-(resolvingPlaneBalancedU alpha D)) = -1 := by
+    simpa [principalMinkowskiSq] using
+      (resolvingPlaneBalancedFrame_orthonormal alpha D).1
+  rw [hneg, generalMaxwellClockRate_sq]
+  ring
+
+theorem generalMaxwellFiniteResolvingRadial_norm
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    principalMinkowskiCovectorSq
+      (generalMaxwellFiniteResolvingRadialComponents
+        Ex Ey Ez Bx By Bz alpha D) =
+      generalMaxwellChi Ex Ey Ez Bx By Bz := by
+  unfold principalMinkowskiCovectorSq
+    generalMaxwellFiniteResolvingRadialComponents
+  rw [principalRaiseCovector_smul_lowerVector,
+    principalMinkowskiSq_smul,
+    (resolvingPlaneBalancedFrame_orthonormal alpha D).2.1,
+    generalMaxwellClockRate_sq]
+  ring
+
+theorem generalMaxwellFiniteResolvingClockRadial_orthogonal
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    principalMinkowskiCovectorBilinear
+      (generalMaxwellFiniteResolvingChronometricComponents
+        Ex Ey Ez Bx By Bz alpha D)
+      (generalMaxwellFiniteResolvingRadialComponents
+        Ex Ey Ez Bx By Bz alpha D) = 0 := by
+  unfold principalMinkowskiCovectorBilinear
+    generalMaxwellFiniteResolvingChronometricComponents
+    generalMaxwellFiniteResolvingRadialComponents
+  rw [principalRaiseCovector_smul_lowerVector,
+    principalRaiseCovector_smul_lowerVector,
+    principalMinkowskiBilinear_smul]
+  have horth :=
+    (resolvingPlaneBalancedFrame_orthonormal alpha D).2.2
+  have hneg :
+      principalMinkowskiBilinear
+        (-(resolvingPlaneBalancedU alpha D))
+        (resolvingPlaneBalancedE alpha D) = 0 := by
+    calc
+      principalMinkowskiBilinear
+          (-(resolvingPlaneBalancedU alpha D))
+          (resolvingPlaneBalancedE alpha D) =
+        -principalMinkowskiBilinear
+          (resolvingPlaneBalancedU alpha D)
+          (resolvingPlaneBalancedE alpha D) := by
+            simp [principalMinkowskiBilinear]
+            ring
+      _ = 0 := by rw [horth]; ring
+  rw [hneg]
+  ring
+
+def generalMaxwellFiniteResolvingThetaPlus
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    Fin 4 → ℝ :=
+  generalMaxwellFiniteResolvingChronometricComponents
+      Ex Ey Ez Bx By Bz alpha D +
+    generalMaxwellFiniteResolvingRadialComponents
+      Ex Ey Ez Bx By Bz alpha D
+
+def generalMaxwellFiniteResolvingThetaMinus
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    Fin 4 → ℝ :=
+  generalMaxwellFiniteResolvingChronometricComponents
+      Ex Ey Ez Bx By Bz alpha D -
+    generalMaxwellFiniteResolvingRadialComponents
+      Ex Ey Ez Bx By Bz alpha D
+
+theorem generalMaxwellFiniteResolvingTheta_null
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    principalMinkowskiCovectorSq
+        (generalMaxwellFiniteResolvingThetaPlus
+          Ex Ey Ez Bx By Bz alpha D) = 0 ∧
+    principalMinkowskiCovectorSq
+        (generalMaxwellFiniteResolvingThetaMinus
+          Ex Ey Ez Bx By Bz alpha D) = 0 := by
+  have hT :=
+    generalMaxwellFiniteResolvingChronometric_norm
+      Ex Ey Ez Bx By Bz alpha D
+  have hR :=
+    generalMaxwellFiniteResolvingRadial_norm
+      Ex Ey Ez Bx By Bz alpha D
+  have hTR :=
+    generalMaxwellFiniteResolvingClockRadial_orthogonal
+      Ex Ey Ez Bx By Bz alpha D
+  constructor
+  · unfold generalMaxwellFiniteResolvingThetaPlus
+    rw [principalMinkowskiCovectorSq_add, hT, hR, hTR]
+    ring
+  · unfold generalMaxwellFiniteResolvingThetaMinus
+    rw [principalMinkowskiCovectorSq_sub, hT, hR, hTR]
+    ring
+
+/-- Normalized radial dual from the arbitrary finite-resolver frame. -/
+def generalMaxwellFiniteResolvingRadialUnitCovector
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ where
+  toFun v :=
+    principalMinkowskiBilinear
+      (resolvingPlaneBalancedE alpha D) v
+  map_add' x y := by
+    exact principalMinkowskiBilinear_add_right
+      (resolvingPlaneBalancedE alpha D) x y
+  map_smul' a x := by
+    simpa using
+      (principalMinkowskiBilinear_smul_right
+        a (resolvingPlaneBalancedE alpha D) x)
+
+/-- Optical coordinates selected by any finite resolver. -/
+def generalMaxwellFiniteResolvingOpticalCoordinates
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    (Fin 4 → ℝ) →ₗ[ℝ] R2 where
+  toFun v :=
+    (generalMaxwellFiniteResolvingClockCovector
+        (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+        (Bx:=Bx) (By:=By) (Bz:=Bz)
+        alpha D v,
+     generalMaxwellFiniteResolvingRadialUnitCovector
+        (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+        (Bx:=Bx) (By:=By) (Bz:=Bz)
+        alpha D v)
+  map_add' x y := by
+    ext <;> simp
+  map_smul' a x := by
+    ext <;> simp
+
+@[simp] theorem generalMaxwellFiniteResolvingOpticalCoordinates_on_U
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellFiniteResolvingOpticalCoordinates
+        (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+        (Bx:=Bx) (By:=By) (Bz:=Bz)
+        alpha D (resolvingPlaneBalancedU alpha D) = TO := by
+  ext
+  · simp [generalMaxwellFiniteResolvingOpticalCoordinates, TO]
+  · unfold generalMaxwellFiniteResolvingOpticalCoordinates
+      generalMaxwellFiniteResolvingRadialUnitCovector
+    simp only
+    rw [principalMinkowskiBilinear_symm]
+    rw [(resolvingPlaneBalancedFrame_orthonormal alpha D).2.2]
+    simp [TO]
+
+@[simp] theorem generalMaxwellFiniteResolvingOpticalCoordinates_on_E
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellFiniteResolvingOpticalCoordinates
+        (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+        (Bx:=Bx) (By:=By) (Bz:=Bz)
+        alpha D (resolvingPlaneBalancedE alpha D) = RO := by
+  ext
+  · unfold generalMaxwellFiniteResolvingOpticalCoordinates
+      generalMaxwellFiniteResolvingClockCovector
+      generalMaxwellFiniteResolvingFutureFluxUnit
+    simp only [LinearMap.smul_apply]
+    rw [(resolvingPlaneBalancedFrame_orthonormal alpha D).2.2]
+    simp [RO]
+  · unfold generalMaxwellFiniteResolvingOpticalCoordinates
+      generalMaxwellFiniteResolvingRadialUnitCovector
+    simp only
+    rw [← principalMinkowskiSq_eq_bilinear,
+      (resolvingPlaneBalancedFrame_orthonormal alpha D).2.1]
+    simp [RO]
+
+def generalMaxwellFiniteResolvingBoostedObserver
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (s : ℝ) : Fin 4 → ℝ :=
+  Real.cosh s • resolvingPlaneBalancedU alpha D +
+    Real.sinh s • resolvingPlaneBalancedE alpha D
+
+theorem generalMaxwellFiniteResolvingOpticalCoordinates_boostedObserver
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (s : ℝ) :
+    generalMaxwellFiniteResolvingOpticalCoordinates
+        (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+        (Bx:=Bx) (By:=By) (Bz:=Bz)
+        alpha D
+        (generalMaxwellFiniteResolvingBoostedObserver
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D s) =
+      opticalBoost s TO := by
+  unfold generalMaxwellFiniteResolvingBoostedObserver
+  rw [map_add, map_smul, map_smul,
+    generalMaxwellFiniteResolvingOpticalCoordinates_on_U,
+    generalMaxwellFiniteResolvingOpticalCoordinates_on_E]
+  ext <;> simp [opticalBoost, TO, RO]
+
+theorem generalMaxwellFiniteResolving_rapidity_forced
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (s sigma : ℝ)
+    (h :
+      opticalBoost sigma TO =
+        generalMaxwellFiniteResolvingOpticalCoordinates
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D
+          (generalMaxwellFiniteResolvingBoostedObserver
+            (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+            (Bx:=Bx) (By:=By) (Bz:=Bz)
+            alpha D s)) :
+    sigma = s := by
+  rw [generalMaxwellFiniteResolvingOpticalCoordinates_boostedObserver] at h
+  exact opticalBoost_TO_injective h
+
+/-- A later finite resolving jet therefore propagates through the full local
+clock chain, not merely through frame selection. -/
+structure ArbitraryMaxwellFiniteResolvingClockCertificate
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hmem :
+      principalRaiseCovector alpha ∈
+        LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))
+    (hp : principalMinkowskiCovectorSq alpha ≠ 0) : Prop where
+  canonical :
+    ∃ D :
+        NormalizedPrincipalNullDyad
+          (LinearMap.range
+            (generalMaxwellProjectorPlusLinear
+              Ex Ey Ez Bx By Bz)),
+      D.FutureTo
+          (generalMaxwellProjectorPlus
+            Ex Ey Ez Bx By Bz (principalBasis 0)) ∧
+      (principalMinkowskiSq
+          (resolvingPlaneBalancedU alpha D) = -1 ∧
+       principalMinkowskiSq
+          (resolvingPlaneBalancedE alpha D) = 1 ∧
+       principalMinkowskiBilinear
+          (resolvingPlaneBalancedU alpha D)
+          (resolvingPlaneBalancedE alpha D) = 0) ∧
+      (generalMaxwellFiniteResolvingADMCharacteristicData
+        Ex Ey Ez Bx By Bz alpha hnonnull D).Lambda ≠ 0 ∧
+      Module.finrank ℝ
+        ((generalMaxwellFiniteResolvingADMCharacteristicData
+            Ex Ey Ez Bx By Bz alpha hnonnull D).K ⧸
+          LinearMap.ker
+            (generalMaxwellFiniteResolvingADMCharacteristicData
+              Ex Ey Ez Bx By Bz alpha hnonnull D).Lambda) = 1 ∧
+      principalMinkowskiCovectorSq
+        (generalMaxwellFiniteResolvingChronometricComponents
+          Ex Ey Ez Bx By Bz alpha D) =
+        -generalMaxwellChi Ex Ey Ez Bx By Bz ∧
+      (principalMinkowskiCovectorSq
+          (generalMaxwellFiniteResolvingThetaPlus
+            Ex Ey Ez Bx By Bz alpha D) = 0 ∧
+       principalMinkowskiCovectorSq
+          (generalMaxwellFiniteResolvingThetaMinus
+            Ex Ey Ez Bx By Bz alpha D) = 0) ∧
+      generalMaxwellFiniteResolvingOpticalCoordinates
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D
+          (generalMaxwellFiniteResolvingBoostedObserver
+            (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+            (Bx:=Bx) (By:=By) (Bz:=Bz)
+            alpha D s) =
+        actionOpticalMap (actionBoost s CA) ∧
+      (∀ sigma : ℝ,
+        opticalBoost sigma TO =
+          generalMaxwellFiniteResolvingOpticalCoordinates
+            (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+            (Bx:=Bx) (By:=By) (Bz:=Bz)
+            alpha D
+            (generalMaxwellFiniteResolvingBoostedObserver
+              (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+              (Bx:=Bx) (By:=By) (Bz:=Bz)
+              alpha D s) →
+        sigma = s) ∧
+      (∀ E :
+        NormalizedPrincipalNullDyad
+          (LinearMap.range
+            (generalMaxwellProjectorPlusLinear
+              Ex Ey Ez Bx By Bz)),
+        E.FutureTo
+            (generalMaxwellProjectorPlus
+              Ex Ey Ez Bx By Bz (principalBasis 0)) →
+        resolvingPlaneBalancedU alpha E =
+            resolvingPlaneBalancedU alpha D ∧
+          (resolvingPlaneBalancedE alpha E =
+              resolvingPlaneBalancedE alpha D ∨
+           resolvingPlaneBalancedE alpha E =
+              -resolvingPlaneBalancedE alpha D))
+
+theorem arbitraryMaxwell_finiteResolvingClock_certificate
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hmem :
+      principalRaiseCovector alpha ∈
+        LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))
+    (hp : principalMinkowskiCovectorSq alpha ≠ 0) :
+    ArbitraryMaxwellFiniteResolvingClockCertificate
+      Ex Ey Ez Bx By Bz u s alpha hnonnull hmem hp := by
+  refine { canonical := ?_ }
+  rcases
+      generalMaxwell_finiteResolvingCovector_frame_forced
+        Ex Ey Ez Bx By Bz alpha hnonnull hmem hp with
+    ⟨D,hD,hframe,hind⟩
+  refine ⟨D,hD,hframe,
+    generalMaxwellFiniteResolvingADMCharacteristic_Lambda_nonzero
+      Ex Ey Ez Bx By Bz alpha hnonnull D,
+    generalMaxwellFiniteResolvingADMCharacteristic_quotient_finrank_one
+      Ex Ey Ez Bx By Bz alpha hnonnull D,
+    generalMaxwellFiniteResolvingChronometric_norm
+      Ex Ey Ez Bx By Bz alpha D,
+    generalMaxwellFiniteResolvingTheta_null
+      Ex Ey Ez Bx By Bz alpha D,
+    ?_,
+    ?_,
+    hind⟩
+  · rw [actionOpticalMap_intertwines_boost,
+      actionOpticalMap_CA,
+      generalMaxwellFiniteResolvingOpticalCoordinates_boostedObserver]
+  · intro sigma hsigma
+    exact generalMaxwellFiniteResolving_rapidity_forced
+      (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+      (Bx:=Bx) (By:=By) (Bz:=Bz)
+      alpha D s sigma hsigma
+
 /-! ### Single arbitrary-field regular-stratum local closure certificate -/
 
 /-- On the regular arbitrary Einstein-Maxwell first-jet stratum, every local
@@ -31251,6 +32183,13 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.resolvingPlaneBalancedFrame_orthonormal
 #print axioms RelativeRest.resolvingPlaneBalancedFrame_independent_future_dyad
 #print axioms RelativeRest.generalMaxwell_finiteResolvingCovector_frame_forced
+#print axioms RelativeRest.generalMaxwellCarrierLinear_finiteBalancedU_eigen
+#print axioms RelativeRest.generalMaxwellFiniteResolvingADMCharacteristic_current_factor
+#print axioms RelativeRest.generalMaxwellFiniteResolvingADMCharacteristic_Lambda_nonzero
+#print axioms RelativeRest.generalMaxwellFiniteResolvingADMCharacteristic_quotient_finrank_one
+#print axioms RelativeRest.generalMaxwellFiniteResolvingTheta_null
+#print axioms RelativeRest.generalMaxwellFiniteResolving_rapidity_forced
+#print axioms RelativeRest.arbitraryMaxwell_finiteResolvingClock_certificate
 #print axioms RelativeRest.resolvedRainichPlane_certificate
 #print axioms RelativeRest.resolvedRainichPlane_representative_independent
 #print axioms RelativeRest.generalMaxwellResolvingCovector_nullDyad_norm
