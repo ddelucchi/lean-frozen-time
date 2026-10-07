@@ -16984,6 +16984,197 @@ theorem canonicalPrincipalField_forces_action_bulk
     ⟨hrest,hJ,hCA,hDA,_horbit,_hhalf,hcur,hL,hdim,_hnorm⟩
   exact ⟨hrest,hJ,hCA,hDA,hcur,hL,hdim⟩
 
+/-! ### Field-only master forcing certificate -/
+
+/-- A representative-free master certificate whose only physical input is a
+nonzero principal Einstein-Maxwell field.  All algebraic clock data, action
+normalization, compensated bulk current, quotient/contact normalization,
+canonical optical first jet, radar rate, transport law, synchronization,
+homogeneous clock cover, and relational evolution are conclusions.  The separate
+existence of an actual curved-spacetime Synge world function is intentionally not
+hidden in this object. -/
+structure CanonicalPrincipalFieldForcedCertificate
+    (E B u s : ℝ) (hfield : E ≠ 0 ∨ B ≠ 0) : Prop where
+  fixedPoint :
+    (8 * Real.pi * principalFieldEnergyDensity E B =
+      8 * Real.pi *
+        maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+        principalFieldEnergyDensity E B) ↔ s = 0
+  actionJet :
+    let D := canonicalPrincipalCarrierCharacteristicInput E B hfield
+    ∀ i j : Fin 4,
+      D.J (principalBasis j) i =
+        (16 * Real.pi / principalMetricSign i) *
+          deriv (principalScaledMetricEulerCoeffFromAction E B i j) 0
+  rainichCarrier :
+    ∀ i j : Fin 4,
+      (∑ k : Fin 4,
+        principalJetFromF E B i k *
+          principalJetFromF E B k j) =
+        (principalChi E B)^2 *
+          (if i = j then 1 else 0)
+  actionOpticalIntertwiner :
+    actionOpticalMap (actionBoost s CA) =
+      opticalBoost s TO
+  masterRelativeRest :
+    (XiGUS u s = XiMUS u s) ↔
+      (nuPlus s = nuMinus s ∧ Real.tanh s = 0)
+  compensatedBulkNormal :
+    let D := canonicalPrincipalCarrierCharacteristicInput E B hfield
+    D.noetherConstraintOperatorFromAction DA =
+      D.iε.comp (principalMetricEulerNoetherJetLinear E B)
+  characteristicFactorization :
+    let D := canonicalPrincipalCarrierCharacteristicInput E B hfield
+    D.metricEulerJetResponse =
+      D.toCharacteristicCurrentData.current
+  contactTransverseDuality :
+    let D := canonicalPrincipalCarrierCharacteristicInput E B hfield
+    Nonempty
+      (ActionRelativeNormalSpace ≃ₗ[ℝ]
+        ((D.toCharacteristicCurrentData.K ⧸
+            LinearMap.ker D.toCharacteristicCurrentData.Lambda) →ₗ[ℝ] ℝ))
+  normalizedClockBridge :
+    let D := canonicalPrincipalCarrierCharacteristicInput E B hfield
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D))) =
+      principalUhat
+  clockRate :
+    principalClockRate E B =
+        4 * Real.sqrt
+          (Real.pi * principalFieldEnergyDensity E B) ∧
+    principalClockRate E B =
+        Real.sqrt
+          (Real.sqrt ((maxwellI E B)^2 + (maxwellJ E B)^2)) ∧
+    principalClockRate E B =
+        Real.sqrt
+          (Real.sqrt
+            (principalRicciNormFromCarrier (principalChi E B)))
+  canonicalOpticalClock :
+    canonicalPrincipalSyngeEndpointJetData.clockCovector = TO
+  canonicalOpticalRadial :
+    canonicalPrincipalSyngeEndpointJetData.radialCovector = RO
+  canonicalOpticalClosure :
+    bil opticalBilinear
+        canonicalPrincipalSyngeEndpointJetData.clockCovector
+        canonicalPrincipalSyngeEndpointJetData.radialCovector = 0 ∧
+    -(bil opticalBilinear
+        canonicalPrincipalSyngeEndpointJetData.clockCovector
+        canonicalPrincipalSyngeEndpointJetData.clockCovector) =
+      bil opticalBilinear
+        canonicalPrincipalSyngeEndpointJetData.radialCovector
+        canonicalPrincipalSyngeEndpointJetData.radialCovector
+  radarCurvatureRate :
+    ∀ (τ0 x dplus dminus : ℝ)
+      (τplus τminus : ℝ → ℝ),
+      HasDerivAt τplus dplus x →
+      HasDerivAt τminus dminus x →
+      HasDerivAt
+        (principalRadarClockTime E B τ0 τplus τminus)
+        (Real.sqrt
+            (Real.sqrt
+              (principalRicciNormFromCarrier (principalChi E B))) *
+          ((dplus + dminus) / 2)) x ∧
+      HasDerivAt
+        (principalRadarClockRadius E B τ0 τplus τminus)
+        (Real.sqrt
+            (Real.sqrt
+              (principalRicciNormFromCarrier (principalChi E B))) *
+          ((dplus - dminus) / 2)) x
+  transportClosure :
+    ∀ (ω : ℝ) (dω dlogK : Fin 4 → ℝ)
+      (du : Fin 4 → Fin 4 → ℝ),
+      ω ≠ 0 →
+      adaptedUnitNormalization du →
+      (∀ i : Fin 3,
+        dlogK i.succ = 4 * dω i.succ / ω) →
+      ((∀ i j : Fin 3,
+          clockTransportTwoForm ω dω du i.succ j.succ = 0) ∧
+        (∀ i : Fin 3,
+          clockTransportTwoForm ω dω du 0 i.succ = 0)) ↔
+      ((∀ i j : Fin 3, principalVorticity du i j = 0) ∧
+        (∀ i : Fin 3,
+          principalAcceleration du i =
+            -dlogK i.succ / 4))
+  synchronizationOnClock :
+    ∀ dRadar : (Fin 4 → ℝ) →ₗ[ℝ] ℝ,
+      dRadar principalUhat = 1 →
+      synchronizationCovector dRadar principalTOLinear
+        principalUhat = 0
+  clockCoverCanonical :
+    (∀ v w : R2,
+      clockOmega v w =
+        clockDKappa v * clockDTheta w -
+          clockDKappa w * clockDTheta v) ∧
+    (∀ κ : ℝ, ∀ v : R2,
+      clockOmega (clockEuler κ) v =
+        clockLiouville κ v) ∧
+    (∀ v : R2, clockLiouville 1 v = clockDTheta v) ∧
+    clockPoisson dThetaVec dKappaVec = 1 ∧
+    (∀ κ : ℝ, clockLiouville κ (clockEuler κ) = 0) ∧
+    (∃! v : R2,
+      tangentToClockSection v ∧ clockLiouville 1 v = 1)
+  relationalEvolution :
+    ∀ (O XF : ℝ → ℝ) (T ϑ : ℝ),
+      HasDerivAt O (XF (ϑ - T)) (ϑ - T) →
+      deriv (fun z => O (z - T)) ϑ =
+        XF (ϑ - T)
+
+/-- Construction of the field-only master certificate.  No characteristic
+parameter witness, hypersurface normalization, CPS representative, optical
+bilinear form, endpoint covector, clock normalization, or radial split is supplied. -/
+theorem canonicalPrincipalField_forced_certificate
+    (E B u s : ℝ) (hfield : E ≠ 0 ∨ B ≠ 0) :
+    CanonicalPrincipalFieldForcedCertificate E B u s hfield := by
+  let D := canonicalPrincipalCarrierCharacteristicInput E B hfield
+  refine {
+    fixedPoint := principalField_solution_preserving_iff
+      u s E B hfield
+    actionJet := ?_
+    rainichCarrier := principalJetFromF_rainich E B
+    actionOpticalIntertwiner := by
+      simpa [actionOpticalMap_CA] using
+        actionOpticalMap_intertwines_boost s CA
+    masterRelativeRest := full_relative_rest_equivalence u s
+    compensatedBulkNormal := ?_
+    characteristicFactorization := ?_
+    contactTransverseDuality := ?_
+    normalizedClockBridge := ?_
+    clockRate := principalClockRate_three_way E B
+    canonicalOpticalClock :=
+      canonicalPrincipalSyngeEndpointJetData_clock
+    canonicalOpticalRadial :=
+      canonicalPrincipalSyngeEndpointJetData_radial
+    canonicalOpticalClosure :=
+      canonicalPrincipalSyngeEndpointJetData_optical_closure
+    radarCurvatureRate := ?_
+    transportClosure := ?_
+    synchronizationOnClock := ?_
+    clockCoverCanonical := clockCover_canonical_pair_certificate
+    relationalEvolution := ?_ }
+  · exact D.J_basis_eq_actionEulerJet
+  · exact D.noetherConstraintOperatorFromAction_DA
+  · rw [D.metricEulerJetResponse_eq_stress,
+      principalCarrierCharacteristic_current D]
+  · exact
+      ⟨actionRelativeNormalClockDualEquiv
+        D.toCharacteristicCurrentData.Lambda
+        (principalCarrierCharacteristic_Lambda_nonzero D)⟩
+  · exact principalCarrierCharacteristic_normalizationBridge D
+  · intro τ0 x dplus dminus τplus τminus hp hm
+    exact principalRadarClock_split_ricci_rate
+      E B τ0 x dplus dminus τplus τminus hp hm
+  · intro ω dω dlogK du hω hunit hlog
+    exact clockTransport_projected_zero_iff
+      ω dω dlogK du hω hunit hlog
+  · intro dRadar hRadar
+    exact principalSynchronization_vanishes dRadar hRadar
+  · intro O XF T ϑ hO
+    exact relational_evolution_from_flow_derivative O XF T ϑ hO
+
 /-! ### Lagrangian-backed characteristic clock: covariant phase space to the normalized line -/
 
 section LagrangianBackedCharacteristic
@@ -21563,6 +21754,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalActionBulk_forced_core_chain
 #print axioms RelativeRest.canonicalPrincipalField_forces_clock_chain
 #print axioms RelativeRest.canonicalPrincipalField_forces_action_bulk
+#print axioms RelativeRest.canonicalPrincipalField_forced_certificate
 #print axioms RelativeRest.principalFieldCurrent_Lambda_unique
 #print axioms RelativeRest.principalFieldCurrent_quotient_finrank_one
 #print axioms RelativeRest.reeb_direction_unique
