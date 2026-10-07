@@ -6550,6 +6550,103 @@ theorem sigmaStar_balanced_dyad_invariant
   rw [sigmaStar_shift_covariance qm qp τ hqm hqp]
   exact balanced_dyad_invariant km lp (sigmaStar qm qp) τ
 
+/-! ### Regular resolving stratum: the residual boost is not free -/
+
+/-- On a forced Lorentzian Rainich two-plane, the first nonzero invariant resolving
+jet is represented in any normalized null dyad by components `(q_-,q_+)`.
+The sole regularity condition is the invariant statement `p²=-2q_-q_+ ≠ 0`.
+Everything about the balancing rapidity is then a theorem. -/
+structure ResolvedRainichPlaneCertificate
+    (qminus qplus : ℝ)
+    (hnonnull : nullCovectorNormSq qminus qplus ≠ 0) : Prop where
+  componentsNonzero :
+    qminus ≠ 0 ∧ qplus ≠ 0
+  uniqueBalance :
+    ∃! σ : ℝ, boostDefect qminus qplus σ = 0
+  explicitBalance :
+    boostDefect qminus qplus (sigmaStar qminus qplus) = 0
+  balanceStrictlyUnique :
+    ∀ σ : ℝ,
+      boostDefect qminus qplus σ = 0 →
+        σ = sigmaStar qminus qplus
+  defectStrictAnti :
+    StrictAnti (boostDefect qminus qplus)
+  representativeShift :
+    ∀ τ : ℝ,
+      sigmaStar
+          (Real.exp (-τ) * qminus)
+          (Real.exp τ * qplus) =
+        sigmaStar qminus qplus - τ
+  balancedDyadIndependent :
+    ∀ (km lp τ : ℝ),
+      (Real.exp
+          (-(sigmaStar
+            (Real.exp (-τ) * qminus)
+            (Real.exp τ * qplus))) *
+          (Real.exp (-τ) * km) =
+        Real.exp (-(sigmaStar qminus qplus)) * km) ∧
+      (Real.exp
+          (sigmaStar
+            (Real.exp (-τ) * qminus)
+            (Real.exp τ * qplus)) *
+          (Real.exp τ * lp) =
+        Real.exp (sigmaStar qminus qplus) * lp)
+
+/-- Constructor: the one invariant non-null resolving-jet condition forces the
+complete residual-boost resolution and removes dependence on the initial null dyad. -/
+theorem resolvedRainichPlane_certificate
+    (qminus qplus : ℝ)
+    (hnonnull : nullCovectorNormSq qminus qplus ≠ 0) :
+    ResolvedRainichPlaneCertificate qminus qplus hnonnull := by
+  rcases nullCovectorNormSq_ne_zero_components
+    qminus qplus hnonnull with ⟨hqm,hqp⟩
+  refine {
+    componentsNonzero := ⟨hqm,hqp⟩
+    uniqueBalance :=
+      boost_balance_exists_unique qminus qplus hqm hqp
+    explicitBalance :=
+      sigmaStar_balance qminus qplus hqm hqp
+    balanceStrictlyUnique := ?_
+    defectStrictAnti :=
+      boostDefect_strictAnti qminus qplus hqm hqp
+    representativeShift := ?_
+    balancedDyadIndependent := ?_ }
+  · intro σ hσ
+    exact boost_balance_unique
+      qminus qplus σ (sigmaStar qminus qplus)
+      hqm hqp hσ
+      (sigmaStar_balance qminus qplus hqm hqp)
+  · intro τ
+    exact sigmaStar_shift_covariance
+      qminus qplus τ hqm hqp
+  · intro km lp τ
+    exact sigmaStar_balanced_dyad_invariant
+      km lp qminus qplus τ hqm hqp
+
+/-- The resolution certificate itself is invariant under a change of starting
+null representative: the regularity condition is preserved and the new
+balancing rapidity differs exactly by the inverse representative boost. -/
+theorem resolvedRainichPlane_representative_independent
+    (qminus qplus τ : ℝ)
+    (hnonnull : nullCovectorNormSq qminus qplus ≠ 0) :
+    let qm' := Real.exp (-τ) * qminus
+    let qp' := Real.exp τ * qplus
+    nullCovectorNormSq qm' qp' ≠ 0 ∧
+      sigmaStar qm' qp' =
+        sigmaStar qminus qplus - τ := by
+  dsimp
+  have hnon' :
+      nullCovectorNormSq
+        (Real.exp (-τ) * qminus)
+        (Real.exp τ * qplus) ≠ 0 := by
+    rw [nullCovectorNormSq_boost_invariant]
+    exact hnonnull
+  rcases nullCovectorNormSq_ne_zero_components
+    qminus qplus hnonnull with ⟨hqm,hqp⟩
+  exact ⟨hnon',
+    sigmaStar_shift_covariance
+      qminus qplus τ hqm hqp⟩
+
 /-! ## 7. Conformal normalization uniqueness in the stated carrier-algebraic category -/
 
 /-- Homogeneity `f(cχ)=c f(χ)` forces a one-variable conformal factor to be linear. -/
@@ -24730,6 +24827,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.actionOpticalMap_intertwines_boost
 #print axioms RelativeRest.rapidity_forced_by_normalized_boost
 #print axioms RelativeRest.sigmaStar_balanced_dyad_invariant
+#print axioms RelativeRest.resolvedRainichPlane_certificate
+#print axioms RelativeRest.resolvedRainichPlane_representative_independent
 #print axioms RelativeRest.characteristicCurrent_factorization
 #print axioms RelativeRest.characteristicCurrent_Lambda_unique
 #print axioms RelativeRest.characteristicCurrent_quotient_finrank_one
