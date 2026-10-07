@@ -4524,6 +4524,16 @@ theorem generalMaxwellNormalizedCarrier_involution
     (generalMaxwellCarrierLinear_sq_chi
       Ex Ey Ez Bx By Bz)
 
+/-- At the zero-carrier boundary the same Rainich square law becomes nilpotence. -/
+theorem rainich_square_nilpotent_at_zero
+    {V : Type*} [AddCommGroup V] [Module ℝ V]
+    (J : V →ₗ[ℝ] V) (χ : ℝ)
+    (hRainich : J.comp J = (χ^2) • LinearMap.id)
+    (hχ : χ = 0) :
+    J.comp J = 0 := by
+  rw [hχ] at hRainich
+  simpa using hRainich
+
 /-- The carrier vanishes into the nilpotent boundary exactly at zero invariant
 magnitude at the level of the universal Rainich square law. -/
 theorem generalMaxwellCarrier_nilpotent_of_chi_zero
@@ -4537,16 +4547,6 @@ theorem generalMaxwellCarrier_nilpotent_of_chi_zero
     (generalMaxwellCarrierLinear_sq_chi
       Ex Ey Ez Bx By Bz)
     hchi
-
-/-- At the zero-carrier boundary the same Rainich square law becomes nilpotence. -/
-theorem rainich_square_nilpotent_at_zero
-    {V : Type*} [AddCommGroup V] [Module ℝ V]
-    (J : V →ₗ[ℝ] V) (χ : ℝ)
-    (hRainich : J.comp J = (χ^2) • LinearMap.id)
-    (hχ : χ = 0) :
-    J.comp J = 0 := by
-  rw [hχ] at hRainich
-  simpa using hRainich
 
 /-- The canonical ± eigenspace projectors of an involution. -/
 def involutionProjPlus
