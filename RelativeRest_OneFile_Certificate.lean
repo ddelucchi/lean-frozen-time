@@ -24074,6 +24074,90 @@ structure ArbitraryMaxwellRegularStratumLocalCertificate
       Ex Ey Ez Bx By Bz u s
       dEx dEy dEz dBx dBy dBz
       hnonnull hp
+  boostRapidityClosure :
+    ∃ D :
+        NormalizedPrincipalNullDyad
+          (LinearMap.range
+            (generalMaxwellProjectorPlusLinear
+              Ex Ey Ez Bx By Bz)),
+      D.FutureTo
+          (generalMaxwellProjectorPlus
+            Ex Ey Ez Bx By Bz (principalBasis 0)) ∧
+      actionOpticalMap (actionBoost s CA) =
+        generalMaxwellBalancedOpticalCoordinates
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D
+          (generalMaxwellBalancedBoostedObserver
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D s) ∧
+      (∀ σ : ℝ,
+        opticalBoost σ TO =
+          generalMaxwellBalancedOpticalCoordinates
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D
+            (generalMaxwellBalancedBoostedObserver
+              Ex Ey Ez Bx By Bz
+              dEx dEy dEz dBx dBy dBz D s) →
+        σ = s) ∧
+      XiMUS u s / XiGUS u s =
+        opticalEval principalThetaPlus
+            (generalMaxwellBalancedOpticalCoordinates
+              Ex Ey Ez Bx By Bz
+              dEx dEy dEz dBx dBy dBz D
+              (generalMaxwellBalancedBoostedObserver
+                Ex Ey Ez Bx By Bz
+                dEx dEy dEz dBx dBy dBz D s)) /
+          opticalEval principalThetaMinus
+            (generalMaxwellBalancedOpticalCoordinates
+              Ex Ey Ez Bx By Bz
+              dEx dEy dEz dBx dBy dBz D
+              (generalMaxwellBalancedBoostedObserver
+                Ex Ey Ez Bx By Bz
+                dEx dEy dEz dBx dBy dBz D s))
+  admGlobalLocalClock :
+    ∃ D :
+        NormalizedPrincipalNullDyad
+          (LinearMap.range
+            (generalMaxwellProjectorPlusLinear
+              Ex Ey Ez Bx By Bz)),
+      D.FutureTo
+          (generalMaxwellProjectorPlus
+            Ex Ey Ez Bx By Bz (principalBasis 0)) ∧
+      let C :=
+        generalMaxwellBalancedADMCharacteristicData
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz
+          hnonnull D
+      (quotientClockCovector
+          (generalMaxwellBalancedClockCovector
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D)).comp
+          (generalMaxwellGlobalToLocalClockMap
+            C.Lambda
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D) =
+        C.clockCovector ∧
+      Function.Bijective
+        (generalMaxwellGlobalToLocalClockMap
+          C.Lambda
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) ∧
+      generalMaxwellLocalLift
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D
+          (generalMaxwellGlobalToLocalClockMap
+            C.Lambda
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D
+            (globalClockQuotientUnit
+              C.Lambda
+              (generalMaxwellBalancedADMCharacteristic_Lambda_nonzero
+                Ex Ey Ez Bx By Bz
+                dEx dEy dEz dBx dBy dBz
+                hnonnull D))) =
+        generalMaxwellBalancedU
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D
   canonicalLocalClock :
     ∃ D :
         NormalizedPrincipalNullDyad
@@ -24275,6 +24359,8 @@ theorem arbitraryMaxwell_regularStratum_local_certificate
         Ex Ey Ez Bx By Bz u s
         dEx dEy dEz dBx dBy dBz
         hnonnull hp
+    boostRapidityClosure := ?_
+    admGlobalLocalClock := ?_
     canonicalLocalClock := ?_
     transportClosure := ?_
     frobeniusClosure := ?_
@@ -24283,6 +24369,61 @@ theorem arbitraryMaxwell_regularStratum_local_certificate
     relationalEvolution := ?_
     causalExtendedEndpointMonotonicity := ?_
     causalBranchIndependence := ?_ }
+  · rcases
+      generalMaxwellProjectorPlus_futureNormalizedNullDyad_exists
+        Ex Ey Ez Bx By Bz hnonnull with
+      ⟨D, hD⟩
+    refine ⟨D, hD,
+      generalMaxwell_actionOptical_boost_identification
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D s,
+      ?_,
+      generalMaxwell_action_null_frequency_ratio
+        u s Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D⟩
+    intro σ hσ
+    exact generalMaxwell_rapidity_forced
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      D s σ hσ
+  · rcases
+      generalMaxwellProjectorPlus_futureNormalizedNullDyad_exists
+        Ex Ey Ez Bx By Bz hnonnull with
+      ⟨D, hD⟩
+    refine ⟨D, hD, ?_⟩
+    dsimp
+    let hΛ :=
+      generalMaxwellBalancedADMCharacteristic_Lambda_nonzero
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz
+        hnonnull D
+    refine ⟨?_, ?_, ?_⟩
+    · simpa [CharacteristicCurrentData.clockCovector] using
+        generalMaxwellGlobalToLocalClockMap_pullback
+          (generalMaxwellBalancedADMCharacteristicData
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz
+            hnonnull D).Lambda
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D
+    · exact
+        generalMaxwellGlobalToLocalClockMap_bijective
+          (generalMaxwellBalancedADMCharacteristicData
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz
+            hnonnull D).Lambda
+          hΛ
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D
+    · exact
+        generalMaxwellGlobalClockUnit_lifts_to_balancedU
+          (generalMaxwellBalancedADMCharacteristicData
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz
+            hnonnull D).Lambda
+          hΛ
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D
   · rcases
       generalMaxwellProjectorPlus_futureNormalizedNullDyad_exists
         Ex Ey Ez Bx By Bz hnonnull with
@@ -30845,6 +30986,10 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellBalancedADMCharacteristic_spatialShift_invisible
 #print axioms RelativeRest.generalMaxwellBalancedADMCharacteristic_pureLapse_response
 #print axioms RelativeRest.arbitraryMaxwell_admClock_certificate
+#print axioms RelativeRest.generalMaxwell_actionOptical_boost_identification
+#print axioms RelativeRest.generalMaxwell_action_null_frequency_ratio
+#print axioms RelativeRest.generalMaxwellGlobalToLocalClockMap_pullback
+#print axioms RelativeRest.generalMaxwellGlobalClockUnit_lifts_to_balancedU
 #print axioms RelativeRest.arbitraryMaxwell_regularStratum_local_certificate
 #print axioms RelativeRest.characteristicCurrent_factorization
 #print axioms RelativeRest.characteristicCurrent_Lambda_unique
