@@ -25650,6 +25650,68 @@ structure ArbitraryMaxwellFiniteResolvingClockCertificate
               resolvingPlaneBalancedE alpha D ∨
            resolvingPlaneBalancedE alpha E =
               -resolvingPlaneBalancedE alpha D))
+  globalLocalClock :
+    ∃ D :
+        NormalizedPrincipalNullDyad
+          (LinearMap.range
+            (generalMaxwellProjectorPlusLinear
+              Ex Ey Ez Bx By Bz)),
+      D.FutureTo
+          (generalMaxwellProjectorPlus
+            Ex Ey Ez Bx By Bz (principalBasis 0)) ∧
+      let C :=
+        generalMaxwellFiniteResolvingADMCharacteristicData
+          Ex Ey Ez Bx By Bz alpha hnonnull D
+      (quotientClockCovector
+          (generalMaxwellFiniteResolvingClockCovector
+            (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+            (Bx:=Bx) (By:=By) (Bz:=Bz)
+            alpha D)).comp
+          (generalMaxwellFiniteResolvingGlobalToLocalClockMap
+            C.Lambda
+            (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+            (Bx:=Bx) (By:=By) (Bz:=Bz)
+            alpha D) =
+        C.clockCovector ∧
+      Function.Bijective
+        (generalMaxwellFiniteResolvingGlobalToLocalClockMap
+          C.Lambda
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D) ∧
+      generalMaxwellFiniteResolvingLocalLift
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D
+          (generalMaxwellFiniteResolvingGlobalToLocalClockMap
+            C.Lambda
+            (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+            (Bx:=Bx) (By:=By) (Bz:=Bz)
+            alpha D
+            (globalClockQuotientUnit
+              C.Lambda
+              (generalMaxwellFiniteResolvingADMCharacteristic_Lambda_nonzero
+                Ex Ey Ez Bx By Bz alpha hnonnull D))) =
+        resolvingPlaneBalancedU alpha D
+  compensatedActionBridge :
+    ∃ D :
+        NormalizedPrincipalNullDyad
+          (LinearMap.range
+            (generalMaxwellProjectorPlusLinear
+              Ex Ey Ez Bx By Bz)),
+      D.FutureTo
+          (generalMaxwellProjectorPlus
+            Ex Ey Ez Bx By Bz (principalBasis 0)) ∧
+      ∀ core :
+        LagrangianFirstVariationCartanData
+          (L:=R2) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ)),
+        let N :=
+          core.toNoetherOperators
+            (generalMaxwellFiniteResolvingADMActionConstraint
+              Ex Ey Ez Bx By Bz alpha hnonnull D)
+        (-1 / 2 : ℝ) • (N.omegaXY DA + N.dB DA) =
+          (generalMaxwellFiniteResolvingADMCharacteristicData
+            Ex Ey Ez Bx By Bz alpha hnonnull D).current
 
 theorem arbitraryMaxwell_finiteResolvingClock_certificate
     (Ex Ey Ez Bx By Bz u s : ℝ)
@@ -25663,7 +25725,10 @@ theorem arbitraryMaxwell_finiteResolvingClock_certificate
     (hp : principalMinkowskiCovectorSq alpha ≠ 0) :
     ArbitraryMaxwellFiniteResolvingClockCertificate
       Ex Ey Ez Bx By Bz u s alpha hnonnull hmem hp := by
-  refine { canonical := ?_ }
+  refine {
+    canonical := ?_
+    globalLocalClock := ?_
+    compensatedActionBridge := ?_ }
   rcases
       generalMaxwell_finiteResolvingCovector_frame_forced
         Ex Ey Ez Bx By Bz alpha hnonnull hmem hp with
@@ -25688,6 +25753,48 @@ theorem arbitraryMaxwell_finiteResolvingClock_certificate
       (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
       (Bx:=Bx) (By:=By) (Bz:=Bz)
       alpha D s sigma hsigma
+  · rcases
+      generalMaxwellProjectorPlus_futureNormalizedNullDyad_exists
+        Ex Ey Ez Bx By Bz hnonnull with
+      ⟨D,hD⟩
+    refine ⟨D,hD,?_⟩
+    dsimp
+    let hΛ :=
+      generalMaxwellFiniteResolvingADMCharacteristic_Lambda_nonzero
+        Ex Ey Ez Bx By Bz alpha hnonnull D
+    refine ⟨?_, ?_, ?_⟩
+    · simpa [CharacteristicCurrentData.clockCovector] using
+        generalMaxwellFiniteResolvingGlobalToLocalClockMap_pullback
+          (generalMaxwellFiniteResolvingADMCharacteristicData
+            Ex Ey Ez Bx By Bz alpha hnonnull D).Lambda
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D
+    · exact
+        generalMaxwellFiniteResolvingGlobalToLocalClockMap_bijective
+          (generalMaxwellFiniteResolvingADMCharacteristicData
+            Ex Ey Ez Bx By Bz alpha hnonnull D).Lambda
+          hΛ
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D
+    · exact
+        generalMaxwellFiniteResolvingGlobalClockUnit_lifts_to_U
+          (generalMaxwellFiniteResolvingADMCharacteristicData
+            Ex Ey Ez Bx By Bz alpha hnonnull D).Lambda
+          hΛ
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D
+  · rcases
+      generalMaxwellProjectorPlus_futureNormalizedNullDyad_exists
+        Ex Ey Ez Bx By Bz hnonnull with
+      ⟨D,hD⟩
+    refine ⟨D,hD,?_⟩
+    intro core
+    exact
+      generalMaxwellFiniteResolving_halfCompensated_DA_eq_clockCurrent
+        Ex Ey Ez Bx By Bz alpha hnonnull D core
 
 
 /-! ### Resolver-order-independent arbitrary-field master
