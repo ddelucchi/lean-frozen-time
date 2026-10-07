@@ -9979,6 +9979,32 @@ theorem clock_section_reeb_existsUnique :
   exact clock_section_reeb_unique v hv.1 hv.2
 
 
+/-- Complete forced clock-cover package corresponding to Eq. (clockcover).
+The symplectic form, Liouville primitive, unit-section clock covector, canonical
+Poisson sign, horizontality, and Reeb normalization are all fixed simultaneously. -/
+theorem clockCover_canonical_pair_certificate :
+    (∀ v w : R2,
+      clockOmega v w =
+        clockDKappa v * clockDTheta w -
+          clockDKappa w * clockDTheta v) ∧
+    (∀ κ : ℝ, ∀ v : R2,
+      clockOmega (clockEuler κ) v =
+        clockLiouville κ v) ∧
+    (∀ v : R2, clockLiouville 1 v = clockDTheta v) ∧
+    clockPoisson dThetaVec dKappaVec = 1 ∧
+    (∀ κ : ℝ, clockLiouville κ (clockEuler κ) = 0) ∧
+    (∃! v : R2,
+      tangentToClockSection v ∧ clockLiouville 1 v = 1) := by
+  refine ⟨clockOmega_eq_dKappa_wedge_dTheta, ?_, ?_, ?_, ?_,
+    clock_section_reeb_existsUnique⟩
+  · intro κ v
+    exact clockLiouville_eq_contraction κ v
+  · intro v
+    exact clockLiouville_unit_section v
+  · exact clockPoisson_coordinates.1
+  · intro κ
+    exact clockLiouville_horizontal_Euler κ
+
 /-- Tangent action of positive common-scale dilation on the clock cover. -/
 def clockDilationTangent (c : ℝ) (v : R2) : R2 :=
   (v.1, c * v.2)
@@ -20956,6 +20982,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalFieldCurrent_quotient_finrank_one
 #print axioms RelativeRest.reeb_direction_unique
 #print axioms RelativeRest.clock_section_reeb_existsUnique
+#print axioms RelativeRest.clockCover_canonical_pair_certificate
 #print axioms RelativeRest.clockLiouville_unique_of_homogeneity
 #print axioms RelativeRest.clockLiouville_dilation_pullback
 #print axioms RelativeRest.clockQuotientDualEquiv
