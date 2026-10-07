@@ -21271,6 +21271,44 @@ def kerrMultiplier (Q sig : ℝ) : ℝ :=
 def kerrClockRate (Q sig : ℝ) : ℝ :=
   Real.sqrt 2 * |Q| / sig
 
+
+/-- The named Kerr-Newman multiplier is literally the inverse of the
+Einstein-Maxwell Ricci fourth-root clock rate on the regular charged stratum. -/
+theorem kerrMultiplier_eq_inv_clockRateFromPrincipalEM
+    (Q r a theta : ℝ)
+    (hQ : Q ≠ 0)
+    (hsig : 0 < Sigma r a theta) :
+    kerrMultiplier Q (Sigma r a theta) =
+      (kerrClockRateFromPrincipalEM Q r a theta)⁻¹ := by
+  rw [kerrClockRateFromPrincipalEM_formula Q r a theta hQ hsig]
+  unfold kerrMultiplier
+  rw [inv_div]
+
+/-- Written entirely as curvature, this is the manuscript identity
+M = K^(-1/4) = Sigma/(sqrt 2 |Q|), with the inverse fourth root represented
+by the positive nested square root fixed by the non-null Einstein-Maxwell field. -/
+theorem kerrMultiplier_eq_inv_ricciFourthRoot
+    (Q r a theta : ℝ)
+    (hQ : Q ≠ 0)
+    (hsig : 0 < Sigma r a theta) :
+    kerrMultiplier Q (Sigma r a theta) =
+      (Real.sqrt (Real.sqrt
+        (kerrRicciNormScalar Q r a theta)))⁻¹ := by
+  exact kerrMultiplier_eq_inv_clockRateFromPrincipalEM
+    Q r a theta hQ hsig
+
+/-- The curvature multiplier is strictly positive on the regular charged
+Kerr-Newman stratum, so its inverse-root branch is fixed rather than signed. -/
+theorem kerrMultiplier_pos
+    (Q r a theta : ℝ)
+    (hQ : Q ≠ 0)
+    (hsig : 0 < Sigma r a theta) :
+    0 < kerrMultiplier Q (Sigma r a theta) := by
+  unfold kerrMultiplier
+  exact div_pos hsig
+    (mul_pos (Real.sqrt_pos.2 (by norm_num))
+      (abs_pos.mpr hQ))
+
 /-- Away from the vacuum and ring singular strata, the clock rate and multiplier are exact reciprocals. -/
 theorem kerrClockRate_mul_multiplier
     (Q sig : ℝ) (hQ : Q ≠ 0) (hsig : sig ≠ 0) :
@@ -29850,6 +29888,10 @@ structure KerrNewmanFieldOnlyForcedCertificate
     coordinateDirectionalDerivative4
       (kerrCarterObserver4 r M a Q θ)
       (kerrMultiplierCoordinateGradient Q r a θ) = 0
+  multiplierCurvatureFourthRoot :
+    kerrMultiplier Q (Sigma r a θ) =
+      (Real.sqrt (Real.sqrt
+        (kerrRicciNormScalar Q r a θ)))⁻¹
   minoClock :
     kerrClockRateFromPrincipalEM Q r a θ * dt =
       Real.sqrt 2 * |Q| * dlam
@@ -29889,6 +29931,8 @@ theorem kerrNewman_fieldOnly_forced_certificate
     carterMultiplierStationary :=
       kerrCarterObserver_multiplier_directionalDerivative_zero
         Q r M a θ
+    multiplierCurvatureFourthRoot :=
+      kerrMultiplier_eq_inv_ricciFourthRoot Q r a θ hQ hsig
     minoClock := hk.2.2.2.2.2
     minoIntrinsicClockParameter := by
       intro Theta0
@@ -34903,6 +34947,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrMultiplier_hasDerivAt_r
 #print axioms RelativeRest.kerrMultiplier_hasDerivAt_theta
 #print axioms RelativeRest.kerrCarterObserver_multiplier_directionalDerivative_zero
+#print axioms RelativeRest.kerrMultiplier_eq_inv_clockRateFromPrincipalEM
+#print axioms RelativeRest.kerrMultiplier_eq_inv_ricciFourthRoot
+#print axioms RelativeRest.kerrMultiplier_pos
 #print axioms RelativeRest.kerrNewman_fieldOnly_forced_certificate
 #print axioms RelativeRest.kerrNewman_fieldOnly_forced_certificate_canonicalMino
 #print axioms RelativeRest.kerrMinoClockFromPrincipalEM_canonical
