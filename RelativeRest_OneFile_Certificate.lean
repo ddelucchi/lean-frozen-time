@@ -21802,6 +21802,351 @@ theorem generalMaxwellChronometricCovector_ricci_norm
     Real.sqrt_sq
       (generalMaxwellChi_nonneg Ex Ey Ez Bx By Bz)]
 
+
+
+/-! ### Frame-free optical first jet from the same balanced Rainich frame -/
+
+/-- Lorentzian inverse-metric pairing of two covectors. -/
+def principalMinkowskiCovectorBilinear
+    (alpha beta : Fin 4 → ℝ) : ℝ :=
+  principalMinkowskiBilinear
+    (principalRaiseCovector alpha)
+    (principalRaiseCovector beta)
+
+theorem principalMinkowskiCovectorSq_add
+    (alpha beta : Fin 4 → ℝ) :
+    principalMinkowskiCovectorSq (alpha + beta) =
+      principalMinkowskiCovectorSq alpha +
+        2 * principalMinkowskiCovectorBilinear alpha beta +
+        principalMinkowskiCovectorSq beta := by
+  simp [principalMinkowskiCovectorSq,
+    principalMinkowskiCovectorBilinear,
+    principalRaiseCovector,
+    principalMinkowskiSq,
+    principalMinkowskiBilinear,
+    principalMetricSign]
+  ring
+
+theorem principalMinkowskiCovectorSq_sub
+    (alpha beta : Fin 4 → ℝ) :
+    principalMinkowskiCovectorSq (alpha - beta) =
+      principalMinkowskiCovectorSq alpha -
+        2 * principalMinkowskiCovectorBilinear alpha beta +
+        principalMinkowskiCovectorSq beta := by
+  simp [principalMinkowskiCovectorSq,
+    principalMinkowskiCovectorBilinear,
+    principalRaiseCovector,
+    principalMinkowskiSq,
+    principalMinkowskiBilinear,
+    principalMetricSign]
+  ring
+
+/-- Physical radial covector dR_EM=sqrt(chi) e_*^flat. -/
+def generalMaxwellRadialCovectorComponents
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    Fin 4 → ℝ :=
+  generalMaxwellClockRate Ex Ey Ez Bx By Bz •
+    principalLowerVector
+      (generalMaxwellBalancedE
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D)
+
+/-- The radial covector has the opposite norm to the clock covector. -/
+theorem generalMaxwellRadialCovector_norm
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    principalMinkowskiCovectorSq
+      (generalMaxwellRadialCovectorComponents
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D) =
+      generalMaxwellChi Ex Ey Ez Bx By Bz := by
+  unfold principalMinkowskiCovectorSq
+    generalMaxwellRadialCovectorComponents
+  rw [principalRaiseCovector_smul_lowerVector,
+    principalMinkowskiSq_smul,
+    (generalMaxwellBalancedFrame_orthonormal
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D).2.1,
+    generalMaxwellClockRate_sq]
+  ring
+
+/-- Clock and radial covectors are orthogonal. -/
+theorem generalMaxwellClockRadialCovectors_orthogonal
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    principalMinkowskiCovectorBilinear
+      (generalMaxwellChronometricCovectorComponents
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D)
+      (generalMaxwellRadialCovectorComponents
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D) = 0 := by
+  unfold principalMinkowskiCovectorBilinear
+    generalMaxwellChronometricCovectorComponents
+    generalMaxwellRadialCovectorComponents
+  rw [principalRaiseCovector_smul_lowerVector,
+    principalRaiseCovector_smul_lowerVector,
+    principalMinkowskiBilinear_smul]
+  have horth :=
+    (generalMaxwellBalancedFrame_orthonormal
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D).2.2
+  have hneg :
+      principalMinkowskiBilinear
+        (-generalMaxwellBalancedU
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D)
+        (generalMaxwellBalancedE
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) = 0 := by
+    simp [principalMinkowskiBilinear]
+    simpa [principalMinkowskiBilinear] using horth
+  rw [hneg]
+  ring
+
+/-- Future null endpoint first jet dTheta_+=dT_EM+dR_EM. -/
+def generalMaxwellThetaPlusCovector
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    Fin 4 → ℝ :=
+  generalMaxwellChronometricCovectorComponents
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D +
+    generalMaxwellRadialCovectorComponents
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D
+
+/-- Past null endpoint first jet dTheta_-=dT_EM-dR_EM. -/
+def generalMaxwellThetaMinusCovector
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    Fin 4 → ℝ :=
+  generalMaxwellChronometricCovectorComponents
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D -
+    generalMaxwellRadialCovectorComponents
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D
+
+/-- Both field-selected endpoint first jets are exactly null. -/
+theorem generalMaxwellThetaCovectors_null
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    principalMinkowskiCovectorSq
+        (generalMaxwellThetaPlusCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) = 0 ∧
+      principalMinkowskiCovectorSq
+        (generalMaxwellThetaMinusCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) = 0 := by
+  have hT :=
+    generalMaxwellChronometricCovector_norm
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D
+  have hR :=
+    generalMaxwellRadialCovector_norm
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D
+  have hTR :=
+    generalMaxwellClockRadialCovectors_orthogonal
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D
+  constructor
+  · unfold generalMaxwellThetaPlusCovector
+    rw [principalMinkowskiCovectorSq_add, hT, hR, hTR]
+    ring
+  · unfold generalMaxwellThetaMinusCovector
+    rw [principalMinkowskiCovectorSq_sub, hT, hR, hTR]
+    ring
+
+/-- Half-sum and half-difference recover exactly the clock/radial first jets. -/
+theorem generalMaxwellThetaCovectors_reconstruct
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    (1 / 2 : ℝ) •
+        (generalMaxwellThetaPlusCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D +
+         generalMaxwellThetaMinusCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) =
+      generalMaxwellChronometricCovectorComponents
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D ∧
+    (1 / 2 : ℝ) •
+        (generalMaxwellThetaPlusCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D -
+         generalMaxwellThetaMinusCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) =
+      generalMaxwellRadialCovectorComponents
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D := by
+  constructor <;> funext i <;>
+    simp [generalMaxwellThetaPlusCovector,
+      generalMaxwellThetaMinusCovector] <;> ring
+
+/-- On the resolving stratum the clock first jet is choice-free, while exchanging
+the principal null lines can only reverse the radial jet. -/
+theorem generalMaxwellClockRadialCovectors_independent_future_dyad
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hp :
+      generalMaxwellResolvingNormSq
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz ≠ 0)
+    (D E :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (t : Fin 4 → ℝ)
+    (hD : D.FutureTo t)
+    (hE : E.FutureTo t) :
+    generalMaxwellChronometricCovectorComponents
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz E =
+      generalMaxwellChronometricCovectorComponents
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D ∧
+    (generalMaxwellRadialCovectorComponents
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz E =
+      generalMaxwellRadialCovectorComponents
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D ∨
+     generalMaxwellRadialCovectorComponents
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz E =
+      -generalMaxwellRadialCovectorComponents
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D) := by
+  rcases
+    generalMaxwellBalancedFrame_independent_future_dyad
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull D E t hD hE hp with
+    ⟨hU, hEframe⟩
+  constructor
+  · unfold generalMaxwellChronometricCovectorComponents
+    rw [hU]
+  · rcases hEframe with hsame | hneg
+    · left
+      unfold generalMaxwellRadialCovectorComponents
+      rw [hsame]
+    · right
+      unfold generalMaxwellRadialCovectorComponents
+      rw [hneg]
+      funext i
+      simp
+      ring
+
+/-- Consequently the unordered null endpoint pair is canonical: a change of
+future normalized starting dyad either preserves (Theta_+,Theta_-) or swaps it. -/
+theorem generalMaxwellThetaCovectors_independent_up_to_exchange
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hp :
+      generalMaxwellResolvingNormSq
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz ≠ 0)
+    (D E :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (t : Fin 4 → ℝ)
+    (hD : D.FutureTo t)
+    (hE : E.FutureTo t) :
+    (generalMaxwellThetaPlusCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz E =
+      generalMaxwellThetaPlusCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D ∧
+     generalMaxwellThetaMinusCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz E =
+      generalMaxwellThetaMinusCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D) ∨
+    (generalMaxwellThetaPlusCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz E =
+      generalMaxwellThetaMinusCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D ∧
+     generalMaxwellThetaMinusCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz E =
+      generalMaxwellThetaPlusCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D) := by
+  rcases
+    generalMaxwellClockRadialCovectors_independent_future_dyad
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull hp D E t hD hE with
+    ⟨hT, hR | hR⟩
+  · left
+    constructor
+    · unfold generalMaxwellThetaPlusCovector
+      rw [hT, hR]
+    · unfold generalMaxwellThetaMinusCovector
+      rw [hT, hR]
+  · right
+    constructor
+    · unfold generalMaxwellThetaPlusCovector
+      rw [hT, hR]
+      funext i
+      simp
+      ring
+    · unfold generalMaxwellThetaMinusCovector
+      rw [hT, hR]
+      funext i
+      simp
+      ring
+
 /-- Frame-free action-to-characteristic-clock certificate on the regular
 first-jet stratum. -/
 structure ArbitraryMaxwellFirstJetClockDescentCertificate
@@ -28348,6 +28693,11 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellChronometricCovectorComponents_eval
 #print axioms RelativeRest.generalMaxwellChronometricCovector_norm
 #print axioms RelativeRest.generalMaxwellChronometricCovector_ricci_norm
+#print axioms RelativeRest.generalMaxwellRadialCovector_norm
+#print axioms RelativeRest.generalMaxwellClockRadialCovectors_orthogonal
+#print axioms RelativeRest.generalMaxwellThetaCovectors_null
+#print axioms RelativeRest.generalMaxwellThetaCovectors_reconstruct
+#print axioms RelativeRest.generalMaxwellThetaCovectors_independent_up_to_exchange
 #print axioms RelativeRest.arbitraryMaxwell_firstJet_clockDescent_certificate
 #print axioms RelativeRest.characteristicCurrent_factorization
 #print axioms RelativeRest.characteristicCurrent_Lambda_unique
