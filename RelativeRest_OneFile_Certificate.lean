@@ -21274,7 +21274,8 @@ theorem generalMaxwellBalancedCharacteristic_current_independent
         LinearMap.id
         (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz)
         (generalMaxwellBalancedFutureFluxUnit
-          Ex Ey Ez Bx dBy dBz D)
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz E)
   rw [hflux]
 
 /-- The same current is literally built from the arbitrary-field action metric
