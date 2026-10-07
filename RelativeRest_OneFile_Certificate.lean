@@ -8098,6 +8098,36 @@ theorem sigmaStar_balanced_module_dyad_exchange
       ring
     rw [hc]
 
+
+
+/-- Any cross-normalized null pair determines an orthonormal Lorentz frame by
+half-sum and half-difference.  This is the normalization theorem behind the
+manuscript's u_*=(k_*+l_*)/sqrt(2) and e_*=(k_*-l_*)/sqrt(2). -/
+theorem normalizedNullPair_midpoint_orthonormal
+    (k l : Fin 4 → ℝ)
+    (hk : principalMinkowskiSq k = 0)
+    (hl : principalMinkowskiSq l = 0)
+    (hkl : principalMinkowskiBilinear k l = -1) :
+    principalMinkowskiSq
+        (principalInvSqrtTwo • (k + l)) = -1 ∧
+      principalMinkowskiSq
+        (principalInvSqrtTwo • (k - l)) = 1 ∧
+      principalMinkowskiBilinear
+        (principalInvSqrtTwo • (k + l))
+        (principalInvSqrtTwo • (k - l)) = 0 := by
+  have hc := principalInvSqrtTwo_sq
+  constructor
+  · rw [principalMinkowskiSq_smul,
+      principalMinkowskiSq_add, hk, hl, hkl, hc]
+    ring
+  · constructor
+    · rw [principalMinkowskiSq_smul,
+        principalMinkowskiSq_sub, hk, hl, hkl, hc]
+      ring
+    · rw [principalMinkowskiBilinear_smul,
+        principalMinkowskiBilinear_add_sub, hk, hl]
+      ring
+
 /-! ### Regular resolving stratum: the residual boost is not free -/
 
 /-- On a forced Lorentzian Rainich two-plane, the first nonzero invariant resolving
@@ -8332,6 +8362,99 @@ def generalMaxwellBalancedE
       generalMaxwellBalancedL
         Ex Ey Ez Bx By Bz
         dEx dEy dEz dBx dBy dBz D)
+
+
+
+/-- The balanced boost preserves nullness and the cross-normalization exactly. -/
+theorem generalMaxwellBalancedNullPair_normalized
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    principalMinkowskiSq
+        (generalMaxwellBalancedK
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) = 0 ∧
+      principalMinkowskiSq
+        (generalMaxwellBalancedL
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) = 0 ∧
+      principalMinkowskiBilinear
+        (generalMaxwellBalancedK
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D)
+        (generalMaxwellBalancedL
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) = -1 := by
+  let σ :=
+    sigmaStar
+      (generalMaxwellResolvingQMinus
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D)
+      (generalMaxwellResolvingQPlus
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D)
+  change
+    principalMinkowskiSq (Real.exp (-σ) • D.k.1) = 0 ∧
+      principalMinkowskiSq (Real.exp σ • D.l.1) = 0 ∧
+      principalMinkowskiBilinear
+        (Real.exp (-σ) • D.k.1)
+        (Real.exp σ • D.l.1) = -1
+  constructor
+  · rw [principalMinkowskiSq_smul, D.kNull]
+    ring
+  · constructor
+    · rw [principalMinkowskiSq_smul, D.lNull]
+      ring
+    · rw [principalMinkowskiBilinear_smul, D.crossNormalized]
+      have he :
+          Real.exp (-σ) * Real.exp σ = 1 := by
+        rw [← Real.exp_add]
+        simp
+      rw [he]
+      ring
+
+/-- The frame reconstructed from the balanced null pair is automatically
+orthonormal.  No observer normalization or spatial normalization is supplied. -/
+theorem generalMaxwellBalancedFrame_orthonormal
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    principalMinkowskiSq
+        (generalMaxwellBalancedU
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) = -1 ∧
+      principalMinkowskiSq
+        (generalMaxwellBalancedE
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) = 1 ∧
+      principalMinkowskiBilinear
+        (generalMaxwellBalancedU
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D)
+        (generalMaxwellBalancedE
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) = 0 := by
+  rcases generalMaxwellBalancedNullPair_normalized
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D with
+    ⟨hk, hl, hkl⟩
+  unfold generalMaxwellBalancedU generalMaxwellBalancedE
+  exact normalizedNullPair_midpoint_orthonormal
+    (generalMaxwellBalancedK
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D)
+    (generalMaxwellBalancedL
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D)
+    hk hl hkl
 
 /-- On the resolving stratum p²≠0, the balanced observer is independent of
 every future-oriented normalized starting null dyad.  The only remaining
@@ -8680,6 +8803,217 @@ theorem generalMaxwellFirstJet_residualBoost_exists
     Ex Ey Ez Bx By Bz
     dEx dEy dEz dBx dBy dBz
     hnonnull D hp
+
+
+
+/-! ### Arbitrary-field first-jet master: action to a normalized choice-free frame -/
+
+/-- Strong frame-free first-jet certificate.  Its only geometric hypotheses are
+the manuscript's stated regular-stratum conditions: a non-null Maxwell field and
+a non-null projected resolving jet p=P_L d log chi.  The action/Rainich core,
+the derivative defining p, existence of a future normalized null dyad, unique
+boost balance, normalized balanced frame, independence of the starting dyad,
+and the invariant clock rate are all conclusions. -/
+structure ArbitraryMaxwellFirstJetForcedCertificate
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hp :
+      generalMaxwellResolvingNormSq
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz ≠ 0) : Prop where
+  actionCore :
+    ArbitraryMaxwellActionForcedCertificate
+      Ex Ey Ez Bx By Bz u s hnonnull
+  resolvingDerivative :
+    ∀ a : Fin 4,
+      HasDerivAt
+        (fun t =>
+          Real.log
+            (generalMaxwellChi
+              (affineJetLine Ex (dEx a) t)
+              (affineJetLine Ey (dEy a) t)
+              (affineJetLine Ez (dEz a) t)
+              (affineJetLine Bx (dBx a) t)
+              (affineJetLine By (dBy a) t)
+              (affineJetLine Bz (dBz a) t)))
+        (generalMaxwellDLogChiCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz a) 0
+  resolvingInPrincipalPlane :
+    generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz
+      (principalRaiseCovector
+        (generalMaxwellResolvingCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz)) =
+      principalRaiseCovector
+        (generalMaxwellResolvingCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz)
+  resolvingNormEveryDyad :
+    ∀ D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)),
+      generalMaxwellResolvingNormSq
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz =
+        -2 *
+          generalMaxwellResolvingQMinus
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D *
+          generalMaxwellResolvingQPlus
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D
+  futureResolvedDyad :
+    ∃ D :
+        NormalizedPrincipalNullDyad
+          (LinearMap.range
+            (generalMaxwellProjectorPlusLinear
+              Ex Ey Ez Bx By Bz)),
+      D.FutureTo
+          (generalMaxwellProjectorPlus
+            Ex Ey Ez Bx By Bz (principalBasis 0)) ∧
+        ∃ hresolve :
+          nullCovectorNormSq
+            (generalMaxwellResolvingQMinus
+              Ex Ey Ez Bx By Bz
+              dEx dEy dEz dBx dBy dBz D)
+            (generalMaxwellResolvingQPlus
+              Ex Ey Ez Bx By Bz
+              dEx dEy dEz dBx dBy dBz D) ≠ 0,
+          ResolvedRainichPlaneCertificate
+            (generalMaxwellResolvingQMinus
+              Ex Ey Ez Bx By Bz
+              dEx dEy dEz dBx dBy dBz D)
+            (generalMaxwellResolvingQPlus
+              Ex Ey Ez Bx By Bz
+              dEx dEy dEz dBx dBy dBz D)
+            hresolve
+  balancedFrameOrthonormal :
+    ∀ D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)),
+      principalMinkowskiSq
+          (generalMaxwellBalancedU
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D) = -1 ∧
+        principalMinkowskiSq
+          (generalMaxwellBalancedE
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D) = 1 ∧
+        principalMinkowskiBilinear
+          (generalMaxwellBalancedU
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D)
+          (generalMaxwellBalancedE
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D) = 0
+  balancedFrameCanonical :
+    ∀ D E :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)),
+      D.FutureTo
+          (generalMaxwellProjectorPlus
+            Ex Ey Ez Bx By Bz (principalBasis 0)) →
+      E.FutureTo
+          (generalMaxwellProjectorPlus
+            Ex Ey Ez Bx By Bz (principalBasis 0)) →
+      generalMaxwellBalancedU
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz E =
+        generalMaxwellBalancedU
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D ∧
+      (generalMaxwellBalancedE
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz E =
+        generalMaxwellBalancedE
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D ∨
+       generalMaxwellBalancedE
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz E =
+        -generalMaxwellBalancedE
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D)
+  clockPositive :
+    0 < generalMaxwellClockRate Ex Ey Ez Bx By Bz
+  clockRicciFourthRoot :
+    generalMaxwellClockRate Ex Ey Ez Bx By Bz =
+      Real.sqrt
+        (Real.sqrt
+          (generalRicciNormFromEinstein Ex Ey Ez Bx By Bz))
+
+/-- Constructor of the arbitrary-field first-jet master. -/
+theorem arbitraryMaxwell_firstJet_forced_certificate
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hp :
+      generalMaxwellResolvingNormSq
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz ≠ 0) :
+    ArbitraryMaxwellFirstJetForcedCertificate
+      Ex Ey Ez Bx By Bz u s
+      dEx dEy dEz dBx dBy dBz
+      hnonnull hp := by
+  refine {
+    actionCore :=
+      arbitraryMaxwell_action_forced_certificate
+        Ex Ey Ez Bx By Bz u s hnonnull
+    resolvingDerivative := ?_
+    resolvingInPrincipalPlane :=
+      generalMaxwellResolvingCovector_raised_eigen
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz hnonnull
+    resolvingNormEveryDyad := ?_
+    futureResolvedDyad := ?_
+    balancedFrameOrthonormal := ?_
+    balancedFrameCanonical := ?_
+    clockPositive :=
+      generalMaxwellClockRate_pos
+        Ex Ey Ez Bx By Bz hnonnull
+    clockRicciFourthRoot :=
+      generalMaxwellClockRate_eq_ricci_fourth_root
+        Ex Ey Ez Bx By Bz }
+  · intro a
+    exact generalMaxwellDLogChiCovector_component_hasDerivAt
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz hnonnull a
+  · intro D
+    simpa [generalMaxwellResolvingQMinus,
+      generalMaxwellResolvingQPlus,
+      nullCovectorNormSq] using
+      (generalMaxwellResolvingCovector_nullDyad_norm
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz hnonnull D)
+  · rcases
+      generalMaxwellProjectorPlus_futureNormalizedNullDyad_exists
+        Ex Ey Ez Bx By Bz hnonnull with
+      ⟨D, hD⟩
+    refine ⟨D, hD, ?_⟩
+    exact generalMaxwellFirstJet_residualBoost_forced
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull D hp
+  · intro D
+    exact generalMaxwellBalancedFrame_orthonormal
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D
+  · intro D E hD hE
+    exact generalMaxwellBalancedFrame_independent_future_dyad
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull D E
+      (generalMaxwellProjectorPlus
+        Ex Ey Ez Bx By Bz (principalBasis 0))
+      hD hE hp
 
 /-! ### Einstein-Maxwell field core plus invariant resolving-jet closure -/
 
@@ -26989,7 +27323,11 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellResolvingCovector_nullDyad_norm
 #print axioms RelativeRest.sigmaStar_balanced_module_dyad_invariant
 #print axioms RelativeRest.sigmaStar_balanced_module_dyad_exchange
+#print axioms RelativeRest.normalizedNullPair_midpoint_orthonormal
+#print axioms RelativeRest.generalMaxwellBalancedNullPair_normalized
+#print axioms RelativeRest.generalMaxwellBalancedFrame_orthonormal
 #print axioms RelativeRest.generalMaxwellBalancedFrame_independent_future_dyad
+#print axioms RelativeRest.arbitraryMaxwell_firstJet_forced_certificate
 #print axioms RelativeRest.generalMaxwellResolvingComponents_change_future_dyad
 #print axioms RelativeRest.generalMaxwellFirstJet_residualBoost_forced
 #print axioms RelativeRest.generalMaxwellFirstJet_residualBoost_exists
