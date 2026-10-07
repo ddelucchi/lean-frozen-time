@@ -21824,6 +21824,160 @@ theorem generalMaxwellBalancedADMCharacteristic_current_factor
     dEx dEy dEz dBx dBy dBz
     hnonnull D
 
+
+/-- Canonical two-sector bulk constraint built from the arbitrary-field
+action/carrier current on the field-derived ADM characteristic space. -/
+def generalMaxwellBalancedADMActionConstraint
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    R2 →ₗ[ℝ] ((Fin 4 → ℝ) →ₗ[ℝ] ℝ) :=
+  actionConstraintResponseLinear
+    (generalMaxwellBalancedADMCharacteristicData
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull D).current
+
+/-- The common action direction is frozen in the arbitrary-field ADM constraint. -/
+@[simp] theorem generalMaxwellBalancedADMActionConstraint_CA
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellBalancedADMActionConstraint
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz
+        hnonnull D CA = 0 := by
+  simp [generalMaxwellBalancedADMActionConstraint]
+
+/-- Its exchange-odd normal is exactly minus twice the action-derived clock current. -/
+@[simp] theorem generalMaxwellBalancedADMActionConstraint_DA
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellBalancedADMActionConstraint
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz
+        hnonnull D DA =
+      (-2 : ℝ) •
+        (generalMaxwellBalancedADMCharacteristicData
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz
+          hnonnull D).current := by
+  simp [generalMaxwellBalancedADMActionConstraint]
+
+/-- Every first-variation/Cartan representative canonically completed with the
+arbitrary-field action constraint has the same compensated Iyer-Wald operator.
+Thus the separate potential/charge representative cannot modify the bulk clock. -/
+theorem generalMaxwellBalancedADM_anyCanonicalCompletion_compensated
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (core :
+      LagrangianFirstVariationCartanData
+        (L:=R2) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ))) :
+    let N :=
+      core.toNoetherOperators
+        (generalMaxwellBalancedADMActionConstraint
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz
+          hnonnull D)
+    N.omegaXY + N.dB =
+      generalMaxwellBalancedADMActionConstraint
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz
+        hnonnull D := by
+  dsimp
+  ext X
+  rw [show
+      ((core.toNoetherOperators
+          (generalMaxwellBalancedADMActionConstraint
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz
+            hnonnull D)).omegaXY +
+        (core.toNoetherOperators
+          (generalMaxwellBalancedADMActionConstraint
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz
+            hnonnull D)).dB) X =
+      (core.toNoetherOperators
+          (generalMaxwellBalancedADMActionConstraint
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz
+            hnonnull D)).omegaXY X +
+      (core.toNoetherOperators
+          (generalMaxwellBalancedADMActionConstraint
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz
+            hnonnull D)).dB X by rfl]
+  rw [(core.toNoetherOperators
+      (generalMaxwellBalancedADMActionConstraint
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz
+        hnonnull D)).compensated_eq_constraint]
+  exact LinearMap.congr_fun
+    (core.toNoetherOperators_constraint
+      (generalMaxwellBalancedADMActionConstraint
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz
+        hnonnull D)) X
+
+/-- Literal arbitrary-field form of the manuscript bridge:
+negative one half of the compensated odd-normal Iyer-Wald current is exactly
+the action-derived ADM characteristic clock current. -/
+theorem generalMaxwellBalancedADM_halfCompensated_DA_eq_clockCurrent
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (core :
+      LagrangianFirstVariationCartanData
+        (L:=R2) (C:=((Fin 4 → ℝ) →ₗ[ℝ] ℝ))) :
+    let N :=
+      core.toNoetherOperators
+        (generalMaxwellBalancedADMActionConstraint
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz
+          hnonnull D)
+    (-1 / 2 : ℝ) • (N.omegaXY DA + N.dB DA) =
+      (generalMaxwellBalancedADMCharacteristicData
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz
+        hnonnull D).current := by
+  dsimp
+  have hcomp :=
+    LinearMap.congr_fun
+      (generalMaxwellBalancedADM_anyCanonicalCompletion_compensated
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz
+        hnonnull D core) DA
+  rw [generalMaxwellBalancedADMActionConstraint_DA] at hcomp
+  rw [hcomp]
+  module
+
 /-- The ADM characteristic clock covector is nonzero. -/
 theorem generalMaxwellBalancedADMCharacteristic_Lambda_nonzero
     (Ex Ey Ez Bx By Bz : ℝ)
@@ -29926,6 +30080,10 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwell_regularSynge_realization_forced
 #print axioms RelativeRest.arbitraryMaxwell_firstJet_clockDescent_certificate
 #print axioms RelativeRest.generalMaxwellADMDeformationMap_pureLapse
+#print axioms RelativeRest.generalMaxwellBalancedADMActionConstraint_CA
+#print axioms RelativeRest.generalMaxwellBalancedADMActionConstraint_DA
+#print axioms RelativeRest.generalMaxwellBalancedADM_anyCanonicalCompletion_compensated
+#print axioms RelativeRest.generalMaxwellBalancedADM_halfCompensated_DA_eq_clockCurrent
 #print axioms RelativeRest.generalMaxwellBalancedADMCharacteristic_Lambda_nonzero
 #print axioms RelativeRest.generalMaxwellBalancedADMCharacteristic_quotient_finrank_one
 #print axioms RelativeRest.generalMaxwellBalancedADMCharacteristic_spatialShift_invisible
