@@ -4498,6 +4498,46 @@ theorem normalized_involution
   simp
 
 
+/-! ### Principal planes constructed from a general Maxwell field -/
+
+/-- Normalized Rainich carrier of an arbitrary six-component Maxwell field. -/
+def generalMaxwellNormalizedCarrier
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    (Fin 4 → ℝ) →ₗ[ℝ] (Fin 4 → ℝ) :=
+  (generalMaxwellChi Ex Ey Ez Bx By Bz)⁻¹ •
+    generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz
+
+/-- On the regular non-null sector, the normalized arbitrary-field carrier is an
+involution.  No principal-frame coordinates enter this statement. -/
+theorem generalMaxwellNormalizedCarrier_involution
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
+    (generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz).comp
+        (generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz) =
+      LinearMap.id := by
+  unfold generalMaxwellNormalizedCarrier
+  exact normalized_involution
+    (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz)
+    (generalMaxwellChi Ex Ey Ez Bx By Bz)
+    (ne_of_gt (generalMaxwellChi_pos
+      Ex Ey Ez Bx By Bz hnonnull))
+    (generalMaxwellCarrierLinear_sq_chi
+      Ex Ey Ez Bx By Bz)
+
+/-- The carrier vanishes into the nilpotent boundary exactly at zero invariant
+magnitude at the level of the universal Rainich square law. -/
+theorem generalMaxwellCarrier_nilpotent_of_chi_zero
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hchi : generalMaxwellChi Ex Ey Ez Bx By Bz = 0) :
+    (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz).comp
+        (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz) = 0 := by
+  exact rainich_square_nilpotent_at_zero
+    (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz)
+    (generalMaxwellChi Ex Ey Ez Bx By Bz)
+    (generalMaxwellCarrierLinear_sq_chi
+      Ex Ey Ez Bx By Bz)
+    hchi
+
 /-- At the zero-carrier boundary the same Rainich square law becomes nilpotence. -/
 theorem rainich_square_nilpotent_at_zero
     {V : Type*} [AddCommGroup V] [Module ℝ V]
@@ -22343,6 +22383,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.conformal_factor_forced_from_common_scale
 #print axioms RelativeRest.carrier_chi_common_scale
 #print axioms RelativeRest.normalizedCarrierEndomorphism_common_scale
+#print axioms RelativeRest.generalMaxwellNormalizedCarrier_involution
+#print axioms RelativeRest.generalMaxwellCarrier_nilpotent_of_chi_zero
 #print axioms RelativeRest.involution_projectors_scale_invariant
 #print axioms RelativeRest.relationalObservable_gauge_invariant
 #print axioms RelativeRest.relationalObservable_deriv
