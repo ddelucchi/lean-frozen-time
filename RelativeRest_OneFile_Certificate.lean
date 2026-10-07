@@ -13726,10 +13726,11 @@ theorem principalClockFrobeniusThreeForm_all_zero_iff_vorticity
   constructor
   · intro h i j
     have h0 := h 0 i.succ j.succ
-    rw [principalClockFrobeniusThreeForm_zero_spatial_spatial] at h0
-    exact
-      (principalFrobeniusSpatialComponent_zero_iff
-        omega domega du i j homega).1 h0
+    rw [principalClockFrobeniusThreeForm_zero_spatial_spatial,
+      principalFrobeniusSpatialComponent_eq] at h0
+    have hcoef : -2 * omega^2 ≠ 0 :=
+      mul_ne_zero (by norm_num) (pow_ne_zero 2 homega)
+    exact (mul_eq_zero.mp h0).resolve_left hcoef
   · intro hv a b c
     have hsp :
         ∀ i j : Fin 3,
