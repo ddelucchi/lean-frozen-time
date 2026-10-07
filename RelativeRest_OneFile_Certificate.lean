@@ -17145,6 +17145,16 @@ structure CanonicalPrincipalFieldForcedCertificate
           D.toCharacteristicCurrentData.Lambda
           (principalCarrierCharacteristic_Lambda_nonzero D))) =
       principalUhat
+  localPointResponseRatio :
+    ∀ (v : Fin 4 → ℝ) (λ : ℝ),
+      principalBridgeSpatialCoeff (principalClockRate E B) v =
+        λ * principalBridgeSpatialCoeff
+          (principalClockRate E B) principalUhat →
+      λ = principalTO v
+  localClockKernel :
+    LinearMap.ker principalTOLinear = principalSpatialSubmodule
+  localClockUnit :
+    principalTOLinear principalUhat = 1
   clockRate :
     principalClockRate E B =
         4 * Real.sqrt
@@ -17259,6 +17269,10 @@ theorem canonicalPrincipalField_forced_certificate
     characteristicFactorization := ?_
     contactTransverseDuality := ?_
     normalizedClockBridge := ?_
+    localPointResponseRatio := ?_
+    localClockKernel := principalTOLinear_kernel
+    localClockUnit := by
+      simpa [principalTOLinear_apply] using principalTO_unit
     clockRate := principalClockRate_three_way E B
     canonicalOpticalClock :=
       canonicalPrincipalSyngeEndpointJetData_clock
@@ -17274,6 +17288,11 @@ theorem canonicalPrincipalField_forced_certificate
     causalExtendedEndpointMonotonicity := ?_
     causalBranchIndependence := ?_ }
   · exact D.J_basis_eq_actionEulerJet
+  · intro v λ hresponse
+    exact principalBridgeSpatialCoeff_ratio_forced
+      (principalClockRate E B) λ v
+      (principalClockRate_ne_zero E B hfield)
+      hresponse
   · exact D.noetherConstraintOperatorFromAction_DA
   · rw [D.metricEulerJetResponse_eq_stress,
       principalCarrierCharacteristic_current D]
@@ -21961,6 +21980,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalActionBulk_forced_core_chain
 #print axioms RelativeRest.canonicalPrincipalField_forces_clock_chain
 #print axioms RelativeRest.canonicalPrincipalField_forces_action_bulk
+#print axioms RelativeRest.principalBridgeSpatialCoeff_ratio_forced
+#print axioms RelativeRest.principalTOLinear_kernel
 #print axioms RelativeRest.canonicalPrincipalField_forced_certificate
 #print axioms RelativeRest.kerrNewman_fieldOnly_forced_certificate
 #print axioms RelativeRest.principalFieldCurrent_Lambda_unique
