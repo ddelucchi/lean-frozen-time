@@ -4885,6 +4885,95 @@ theorem generalMaxwellProjector_images_orthogonal
   · exact generalMaxwellProjectorMinus_eigen
       Ex Ey Ez Bx By Bz hnonnull w
 
+/-- The arbitrary-field Rainich projectors do more than provide candidate
+eigenspaces: they are the unique decomposition of every vector into its +1 and -1
+carrier parts.  Thus the principal splitting is forced before any frame choice. -/
+theorem generalMaxwell_principal_split_unique
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (v vp vm : Fin 4 → ℝ)
+    (hsum : vp + vm = v)
+    (hp :
+      generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz vp = vp)
+    (hm :
+      generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz vm = -vm) :
+    vp = generalMaxwellProjectorPlus Ex Ey Ez Bx By Bz v ∧
+      vm = generalMaxwellProjectorMinus Ex Ey Ez Bx By Bz v := by
+  have hSv :
+      generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz v =
+        vp - vm := by
+    rw [← hsum, map_add, hp, hm]
+    module
+  constructor
+  · unfold generalMaxwellProjectorPlus involutionProjPlus
+    rw [← hsum, hSv]
+    module
+  · unfold generalMaxwellProjectorMinus involutionProjMinus
+    rw [← hsum, hSv]
+    module
+
+/-- Conversely the canonical projected pair always satisfies the defining
+eigenvalue equations, reconstructs the original vector, and is orthogonal. -/
+theorem generalMaxwell_principal_split_certificate
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (v : Fin 4 → ℝ) :
+    generalMaxwellProjectorPlus Ex Ey Ez Bx By Bz v +
+        generalMaxwellProjectorMinus Ex Ey Ez Bx By Bz v = v ∧
+    generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz
+        (generalMaxwellProjectorPlus Ex Ey Ez Bx By Bz v) =
+      generalMaxwellProjectorPlus Ex Ey Ez Bx By Bz v ∧
+    generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz
+        (generalMaxwellProjectorMinus Ex Ey Ez Bx By Bz v) =
+      -generalMaxwellProjectorMinus Ex Ey Ez Bx By Bz v ∧
+    principalMinkowskiBilinear
+        (generalMaxwellProjectorPlus Ex Ey Ez Bx By Bz v)
+        (generalMaxwellProjectorMinus Ex Ey Ez Bx By Bz v) = 0 := by
+  exact ⟨generalMaxwellProjectors_sum Ex Ey Ez Bx By Bz v,
+    generalMaxwellProjectorPlus_eigen Ex Ey Ez Bx By Bz hnonnull v,
+    generalMaxwellProjectorMinus_eigen Ex Ey Ez Bx By Bz hnonnull v,
+    generalMaxwellProjector_images_orthogonal
+      Ex Ey Ez Bx By Bz hnonnull v v⟩
+
+/-- The normalized arbitrary Maxwell carrier itself is reconstructed uniquely from
+the two canonical projectors. -/
+theorem generalMaxwellNormalizedCarrier_eq_projector_difference
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (v : Fin 4 → ℝ) :
+    generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz v =
+      generalMaxwellProjectorPlus Ex Ey Ez Bx By Bz v -
+        generalMaxwellProjectorMinus Ex Ey Ez Bx By Bz v := by
+  unfold generalMaxwellProjectorPlus generalMaxwellProjectorMinus
+    involutionProjPlus involutionProjMinus
+  module
+
+/-- Any putative pair of complementary +1/-1 eigencomponents agreeing with the
+arbitrary Maxwell carrier must therefore coincide pointwise with the canonical
+Rainich projectors. -/
+theorem generalMaxwell_principal_projectors_pointwise_unique
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (Pplus Pminus :
+      (Fin 4 → ℝ) →ₗ[ℝ] (Fin 4 → ℝ))
+    (hsum : ∀ v, Pplus v + Pminus v = v)
+    (hplus : ∀ v,
+      generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz (Pplus v) =
+        Pplus v)
+    (hminus : ∀ v,
+      generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz (Pminus v) =
+        -Pminus v) :
+    (∀ v, Pplus v =
+        generalMaxwellProjectorPlus Ex Ey Ez Bx By Bz v) ∧
+      (∀ v, Pminus v =
+        generalMaxwellProjectorMinus Ex Ey Ez Bx By Bz v) := by
+  constructor <;> intro v
+  · exact (generalMaxwell_principal_split_unique
+      Ex Ey Ez Bx By Bz hnonnull v (Pplus v) (Pminus v)
+      (hsum v) (hplus v) (hminus v)).1
+  · exact (generalMaxwell_principal_split_unique
+      Ex Ey Ez Bx By Bz hnonnull v (Pplus v) (Pminus v)
+      (hsum v) (hplus v) (hminus v)).2
+
 /-! ### Full-jet residual stabilizer logic -/
 
 variable {G : Type*}
@@ -23252,6 +23341,10 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellNormalizedCarrier_involution
 #print axioms RelativeRest.generalMaxwellNormalizedCarrier_self_adjoint
 #print axioms RelativeRest.generalMaxwellProjector_images_orthogonal
+#print axioms RelativeRest.generalMaxwell_principal_split_unique
+#print axioms RelativeRest.generalMaxwell_principal_split_certificate
+#print axioms RelativeRest.generalMaxwellNormalizedCarrier_eq_projector_difference
+#print axioms RelativeRest.generalMaxwell_principal_projectors_pointwise_unique
 #print axioms RelativeRest.generalMaxwellCarrier_nilpotent_of_chi_zero
 #print axioms RelativeRest.involution_projectors_scale_invariant
 #print axioms RelativeRest.relationalObservable_gauge_invariant
