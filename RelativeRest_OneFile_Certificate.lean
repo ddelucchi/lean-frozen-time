@@ -26950,6 +26950,41 @@ theorem paper_resolvedRegularBranch_forced_certificate
 
 
 
+
+/-- Genuine regular Synge branch with canonical finite-jet resolver selection.
+The ambient world-function source and its regularity are geometric existence
+data, but the resolver is no longer chosen by hand: it is the first successful
+entry of the supplied carrier-jet tower. -/
+theorem paper_finiteResolverTowerRegularSynge_forced_certificate
+    (Bdual :
+      (X →L[ℝ] ℝ) →ₗ[ℝ] (X →L[ℝ] ℝ) →ₗ[ℝ] ℝ)
+    (S : RegularSyngeEndpointPairSource Bdual)
+    (I : (X →L[ℝ] ℝ) →ₗ[ℝ] R2)
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (T : MaxwellFiniteResolverTower Ex Ey Ez Bx By Bz)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hreal : S.RealizesCanonicalOpticalJet I)
+    (hsym : ∀ a b, bil Bdual a b = bil Bdual b a) :
+    PaperResolvedRegularBranchForcedCertificate
+      Bdual S I
+      Ex Ey Ez Bx By Bz u s
+      dEx dEy dEz dBx dBy dBz
+      T.firstCovector
+      hnonnull
+      T.firstCovector_mem
+      T.firstCovector_nonnull
+      hreal hsym := by
+  exact paper_resolvedRegularBranch_forced_certificate
+    Bdual S I
+    Ex Ey Ez Bx By Bz u s
+    dEx dEy dEz dBx dBy dBz
+    T.firstCovector
+    hnonnull
+    T.firstCovector_mem
+    T.firstCovector_nonnull
+    hreal hsym
+
 /-- End-to-end paper certificate in the canonical optical normal form.  The
 regular endpoint pair, its IFT derivatives, the optical realization, and the
 bilinear symmetry are all constructed internally.  The only remaining resolver
@@ -34043,6 +34078,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.MaxwellFiniteResolverTower.firstCovector_nonnull
 #print axioms RelativeRest.MaxwellFiniteResolverTower.before_first_unresolved
 #print axioms RelativeRest.paper_finiteResolverTowerCanonicalRegularBranch_forced_certificate
+#print axioms RelativeRest.paper_finiteResolverTowerRegularSynge_forced_certificate
 #print axioms RelativeRest.resolvedRainichPlane_certificate
 #print axioms RelativeRest.resolvedRainichPlane_representative_independent
 #print axioms RelativeRest.generalMaxwellResolvingCovector_nullDyad_norm
