@@ -17307,7 +17307,8 @@ theorem canonicalPrincipalField_forced_certificate
     contactTransverseDuality := ?_
     normalizedClockBridge := ?_
     localPointResponseRatio := ?_
-    localClockKernel := principalTOLinear_kernel
+    localClockKernel := by
+      simpa [principalTOLinear] using principalTO_ker_eq_spatial
     localClockUnit := by
       simpa [principalTOLinear_apply] using principalTO_unit
     clockRate := principalClockRate_three_way E B
@@ -17328,7 +17329,7 @@ theorem canonicalPrincipalField_forced_certificate
   · intro v λ hresponse
     exact principalBridgeSpatialCoeff_ratio_forced
       (principalClockRate E B) λ v
-      (principalClockRate_ne_zero E B hfield)
+      (ne_of_gt (Real.sqrt_pos.2 (principalChi_pos E B hfield)))
       hresponse
   · exact D.noetherConstraintOperatorFromAction_DA
   · rw [D.metricEulerJetResponse_eq_stress,
@@ -22019,7 +22020,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.canonicalPrincipalField_forces_clock_chain
 #print axioms RelativeRest.canonicalPrincipalField_forces_action_bulk
 #print axioms RelativeRest.principalBridgeSpatialCoeff_ratio_forced
-#print axioms RelativeRest.principalTOLinear_kernel
+#print axioms RelativeRest.principalTO_ker_eq_spatial
 #print axioms RelativeRest.canonicalPrincipalField_forced_certificate
 #print axioms RelativeRest.kerrNewman_fieldOnly_forced_certificate
 #print axioms RelativeRest.principalFieldCurrent_Lambda_unique
