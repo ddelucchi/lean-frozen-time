@@ -13674,6 +13674,76 @@ theorem principalFrobeniusSpatialComponent_eq
   rw [principalFrobeniusSpatialComponent, clockTransport_spatial]
   ring
 
+
+/-- Components of the chronometric one-form T_O=-omega u^flat in the adapted
+orthonormal frame. -/
+def principalChronometricCovectorComponent
+    (omega : ℝ) (a : Fin 4) : ℝ :=
+  -omega * principalUFlat a
+
+/-- Full three-index component tensor of T_O wedge dT_O. -/
+def principalClockFrobeniusThreeForm
+    (omega : ℝ) (domega : Fin 4 → ℝ)
+    (du : Fin 4 → Fin 4 → ℝ)
+    (a b c : Fin 4) : ℝ :=
+  principalChronometricCovectorComponent omega a *
+      clockTransportTwoForm omega domega du b c +
+    principalChronometricCovectorComponent omega b *
+      clockTransportTwoForm omega domega du c a +
+    principalChronometricCovectorComponent omega c *
+      clockTransportTwoForm omega domega du a b
+
+/-- The only potentially nonzero adapted components are the time-spatial-spatial
+ones, and they are exactly the earlier Frobenius obstruction components. -/
+theorem principalClockFrobeniusThreeForm_zero_spatial_spatial
+    (omega : ℝ) (domega : Fin 4 → ℝ)
+    (du : Fin 4 → Fin 4 → ℝ)
+    (i j : Fin 3) :
+    principalClockFrobeniusThreeForm
+        omega domega du 0 i.succ j.succ =
+      principalFrobeniusSpatialComponent
+        omega domega du i j := by
+  unfold principalClockFrobeniusThreeForm
+    principalChronometricCovectorComponent
+    principalFrobeniusSpatialComponent
+    principalUFlat
+  have hi : (i.succ : Fin 4) ≠ 0 := Fin.succ_ne_zero i
+  have hj : (j.succ : Fin 4) ≠ 0 := Fin.succ_ne_zero j
+  simp [hi, hj]
+
+/-- Literal adapted-frame Frobenius theorem for the full wedge tensor:
+T_O wedge dT_O vanishes in every component iff the vorticity of the selected
+unit congruence vanishes. -/
+theorem principalClockFrobeniusThreeForm_all_zero_iff_vorticity
+    (omega : ℝ) (domega : Fin 4 → ℝ)
+    (du : Fin 4 → Fin 4 → ℝ)
+    (homega : omega ≠ 0) :
+    (∀ a b c : Fin 4,
+      principalClockFrobeniusThreeForm
+        omega domega du a b c = 0) ↔
+    (∀ i j : Fin 3,
+      principalVorticity du i j = 0) := by
+  constructor
+  · intro h i j
+    have h0 := h 0 i.succ j.succ
+    rw [principalClockFrobeniusThreeForm_zero_spatial_spatial] at h0
+    exact
+      (principalFrobeniusSpatialComponent_zero_iff
+        omega domega du i j homega).1 h0
+  · intro hv a b c
+    have hsp :
+        ∀ i j : Fin 3,
+          clockTransportTwoForm
+            omega domega du i.succ j.succ = 0 := by
+      intro i j
+      rw [clockTransport_spatial, hv i j]
+      ring
+    fin_cases a <;> fin_cases b <;> fin_cases c <;>
+      simp [principalClockFrobeniusThreeForm,
+        principalChronometricCovectorComponent,
+        principalUFlat, hsp,
+        clockTransportTwoForm_skew]
+
 /-- On the positive/nonzero-rate sector, a spatial Frobenius component vanishes exactly
 when the corresponding vorticity component vanishes. -/
 theorem principalFrobeniusSpatialComponent_zero_iff
@@ -34209,6 +34279,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.adaptedUnitNormalization_of_unitNorm_stationary
 #print axioms RelativeRest.clockTransport_projected_zero_iff
 #print axioms RelativeRest.principalFrobenius_all_zero_iff
+#print axioms RelativeRest.principalClockFrobeniusThreeForm_all_zero_iff_vorticity
 #print axioms RelativeRest.principalSynchronization_vanishes
 #print axioms RelativeRest.radarClockRadius_unit_radial_jet
 #print axioms RelativeRest.radarClockTime_unit_clock_jet
