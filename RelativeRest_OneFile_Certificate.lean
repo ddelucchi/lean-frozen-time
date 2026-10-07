@@ -16588,6 +16588,97 @@ def canonicalPrincipalLapseCarrierCharacteristicInput
   volume_pos := by norm_num
   witness_image := by simp
 
+/-- Minimal phase-space reachability datum for a physical characteristic map.
+It does not require `beta` to be injective, surjective, or the identity.  It only
+requires that pure lapse deformations map to the already-selected principal
+future timelike line. -/
+structure PrincipalLapseReachabilityInput
+    (P : Type*) [AddCommGroup P] [Module ℝ P] where
+  beta : P →ₗ[ℝ] (Fin 4 → ℝ)
+  lapseLift : ℝ →ₗ[ℝ] P
+  E : ℝ
+  B : ℝ
+  field_nonzero : E ≠ 0 ∨ B ≠ 0
+  pureLapse :
+    beta.comp lapseLift = principalLapseCharacteristicMap
+
+/-- The pure-lapse reachability statement constructs the positive characteristic
+witness; no independent witness or full tangent-space accessibility is needed. -/
+def PrincipalLapseReachabilityInput.toCarrier
+    {P : Type*} [AddCommGroup P] [Module ℝ P]
+    (D : PrincipalLapseReachabilityInput P) :
+    PrincipalCarrierCharacteristicInput (P:=P) where
+  beta := D.beta
+  positiveWitness := D.lapseLift 1
+  smear := 1
+  E := D.E
+  B := D.B
+  volume := 1
+  smear_pos := by norm_num
+  field_nonzero := D.field_nonzero
+  volume_pos := by norm_num
+  witness_image := by
+    have h := LinearMap.congr_fun D.pureLapse 1
+    simpa [principalLapseCharacteristicMap] using h
+
+/-- The actual characteristic image therefore contains the normalized principal
+future direction whenever pure lapse is represented correctly. -/
+theorem PrincipalLapseReachabilityInput.beta_positiveWitness
+    {P : Type*} [AddCommGroup P] [Module ℝ P]
+    (D : PrincipalLapseReachabilityInput P) :
+    D.beta (D.toCarrier.positiveWitness) = principalUhat := by
+  simpa using D.toCarrier.witness_image
+
+/-- Pure-lapse reachability is sufficient for the entire characteristic quotient
+and normalization chain, for an otherwise arbitrary characteristic map. -/
+theorem PrincipalLapseReachabilityInput.forces_clock_chain
+    {P : Type*} [AddCommGroup P] [Module ℝ P]
+    (D : PrincipalLapseReachabilityInput P) :
+    D.toCarrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.toCarrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.toCarrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.toCarrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.toCarrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.toCarrier))) =
+      principalUhat := by
+  have h := principalCarrierCharacteristic_clock_chain D.toCarrier
+  exact ⟨h.1, h.2.1, h.2.2.2⟩
+
+/-- The same minimal reachability condition is sufficient for the complete
+representative-free action-to-clock bulk chain. -/
+theorem PrincipalLapseReachabilityInput.forces_action_bulk
+    {P : Type*} [AddCommGroup P] [Module ℝ P]
+    (D : PrincipalLapseReachabilityInput P)
+    (u s : ℝ) :
+    ((8 * Real.pi * principalFieldEnergyDensity D.E D.B =
+        8 * Real.pi *
+          maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+          principalFieldEnergyDensity D.E D.B) ↔ s = 0) ∧
+    (∀ i j : Fin 4,
+      D.toCarrier.J (principalBasis j) i =
+        (16 * Real.pi / principalMetricSign i) *
+          deriv
+            (principalScaledMetricEulerCoeffFromAction
+              D.E D.B i j) 0) ∧
+    D.toCarrier.noetherConstraintOperatorFromAction CA = 0 ∧
+    D.toCarrier.noetherConstraintOperatorFromAction DA =
+      D.toCarrier.iε.comp
+        (principalMetricEulerNoetherJetLinear D.E D.B) ∧
+    D.toCarrier.metricEulerJetResponse =
+      D.toCarrier.toCharacteristicCurrentData.current ∧
+    D.toCarrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.toCarrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.toCarrier.toCharacteristicCurrentData.Lambda) = 1 := by
+  have h := principalActionBulk_forced_core_chain D.toCarrier u s
+  rcases h with
+    ⟨hrest,hJ,hCA,hDA,_horbit,_hhalf,hcur,hL,hdim,_hnorm⟩
+  exact ⟨hrest,hJ,hCA,hDA,hcur,hL,hdim⟩
+
 /-- Field-derived Maxwell stress endomorphism attached to the input. -/
 def PrincipalCarrierCharacteristicInput.T
     (D : PrincipalCarrierCharacteristicInput (P:=P)) :
@@ -22017,6 +22108,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.PrincipalCarrierCharacteristicInput.anyCanonicalCompletion_compensated_eq_action
 #print axioms RelativeRest.principalActionBulk_forced_core_chain
 #print axioms RelativeRest.principalLapseCharacteristicMap_one
+#print axioms RelativeRest.PrincipalLapseReachabilityInput.forces_clock_chain
+#print axioms RelativeRest.PrincipalLapseReachabilityInput.forces_action_bulk
 #print axioms RelativeRest.canonicalPrincipalField_forces_clock_chain
 #print axioms RelativeRest.canonicalPrincipalField_forces_action_bulk
 #print axioms RelativeRest.principalBridgeSpatialCoeff_ratio_forced
