@@ -25048,6 +25048,33 @@ theorem generalMaxwellFiniteResolvingADMCharacteristic_current_factor
   field_simp [ne_of_gt Real.pi_pos]
   ring
 
+
+/-- The finite-resolver characteristic current is literally built from the
+endomorphism reconstructed from the displayed Maxwell Lagrangian metric
+derivative.  Thus the resolver affects only the selected timelike contraction,
+not the provenance or normalization of the physical carrier. -/
+theorem generalMaxwellFiniteResolvingADMCharacteristic_current_eq_actionDerived
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    (generalMaxwellFiniteResolvingADMCharacteristicData
+      Ex Ey Ez Bx By Bz alpha hnonnull D).current =
+      halfCarrierBulkCurrent
+        LinearMap.id
+        (generalActionDerivedCarrierLinear
+          Ex Ey Ez Bx By Bz)
+        (generalMaxwellFiniteResolvingFutureFluxUnit
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D) := by
+  rw [generalActionDerivedCarrierLinear_eq_generalMaxwellCarrierLinear]
+  rfl
+
 theorem generalMaxwellFiniteResolvingADMCharacteristic_Lambda_nonzero
     (Ex Ey Ez Bx By Bz : ℝ)
     (alpha : Fin 4 → ℝ)
@@ -26208,6 +26235,25 @@ structure ArbitraryMaxwellFiniteResolvingClockCertificate
               (generalMaxwellFiniteResolvingADMCharacteristic_Lambda_nonzero
                 Ex Ey Ez Bx By Bz alpha hnonnull D))) =
         resolvingPlaneBalancedU alpha D
+  actionDerivedCurrent :
+    ∃ D :
+        NormalizedPrincipalNullDyad
+          (LinearMap.range
+            (generalMaxwellProjectorPlusLinear
+              Ex Ey Ez Bx By Bz)),
+      D.FutureTo
+          (generalMaxwellProjectorPlus
+            Ex Ey Ez Bx By Bz (principalBasis 0)) ∧
+      (generalMaxwellFiniteResolvingADMCharacteristicData
+          Ex Ey Ez Bx By Bz alpha hnonnull D).current =
+        halfCarrierBulkCurrent
+          LinearMap.id
+          (generalActionDerivedCarrierLinear
+            Ex Ey Ez Bx By Bz)
+          (generalMaxwellFiniteResolvingFutureFluxUnit
+            (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+            (Bx:=Bx) (By:=By) (Bz:=Bz)
+            alpha D)
   compensatedActionBridge :
     ∃ D :
         NormalizedPrincipalNullDyad
@@ -26244,6 +26290,7 @@ theorem arbitraryMaxwell_finiteResolvingClock_certificate
     canonical := ?_
     opticalIFTNormalForm := ?_
     globalLocalClock := ?_
+    actionDerivedCurrent := ?_
     compensatedActionBridge := ?_ }
   rcases
       generalMaxwell_finiteResolvingCovector_frame_forced
@@ -26312,6 +26359,13 @@ theorem arbitraryMaxwell_finiteResolvingClock_certificate
           (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
           (Bx:=Bx) (By:=By) (Bz:=Bz)
           alpha D
+  · rcases
+      generalMaxwellProjectorPlus_futureNormalizedNullDyad_exists
+        Ex Ey Ez Bx By Bz hnonnull with
+      ⟨D,hD⟩
+    exact ⟨D,hD,
+      generalMaxwellFiniteResolvingADMCharacteristic_current_eq_actionDerived
+        Ex Ey Ez Bx By Bz alpha hnonnull D⟩
   · rcases
       generalMaxwellProjectorPlus_futureNormalizedNullDyad_exists
         Ex Ey Ez Bx By Bz hnonnull with
@@ -33962,6 +34016,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwell_finiteResolvingCovector_frame_forced
 #print axioms RelativeRest.generalMaxwellCarrierLinear_finiteBalancedU_eigen
 #print axioms RelativeRest.generalMaxwellFiniteResolvingADMCharacteristic_current_factor
+#print axioms RelativeRest.generalMaxwellFiniteResolvingADMCharacteristic_current_eq_actionDerived
 #print axioms RelativeRest.generalMaxwellFiniteResolvingADMCharacteristic_Lambda_nonzero
 #print axioms RelativeRest.generalMaxwellFiniteResolvingADMCharacteristic_quotient_finrank_one
 #print axioms RelativeRest.generalMaxwellFiniteResolvingTheta_null
