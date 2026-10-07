@@ -1649,132 +1649,6 @@ theorem generalMaxwellF_principal_specialization
   fin_cases i <;> fin_cases j <;>
     simp [generalMaxwellF, principalMaxwellF]
 
-/-! ### Arbitrary-field stress scaling and unique relative fixed point -/
-
-/-- Electromagnetic energy density of the full six-component Maxwell field in the
-chosen orthonormal time orientation. -/
-def generalMaxwellEnergyDensity
-    (Ex Ey Ez Bx By Bz : ℝ) : ℝ :=
-  (Ex^2 + Ey^2 + Ez^2 + Bx^2 + By^2 + Bz^2) /
-    (8 * Real.pi)
-
-/-- The mixed timelike stress component of the arbitrary field is minus its
-positive energy density. -/
-theorem generalMaxwellStressFromF_00
-    (Ex Ey Ez Bx By Bz : ℝ) :
-    generalMaxwellStressFromF Ex Ey Ez Bx By Bz 0 0 =
-      -generalMaxwellEnergyDensity Ex Ey Ez Bx By Bz := by
-  simp [generalMaxwellStressFromF,
-    generalMaxwellEnergyDensity,
-    generalMaxwellFsq, generalMaxwellF,
-    principalMetricSign]
-  field_simp [ne_of_gt Real.pi_pos]
-  ring
-
-/-- A non-null electromagnetic field cannot have zero Euclidean component norm. -/
-theorem generalMaxwell_component_norm_sq_pos
-    (Ex Ey Ez Bx By Bz : ℝ)
-    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
-    0 < Ex^2 + Ey^2 + Ez^2 + Bx^2 + By^2 + Bz^2 := by
-  have hnonneg :
-      0 ≤ Ex^2 + Ey^2 + Ez^2 + Bx^2 + By^2 + Bz^2 := by
-    positivity
-  have hne :
-      Ex^2 + Ey^2 + Ez^2 + Bx^2 + By^2 + Bz^2 ≠ 0 := by
-    intro hzero
-    have hEx : Ex = 0 := by
-      nlinarith [sq_nonneg Ex, sq_nonneg Ey, sq_nonneg Ez,
-        sq_nonneg Bx, sq_nonneg By, sq_nonneg Bz]
-    have hEy : Ey = 0 := by
-      nlinarith [sq_nonneg Ex, sq_nonneg Ey, sq_nonneg Ez,
-        sq_nonneg Bx, sq_nonneg By, sq_nonneg Bz]
-    have hEz : Ez = 0 := by
-      nlinarith [sq_nonneg Ex, sq_nonneg Ey, sq_nonneg Ez,
-        sq_nonneg Bx, sq_nonneg By, sq_nonneg Bz]
-    have hBx : Bx = 0 := by
-      nlinarith [sq_nonneg Ex, sq_nonneg Ey, sq_nonneg Ez,
-        sq_nonneg Bx, sq_nonneg By, sq_nonneg Bz]
-    have hBy : By = 0 := by
-      nlinarith [sq_nonneg Ex, sq_nonneg Ey, sq_nonneg Ez,
-        sq_nonneg Bx, sq_nonneg By, sq_nonneg Bz]
-    have hBz : Bz = 0 := by
-      nlinarith [sq_nonneg Ex, sq_nonneg Ey, sq_nonneg Ez,
-        sq_nonneg Bx, sq_nonneg By, sq_nonneg Bz]
-    rcases hnonnull with hI | hJ
-    · apply hI
-      simp [generalMaxwellI, hEx, hEy, hEz, hBx, hBy, hBz]
-    · apply hJ
-      simp [generalMaxwellJ, hEx, hEy, hEz, hBx, hBy, hBz]
-  exact lt_of_le_of_ne hnonneg (Ne.symm hne)
-
-/-- Hence the arbitrary non-null field has strictly positive energy density. -/
-theorem generalMaxwellEnergyDensity_pos
-    (Ex Ey Ez Bx By Bz : ℝ)
-    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
-    0 < generalMaxwellEnergyDensity Ex Ey Ez Bx By Bz := by
-  unfold generalMaxwellEnergyDensity
-  exact div_pos
-    (generalMaxwell_component_norm_sq_pos
-      Ex Ey Ez Bx By Bz hnonnull)
-    (mul_pos (by norm_num) Real.pi_pos)
-
-/-- Maxwell stress scales quadratically under an arbitrary common field-amplitude
-rescaling, with no principal-frame alignment. -/
-theorem generalMaxwellStressFromF_scale
-    (c Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) :
-    generalMaxwellStressFromF
-        (c * Ex) (c * Ey) (c * Ez)
-        (c * Bx) (c * By) (c * Bz) i j =
-      c^2 * generalMaxwellStressFromF
-        Ex Ey Ez Bx By Bz i j := by
-  fin_cases i <;> fin_cases j <;>
-    simp [generalMaxwellStressFromF,
-      generalMaxwellFsq, generalMaxwellF,
-      principalMetricSign] <;>
-    field_simp [ne_of_gt Real.pi_pos] <;>
-    ring
-
-/-- Therefore the arbitrary Maxwell field obeys the same exact relative character
-`e^{2s}` used in the Einstein-Maxwell action comparison. -/
-theorem generalMaxwellStressFromF_exp_scale
-    (s Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) :
-    generalMaxwellStressFromF
-        (Real.exp s * Ex) (Real.exp s * Ey) (Real.exp s * Ez)
-        (Real.exp s * Bx) (Real.exp s * By) (Real.exp s * Bz) i j =
-      Real.exp (2 * s) *
-        generalMaxwellStressFromF Ex Ey Ez Bx By Bz i j := by
-  rw [generalMaxwellStressFromF_scale]
-  rw [show (Real.exp s)^2 = Real.exp (2 * s) by
-    rw [pow_two, ← Real.exp_add]
-    congr 1
-    ring]
-
-/-- On the regular non-null Maxwell sector, simultaneous satisfaction of the
-original and relatively rescaled Einstein-Maxwell equation is possible exactly at
-the unique action fixed point `s=0`, before principalization. -/
-theorem generalMaxwell_solution_preserving_iff
-    (u s Ex Ey Ez Bx By Bz : ℝ)
-    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
-    (8 * Real.pi *
-        generalMaxwellEnergyDensity Ex Ey Ez Bx By Bz =
-      8 * Real.pi *
-        maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
-        generalMaxwellEnergyDensity Ex Ey Ez Bx By Bz) ↔
-      s = 0 := by
-  exact rescaled_solution_preserving_iff
-    u s (generalMaxwellEnergyDensity Ex Ey Ez Bx By Bz)
-    (ne_of_gt
-      (generalMaxwellEnergyDensity_pos
-        Ex Ey Ez Bx By Bz hnonnull))
-
-/-- The arbitrary-field fixed-point theorem specializes to the principal one. -/
-theorem generalMaxwellEnergyDensity_principal_specialization
-    (E B : ℝ) :
-    generalMaxwellEnergyDensity E 0 0 B 0 0 =
-      principalFieldEnergyDensity E B := by
-  unfold generalMaxwellEnergyDensity principalFieldEnergyDensity
-  ring
-
 /-! ### Maxwell potential first variation and symplectic potential -/
 
 
@@ -3962,6 +3836,133 @@ theorem generalMaxwellChi_pos
   · have hJ2 : 0 < (generalMaxwellJ Ex Ey Ez Bx By Bz)^2 :=
       sq_pos_of_ne_zero hJ
     nlinarith [sq_nonneg (generalMaxwellI Ex Ey Ez Bx By Bz)]
+
+/-! ### Arbitrary-field stress scaling and unique relative fixed point -/
+
+/-- Electromagnetic energy density of the full six-component Maxwell field in the
+chosen orthonormal time orientation. -/
+def generalMaxwellEnergyDensity
+    (Ex Ey Ez Bx By Bz : ℝ) : ℝ :=
+  (Ex^2 + Ey^2 + Ez^2 + Bx^2 + By^2 + Bz^2) /
+    (8 * Real.pi)
+
+/-- The mixed timelike stress component of the arbitrary field is minus its
+positive energy density. -/
+theorem generalMaxwellStressFromF_00
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    generalMaxwellStressFromF Ex Ey Ez Bx By Bz 0 0 =
+      -generalMaxwellEnergyDensity Ex Ey Ez Bx By Bz := by
+  simp [generalMaxwellStressFromF,
+    generalMaxwellEnergyDensity,
+    generalMaxwellFsq, generalMaxwellF,
+    principalMetricSign]
+  field_simp [ne_of_gt Real.pi_pos]
+  ring
+
+/-- A non-null electromagnetic field cannot have zero Euclidean component norm. -/
+theorem generalMaxwell_component_norm_sq_pos
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
+    0 < Ex^2 + Ey^2 + Ez^2 + Bx^2 + By^2 + Bz^2 := by
+  have hnonneg :
+      0 ≤ Ex^2 + Ey^2 + Ez^2 + Bx^2 + By^2 + Bz^2 := by
+    positivity
+  have hne :
+      Ex^2 + Ey^2 + Ez^2 + Bx^2 + By^2 + Bz^2 ≠ 0 := by
+    intro hzero
+    have hEx : Ex = 0 := by
+      nlinarith [sq_nonneg Ex, sq_nonneg Ey, sq_nonneg Ez,
+        sq_nonneg Bx, sq_nonneg By, sq_nonneg Bz]
+    have hEy : Ey = 0 := by
+      nlinarith [sq_nonneg Ex, sq_nonneg Ey, sq_nonneg Ez,
+        sq_nonneg Bx, sq_nonneg By, sq_nonneg Bz]
+    have hEz : Ez = 0 := by
+      nlinarith [sq_nonneg Ex, sq_nonneg Ey, sq_nonneg Ez,
+        sq_nonneg Bx, sq_nonneg By, sq_nonneg Bz]
+    have hBx : Bx = 0 := by
+      nlinarith [sq_nonneg Ex, sq_nonneg Ey, sq_nonneg Ez,
+        sq_nonneg Bx, sq_nonneg By, sq_nonneg Bz]
+    have hBy : By = 0 := by
+      nlinarith [sq_nonneg Ex, sq_nonneg Ey, sq_nonneg Ez,
+        sq_nonneg Bx, sq_nonneg By, sq_nonneg Bz]
+    have hBz : Bz = 0 := by
+      nlinarith [sq_nonneg Ex, sq_nonneg Ey, sq_nonneg Ez,
+        sq_nonneg Bx, sq_nonneg By, sq_nonneg Bz]
+    rcases hnonnull with hI | hJ
+    · apply hI
+      simp [generalMaxwellI, hEx, hEy, hEz, hBx, hBy, hBz]
+    · apply hJ
+      simp [generalMaxwellJ, hEx, hEy, hEz, hBx, hBy, hBz]
+  exact lt_of_le_of_ne hnonneg (Ne.symm hne)
+
+/-- Hence the arbitrary non-null field has strictly positive energy density. -/
+theorem generalMaxwellEnergyDensity_pos
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
+    0 < generalMaxwellEnergyDensity Ex Ey Ez Bx By Bz := by
+  unfold generalMaxwellEnergyDensity
+  exact div_pos
+    (generalMaxwell_component_norm_sq_pos
+      Ex Ey Ez Bx By Bz hnonnull)
+    (mul_pos (by norm_num) Real.pi_pos)
+
+/-- Maxwell stress scales quadratically under an arbitrary common field-amplitude
+rescaling, with no principal-frame alignment. -/
+theorem generalMaxwellStressFromF_scale
+    (c Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) :
+    generalMaxwellStressFromF
+        (c * Ex) (c * Ey) (c * Ez)
+        (c * Bx) (c * By) (c * Bz) i j =
+      c^2 * generalMaxwellStressFromF
+        Ex Ey Ez Bx By Bz i j := by
+  fin_cases i <;> fin_cases j <;>
+    simp [generalMaxwellStressFromF,
+      generalMaxwellFsq, generalMaxwellF,
+      principalMetricSign] <;>
+    field_simp [ne_of_gt Real.pi_pos] <;>
+    ring
+
+/-- Therefore the arbitrary Maxwell field obeys the same exact relative character
+`e^{2s}` used in the Einstein-Maxwell action comparison. -/
+theorem generalMaxwellStressFromF_exp_scale
+    (s Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) :
+    generalMaxwellStressFromF
+        (Real.exp s * Ex) (Real.exp s * Ey) (Real.exp s * Ez)
+        (Real.exp s * Bx) (Real.exp s * By) (Real.exp s * Bz) i j =
+      Real.exp (2 * s) *
+        generalMaxwellStressFromF Ex Ey Ez Bx By Bz i j := by
+  rw [generalMaxwellStressFromF_scale]
+  rw [show (Real.exp s)^2 = Real.exp (2 * s) by
+    rw [pow_two, ← Real.exp_add]
+    congr 1
+    ring]
+
+/-- On the regular non-null Maxwell sector, simultaneous satisfaction of the
+original and relatively rescaled Einstein-Maxwell equation is possible exactly at
+the unique action fixed point `s=0`, before principalization. -/
+theorem generalMaxwell_solution_preserving_iff
+    (u s Ex Ey Ez Bx By Bz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
+    (8 * Real.pi *
+        generalMaxwellEnergyDensity Ex Ey Ez Bx By Bz =
+      8 * Real.pi *
+        maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+        generalMaxwellEnergyDensity Ex Ey Ez Bx By Bz) ↔
+      s = 0 := by
+  exact rescaled_solution_preserving_iff
+    u s (generalMaxwellEnergyDensity Ex Ey Ez Bx By Bz)
+    (ne_of_gt
+      (generalMaxwellEnergyDensity_pos
+        Ex Ey Ez Bx By Bz hnonnull))
+
+/-- The arbitrary-field fixed-point theorem specializes to the principal one. -/
+theorem generalMaxwellEnergyDensity_principal_specialization
+    (E B : ℝ) :
+    generalMaxwellEnergyDensity E 0 0 B 0 0 =
+      principalFieldEnergyDensity E B := by
+  unfold generalMaxwellEnergyDensity principalFieldEnergyDensity
+  ring
+
 
 /-- The arbitrary-field carrier square written with the positive Rainich magnitude. -/
 theorem generalMaxwellCarrierLinear_sq_chi
