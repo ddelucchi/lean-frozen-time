@@ -28137,6 +28137,198 @@ theorem paper_finiteResolverTowerCanonicalRegularBranch_forced_certificate
     T.firstCovector_mem
     T.firstCovector_nonnull
 
+
+
+/-! ### Genuine Synge branch with no ambient optical-map input
+
+The previous certificate accepts an ambient linear realization I.  The following
+version removes that extension entirely.  It uses only the actual endpoint plane
+and its geometric nondegeneracy; the normalized identification on that plane is
+constructed uniquely above. -/
+
+/-- End-to-end resolved-branch certificate using only the genuine Synge endpoint
+plane.  No linear map on the ambient cotangent space is an input. -/
+structure PaperIntrinsicEndpointPlaneResolvedBranchForcedCertificate
+    (Bdual :
+      (X →L[ℝ] ℝ) →ₗ[ℝ] (X →L[ℝ] ℝ) →ₗ[ℝ] ℝ)
+    (S : RegularSyngeEndpointPairSource Bdual)
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hmem :
+      principalRaiseCovector alpha ∈
+        LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))
+    (hp : principalMinkowskiCovectorSq alpha ≠ 0)
+    (hind : S.EndpointPairIndependent)
+    (hsym : ∀ a b, bil Bdual a b = bil Bdual b a) : Prop where
+  einsteinMaxwellCore :
+    ArbitraryMaxwellResolvedRegularStratumCertificate
+      Ex Ey Ez Bx By Bz u s
+      dEx dEy dEz dBx dBy dBz
+      alpha hnonnull hmem hp
+  regularEndpointIFT :
+    HasStrictFDerivAt
+        S.plus.endpointMap
+        ((-S.plus.sigmaTheta⁻¹) • S.plus.sigmaX)
+        S.plus.u.1 ∧
+      HasStrictFDerivAt
+        S.minus.endpointMap
+        ((-S.minus.sigmaTheta⁻¹) • S.minus.sigmaX)
+        S.minus.u.1
+  syngeOpticalClosure :
+    bil Bdual
+        S.toSyngeEndpointJetData.clockCovector
+        S.toSyngeEndpointJetData.radialCovector = 0 ∧
+      -(bil Bdual
+          S.toSyngeEndpointJetData.clockCovector
+          S.toSyngeEndpointJetData.clockCovector) =
+        bil Bdual
+          S.toSyngeEndpointJetData.radialCovector
+          S.toSyngeEndpointJetData.radialCovector
+  endpointPlaneIdentification :
+    ∃! J : S.EndpointPlane →ₗ[ℝ] R2,
+      J (S.endpointPlaneEquiv hind (1,0)) = principalThetaPlus ∧
+      J (S.endpointPlaneEquiv hind (0,1)) = principalThetaMinus
+  fieldForcedClockRadial :
+    ∃ D :
+        NormalizedPrincipalNullDyad
+          (LinearMap.range
+            (generalMaxwellProjectorPlusLinear
+              Ex Ey Ez Bx By Bz)),
+      D.FutureTo
+          (generalMaxwellProjectorPlus
+            Ex Ey Ez Bx By Bz (principalBasis 0)) ∧
+      S.canonicalEndpointPlaneOpticalMap hind
+          (S.endpointPlaneEquiv hind
+            ((1 / 2 : ℝ), (1 / 2 : ℝ))) =
+        generalMaxwellFiniteResolvingOpticalCoordinates
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D (resolvingPlaneBalancedU alpha D) ∧
+      S.canonicalEndpointPlaneOpticalMap hind
+          (S.endpointPlaneEquiv hind
+            ((1 / 2 : ℝ), (-1 / 2 : ℝ))) =
+        generalMaxwellFiniteResolvingOpticalCoordinates
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D (resolvingPlaneBalancedE alpha D)
+
+/-- Constructor of the ambient-map-free genuine-branch certificate. -/
+theorem paper_intrinsicEndpointPlaneResolvedBranch_forced_certificate
+    (Bdual :
+      (X →L[ℝ] ℝ) →ₗ[ℝ] (X →L[ℝ] ℝ) →ₗ[ℝ] ℝ)
+    (S : RegularSyngeEndpointPairSource Bdual)
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hmem :
+      principalRaiseCovector alpha ∈
+        LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))
+    (hp : principalMinkowskiCovectorSq alpha ≠ 0)
+    (hind : S.EndpointPairIndependent)
+    (hsym : ∀ a b, bil Bdual a b = bil Bdual b a) :
+    PaperIntrinsicEndpointPlaneResolvedBranchForcedCertificate
+      Bdual S
+      Ex Ey Ez Bx By Bz u s
+      dEx dEy dEz dBx dBy dBz
+      alpha hnonnull hmem hp hind hsym := by
+  refine {
+    einsteinMaxwellCore :=
+      arbitraryMaxwell_resolvedRegularStratum_certificate
+        Ex Ey Ez Bx By Bz u s
+        dEx dEy dEz dBx dBy dBz
+        alpha hnonnull hmem hp
+    regularEndpointIFT := ⟨
+      S.plus.endpointMap_hasStrictFDerivAt_explicit,
+      S.minus.endpointMap_hasStrictFDerivAt_explicit⟩
+    syngeOpticalClosure := S.optical_closure hsym
+    endpointPlaneIdentification :=
+      S.canonicalEndpointPlaneOpticalMap_existsUnique hind
+    fieldForcedClockRadial := ?_ }
+  rcases
+      generalMaxwellProjectorPlus_futureNormalizedNullDyad_exists
+        Ex Ey Ez Bx By Bz hnonnull with
+    ⟨D,hD⟩
+  refine ⟨D,hD,?_,?_⟩
+  · rw [S.canonicalEndpointPlaneOpticalMap_clock hind,
+      generalMaxwellFiniteResolvingOpticalCoordinates_on_U]
+  · rw [S.canonicalEndpointPlaneOpticalMap_radial hind,
+      generalMaxwellFiniteResolvingOpticalCoordinates_on_E]
+
+/-- Generic first-jet stratum on a genuine regular Synge branch.  The resolver
+covector is the field-derived P_L d log chi and no ambient optical map is supplied. -/
+theorem paper_intrinsicEndpointPlane_firstJet_forced_certificate
+    (Bdual :
+      (X →L[ℝ] ℝ) →ₗ[ℝ] (X →L[ℝ] ℝ) →ₗ[ℝ] ℝ)
+    (S : RegularSyngeEndpointPairSource Bdual)
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hp :
+      generalMaxwellResolvingNormSq
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz ≠ 0)
+    (hind : S.EndpointPairIndependent)
+    (hsym : ∀ a b, bil Bdual a b = bil Bdual b a) :
+    PaperIntrinsicEndpointPlaneResolvedBranchForcedCertificate
+      Bdual S
+      Ex Ey Ez Bx By Bz u s
+      dEx dEy dEz dBx dBy dBz
+      (generalMaxwellResolvingCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz)
+      hnonnull
+      (generalMaxwellResolvingCovector_raised_mem_plusRange
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz hnonnull)
+      hp hind hsym := by
+  exact paper_intrinsicEndpointPlaneResolvedBranch_forced_certificate
+    Bdual S
+    Ex Ey Ez Bx By Bz u s
+    dEx dEy dEz dBx dBy dBz
+    (generalMaxwellResolvingCovector
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz)
+    hnonnull
+    (generalMaxwellResolvingCovector_raised_mem_plusRange
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz hnonnull)
+    hp hind hsym
+
+/-- Finite-resolver-tower version on a genuine Synge branch, again with no
+ambient optical identification.  The first successful resolver order is
+selected internally by well-ordering. -/
+theorem paper_intrinsicEndpointPlane_finiteResolverTower_forced_certificate
+    (Bdual :
+      (X →L[ℝ] ℝ) →ₗ[ℝ] (X →L[ℝ] ℝ) →ₗ[ℝ] ℝ)
+    (S : RegularSyngeEndpointPairSource Bdual)
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (T : MaxwellFiniteResolverTower Ex Ey Ez Bx By Bz)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hind : S.EndpointPairIndependent)
+    (hsym : ∀ a b, bil Bdual a b = bil Bdual b a) :
+    PaperIntrinsicEndpointPlaneResolvedBranchForcedCertificate
+      Bdual S
+      Ex Ey Ez Bx By Bz u s
+      dEx dEy dEz dBx dBy dBz
+      T.firstCovector
+      hnonnull T.firstCovector_mem T.firstCovector_nonnull
+      hind hsym := by
+  exact paper_intrinsicEndpointPlaneResolvedBranch_forced_certificate
+    Bdual S
+    Ex Ey Ez Bx By Bz u s
+    dEx dEy dEz dBx dBy dBz
+    T.firstCovector
+    hnonnull T.firstCovector_mem T.firstCovector_nonnull
+    hind hsym
+
 end ResolvedRegularSyngePaperCertificate
 
 /-! ### Single arbitrary-field regular-stratum local closure certificate -/
@@ -35297,6 +35489,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.RegularSyngeEndpointPairSource.endpointPairIndependent_of_realization
 #print axioms RelativeRest.RegularSyngeEndpointPairSource.canonicalEndpointPlaneOpticalMap_existsUnique
 #print axioms RelativeRest.paper_resolvedRegularBranch_forced_certificate
+#print axioms RelativeRest.paper_intrinsicEndpointPlaneResolvedBranch_forced_certificate
+#print axioms RelativeRest.paper_intrinsicEndpointPlane_firstJet_forced_certificate
+#print axioms RelativeRest.paper_intrinsicEndpointPlane_finiteResolverTower_forced_certificate
 #print axioms RelativeRest.opticalDualBilinear_symmetric
 #print axioms RelativeRest.paper_canonicalResolvedRegularBranch_forced_certificate
 #print axioms RelativeRest.paper_firstJetCanonicalRegularBranch_forced_certificate
