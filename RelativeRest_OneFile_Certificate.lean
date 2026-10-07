@@ -5602,58 +5602,6 @@ theorem generalMaxwellNormalizedCarrier_basis0_pairing
   field_simp [hchi0]
   ring
 
-/-- Maxwell positivity selects the +1 Rainich eigenspace as the Lorentzian
-principal two-plane: the canonical projection of the background future unit
-vector is strictly timelike.  This is frame-free and uses only the non-null
-Maxwell condition. -/
-theorem generalMaxwellProjectorPlus_basis0_timelike
-    (Ex Ey Ez Bx By Bz : ℝ)
-    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
-    principalMinkowskiSq
-      (generalMaxwellProjectorPlus
-        Ex Ey Ez Bx By Bz (principalBasis 0)) < 0 := by
-  rw [principalMinkowskiSq_eq_bilinear]
-  change
-    principalMinkowskiBilinearLinear
-      (generalMaxwellProjectorPlus
-        Ex Ey Ez Bx By Bz (principalBasis 0))
-      (generalMaxwellProjectorPlus
-        Ex Ey Ez Bx By Bz (principalBasis 0)) < 0
-  rw [show
-      generalMaxwellProjectorPlus
-        Ex Ey Ez Bx By Bz (principalBasis 0) =
-        involutionProjPlus
-          (generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz)
-          (principalBasis 0) by rfl]
-  rw [selfAdjointInvolution_plus_projector_norm
-    principalMinkowskiBilinearLinear
-    (generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz)
-    (fun x y =>
-      generalMaxwellNormalizedCarrier_self_adjoint
-        Ex Ey Ez Bx By Bz x y)
-    (generalMaxwellNormalizedCarrier_apply_sq
-      Ex Ey Ez Bx By Bz hnonnull)
-    (principalBasis 0)]
-  simp only [principalMinkowskiBilinearLinear_apply]
-  have htime :
-      principalMinkowskiBilinear
-        (principalBasis 0) (principalBasis 0) = -1 := by
-    rw [← principalMinkowskiSq_eq_bilinear, principal_time_basis_norm]
-  rw [htime,
-    generalMaxwellNormalizedCarrier_basis0_pairing
-      Ex Ey Ez Bx By Bz hnonnull]
-  have hratio :
-      0 <
-        16 * Real.pi *
-          generalMaxwellEnergyDensity Ex Ey Ez Bx By Bz /
-            generalMaxwellChi Ex Ey Ez Bx By Bz := by
-    exact div_pos
-      (mul_pos
-        (mul_pos (by norm_num) Real.pi_pos)
-        (generalMaxwellEnergyDensity_pos
-          Ex Ey Ez Bx By Bz hnonnull))
-      (generalMaxwellChi_pos Ex Ey Ez Bx By Bz hnonnull)
-  nlinarith
 
 /-! ### Canonical principal projectors of the arbitrary Maxwell carrier -/
 
@@ -5729,6 +5677,59 @@ theorem generalMaxwellProjectors_idempotent
     (generalMaxwellNormalizedCarrier_apply_sq
       Ex Ey Ez Bx By Bz hnonnull) v
 
+
+/-- Maxwell positivity selects the +1 Rainich eigenspace as the Lorentzian
+principal two-plane: the canonical projection of the background future unit
+vector is strictly timelike.  This is frame-free and uses only the non-null
+Maxwell condition. -/
+theorem generalMaxwellProjectorPlus_basis0_timelike
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
+    principalMinkowskiSq
+      (generalMaxwellProjectorPlus
+        Ex Ey Ez Bx By Bz (principalBasis 0)) < 0 := by
+  rw [principalMinkowskiSq_eq_bilinear]
+  change
+    principalMinkowskiBilinearLinear
+      (generalMaxwellProjectorPlus
+        Ex Ey Ez Bx By Bz (principalBasis 0))
+      (generalMaxwellProjectorPlus
+        Ex Ey Ez Bx By Bz (principalBasis 0)) < 0
+  rw [show
+      generalMaxwellProjectorPlus
+        Ex Ey Ez Bx By Bz (principalBasis 0) =
+        involutionProjPlus
+          (generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz)
+          (principalBasis 0) by rfl]
+  rw [selfAdjointInvolution_plus_projector_norm
+    principalMinkowskiBilinearLinear
+    (generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz)
+    (fun x y =>
+      generalMaxwellNormalizedCarrier_self_adjoint
+        Ex Ey Ez Bx By Bz x y)
+    (generalMaxwellNormalizedCarrier_apply_sq
+      Ex Ey Ez Bx By Bz hnonnull)
+    (principalBasis 0)]
+  simp only [principalMinkowskiBilinearLinear_apply]
+  have htime :
+      principalMinkowskiBilinear
+        (principalBasis 0) (principalBasis 0) = -1 := by
+    rw [← principalMinkowskiSq_eq_bilinear, principal_time_basis_norm]
+  rw [htime,
+    generalMaxwellNormalizedCarrier_basis0_pairing
+      Ex Ey Ez Bx By Bz hnonnull]
+  have hratio :
+      0 <
+        16 * Real.pi *
+          generalMaxwellEnergyDensity Ex Ey Ez Bx By Bz /
+            generalMaxwellChi Ex Ey Ez Bx By Bz := by
+    exact div_pos
+      (mul_pos
+        (mul_pos (by norm_num) Real.pi_pos)
+        (generalMaxwellEnergyDensity_pos
+          Ex Ey Ez Bx By Bz hnonnull))
+      (generalMaxwellChi_pos Ex Ey Ez Bx By Bz hnonnull)
+  nlinarith
 
 /-- The two canonical principal-plane images of an arbitrary non-null Maxwell
 field are Lorentz-orthogonal.  This is the frame-free principal-plane splitting
