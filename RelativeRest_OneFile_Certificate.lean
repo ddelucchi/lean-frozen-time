@@ -4562,6 +4562,31 @@ def generalMaxwellNormalizedCarrier
   (generalMaxwellChi Ex Ey Ez Bx By Bz)⁻¹ •
     generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz
 
+
+/-- Normalization by the positive Rainich magnitude preserves Lorentz
+self-adjointness of the arbitrary Maxwell carrier. -/
+theorem generalMaxwellNormalizedCarrier_self_adjoint
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (v w : Fin 4 → ℝ) :
+    principalMinkowskiBilinear
+        (generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz v) w =
+      principalMinkowskiBilinear
+        v (generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz w) := by
+  unfold generalMaxwellNormalizedCarrier
+  simp only [LinearMap.smul_apply]
+  have hL :=
+    principalMinkowskiBilinear_smul
+      (generalMaxwellChi Ex Ey Ez Bx By Bz)⁻¹ 1
+      (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz v) w
+  have hR :=
+    principalMinkowskiBilinear_smul
+      1 (generalMaxwellChi Ex Ey Ez Bx By Bz)⁻¹
+      v (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz w)
+  simp at hL hR
+  rw [hL, hR,
+    generalMaxwellCarrierLinear_self_adjoint
+      Ex Ey Ez Bx By Bz v w]
+
 /-- On the regular non-null sector, the normalized arbitrary-field carrier is an
 involution.  No principal-frame coordinates enter this statement. -/
 theorem generalMaxwellNormalizedCarrier_involution
@@ -4763,6 +4788,42 @@ theorem generalMaxwellProjectors_idempotent
     (generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz)
     (generalMaxwellNormalizedCarrier_apply_sq
       Ex Ey Ez Bx By Bz hnonnull) v
+
+
+/-- The two canonical principal-plane images of an arbitrary non-null Maxwell
+field are Lorentz-orthogonal.  This is the frame-free principal-plane splitting
+used by the manuscript. -/
+theorem generalMaxwellProjector_images_orthogonal
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (v w : Fin 4 → ℝ) :
+    principalMinkowskiBilinear
+      (generalMaxwellProjectorPlus Ex Ey Ez Bx By Bz v)
+      (generalMaxwellProjectorMinus Ex Ey Ez Bx By Bz w) = 0 := by
+  apply involution_eigenspaces_orthogonal
+    (B := {
+      toFun := fun x =>
+        { toFun := fun y => principalMinkowskiBilinear x y
+          map_add' := by intro y z; simp [principalMinkowskiBilinear]; ring
+          map_smul' := by intro c y; simp [principalMinkowskiBilinear]; ring }
+      map_add' := by
+        intro x y
+        ext z
+        simp [principalMinkowskiBilinear]
+        ring
+      map_smul' := by
+        intro c x
+        ext z
+        simp [principalMinkowskiBilinear]
+        ring })
+    (S := generalMaxwellNormalizedCarrier Ex Ey Ez Bx By Bz)
+    (fun x y =>
+      generalMaxwellNormalizedCarrier_self_adjoint
+        Ex Ey Ez Bx By Bz x y)
+  · exact generalMaxwellProjectorPlus_eigen
+      Ex Ey Ez Bx By Bz hnonnull v
+  · exact generalMaxwellProjectorMinus_eigen
+      Ex Ey Ez Bx By Bz hnonnull w
 
 /-! ### Full-jet residual stabilizer logic -/
 
@@ -22826,6 +22887,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.carrier_chi_common_scale
 #print axioms RelativeRest.normalizedCarrierEndomorphism_common_scale
 #print axioms RelativeRest.generalMaxwellNormalizedCarrier_involution
+#print axioms RelativeRest.generalMaxwellNormalizedCarrier_self_adjoint
+#print axioms RelativeRest.generalMaxwellProjector_images_orthogonal
 #print axioms RelativeRest.generalMaxwellCarrier_nilpotent_of_chi_zero
 #print axioms RelativeRest.involution_projectors_scale_invariant
 #print axioms RelativeRest.relationalObservable_gauge_invariant
