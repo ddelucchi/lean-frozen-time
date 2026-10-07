@@ -25767,6 +25767,40 @@ structure ArbitraryMaxwellFiniteResolvingClockCertificate
               resolvingPlaneBalancedE alpha D ∨
            resolvingPlaneBalancedE alpha E =
               -resolvingPlaneBalancedE alpha D))
+  opticalIFTNormalForm :
+    ∃ D :
+        NormalizedPrincipalNullDyad
+          (LinearMap.range
+            (generalMaxwellProjectorPlusLinear
+              Ex Ey Ez Bx By Bz)),
+      D.FutureTo
+          (generalMaxwellProjectorPlus
+            Ex Ey Ez Bx By Bz (principalBasis 0)) ∧
+      generalMaxwellFiniteResolvingOpticalCoordinates
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D (resolvingPlaneBalancedU alpha D) = TO ∧
+      generalMaxwellFiniteResolvingOpticalCoordinates
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D (resolvingPlaneBalancedE alpha D) = RO ∧
+      Function.Surjective
+        (generalMaxwellFiniteResolvingOpticalCoordinates
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D) ∧
+      canonicalOpticalRegularSyngePair.RealizesCanonicalOpticalJet
+        opticalDualCoordinates ∧
+      HasStrictFDerivAt
+          canonicalOpticalRegularSyngePair.plus.endpointMap
+          ((-canonicalOpticalRegularSyngePair.plus.sigmaTheta⁻¹) •
+            canonicalOpticalRegularSyngePair.plus.sigmaX)
+          canonicalOpticalRegularSyngePair.plus.u.1 ∧
+      HasStrictFDerivAt
+          canonicalOpticalRegularSyngePair.minus.endpointMap
+          ((-canonicalOpticalRegularSyngePair.minus.sigmaTheta⁻¹) •
+            canonicalOpticalRegularSyngePair.minus.sigmaX)
+          canonicalOpticalRegularSyngePair.minus.u.1
   globalLocalClock :
     ∃ D :
         NormalizedPrincipalNullDyad
@@ -25844,6 +25878,7 @@ theorem arbitraryMaxwell_finiteResolvingClock_certificate
       Ex Ey Ez Bx By Bz u s alpha hnonnull hmem hp := by
   refine {
     canonical := ?_
+    opticalIFTNormalForm := ?_
     globalLocalClock := ?_
     compensatedActionBridge := ?_ }
   rcases
@@ -25870,6 +25905,16 @@ theorem arbitraryMaxwell_finiteResolvingClock_certificate
       (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
       (Bx:=Bx) (By:=By) (Bz:=Bz)
       alpha D s sigma hsigma
+  · rcases
+      generalMaxwellProjectorPlus_futureNormalizedNullDyad_exists
+        Ex Ey Ez Bx By Bz hnonnull with
+      ⟨D,hD⟩
+    refine ⟨D,hD,?_⟩
+    exact
+      generalMaxwellFiniteResolving_opticalIFT_normalForm
+        (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+        (Bx:=Bx) (By:=By) (Bz:=Bz)
+        alpha D
   · rcases
       generalMaxwellProjectorPlus_futureNormalizedNullDyad_exists
         Ex Ey Ez Bx By Bz hnonnull with
