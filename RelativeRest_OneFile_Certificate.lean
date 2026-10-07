@@ -1796,6 +1796,115 @@ theorem principalMaxwellFsqMetricDifferential_matrixUnit
       principalMaxwellF] <;>
     ring
 
+/-- Literal inverse-metric matrix line through the principal Lorentzian
+orthonormal metric in the matrix-unit direction `δg^{ij}`. -/
+def principalInverseMetricMatrixLine
+    (i j : Fin 4) (s : ℝ) : Matrix (Fin 4) (Fin 4) ℝ :=
+  fun a b =>
+    principalMetricCov a b +
+      s * principalInverseMetricMatrixUnit i j a b
+
+/-- The one-entry perturbation has the exact determinant expected from the
+principal diagonal metric.  Off-diagonal matrix units leave the determinant
+unchanged; diagonal units multiply it by `1+s g_ii`. -/
+theorem principalInverseMetricMatrixLine_det
+    (i j : Fin 4) (s : ℝ) :
+    (principalInverseMetricMatrixLine i j s).det =
+      if i = j
+      then -(1 + s * principalMetricSign i)
+      else -1 := by
+  by_cases hle : i ≤ j
+  · have hup :
+        (principalInverseMetricMatrixLine i j s).IsUpperTriangular := by
+      intro a b hba
+      have hab : a ≠ b := ne_of_gt hba
+      have hunit : ¬ (a = i ∧ b = j) := by
+        rintro ⟨rfl, rfl⟩
+        exact (not_lt_of_ge hle) hba
+      simp [principalInverseMetricMatrixLine,
+        principalMetricCov, principalInverseMetricMatrixUnit,
+        hab, hunit]
+    rw [Matrix.det_of_isUpperTriangular hup]
+    fin_cases i <;> fin_cases j <;>
+      simp [principalInverseMetricMatrixLine,
+        principalMetricCov, principalMetricSign,
+        principalInverseMetricMatrixUnit] <;> ring
+  · have hji : j < i := lt_of_not_ge hle
+    have hlow :
+        (principalInverseMetricMatrixLine i j s).IsLowerTriangular := by
+      intro a b hab
+      have hne : a ≠ b := ne_of_lt hab
+      have hunit : ¬ (a = i ∧ b = j) := by
+        rintro ⟨rfl, rfl⟩
+        exact (not_lt_of_ge (le_of_lt hji)) hab
+      simp [principalInverseMetricMatrixLine,
+        principalMetricCov, principalInverseMetricMatrixUnit,
+        hne, hunit]
+    rw [Matrix.det_of_isLowerTriangular _ hlow]
+    fin_cases i <;> fin_cases j <;>
+      simp [principalInverseMetricMatrixLine,
+        principalMetricCov, principalMetricSign,
+        principalInverseMetricMatrixUnit] <;> ring
+
+/-- Normalized Lorentzian volume density along the actual inverse-metric matrix
+line.  Near the background point the determinant is negative, so
+`sqrt(-det g^{-1})^{-1}=sqrt(|det g|)`. -/
+def principalInverseMetricVolumeFromDetLine
+    (i j : Fin 4) (s : ℝ) : ℝ :=
+  (Real.sqrt
+    (-(principalInverseMetricMatrixLine i j s).det))⁻¹
+
+/-- The literal determinant-derived volume line has derivative
+`-(1/2) g_ij` at the principal metric. -/
+theorem principalInverseMetricVolumeFromDetLine_hasDerivAt_zero
+    (i j : Fin 4) :
+    HasDerivAt
+      (principalInverseMetricVolumeFromDetLine i j)
+      (-(1 / 2 : ℝ) * principalMetricCov i j) 0 := by
+  rw [show principalInverseMetricVolumeFromDetLine i j =
+      fun s : ℝ =>
+        (Real.sqrt
+          (-(principalInverseMetricMatrixLine i j s).det))⁻¹ by rfl]
+  by_cases hij : i = j
+  · subst j
+    have hlin :
+        HasDerivAt
+          (fun s : ℝ => 1 + s * principalMetricSign i)
+          (principalMetricSign i) 0 := by
+      simpa using
+        ((hasDerivAt_id 0).mul_const
+          (principalMetricSign i)).const_add 1
+    have hsqrt :=
+      hlin.sqrt (by norm_num :
+        (1 + (0 : ℝ) * principalMetricSign i) ≠ 0)
+    have hinv :=
+      hsqrt.inv (by norm_num :
+        Real.sqrt (1 + (0 : ℝ) * principalMetricSign i) ≠ 0)
+    have hfun :
+        (fun s : ℝ =>
+          (Real.sqrt
+            (-(principalInverseMetricMatrixLine i i s).det))⁻¹) =
+        (fun s : ℝ =>
+          (Real.sqrt
+            (1 + s * principalMetricSign i))⁻¹) := by
+      funext s
+      rw [principalInverseMetricMatrixLine_det]
+      simp
+    rw [hfun]
+    convert hinv using 1 <;>
+      simp [principalMetricCov] <;> ring
+  · have hfun :
+        (fun s : ℝ =>
+          (Real.sqrt
+            (-(principalInverseMetricMatrixLine i j s).det))⁻¹) =
+        fun _ : ℝ => 1 := by
+      funext s
+      rw [principalInverseMetricMatrixLine_det]
+      simp [hij]
+    rw [hfun]
+    simpa [principalMetricCov, hij] using
+      (hasDerivAt_const (0 : ℝ) (1 : ℝ))
+
 /-- The inverse-metric variation of `F^2` contributes the factor two fixed by the
 two inverse metrics in the Maxwell Lagrangian. -/
 def principalMaxwellInverseMetricVariationCoeff
@@ -1813,6 +1922,16 @@ def principalMaxwellVolumeVariationCoeff
 component variation `δg^{ij}`. -/
 def principalInverseMetricVolumeDerivative (i j : Fin 4) : ℝ :=
   -(1 / 2 : ℝ) * principalMetricCov i j
+
+/-- The named volume derivative is therefore the derivative of the actual
+Lorentzian determinant volume density, not an independent variational input. -/
+theorem principalInverseMetricVolumeDerivative_from_det
+    (i j : Fin 4) :
+    deriv (principalInverseMetricVolumeFromDetLine i j) 0 =
+      principalInverseMetricVolumeDerivative i j := by
+  exact
+    (principalInverseMetricVolumeFromDetLine_hasDerivAt_zero i j).deriv
+
 
 /-- Directional derivative of `F_ab F^ab` under the same inverse-metric component
 variation. The factor two is forced by the two inverse metrics raising the indices. -/
@@ -21200,6 +21319,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalMaxwellPotential_first_variation
 #print axioms RelativeRest.principalMaxwell_pureGauss_bulk_response_zero
 #print axioms RelativeRest.principalMaxwellPotential_onShell_first_variation
+#print axioms RelativeRest.principalInverseMetricMatrixLine_det
+#print axioms RelativeRest.principalInverseMetricVolumeFromDetLine_hasDerivAt_zero
+#print axioms RelativeRest.principalInverseMetricVolumeDerivative_from_det
 #print axioms RelativeRest.principalMaxwellFsqMetricDifferential_matrixUnit
 #print axioms RelativeRest.principalMaxwellFsqInverseMetricDerivative_from_contraction
 #print axioms RelativeRest.principalMaxwellLagrangianMetricLine_hasDerivAt_zero
