@@ -21579,6 +21579,503 @@ theorem generalMaxwellBalancedClockCovector_independent
 
 
 
+
+/-! ### Arbitrary-field ADM characteristic realization
+
+The pointwise identity characteristic model above is useful for quotient algebra,
+but the manuscript's beta map is a normal-plus-shift gauge deformation.  The
+following construction uses the already-forced balanced observer and its spatial
+kernel to build that deformation directly. -/
+
+/-- Spatial deformation subspace selected by the field-derived clock covector. -/
+abbrev GeneralMaxwellBalancedSpatialSubmodule
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :=
+  LinearMap.ker
+    (generalMaxwellBalancedClockCovector
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D)
+
+/-- Lapse plus field-selected spatial shift. -/
+abbrev GeneralMaxwellADMDeformationParameter
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :=
+  ℝ ×
+    GeneralMaxwellBalancedSpatialSubmodule
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D
+
+/-- Arbitrary-field hypersurface deformation from lapse and the field-selected shift. -/
+def generalMaxwellADMDeformationMap
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    GeneralMaxwellADMDeformationParameter
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D →ₗ[ℝ]
+      (Fin 4 → ℝ) where
+  toFun p :=
+    p.1 •
+        generalMaxwellBalancedU
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D +
+      p.2.1
+  map_add' x y := by
+    ext i
+    simp [add_smul]
+  map_smul' a x := by
+    ext i
+    simp [mul_smul]
+
+/-- Pure-lapse inclusion into the arbitrary-field ADM deformation space. -/
+def generalMaxwellADMPureLapseLift
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    ℝ →ₗ[ℝ]
+      GeneralMaxwellADMDeformationParameter
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D where
+  toFun N := (N, 0)
+  map_add' x y := by rfl
+  map_smul' a x := by rfl
+
+/-- Pure lapse along the already-forced observer. -/
+def generalMaxwellBalancedLapseCharacteristicMap
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    ℝ →ₗ[ℝ] (Fin 4 → ℝ) where
+  toFun N :=
+    N •
+      generalMaxwellBalancedU
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D
+  map_add' x y := by
+    simp [add_smul]
+  map_smul' a x := by
+    simp [mul_smul]
+
+/-- The ADM map forces the pure-lapse characteristic line exactly. -/
+theorem generalMaxwellADMDeformationMap_pureLapse
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    (generalMaxwellADMDeformationMap
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D).comp
+        (generalMaxwellADMPureLapseLift
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) =
+      generalMaxwellBalancedLapseCharacteristicMap
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D := by
+  ext N i
+  simp [generalMaxwellADMDeformationMap,
+    generalMaxwellADMPureLapseLift,
+    generalMaxwellBalancedLapseCharacteristicMap]
+
+/-- Unit lapse reaches the field-selected unit observer. -/
+@[simp] theorem generalMaxwellADMDeformationMap_unitLapse
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellADMDeformationMap
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D
+        (1, 0) =
+      generalMaxwellBalancedU
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D := by
+  ext i
+  simp [generalMaxwellADMDeformationMap]
+
+/-- A zero-lapse spatial shift is sent to the shift itself. -/
+@[simp] theorem generalMaxwellADMDeformationMap_spatialShift
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (S :
+      GeneralMaxwellBalancedSpatialSubmodule
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D) :
+    generalMaxwellADMDeformationMap
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D
+        (0, S) = S.1 := by
+  ext i
+  simp [generalMaxwellADMDeformationMap]
+
+/-- Characteristic-current data built on the normal-plus-shift deformation map. -/
+def generalMaxwellBalancedADMCharacteristicData
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    CharacteristicCurrentData
+      (P:=
+        GeneralMaxwellADMDeformationParameter
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D)
+      (KSpace:=(Fin 4 → ℝ)) where
+  beta :=
+    generalMaxwellADMDeformationMap
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D
+  current :=
+    halfCarrierBulkCurrent
+      LinearMap.id
+      (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz)
+      (generalMaxwellBalancedFutureFluxUnit
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D)
+  positiveWitness := (1, 0)
+  current_positive := by
+    change
+      0 <
+        halfCarrierBulkCurrent
+          LinearMap.id
+          (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz)
+          (generalMaxwellBalancedFutureFluxUnit
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D)
+          (generalMaxwellADMDeformationMap
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D
+            (1, 0))
+    rw [generalMaxwellADMDeformationMap_unitLapse]
+    exact
+      generalMaxwellBalancedHalfCarrierCurrent_positive
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz
+        hnonnull D
+
+/-- The ADM characteristic current has the same intrinsic clock factorization. -/
+theorem generalMaxwellBalancedADMCharacteristic_current_factor
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    (generalMaxwellBalancedADMCharacteristicData
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull D).current =
+      (generalMaxwellChi Ex Ey Ez Bx By Bz /
+        (16 * Real.pi)) •
+        generalMaxwellBalancedClockCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D := by
+  change
+    halfCarrierBulkCurrent
+        LinearMap.id
+        (generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz)
+        (generalMaxwellBalancedFutureFluxUnit
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) =
+      (generalMaxwellChi Ex Ey Ez Bx By Bz /
+        (16 * Real.pi)) •
+        generalMaxwellBalancedClockCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D
+  exact generalMaxwellBalancedCharacteristic_current_factor
+    Ex Ey Ez Bx By Bz
+    dEx dEy dEz dBx dBy dBz
+    hnonnull D
+
+/-- The ADM characteristic clock covector is nonzero. -/
+theorem generalMaxwellBalancedADMCharacteristic_Lambda_nonzero
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    (generalMaxwellBalancedADMCharacteristicData
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull D).Lambda ≠ 0 :=
+  characteristicCurrent_Lambda_nonzero
+    (generalMaxwellBalancedADMCharacteristicData
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull D)
+
+/-- The stress-visible ADM characteristic quotient is one-dimensional. -/
+theorem generalMaxwellBalancedADMCharacteristic_quotient_finrank_one
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    Module.finrank ℝ
+      ((generalMaxwellBalancedADMCharacteristicData
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz
+          hnonnull D).K ⧸
+        LinearMap.ker
+          (generalMaxwellBalancedADMCharacteristicData
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz
+            hnonnull D).Lambda) = 1 :=
+  characteristicCurrent_quotient_finrank_one
+    (generalMaxwellBalancedADMCharacteristicData
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull D)
+
+/-- Every spatial shift lies in the kernel of the action-derived ADM response. -/
+theorem generalMaxwellBalancedADMCharacteristic_spatialShift_invisible
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (S :
+      GeneralMaxwellBalancedSpatialSubmodule
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D) :
+    (generalMaxwellBalancedADMCharacteristicData
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull D).current
+      ((generalMaxwellBalancedADMCharacteristicData
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz
+        hnonnull D).beta (0, S)) = 0 := by
+  rw [generalMaxwellBalancedADMCharacteristic_current_factor
+    Ex Ey Ez Bx By Bz
+    dEx dEy dEz dBx dBy dBz hnonnull D]
+  change
+    (generalMaxwellChi Ex Ey Ez Bx By Bz /
+        (16 * Real.pi)) *
+      generalMaxwellBalancedClockCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D
+        (generalMaxwellADMDeformationMap
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D
+          (0, S)) = 0
+  rw [generalMaxwellADMDeformationMap_spatialShift]
+  rw [S.2]
+  ring
+
+/-- Pure lapse response is the lapse times chi/(16 pi). -/
+theorem generalMaxwellBalancedADMCharacteristic_pureLapse_response
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (N : ℝ) :
+    (generalMaxwellBalancedADMCharacteristicData
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull D).current
+      ((generalMaxwellBalancedADMCharacteristicData
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz
+        hnonnull D).beta
+        ((generalMaxwellADMPureLapseLift
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) N)) =
+      N *
+        (generalMaxwellChi Ex Ey Ez Bx By Bz /
+          (16 * Real.pi)) := by
+  rw [generalMaxwellBalancedADMCharacteristic_current_factor
+    Ex Ey Ez Bx By Bz
+    dEx dEy dEz dBx dBy dBz hnonnull D]
+  change
+    (generalMaxwellChi Ex Ey Ez Bx By Bz /
+        (16 * Real.pi)) *
+      generalMaxwellBalancedClockCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D
+        (generalMaxwellADMDeformationMap
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D
+          ((generalMaxwellADMPureLapseLift
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D) N)) =
+      N *
+        (generalMaxwellChi Ex Ey Ez Bx By Bz /
+          (16 * Real.pi))
+  have hpure :=
+    LinearMap.congr_fun
+      (generalMaxwellADMDeformationMap_pureLapse
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D) N
+  rw [hpure]
+  change
+    (generalMaxwellChi Ex Ey Ez Bx By Bz /
+        (16 * Real.pi)) *
+      generalMaxwellBalancedClockCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D
+        (N •
+          generalMaxwellBalancedU
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D) =
+      N *
+        (generalMaxwellChi Ex Ey Ez Bx By Bz /
+          (16 * Real.pi))
+  rw [map_smul,
+    generalMaxwellBalancedClockCovector_unit
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D]
+  ring
+
+/-- Strong arbitrary-field ADM clock certificate. -/
+structure ArbitraryMaxwellADMClockCertificate
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hp :
+      generalMaxwellResolvingNormSq
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz ≠ 0) : Prop where
+  firstJetCore :
+    ArbitraryMaxwellFirstJetForcedCertificate
+      Ex Ey Ez Bx By Bz u s
+      dEx dEy dEz dBx dBy dBz
+      hnonnull hp
+  futureADMClock :
+    ∃ D :
+        NormalizedPrincipalNullDyad
+          (LinearMap.range
+            (generalMaxwellProjectorPlusLinear
+              Ex Ey Ez Bx By Bz)),
+      D.FutureTo
+          (generalMaxwellProjectorPlus
+            Ex Ey Ez Bx By Bz (principalBasis 0)) ∧
+      let C :=
+        generalMaxwellBalancedADMCharacteristicData
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz
+          hnonnull D
+      C.Lambda ≠ 0 ∧
+      Module.finrank ℝ
+          (C.K ⧸ LinearMap.ker C.Lambda) = 1 ∧
+      (generalMaxwellADMDeformationMap
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D).comp
+          (generalMaxwellADMPureLapseLift
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D) =
+        generalMaxwellBalancedLapseCharacteristicMap
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D ∧
+      C.current (C.beta (1, 0)) =
+        generalMaxwellChi Ex Ey Ez Bx By Bz /
+          (16 * Real.pi) ∧
+      (∀ S :
+        GeneralMaxwellBalancedSpatialSubmodule
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D,
+        C.current (C.beta (0, S)) = 0)
+
+/-- Constructor for the ADM characteristic clock certificate. -/
+theorem arbitraryMaxwell_admClock_certificate
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hp :
+      generalMaxwellResolvingNormSq
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz ≠ 0) :
+    ArbitraryMaxwellADMClockCertificate
+      Ex Ey Ez Bx By Bz u s
+      dEx dEy dEz dBx dBy dBz
+      hnonnull hp := by
+  refine {
+    firstJetCore :=
+      arbitraryMaxwell_firstJet_forced_certificate
+        Ex Ey Ez Bx By Bz u s
+        dEx dEy dEz dBx dBy dBz
+        hnonnull hp
+    futureADMClock := ?_ }
+  rcases
+      generalMaxwellProjectorPlus_futureNormalizedNullDyad_exists
+        Ex Ey Ez Bx By Bz hnonnull with
+    ⟨D, hD⟩
+  refine ⟨D, hD, ?_⟩
+  dsimp
+  refine ⟨
+    generalMaxwellBalancedADMCharacteristic_Lambda_nonzero
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz hnonnull D,
+    generalMaxwellBalancedADMCharacteristic_quotient_finrank_one
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz hnonnull D,
+    generalMaxwellADMDeformationMap_pureLapse
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D,
+    ?_,
+    ?_⟩
+  · simpa using
+      generalMaxwellBalancedADMCharacteristic_pureLapse_response
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz
+        hnonnull D 1
+  · intro S
+    exact
+      generalMaxwellBalancedADMCharacteristic_spatialShift_invisible
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz
+        hnonnull D S
+
 /-- The balanced observer rescaled to unit norm in the forced conformal metric
 gHat=chi g. -/
 def generalMaxwellConformalBalancedU
@@ -22638,6 +23135,11 @@ structure ArbitraryMaxwellRegularStratumLocalCertificate
       Ex Ey Ez Bx By Bz u s
       dEx dEy dEz dBx dBy dBz
       hnonnull hp
+  admCharacteristicClock :
+    ArbitraryMaxwellADMClockCertificate
+      Ex Ey Ez Bx By Bz u s
+      dEx dEy dEz dBx dBy dBz
+      hnonnull hp
   canonicalLocalClock :
     ∃ D :
         NormalizedPrincipalNullDyad
@@ -22822,6 +23324,11 @@ theorem arbitraryMaxwell_regularStratum_local_certificate
   refine {
     actionToCharacteristicClock :=
       arbitraryMaxwell_firstJet_clockDescent_certificate
+        Ex Ey Ez Bx By Bz u s
+        dEx dEy dEz dBx dBy dBz
+        hnonnull hp
+    admCharacteristicClock :=
+      arbitraryMaxwell_admClock_certificate
         Ex Ey Ez Bx By Bz u s
         dEx dEy dEz dBx dBy dBz
         hnonnull hp
@@ -29368,6 +29875,12 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellThetaMinusCovector_eval_optical
 #print axioms RelativeRest.generalMaxwell_opticalIFT_normalForm
 #print axioms RelativeRest.arbitraryMaxwell_firstJet_clockDescent_certificate
+#print axioms RelativeRest.generalMaxwellADMDeformationMap_pureLapse
+#print axioms RelativeRest.generalMaxwellBalancedADMCharacteristic_Lambda_nonzero
+#print axioms RelativeRest.generalMaxwellBalancedADMCharacteristic_quotient_finrank_one
+#print axioms RelativeRest.generalMaxwellBalancedADMCharacteristic_spatialShift_invisible
+#print axioms RelativeRest.generalMaxwellBalancedADMCharacteristic_pureLapse_response
+#print axioms RelativeRest.arbitraryMaxwell_admClock_certificate
 #print axioms RelativeRest.arbitraryMaxwell_regularStratum_local_certificate
 #print axioms RelativeRest.characteristicCurrent_factorization
 #print axioms RelativeRest.characteristicCurrent_Lambda_unique
