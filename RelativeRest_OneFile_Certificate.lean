@@ -17559,6 +17559,59 @@ theorem PrincipalLapseReachabilityInput.forces_action_bulk
     ⟨hrest,hJ,hCA,hDA,_horbit,_hhalf,hcur,hL,hdim,_hnorm⟩
   exact ⟨hrest,hJ,hCA,hDA,hcur,hL,hdim⟩
 
+/-- In the canonical ADM normal+shift deformation model, the nonzero Maxwell
+field alone is enough to realize the positive clock direction by unit lapse and zero
+shift, and therefore forces the complete characteristic quotient/normalization chain. -/
+theorem canonicalPrincipalADM_forces_clock_chain
+    (E B : ℝ) (hfield : E ≠ 0 ∨ B ≠ 0) :
+    let D := canonicalPrincipalADMReachabilityInput E B hfield
+    D.beta.comp D.lapseLift = principalLapseCharacteristicMap ∧
+    D.beta (D.lapseLift 1) = principalUhat ∧
+    D.toCarrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.toCarrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.toCarrier.toCharacteristicCurrentData.Lambda) = 1 ∧
+    principalLocalLift
+      (globalToPrincipalLocalClockMap
+        D.toCarrier.toCharacteristicCurrentData.Lambda
+        (globalClockQuotientUnit
+          D.toCarrier.toCharacteristicCurrentData.Lambda
+          (principalCarrierCharacteristic_Lambda_nonzero D.toCarrier))) =
+      principalUhat := by
+  let D := canonicalPrincipalADMReachabilityInput E B hfield
+  have hclock := D.forces_clock_chain
+  refine ⟨D.pureLapse, ?_, hclock.1, hclock.2.1, hclock.2.2⟩
+  have h := LinearMap.congr_fun D.pureLapse 1
+  simpa [principalLapseCharacteristicMap] using h
+
+/-- The same canonical ADM deformation model carries the complete representative-free
+action-to-clock bulk chain.  No arbitrary reachability witness or tangent-space
+surjectivity is needed: the unit-lapse normal deformation is enough. -/
+theorem canonicalPrincipalADM_forces_action_bulk
+    (E B u s : ℝ) (hfield : E ≠ 0 ∨ B ≠ 0) :
+    let D := canonicalPrincipalADMReachabilityInput E B hfield
+    ((8 * Real.pi * principalFieldEnergyDensity E B =
+        8 * Real.pi *
+          maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
+          principalFieldEnergyDensity E B) ↔ s = 0) ∧
+    (∀ i j : Fin 4,
+      D.toCarrier.J (principalBasis j) i =
+        (16 * Real.pi / principalMetricSign i) *
+          deriv
+            (principalScaledMetricEulerCoeffFromAction E B i j) 0) ∧
+    D.toCarrier.noetherConstraintOperatorFromAction CA = 0 ∧
+    D.toCarrier.noetherConstraintOperatorFromAction DA =
+      D.toCarrier.iε.comp
+        (principalMetricEulerNoetherJetLinear E B) ∧
+    D.toCarrier.metricEulerJetResponse =
+      D.toCarrier.toCharacteristicCurrentData.current ∧
+    D.toCarrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
+    Module.finrank ℝ
+      (D.toCarrier.toCharacteristicCurrentData.K ⧸
+        LinearMap.ker D.toCarrier.toCharacteristicCurrentData.Lambda) = 1) := by
+  let D := canonicalPrincipalADMReachabilityInput E B hfield
+  exact D.forces_action_bulk u s
+
 /-- In the canonical pointwise characteristic model, a nonzero Maxwell field
 alone forces the nonvanishing characteristic clock, the one-dimensional quotient,
 and the uniquely normalized principal timelike representative.  No parameter witness,
@@ -22690,6 +22743,8 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.principalADMDeformationMap_unitLapse
 #print axioms RelativeRest.PrincipalLapseReachabilityInput.forces_clock_chain
 #print axioms RelativeRest.PrincipalLapseReachabilityInput.forces_action_bulk
+#print axioms RelativeRest.canonicalPrincipalADM_forces_clock_chain
+#print axioms RelativeRest.canonicalPrincipalADM_forces_action_bulk
 #print axioms RelativeRest.canonicalPrincipalField_forces_clock_chain
 #print axioms RelativeRest.canonicalPrincipalField_forces_action_bulk
 #print axioms RelativeRest.principalBridgeSpatialCoeff_ratio_forced
