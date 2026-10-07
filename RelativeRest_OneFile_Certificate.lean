@@ -22163,6 +22163,355 @@ theorem generalMaxwellThetaCovectors_independent_up_to_exchange
       simp
       ring
 
+
+
+/-! ### Canonical optical normal coordinates for the arbitrary field-selected frame -/
+
+/-- Unit radial dual R_*(v)=g(e_*,v). -/
+def generalMaxwellBalancedRadialUnitCovector
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ where
+  toFun v :=
+    principalMinkowskiBilinear
+      (generalMaxwellBalancedE
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D) v
+  map_add' x y := by
+    exact principalMinkowskiBilinear_add_right
+      (generalMaxwellBalancedE
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D) x y
+  map_smul' a x := by
+    simpa using
+      (principalMinkowskiBilinear_smul_right
+        a
+        (generalMaxwellBalancedE
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) x)
+
+/-- T_* annihilates the radial unit. -/
+theorem generalMaxwellBalancedClockCovector_on_balancedE
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellBalancedClockCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D
+        (generalMaxwellBalancedE
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) = 0 := by
+  unfold generalMaxwellBalancedClockCovector
+    generalMaxwellBalancedFutureFluxUnit
+  simp only [LinearMap.smul_apply]
+  rw [(generalMaxwellBalancedFrame_orthonormal
+    Ex Ey Ez Bx By Bz
+    dEx dEy dEz dBx dBy dBz D).2.2]
+  ring
+
+/-- R_* annihilates the clock unit. -/
+theorem generalMaxwellBalancedRadialUnitCovector_on_balancedU
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellBalancedRadialUnitCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D
+        (generalMaxwellBalancedU
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) = 0 := by
+  unfold generalMaxwellBalancedRadialUnitCovector
+  rw [principalMinkowskiBilinear_symm]
+  exact
+    (generalMaxwellBalancedFrame_orthonormal
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D).2.2
+
+/-- R_* evaluates to one on its normalized radial unit. -/
+theorem generalMaxwellBalancedRadialUnitCovector_on_balancedE
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellBalancedRadialUnitCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D
+        (generalMaxwellBalancedE
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) = 1 := by
+  unfold generalMaxwellBalancedRadialUnitCovector
+  rw [← principalMinkowskiSq_eq_bilinear]
+  exact
+    (generalMaxwellBalancedFrame_orthonormal
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D).2.1
+
+/-- Field-selected optical coordinates (T_*,R_*) on the ambient tangent model. -/
+def generalMaxwellBalancedOpticalCoordinates
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    (Fin 4 → ℝ) →ₗ[ℝ] R2 where
+  toFun v :=
+    (generalMaxwellBalancedClockCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D v,
+     generalMaxwellBalancedRadialUnitCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D v)
+  map_add' x y := by
+    ext <;> simp
+  map_smul' a x := by
+    ext <;> simp
+
+/-- The field-selected clock unit maps to the canonical optical time basis. -/
+theorem generalMaxwellBalancedOpticalCoordinates_on_U
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellBalancedOpticalCoordinates
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D
+        (generalMaxwellBalancedU
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) = TO := by
+  ext
+  · simp [generalMaxwellBalancedOpticalCoordinates, TO,
+      generalMaxwellBalancedClockCovector_unit,
+      generalMaxwellBalancedRadialUnitCovector_on_balancedU]
+  · simp [generalMaxwellBalancedOpticalCoordinates, TO,
+      generalMaxwellBalancedClockCovector_unit,
+      generalMaxwellBalancedRadialUnitCovector_on_balancedU]
+
+/-- The field-selected radial unit maps to the canonical optical radial basis. -/
+theorem generalMaxwellBalancedOpticalCoordinates_on_E
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellBalancedOpticalCoordinates
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D
+        (generalMaxwellBalancedE
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) = RO := by
+  ext
+  · simp [generalMaxwellBalancedOpticalCoordinates, RO,
+      generalMaxwellBalancedClockCovector_on_balancedE,
+      generalMaxwellBalancedRadialUnitCovector_on_balancedE]
+  · simp [generalMaxwellBalancedOpticalCoordinates, RO,
+      generalMaxwellBalancedClockCovector_on_balancedE,
+      generalMaxwellBalancedRadialUnitCovector_on_balancedE]
+
+/-- The optical coordinate map reaches the entire normalized (T,R) plane. -/
+theorem generalMaxwellBalancedOpticalCoordinates_surjective
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    Function.Surjective
+      (generalMaxwellBalancedOpticalCoordinates
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D) := by
+  intro y
+  let U :=
+    generalMaxwellBalancedU
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D
+  let E :=
+    generalMaxwellBalancedE
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D
+  refine ⟨y.1 • U + y.2 • E, ?_⟩
+  rw [map_add, map_smul, map_smul,
+    generalMaxwellBalancedOpticalCoordinates_on_U,
+    generalMaxwellBalancedOpticalCoordinates_on_E]
+  ext <;> simp [TO, RO]
+
+theorem principalCovectorEval_add
+    (alpha beta v : Fin 4 → ℝ) :
+    principalCovectorEval (alpha + beta) v =
+      principalCovectorEval alpha v +
+        principalCovectorEval beta v := by
+  simp [principalCovectorEval, Finset.sum_add_distrib]
+  ring
+
+theorem principalCovectorEval_sub
+    (alpha beta v : Fin 4 → ℝ) :
+    principalCovectorEval (alpha - beta) v =
+      principalCovectorEval alpha v -
+        principalCovectorEval beta v := by
+  simp [principalCovectorEval, Finset.sum_sub_distrib]
+  ring
+
+/-- Radial physical covector evaluation is sqrt(chi) times the normalized R coordinate. -/
+theorem generalMaxwellRadialCovectorComponents_eval
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (v : Fin 4 → ℝ) :
+    principalCovectorEval
+      (generalMaxwellRadialCovectorComponents
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D) v =
+      generalMaxwellClockRate Ex Ey Ez Bx By Bz *
+        generalMaxwellBalancedRadialUnitCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D v := by
+  rw [principalCovectorEval_eq_raised_pairing]
+  unfold generalMaxwellRadialCovectorComponents
+  rw [principalRaiseCovector_smul_lowerVector,
+    principalMinkowskiBilinear_smul_left]
+  rfl
+
+/-- The physical future endpoint first jet is sqrt(chi) times the pullback of
+the canonical optical covector T_O+R_O. -/
+theorem generalMaxwellThetaPlusCovector_eval_optical
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (v : Fin 4 → ℝ) :
+    principalCovectorEval
+      (generalMaxwellThetaPlusCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D) v =
+      generalMaxwellClockRate Ex Ey Ez Bx By Bz *
+        opticalEval principalThetaPlus
+          (generalMaxwellBalancedOpticalCoordinates
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D v) := by
+  unfold generalMaxwellThetaPlusCovector
+  rw [principalCovectorEval_add,
+    generalMaxwellChronometricCovectorComponents_eval,
+    generalMaxwellRadialCovectorComponents_eval]
+  unfold generalMaxwellChronometricClockCovector
+    generalMaxwellBalancedOpticalCoordinates
+    opticalEval principalThetaPlus TO RO
+  simp only [LinearMap.smul_apply]
+  ring
+
+/-- The physical past endpoint first jet is sqrt(chi) times the pullback of
+the canonical optical covector T_O-R_O. -/
+theorem generalMaxwellThetaMinusCovector_eval_optical
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (v : Fin 4 → ℝ) :
+    principalCovectorEval
+      (generalMaxwellThetaMinusCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D) v =
+      generalMaxwellClockRate Ex Ey Ez Bx By Bz *
+        opticalEval principalThetaMinus
+          (generalMaxwellBalancedOpticalCoordinates
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D v) := by
+  unfold generalMaxwellThetaMinusCovector
+  rw [principalCovectorEval_sub,
+    generalMaxwellChronometricCovectorComponents_eval,
+    generalMaxwellRadialCovectorComponents_eval]
+  unfold generalMaxwellChronometricClockCovector
+    generalMaxwellBalancedOpticalCoordinates
+    opticalEval principalThetaMinus TO RO
+  simp only [LinearMap.smul_apply]
+  ring
+
+/-- The arbitrary-field optical first jet is therefore in the exact canonical
+normal form for which an actual strict-IFT endpoint pair has already been
+constructed.  This theorem deliberately claims a normal-form realization, not
+that the affine IFT source is the curved-spacetime Synge world function. -/
+theorem generalMaxwell_opticalIFT_normalForm
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellBalancedOpticalCoordinates
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D
+        (generalMaxwellBalancedU
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) = TO ∧
+    generalMaxwellBalancedOpticalCoordinates
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D
+        (generalMaxwellBalancedE
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) = RO ∧
+    Function.Surjective
+      (generalMaxwellBalancedOpticalCoordinates
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D) ∧
+    canonicalOpticalRegularSyngePair.RealizesCanonicalOpticalJet
+      opticalDualCoordinates ∧
+    HasStrictFDerivAt
+        canonicalOpticalRegularSyngePair.plus.endpointMap
+        ((-canonicalOpticalRegularSyngePair.plus.sigmaTheta⁻¹) •
+          canonicalOpticalRegularSyngePair.plus.sigmaX)
+        canonicalOpticalRegularSyngePair.plus.u.1 ∧
+    HasStrictFDerivAt
+        canonicalOpticalRegularSyngePair.minus.endpointMap
+        ((-canonicalOpticalRegularSyngePair.minus.sigmaTheta⁻¹) •
+          canonicalOpticalRegularSyngePair.minus.sigmaX)
+        canonicalOpticalRegularSyngePair.minus.u.1 := by
+  exact ⟨
+    generalMaxwellBalancedOpticalCoordinates_on_U
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D,
+    generalMaxwellBalancedOpticalCoordinates_on_E
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D,
+    generalMaxwellBalancedOpticalCoordinates_surjective
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D,
+    canonicalOpticalRegularSyngePair_realizesCanonicalOpticalJet,
+    canonicalOpticalRegularSyngePair_endpoint_derivatives.1,
+    canonicalOpticalRegularSyngePair_endpoint_derivatives.2⟩
+
 /-- Frame-free action-to-characteristic-clock certificate on the regular
 first-jet stratum. -/
 structure ArbitraryMaxwellFirstJetClockDescentCertificate
@@ -28714,6 +29063,10 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellThetaCovectors_null
 #print axioms RelativeRest.generalMaxwellThetaCovectors_reconstruct
 #print axioms RelativeRest.generalMaxwellThetaCovectors_independent_up_to_exchange
+#print axioms RelativeRest.generalMaxwellBalancedOpticalCoordinates_surjective
+#print axioms RelativeRest.generalMaxwellThetaPlusCovector_eval_optical
+#print axioms RelativeRest.generalMaxwellThetaMinusCovector_eval_optical
+#print axioms RelativeRest.generalMaxwell_opticalIFT_normalForm
 #print axioms RelativeRest.arbitraryMaxwell_firstJet_clockDescent_certificate
 #print axioms RelativeRest.characteristicCurrent_factorization
 #print axioms RelativeRest.characteristicCurrent_Lambda_unique
