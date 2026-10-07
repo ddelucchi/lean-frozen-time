@@ -17326,11 +17326,6 @@ theorem canonicalPrincipalField_forced_certificate
     causalExtendedEndpointMonotonicity := ?_
     causalBranchIndependence := ?_ }
   · exact D.J_basis_eq_actionEulerJet
-  · intro v λ hresponse
-    exact principalBridgeSpatialCoeff_ratio_forced
-      (principalClockRate E B) λ v
-      (ne_of_gt (Real.sqrt_pos.2 (principalChi_pos E B hfield)))
-      hresponse
   · exact D.noetherConstraintOperatorFromAction_DA
   · rw [D.metricEulerJetResponse_eq_stress,
       principalCarrierCharacteristic_current D]
@@ -17339,6 +17334,11 @@ theorem canonicalPrincipalField_forced_certificate
         D.toCharacteristicCurrentData.Lambda
         (principalCarrierCharacteristic_Lambda_nonzero D)⟩
   · exact principalCarrierCharacteristic_normalizationBridge D
+  · intro v λ hresponse
+    exact principalBridgeSpatialCoeff_ratio_forced
+      (principalClockRate E B) λ v
+      (ne_of_gt (Real.sqrt_pos.2 (principalChi_pos E B hfield)))
+      hresponse
   · intro τ0 x dplus dminus τplus τminus hp hm
     exact principalRadarClock_split_ricci_rate
       E B τ0 x dplus dminus τplus τminus hp hm
