@@ -25193,6 +25193,123 @@ theorem generalMaxwellFiniteResolving_rapidity_forced
   exact opticalBoost_TO_injective h
 
 
+
+/-- The arbitrary finite-resolver optical coordinates cover the normalized
+time-radial plane. -/
+theorem generalMaxwellFiniteResolvingOpticalCoordinates_surjective
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    Function.Surjective
+      (generalMaxwellFiniteResolvingOpticalCoordinates
+        (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+        (Bx:=Bx) (By:=By) (Bz:=Bz)
+        alpha D) := by
+  intro y
+  refine ⟨
+    y.1 • resolvingPlaneBalancedU alpha D +
+      y.2 • resolvingPlaneBalancedE alpha D, ?_⟩
+  rw [map_add, map_smul, map_smul,
+    generalMaxwellFiniteResolvingOpticalCoordinates_on_U,
+    generalMaxwellFiniteResolvingOpticalCoordinates_on_E]
+  ext <;> simp [TO, RO]
+
+/-- Canonical local optical IFT package for any finite resolver. -/
+theorem generalMaxwellFiniteResolving_opticalIFT_normalForm
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellFiniteResolvingOpticalCoordinates
+        (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+        (Bx:=Bx) (By:=By) (Bz:=Bz)
+        alpha D (resolvingPlaneBalancedU alpha D) = TO ∧
+    generalMaxwellFiniteResolvingOpticalCoordinates
+        (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+        (Bx:=Bx) (By:=By) (Bz:=Bz)
+        alpha D (resolvingPlaneBalancedE alpha D) = RO ∧
+    Function.Surjective
+      (generalMaxwellFiniteResolvingOpticalCoordinates
+        (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+        (Bx:=Bx) (By:=By) (Bz:=Bz)
+        alpha D) ∧
+    canonicalOpticalRegularSyngePair.RealizesCanonicalOpticalJet
+      opticalDualCoordinates ∧
+    HasStrictFDerivAt
+        canonicalOpticalRegularSyngePair.plus.endpointMap
+        ((-canonicalOpticalRegularSyngePair.plus.sigmaTheta⁻¹) •
+          canonicalOpticalRegularSyngePair.plus.sigmaX)
+        canonicalOpticalRegularSyngePair.plus.u.1 ∧
+    HasStrictFDerivAt
+        canonicalOpticalRegularSyngePair.minus.endpointMap
+        ((-canonicalOpticalRegularSyngePair.minus.sigmaTheta⁻¹) •
+          canonicalOpticalRegularSyngePair.minus.sigmaX)
+        canonicalOpticalRegularSyngePair.minus.u.1 := by
+  exact ⟨
+    generalMaxwellFiniteResolvingOpticalCoordinates_on_U
+      (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+      (Bx:=Bx) (By:=By) (Bz:=Bz)
+      alpha D,
+    generalMaxwellFiniteResolvingOpticalCoordinates_on_E
+      (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+      (Bx:=Bx) (By:=By) (Bz:=Bz)
+      alpha D,
+    generalMaxwellFiniteResolvingOpticalCoordinates_surjective
+      (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+      (Bx:=Bx) (By:=By) (Bz:=Bz)
+      alpha D,
+    canonicalOpticalRegularSyngePair_realizesCanonicalOpticalJet,
+    canonicalOpticalRegularSyngePair_endpoint_derivatives.1,
+    canonicalOpticalRegularSyngePair_endpoint_derivatives.2⟩
+
+/-- Any genuine curved-spacetime regular Synge realization of the canonical
+optical jet is forced onto the clock/radial frame selected by whichever finite
+Maxwell jet first resolves the Rainich boost. -/
+theorem generalMaxwellFiniteResolving_regularSynge_realization_forced
+    {X : Type*}
+    [NormedAddCommGroup X] [NormedSpace ℝ X] [CompleteSpace X]
+    {Bdual :
+      (X →L[ℝ] ℝ) →ₗ[ℝ] (X →L[ℝ] ℝ) →ₗ[ℝ] ℝ}
+    (S : RegularSyngeEndpointPairSource Bdual)
+    (I : (X →L[ℝ] ℝ) →ₗ[ℝ] R2)
+    (hreal : S.RealizesCanonicalOpticalJet I)
+    (alpha : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    I S.toSyngeEndpointJetData.clockCovector =
+        generalMaxwellFiniteResolvingOpticalCoordinates
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D (resolvingPlaneBalancedU alpha D) ∧
+    I S.toSyngeEndpointJetData.radialCovector =
+        generalMaxwellFiniteResolvingOpticalCoordinates
+          (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+          (Bx:=Bx) (By:=By) (Bz:=Bz)
+          alpha D (resolvingPlaneBalancedE alpha D) ∧
+    I S.toSyngeEndpointJetData.dThetaPlus = principalThetaPlus ∧
+    I S.toSyngeEndpointJetData.dThetaMinus = principalThetaMinus := by
+  have hTR :=
+    (S.realizesCanonicalOpticalJet_iff_clock_radial I).mp hreal
+  refine ⟨?_, ?_, hreal.1, hreal.2⟩
+  · rw [generalMaxwellFiniteResolvingOpticalCoordinates_on_U
+      (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+      (Bx:=Bx) (By:=By) (Bz:=Bz)
+      alpha D]
+    exact hTR.1
+  · rw [generalMaxwellFiniteResolvingOpticalCoordinates_on_E
+      (Ex:=Ex) (Ey:=Ey) (Ez:=Ez)
+      (Bx:=Bx) (By:=By) (Bz:=Bz)
+      alpha D]
+    exact hTR.2
+
 /-! #### Global/local and compensated-action closure for any finite resolver -/
 
 /-- Local quotient unit selected by an arbitrary finite resolver. -/
@@ -32807,6 +32924,9 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellFiniteResolvingADMCharacteristic_quotient_finrank_one
 #print axioms RelativeRest.generalMaxwellFiniteResolvingTheta_null
 #print axioms RelativeRest.generalMaxwellFiniteResolving_rapidity_forced
+#print axioms RelativeRest.generalMaxwellFiniteResolvingOpticalCoordinates_surjective
+#print axioms RelativeRest.generalMaxwellFiniteResolving_opticalIFT_normalForm
+#print axioms RelativeRest.generalMaxwellFiniteResolving_regularSynge_realization_forced
 #print axioms RelativeRest.generalMaxwellFiniteResolvingGlobalToLocalClockMap_pullback
 #print axioms RelativeRest.generalMaxwellFiniteResolvingGlobalToLocalClockMap_bijective
 #print axioms RelativeRest.generalMaxwellFiniteResolvingGlobalClockUnit_lifts_to_U
