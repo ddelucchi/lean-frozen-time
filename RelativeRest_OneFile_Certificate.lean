@@ -25311,6 +25311,79 @@ theorem arbitraryMaxwell_finiteResolvingClock_certificate
       (Bx:=Bx) (By:=By) (Bz:=Bz)
       alpha D s sigma hsigma
 
+
+/-! ### Resolver-order-independent arbitrary-field master
+
+This is the correct theorem for the manuscript's jet-tower clause.  It does not
+assume that the first invariant resolving covector already breaks the residual
+boost.  Any finite carrier jet may supply the first non-null covector alpha in
+the forced Rainich +1 plane; from that point onward the action, frame, ADM
+characteristic clock, chronometric normalization, optical null pair, and
+rapidity are all fixed. -/
+
+structure ArbitraryMaxwellResolvedJetForcedCertificate
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hmem :
+      principalRaiseCovector alpha ∈
+        LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))
+    (hp : principalMinkowskiCovectorSq alpha ≠ 0) : Prop where
+  actionCore :
+    ArbitraryMaxwellActionForcedCertificate
+      Ex Ey Ez Bx By Bz u s hnonnull
+  resolvedClockCore :
+    ArbitraryMaxwellFiniteResolvingClockCertificate
+      Ex Ey Ez Bx By Bz u s alpha
+      hnonnull hmem hp
+  absoluteConformalNormalization :
+    ∀ F : ℝ,
+      0 < F →
+      generalMaxwellChi Ex Ey Ez Bx By Bz ^ 2 / F ^ 2 = 1 →
+      F = generalMaxwellChi Ex Ey Ez Bx By Bz
+  jetTowerDichotomy :
+    ∀ {G : Type*} (H : ℕ → Set G) (e : G),
+      (∀ n, e ∈ H n) →
+      (∃ m : ℕ,
+          H m = {e} ∧ fullJetStabilizer H = {e}) ∨
+        (∀ m : ℕ, H m ≠ {e})
+
+/-- Constructor of the resolver-order-independent master.  No first-jet
+resolving hypothesis appears. -/
+theorem arbitraryMaxwell_resolvedJet_forced_certificate
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (alpha : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hmem :
+      principalRaiseCovector alpha ∈
+        LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))
+    (hp : principalMinkowskiCovectorSq alpha ≠ 0) :
+    ArbitraryMaxwellResolvedJetForcedCertificate
+      Ex Ey Ez Bx By Bz u s alpha
+      hnonnull hmem hp := by
+  refine {
+    actionCore :=
+      arbitraryMaxwell_action_forced_certificate
+        Ex Ey Ez Bx By Bz u s hnonnull
+    resolvedClockCore :=
+      arbitraryMaxwell_finiteResolvingClock_certificate
+        Ex Ey Ez Bx By Bz u s alpha
+        hnonnull hmem hp
+    absoluteConformalNormalization := ?_
+    jetTowerDichotomy := ?_ }
+  · intro F hF hunit
+    exact positive_conformal_scalar_forced_by_unit_involution
+      F (generalMaxwellChi Ex Ey Ez Bx By Bz)
+      hF
+      (generalMaxwellChi_pos Ex Ey Ez Bx By Bz hnonnull)
+      hunit
+  · intro G H e he
+    exact finiteJetBreak_or_unbrokenAtEveryFiniteOrder H e he
+
 /-! ### Single arbitrary-field regular-stratum local closure certificate -/
 
 /-- On the regular arbitrary Einstein-Maxwell first-jet stratum, every local
@@ -32250,6 +32323,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellFiniteResolvingTheta_null
 #print axioms RelativeRest.generalMaxwellFiniteResolving_rapidity_forced
 #print axioms RelativeRest.arbitraryMaxwell_finiteResolvingClock_certificate
+#print axioms RelativeRest.arbitraryMaxwell_resolvedJet_forced_certificate
 #print axioms RelativeRest.resolvedRainichPlane_certificate
 #print axioms RelativeRest.resolvedRainichPlane_representative_independent
 #print axioms RelativeRest.generalMaxwellResolvingCovector_nullDyad_norm
