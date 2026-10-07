@@ -18854,6 +18854,10 @@ structure CanonicalPrincipalFieldForcedCertificate
       8 * Real.pi *
         maxwellStressScaleFactor (rhoUS u s) (lambdaUS u s) *
         principalFieldEnergyDensity E B) ↔ s = 0
+  arbitraryFieldOrigin :
+    ArbitraryMaxwellActionForcedCertificate
+      E 0 0 B 0 0 u s
+      (generalMaxwellNonNull_principal_of_nonzero E B hfield)
   fourDimensionalReciprocity :
     ∀ d : ℝ,
       (volumeHomothetyExponent d + scalarCurvatureHomothetyExponent) *
@@ -19210,6 +19214,9 @@ theorem canonicalPrincipalField_forced_certificate
   refine {
     fixedPoint := principalField_solution_preserving_iff
       u s E B hfield
+    arbitraryFieldOrigin :=
+      principalField_has_arbitraryMaxwell_action_certificate
+        E B u s hfield
     fourDimensionalReciprocity :=
       primitive_relative_weights_reciprocal_iff_four
     hodgeTwoFormFourDimensional :=
@@ -24106,6 +24113,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.clockPotential_unique_up_to_constant
 #print axioms RelativeRest.clockPotential_normalized_flow
 #print axioms RelativeRest.principalEinsteinMaxwell_bulk_stationarity_iff_field_equations
+#print axioms RelativeRest.arbitraryMaxwell_action_forced_certificate
 #print axioms RelativeRest.canonicalPrincipalField_forced_certificate
 #print axioms RelativeRest.kerrNewman_fieldOnly_forced_certificate
 #print axioms RelativeRest.principalFieldCurrent_Lambda_unique
