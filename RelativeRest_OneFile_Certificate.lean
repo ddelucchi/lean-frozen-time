@@ -21577,6 +21577,231 @@ theorem generalMaxwellBalancedClockCovector_independent
   simp only [LinearMap.smul_apply]
   rw [hU]
 
+
+
+/-- The balanced observer rescaled to unit norm in the forced conformal metric
+gHat=chi g. -/
+def generalMaxwellConformalBalancedU
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    Fin 4 → ℝ :=
+  conformalUnitFactor
+      (generalMaxwellChi Ex Ey Ez Bx By Bz) •
+    generalMaxwellBalancedU
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D
+
+/-- The conformally rescaled observer has unit timelike norm in gHat. -/
+theorem generalMaxwellConformalBalancedU_unit
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellChi Ex Ey Ez Bx By Bz *
+      principalMinkowskiSq
+        (generalMaxwellConformalBalancedU
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) = -1 := by
+  unfold generalMaxwellConformalBalancedU
+  rw [principalMinkowskiSq_smul]
+  exact conformal_unit_timelike_normalization
+    (generalMaxwellChi Ex Ey Ez Bx By Bz)
+    (principalMinkowskiSq
+      (generalMaxwellBalancedU
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D))
+    (generalMaxwellChi_pos Ex Ey Ez Bx By Bz hnonnull)
+    (generalMaxwellBalancedFrame_orthonormal
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D).1
+
+/-- Physical chronometric one-form dT_EM = sqrt(chi) T_*. -/
+def generalMaxwellChronometricClockCovector
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    (Fin 4 → ℝ) →ₗ[ℝ] ℝ :=
+  generalMaxwellClockRate Ex Ey Ez Bx By Bz •
+    generalMaxwellBalancedClockCovector
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D
+
+/-- Along the g-unit field-selected observer, the physical clock advances at the
+intrinsic rate sqrt(chi). -/
+theorem generalMaxwellChronometricClockCovector_on_balancedU
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellChronometricClockCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D
+        (generalMaxwellBalancedU
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) =
+      generalMaxwellClockRate Ex Ey Ez Bx By Bz := by
+  unfold generalMaxwellChronometricClockCovector
+  simp only [LinearMap.smul_apply]
+  rw [generalMaxwellBalancedClockCovector_unit
+    Ex Ey Ez Bx By Bz
+    dEx dEy dEz dBx dBy dBz D]
+  ring
+
+/-- In the conformal chronometric metric the same clock is unit normalized:
+dT_EM(uHat_*)=1. -/
+theorem generalMaxwellChronometricClockCovector_on_conformalU
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    generalMaxwellChronometricClockCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D
+        (generalMaxwellConformalBalancedU
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) = 1 := by
+  unfold generalMaxwellConformalBalancedU
+  rw [map_smul,
+    generalMaxwellChronometricClockCovector_on_balancedU
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz D]
+  have hs0 :
+      Real.sqrt (generalMaxwellChi Ex Ey Ez Bx By Bz) ≠ 0 :=
+    ne_of_gt
+      (Real.sqrt_pos.2
+        (generalMaxwellChi_pos Ex Ey Ez Bx By Bz hnonnull))
+  unfold conformalUnitFactor generalMaxwellClockRate
+  field_simp [hs0]
+
+/-- Raising a scaled metric dual cancels the musical maps exactly. -/
+theorem principalRaiseCovector_smul_lowerVector
+    (a : ℝ) (v : Fin 4 → ℝ) :
+    principalRaiseCovector (a • principalLowerVector v) =
+      a • v := by
+  funext i
+  fin_cases i <;>
+    simp [principalRaiseCovector, principalLowerVector,
+      principalMetricSign]
+
+/-- Coordinate components of the physical clock one-form. -/
+def generalMaxwellChronometricCovectorComponents
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    Fin 4 → ℝ :=
+  generalMaxwellClockRate Ex Ey Ez Bx By Bz •
+    principalLowerVector
+      (-generalMaxwellBalancedU
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D)
+
+/-- The component covector and the linear chronometric covector are the same
+geometric one-form. -/
+theorem generalMaxwellChronometricCovectorComponents_eval
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)))
+    (v : Fin 4 → ℝ) :
+    principalCovectorEval
+      (generalMaxwellChronometricCovectorComponents
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D) v =
+      generalMaxwellChronometricClockCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D v := by
+  rw [principalCovectorEval_eq_raised_pairing]
+  unfold generalMaxwellChronometricCovectorComponents
+  rw [principalRaiseCovector_smul_lowerVector]
+  unfold generalMaxwellChronometricClockCovector
+    generalMaxwellBalancedClockCovector
+    generalMaxwellBalancedFutureFluxUnit
+  simp only [LinearMap.smul_apply]
+  rw [principalMinkowskiBilinear_smul_left]
+  ring
+
+/-- Hamilton-Jacobi norm in the original Einstein-Maxwell metric:
+g^{-1}(dT_EM,dT_EM)=-chi. -/
+theorem generalMaxwellChronometricCovector_norm
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    principalMinkowskiCovectorSq
+      (generalMaxwellChronometricCovectorComponents
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D) =
+      -generalMaxwellChi Ex Ey Ez Bx By Bz := by
+  unfold principalMinkowskiCovectorSq
+    generalMaxwellChronometricCovectorComponents
+  rw [principalRaiseCovector_smul_lowerVector,
+    principalMinkowskiSq_smul]
+  have hneg :
+      principalMinkowskiSq
+        (-generalMaxwellBalancedU
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D) = -1 := by
+    simpa [principalMinkowskiSq] using
+      (generalMaxwellBalancedFrame_orthonormal
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D).1
+  rw [hneg, generalMaxwellClockRate_sq]
+  ring
+
+/-- Curvature form of the same Hamilton-Jacobi equation:
+g^{-1}(dT_EM,dT_EM)=-sqrt(R_ab R^ab). -/
+theorem generalMaxwellChronometricCovector_ricci_norm
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz))) :
+    principalMinkowskiCovectorSq
+      (generalMaxwellChronometricCovectorComponents
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D) =
+      -Real.sqrt
+        (generalRicciNormFromEinstein
+          Ex Ey Ez Bx By Bz) := by
+  rw [generalMaxwellChronometricCovector_norm
+    Ex Ey Ez Bx By Bz
+    dEx dEy dEz dBx dBy dBz D,
+    generalRicciNormFromEinstein_eq_chi_sq,
+    Real.sqrt_sq
+      (generalMaxwellChi_nonneg Ex Ey Ez Bx By Bz)]
+
 /-- Frame-free action-to-characteristic-clock certificate on the regular
 first-jet stratum. -/
 structure ArbitraryMaxwellFirstJetClockDescentCertificate
@@ -28117,6 +28342,12 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellBalancedCharacteristic_kernel_eq_clock
 #print axioms RelativeRest.generalMaxwellBalancedCharacteristic_ratio_forced
 #print axioms RelativeRest.generalMaxwellBalancedClockCovector_independent
+#print axioms RelativeRest.generalMaxwellConformalBalancedU_unit
+#print axioms RelativeRest.generalMaxwellChronometricClockCovector_on_balancedU
+#print axioms RelativeRest.generalMaxwellChronometricClockCovector_on_conformalU
+#print axioms RelativeRest.generalMaxwellChronometricCovectorComponents_eval
+#print axioms RelativeRest.generalMaxwellChronometricCovector_norm
+#print axioms RelativeRest.generalMaxwellChronometricCovector_ricci_norm
 #print axioms RelativeRest.arbitraryMaxwell_firstJet_clockDescent_certificate
 #print axioms RelativeRest.characteristicCurrent_factorization
 #print axioms RelativeRest.characteristicCurrent_Lambda_unique
