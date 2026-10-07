@@ -22615,6 +22615,306 @@ theorem arbitraryMaxwell_firstJet_clockDescent_certificate
         Ex Ey Ez Bx By Bz (principalBasis 0))
       hD hE
 
+
+
+/-! ### Single arbitrary-field regular-stratum local closure certificate -/
+
+/-- On the regular arbitrary Einstein-Maxwell first-jet stratum, every local
+choice relevant to the manuscript's clock construction is now a theorem.
+The only hypotheses here are the invariant non-null field condition and the
+invariant resolving condition p²≠0.  Differential transport is stated with its
+own ordinary first-derivative data, while global causal statements are kept in
+their exact order-theoretic form. -/
+structure ArbitraryMaxwellRegularStratumLocalCertificate
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hp :
+      generalMaxwellResolvingNormSq
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz ≠ 0) : Prop where
+  actionToCharacteristicClock :
+    ArbitraryMaxwellFirstJetClockDescentCertificate
+      Ex Ey Ez Bx By Bz u s
+      dEx dEy dEz dBx dBy dBz
+      hnonnull hp
+  canonicalLocalClock :
+    ∃ D :
+        NormalizedPrincipalNullDyad
+          (LinearMap.range
+            (generalMaxwellProjectorPlusLinear
+              Ex Ey Ez Bx By Bz)),
+      D.FutureTo
+          (generalMaxwellProjectorPlus
+            Ex Ey Ez Bx By Bz (principalBasis 0)) ∧
+      let C :=
+        generalMaxwellBalancedCharacteristicData
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz
+          hnonnull D
+      C.Lambda ≠ 0 ∧
+      Module.finrank ℝ
+          (C.K ⧸ LinearMap.ker C.Lambda) = 1 ∧
+      C.current =
+        halfCarrierBulkCurrent
+          LinearMap.id
+          (generalActionDerivedCarrierLinear
+            Ex Ey Ez Bx By Bz)
+          (generalMaxwellBalancedFutureFluxUnit
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D) ∧
+      C.current =
+        (generalMaxwellChi Ex Ey Ez Bx By Bz /
+          (16 * Real.pi)) •
+          generalMaxwellBalancedClockCovector
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D ∧
+      LinearMap.ker C.current =
+        LinearMap.ker
+          (generalMaxwellBalancedClockCovector
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D) ∧
+      generalMaxwellChi Ex Ey Ez Bx By Bz *
+        principalMinkowskiSq
+          (generalMaxwellConformalBalancedU
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D) = -1 ∧
+      generalMaxwellChronometricClockCovector
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D
+          (generalMaxwellConformalBalancedU
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D) = 1 ∧
+      principalMinkowskiCovectorSq
+          (generalMaxwellChronometricCovectorComponents
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D) =
+        -Real.sqrt
+          (generalRicciNormFromEinstein
+            Ex Ey Ez Bx By Bz) ∧
+      principalMinkowskiCovectorSq
+          (generalMaxwellThetaPlusCovector
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D) = 0 ∧
+      principalMinkowskiCovectorSq
+          (generalMaxwellThetaMinusCovector
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D) = 0 ∧
+      (generalMaxwellBalancedOpticalCoordinates
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D
+          (generalMaxwellBalancedU
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D) = TO ∧
+       generalMaxwellBalancedOpticalCoordinates
+          Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz D
+          (generalMaxwellBalancedE
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D) = RO ∧
+       Function.Surjective
+          (generalMaxwellBalancedOpticalCoordinates
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D) ∧
+       canonicalOpticalRegularSyngePair.RealizesCanonicalOpticalJet
+          opticalDualCoordinates ∧
+       HasStrictFDerivAt
+          canonicalOpticalRegularSyngePair.plus.endpointMap
+          ((-canonicalOpticalRegularSyngePair.plus.sigmaTheta⁻¹) •
+            canonicalOpticalRegularSyngePair.plus.sigmaX)
+          canonicalOpticalRegularSyngePair.plus.u.1 ∧
+       HasStrictFDerivAt
+          canonicalOpticalRegularSyngePair.minus.endpointMap
+          ((-canonicalOpticalRegularSyngePair.minus.sigmaTheta⁻¹) •
+            canonicalOpticalRegularSyngePair.minus.sigmaX)
+          canonicalOpticalRegularSyngePair.minus.u.1) ∧
+      (∀ dRadar : (Fin 4 → ℝ) →ₗ[ℝ] ℝ,
+        dRadar
+          (generalMaxwellConformalBalancedU
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D) = 1 →
+        synchronizationCovector
+          dRadar
+          (generalMaxwellChronometricClockCovector
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D)
+          (generalMaxwellConformalBalancedU
+            Ex Ey Ez Bx By Bz
+            dEx dEy dEz dBx dBy dBz D) = 0)
+  transportClosure :
+    ∀ (dω dlogK : Fin 4 → ℝ)
+      (du : Fin 4 → Fin 4 → ℝ),
+      adaptedUnitNormalization du →
+      (∀ i : Fin 3,
+        dlogK i.succ =
+          4 * dω i.succ /
+            generalMaxwellClockRate Ex Ey Ez Bx By Bz) →
+      (((∀ i j : Fin 3,
+          clockTransportTwoForm
+            (generalMaxwellClockRate Ex Ey Ez Bx By Bz)
+            dω du i.succ j.succ = 0) ∧
+        (∀ i : Fin 3,
+          clockTransportTwoForm
+            (generalMaxwellClockRate Ex Ey Ez Bx By Bz)
+            dω du 0 i.succ = 0)) ↔
+       ((∀ i j : Fin 3,
+          principalVorticity du i j = 0) ∧
+        (∀ i : Fin 3,
+          principalAcceleration du i =
+            -dlogK i.succ / 4)))
+  frobeniusClosure :
+    ∀ (dω : Fin 4 → ℝ)
+      (du : Fin 4 → Fin 4 → ℝ),
+      (∀ i j : Fin 3,
+        principalFrobeniusSpatialComponent
+          (generalMaxwellClockRate Ex Ey Ez Bx By Bz)
+          dω du i j = 0) ↔
+      (∀ i j : Fin 3,
+        principalVorticity du i j = 0)
+  clockCoverCanonical :
+    (∀ v w : R2,
+      clockOmega v w =
+        clockDKappa v * clockDTheta w -
+          clockDKappa w * clockDTheta v) ∧
+    (∀ κ : ℝ, ∀ v : R2,
+      clockOmega (clockEuler κ) v =
+        clockLiouville κ v) ∧
+    (∀ v : R2,
+      clockLiouville 1 v = clockDTheta v) ∧
+    clockPoisson dThetaVec dKappaVec = 1 ∧
+    (∀ κ : ℝ,
+      clockLiouville κ (clockEuler κ) = 0) ∧
+    (∃! v : R2,
+      tangentToClockSection v ∧
+        clockLiouville 1 v = 1)
+  relationalEvolution :
+    ∀ (O XF : ℝ → ℝ) (T θ : ℝ),
+      HasDerivAt O (XF (θ - T)) (θ - T) →
+      deriv (fun ϑ => O (ϑ - T)) θ =
+        XF (θ - T)
+  causalExtendedEndpointMonotonicity :
+    ∀ {X : Type*} {R : X → X → Prop},
+      Transitive R →
+      ∀ (γ : ℝ → X) {x y : X}, R x y →
+        pastEndpointE (causalPastParameterSet R γ x) ≤
+            pastEndpointE (causalPastParameterSet R γ y) ∧
+        futureEndpointE (causalFutureParameterSet R γ x) ≤
+            futureEndpointE (causalFutureParameterSet R γ y)
+  causalBranchIndependence :
+    ∀ (P₁ P₂ F₁ F₂ : Set ℝ),
+      P₁ = P₂ → F₁ = F₂ →
+      pastEndpoint P₁ = pastEndpoint P₂ ∧
+      futureEndpoint F₁ = futureEndpoint F₂
+
+/-- Constructor for the single local regular-stratum closure certificate. -/
+theorem arbitraryMaxwell_regularStratum_local_certificate
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hp :
+      generalMaxwellResolvingNormSq
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz ≠ 0) :
+    ArbitraryMaxwellRegularStratumLocalCertificate
+      Ex Ey Ez Bx By Bz u s
+      dEx dEy dEz dBx dBy dBz
+      hnonnull hp := by
+  refine {
+    actionToCharacteristicClock :=
+      arbitraryMaxwell_firstJet_clockDescent_certificate
+        Ex Ey Ez Bx By Bz u s
+        dEx dEy dEz dBx dBy dBz
+        hnonnull hp
+    canonicalLocalClock := ?_
+    transportClosure := ?_
+    frobeniusClosure := ?_
+    clockCoverCanonical :=
+      clockCover_canonical_pair_certificate
+    relationalEvolution := ?_
+    causalExtendedEndpointMonotonicity := ?_
+    causalBranchIndependence := ?_ }
+  · rcases
+      generalMaxwellProjectorPlus_futureNormalizedNullDyad_exists
+        Ex Ey Ez Bx By Bz hnonnull with
+      ⟨D, hD⟩
+    refine ⟨D, hD, ?_⟩
+    let C :=
+      generalMaxwellBalancedCharacteristicData
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz
+        hnonnull D
+    have hnull :=
+      generalMaxwellThetaCovectors_null
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D
+    exact ⟨
+      generalMaxwellBalancedCharacteristic_Lambda_nonzero
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz hnonnull D,
+      generalMaxwellBalancedCharacteristic_quotient_finrank_one
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz hnonnull D,
+      generalMaxwellBalancedCharacteristic_current_eq_actionDerived
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz hnonnull D,
+      generalMaxwellBalancedCharacteristic_current_factor
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz hnonnull D,
+      generalMaxwellBalancedCharacteristic_kernel_eq_clock
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz hnonnull D,
+      generalMaxwellConformalBalancedU_unit
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz hnonnull D,
+      generalMaxwellChronometricClockCovector_on_conformalU
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz hnonnull D,
+      generalMaxwellChronometricCovector_ricci_norm
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D,
+      hnull.1,
+      hnull.2,
+      generalMaxwell_opticalIFT_normalForm
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D,
+      ?_⟩
+    intro dRadar hRadar
+    exact synchronizationCovector_vanishes_on_clock
+      dRadar
+      (generalMaxwellChronometricClockCovector
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D)
+      (generalMaxwellConformalBalancedU
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz D)
+      hRadar
+      (generalMaxwellChronometricClockCovector_on_conformalU
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz hnonnull D)
+  · intro dω dlogK du hunit hlog
+    exact clockTransport_projected_zero_iff
+      (generalMaxwellClockRate Ex Ey Ez Bx By Bz)
+      dω dlogK du
+      (ne_of_gt
+        (generalMaxwellClockRate_pos
+          Ex Ey Ez Bx By Bz hnonnull))
+      hunit hlog
+  · intro dω du
+    exact principalFrobenius_all_zero_iff
+      (generalMaxwellClockRate Ex Ey Ez Bx By Bz)
+      dω du
+      (ne_of_gt
+        (generalMaxwellClockRate_pos
+          Ex Ey Ez Bx By Bz hnonnull))
+  · intro O XF T θ hO
+    exact relational_evolution_from_flow_derivative
+      O XF T θ hO
+  · intro X R htrans γ x y hxy
+    exact causal_extended_endpoints_mono_of_transitive
+      htrans γ hxy
+  · intro P₁ P₂ F₁ F₂ hP hF
+    exact causal_endpoints_branch_independent hP hF
+
 /-! ### Construction of the characteristic current from the fixed-point carrier -/
 
 section CarrierCharacteristicConstruction
@@ -29068,6 +29368,7 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.generalMaxwellThetaMinusCovector_eval_optical
 #print axioms RelativeRest.generalMaxwell_opticalIFT_normalForm
 #print axioms RelativeRest.arbitraryMaxwell_firstJet_clockDescent_certificate
+#print axioms RelativeRest.arbitraryMaxwell_regularStratum_local_certificate
 #print axioms RelativeRest.characteristicCurrent_factorization
 #print axioms RelativeRest.characteristicCurrent_Lambda_unique
 #print axioms RelativeRest.characteristicCurrent_quotient_finrank_one
