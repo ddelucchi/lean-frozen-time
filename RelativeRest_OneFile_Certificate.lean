@@ -37800,3 +37800,105 @@ end RelativeRest
 #print axioms RelativeRest.kerrCarterActionMetricEuler_forced_from_metric_and_potential
 #print axioms RelativeRest.kerrPrincipalSixComponent_nonnull_from_potential
 #print axioms RelativeRest.kerrNewman_sameField_action_forces_rest_and_all_normal_jets
+
+/-!
+# Kerr–Newman geometric Ricci closes the local action-normal-jet identification
+
+The previous theorem established that the same potential-derived E/B components
+give the metric-derived Carter-frame Einstein tensor. This last bridge uses
+the SAME explicit Ricci-frame coefficients from the parent metric calculation
+to prove, rather than assume, that the first relative jet is minus twice
+Kerr–Newman Ricci.
+
+Unlike a conjunction with an independent generic tensor, the metric, field,
+Euler coefficient, odd normal jet, and Ricci are now tied to the one
+Kerr–Newman solution. This remains a regular-chart local statement.
+-/
+
+namespace RelativeRest
+
+/-- The same Carter-frame Ricci coefficients previously obtained from
+    the explicit Kerr–Newman metric, assembled as a covariant tensor. -/
+def kerrCarterRicciCovFromMetric
+    (Q r a theta : ℝ) : MaxwellAction.Tensor44 :=
+  fun i j =>
+    if i = j then kerrRicciFrameCovCoeff Q r a theta i else 0
+
+/-- Kerr–Newman Ricci has zero metric trace already at the explicit
+    coframe-coefficient level; no scalar-curvature hypothesis is added. -/
+theorem kerrCarterRicciCov_scalarCurvature_zero
+    (Q r a theta : ℝ) :
+    principalScalarCurvatureFromRicci
+      (kerrCarterRicciCovFromMetric Q r a theta) = 0 := by
+  simp [principalScalarCurvatureFromRicci,
+    kerrCarterRicciCovFromMetric,
+    kerrRicciFrameCovCoeff, principalMetricSign,
+    Fin.sum_univ_four]
+  ring
+
+/-- Raising an index of the actual Kerr–Newman metric-derived Ricci
+    reconstructs exactly the metric-derived Carter Einstein tensor,
+    since the trace term vanishes, in every frame component. -/
+theorem kerrCarterEinsteinMixed_is_metricRicciEinstein
+    (Q r a theta : ℝ) :
+    principalEinsteinMixedFromRicci
+      (kerrCarterRicciCovFromMetric Q r a theta) =
+    kerrCarterEinsteinMixedFromMetric Q r a theta := by
+  funext i j
+  unfold principalEinsteinMixedFromRicci
+    principalEinsteinCovFromRicci
+  rw [kerrCarterRicciCov_scalarCurvature_zero]
+  by_cases hij : i = j
+  · subst j
+    simp [kerrCarterRicciCovFromMetric,
+      kerrCarterEinsteinMixedFromMetric,
+      kerrRicciFrameMixedCoeff]
+  · simp [kerrCarterRicciCovFromMetric,
+      kerrCarterEinsteinMixedFromMetric, hij]
+
+/-- The Einstein–Maxwell action's *same-field* metric Euler coefficients
+    vanish with Ricci supplied by the explicit Kerr–Newman metric. -/
+theorem kerrCarter_metricRicci_actionStationary
+    (Q r a theta : ℝ)
+    (hsig : Sigma r a theta ≠ 0) :
+    ∀ i j : Fin 4,
+      generalEinsteinMaxwellMetricVariationCoeff
+        (principalEinsteinMixedFromRicci
+          (kerrCarterRicciCovFromMetric Q r a theta))
+        (kerrPrincipalE Q r a theta) 0 0
+        (kerrPrincipalB Q r a theta) 0 0 i j = 0 := by
+  rw [kerrCarterEinsteinMixed_is_metricRicciEinstein]
+  exact kerrCarterActionMetricEuler_forced_from_metric_and_potential
+    Q r a theta hsig
+
+/-- The normal tensor jet is *literally minus twice the actual metric-derived
+    Kerr–Newman Ricci tensor*, now proved from the same field's
+    Einstein–Maxwell action stationarity and original curvature calculation.
+    No extra abstract Ricci tensor or equation of motion is passed in. -/
+theorem kerrNewman_sameField_relative_normal_jet_eq_minusTwoRicci
+    (Q r a theta : ℝ) (hQ : Q ≠ 0)
+    (hsig : 0 < Sigma r a theta) (i j : Fin 4) :
+    deriv (kerrCarterActionOddResidual Q r a theta i j) 0 =
+      -2 * kerrCarterRicciCovFromMetric Q r a theta i j := by
+  have hstat :=
+    kerrCarter_metricRicci_actionStationary
+      Q r a theta (ne_of_gt hsig)
+  have hnonnull :=
+    kerrPrincipalSixComponent_nonnull_from_potential
+      Q r a theta hQ hsig
+  have hall :=
+    MaxwellAction.actionBulkStationarity_nonnull_forces_rest_allJets_and_Ricci
+      (kerrCarterRicciCovFromMetric Q r a theta)
+      (kerrPrincipalE Q r a theta) 0 0
+      (kerrPrincipalB Q r a theta) 0 0
+      hstat hnonnull 0 i j 0
+  have hjet := hall.2.2.2
+  rw [kerrCarterEinsteinMixed_is_metricRicciEinstein] at hjet
+  exact hjet
+
+end RelativeRest
+
+#print axioms RelativeRest.kerrCarterRicciCov_scalarCurvature_zero
+#print axioms RelativeRest.kerrCarterEinsteinMixed_is_metricRicciEinstein
+#print axioms RelativeRest.kerrCarter_metricRicci_actionStationary
+#print axioms RelativeRest.kerrNewman_sameField_relative_normal_jet_eq_minusTwoRicci
