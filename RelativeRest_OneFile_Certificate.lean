@@ -38297,3 +38297,72 @@ end RelativeRest
 
 #print axioms RelativeRest.MaxwellAction.generalField_forces_characteristicFacet
 #print axioms RelativeRest.MaxwellAction.generalEinsteinMaxwell_fullAction_to_characteristicAndTimeFacets
+
+/-!
+# Regularity is an equation-derived invariant, not a freely added clock
+
+Maxwell non-nullness is exactly the positivity of the Rainich magnitude
+and, ON THE SAME EINSTEIN-MAXWELL ACTION SHELL, the positive curvature norm.
+The domain where the intrinsic curvature clock rate is nonzero is thus
+geometrically detectable. It is not an independent observer normalization
+or material reference-system choice.
+-/
+
+namespace RelativeRest
+namespace MaxwellAction
+
+/-- The non-null Maxwell stratum is equivalent to positivity of the
+    action-carrier invariant. Its proof uses only the actual six Maxwell
+    components, the squared electromagnetic invariants, and the positive
+    square root. -/
+theorem nonnull_iff_positive_RainichMagnitude
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    generalMaxwellNonNull Ex Ey Ez Bx By Bz ↔
+      0 < generalMaxwellChi Ex Ey Ez Bx By Bz := by
+  constructor
+  · exact generalMaxwellChi_pos Ex Ey Ez Bx By Bz
+  · intro hchi
+    by_contra hnull
+    have hI : generalMaxwellI Ex Ey Ez Bx By Bz = 0 := by
+      by_contra hne
+      exact hnull (Or.inl hne)
+    have hJ : generalMaxwellJ Ex Ey Ez Bx By Bz = 0 := by
+      by_contra hne
+      exact hnull (Or.inr hne)
+    have hzero :
+        generalMaxwellChi Ex Ey Ez Bx By Bz = 0 := by
+      simp [generalMaxwellChi, hI, hJ]
+    linarith
+
+/-- No extra Ricci positivity assumption: metric Euler stationarity
+    identifies the actual curvature norm with the square of chi, and
+    non-nullness is *equivalent* to positivity of that norm. -/
+theorem actionStationary_nonnull_iff_positive_actual_RicciNorm
+    (RicCov : Tensor44) (Ex Ey Ez Bx By Bz : ℝ)
+    (hmetric : ∀ i j : Fin 4,
+      generalEinsteinMaxwellMetricVariationCoeff
+        (principalEinsteinMixedFromRicci RicCov)
+        Ex Ey Ez Bx By Bz i j = 0) :
+    generalMaxwellNonNull Ex Ey Ez Bx By Bz ↔
+      0 < ricciNormFromActionMetric RicCov := by
+  have hK :=
+    onShellAction_forces_actual_RicciNorm
+      RicCov Ex Ey Ez Bx By Bz hmetric
+  rw [hK, generalRicciNormFromEinstein_eq_chi_sq]
+  constructor
+  · intro hn
+    exact sq_pos_of_pos
+      ((nonnull_iff_positive_RainichMagnitude
+        Ex Ey Ez Bx By Bz).mp hn)
+  · intro hpos
+    apply (nonnull_iff_positive_RainichMagnitude
+      Ex Ey Ez Bx By Bz).mpr
+    have hnonneg :=
+      generalMaxwellChi_nonneg Ex Ey Ez Bx By Bz
+    nlinarith
+
+end MaxwellAction
+end RelativeRest
+
+#print axioms RelativeRest.MaxwellAction.nonnull_iff_positive_RainichMagnitude
+#print axioms RelativeRest.MaxwellAction.actionStationary_nonnull_iff_positive_actual_RicciNorm
