@@ -262,9 +262,13 @@ theorem principalPlaneStress_commutes_with_lorentz_boost
     principalPlaneStress energy (lorentzNullBoost s v) =
       lorentzNullBoost s (principalPlaneStress energy v) := by
   rcases v with ⟨x, y⟩
-  simp [principalPlaneStress, lorentzNullBoost,
-    weightedNullBoost]
-  constructor <;> ring
+  apply Prod.ext
+  · simp [principalPlaneStress, lorentzNullBoost,
+      weightedNullBoost]
+    ring
+  · simp [principalPlaneStress, lorentzNullBoost,
+      weightedNullBoost]
+    ring
 
 /-- The boost-invariance/no-fixed-vector obstruction holds for every
     value of the electromagnetic energy, including strictly positive ones.
