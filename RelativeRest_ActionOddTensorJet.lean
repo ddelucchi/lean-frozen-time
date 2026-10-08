@@ -244,5 +244,66 @@ theorem actionBulkStationarity_nonzeroElectric_forces_rest
       (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz))
     hEinstein 0 0 hT s
 
+/-- For *every* regular non-null Maxwell field, the on-shell stress
+    positivity needed for fixed-point uniqueness is automatically supplied
+    by the parent certificate's six-component energy theorem. No choice of
+    a nonzero electric or magnetic component is necessary. -/
+theorem generalNonNullField_forces_physicalEnergy_positive
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
+    0 < physicalMaxwellStress
+      (fieldStrength
+        (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) 0 0 := by
+  have hbase :=
+    generalMaxwellEnergyDensity_pos Ex Ey Ez Bx By Bz hnonnull
+  have hmatch :
+      physicalMaxwellStress
+        (fieldStrength
+          (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) 0 0 =
+        generalMaxwellEnergyDensity Ex Ey Ez Bx By Bz := by
+    rw [generalMaxwellPotentialJet_fieldStrength]
+    rw [generalMaxwellStress_matches_action_variation_tensor]
+    simp [generalMaxwellStressCovFromF,
+      generalMaxwellStressFromF_00, principalMetricSign]
+  rw [hmatch]
+  exact hbase
+
+/-- Main action-level fixed-point theorem on the paper's regular non-null
+    sector, with no separately supplied Einstein equation, special electric
+    component, or independently postulated nonzero current/stress witness. -/
+theorem actionBulkStationarity_nonnull_forces_unique_rest
+    (Gmixed : Tensor44)
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hstationary : ∀ i j : Fin 4,
+      generalEinsteinMaxwellMetricVariationCoeff
+        Gmixed Ex Ey Ez Bx By Bz i j = 0)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (s : ℝ) :
+    oddRelativeResidual
+        (covariantEinsteinFromActionMixed Gmixed)
+        (fieldStrength
+          (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz))
+        0 0 s = 0 ↔ s = 0 := by
+  have hEinstein : ∀ i j : Fin 4,
+      covariantEinsteinFromActionMixed Gmixed i j =
+        8 * Real.pi *
+          physicalMaxwellStress
+            (fieldStrength
+              (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) i j := by
+    intro i j
+    exact actionBulkStationarity_forces_covariantEinsteinEquation
+      Gmixed Ex Ey Ez Bx By Bz hstationary i j
+  have hT : physicalMaxwellStress
+      (fieldStrength
+        (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) 0 0 ≠ 0 :=
+    ne_of_gt
+      (generalNonNullField_forces_physicalEnergy_positive
+        Ex Ey Ez Bx By Bz hnonnull)
+  exact oddRelativeResidual_zero_iff_rest
+    (covariantEinsteinFromActionMixed Gmixed)
+    (fieldStrength
+      (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz))
+    hEinstein 0 0 hT s
+
 end MaxwellAction
 end RelativeRest
