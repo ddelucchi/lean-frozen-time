@@ -42,6 +42,14 @@ jobs:
           set -euo pipefail
           lake exe cache get
 
+      - name: Check Maxwell action proof
+        id: maxwell
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          lake env lean RelativeRest_Maxwell_Action.lean 2>&1 | tee maxwell-build.log
+
       - name: Build certificate
         id: build
         continue-on-error: true
@@ -55,10 +63,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: lean-build-log
-          path: build.log
+          path: |
+            build.log
+            maxwell-build.log
           if-no-files-found: warn
 
       - name: Fail if Lean build failed
-        if: steps.build.outcome != 'success'
+        if: steps.build.outcome != 'success' || steps.maxwell.outcome != 'success'
         shell: bash
         run: exit 1
