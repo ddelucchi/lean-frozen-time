@@ -67,6 +67,47 @@ relations in different conventions; the bridge makes their **definitional
 compatibility** explicit. It is a strengthening of the audit trail, not a
 claim that their content was absent from the parent file.
 
+## A2. New: no-intermediate-field-equation action bridge and complete jet parity
+
+`RelativeRest_ActionOddTensorJet.lean` eliminates a separate
+`G_ab=8*pi*T_ab` premise from its action-stationarity theorem:
+
+1. Use the **existing parent's** exact local Einstein–Maxwell
+   inverse-metric Euler coefficient `generalEinsteinMaxwellMetricVariationCoeff`.
+   This coefficient was derived from the literal displayed action.
+2. Let those Euler coefficients vanish, as required of an on-shell field.
+   Invoke the parent's proved `...eq_zero_iff` theorem to obtain
+   `G^a_b=8*pi*T^a_b` for the SAME six-component field.
+3. Lower the tensor index with the SAME orthonormal metric, and use
+   `generalMaxwellStress_matches_action_variation_tensor` plus
+   `F=dA` to derive the physical covariant Einstein equation.
+4. Define the reciprocal-character-normalized defect
+   `exp(-s)*(G-exp(2s)*8*pi*T)`; on shell the parent's actual
+   `defect_from_on_shell_equation` proves it equals
+   `-16*pi*sinh(s)*T`, rather than postulating an odd residual.
+5. Reuse the parent's `carrierOdd_full_jet_parity` and the literal
+   stress match: **all even iterated normal derivatives are zero**,
+   and **all odd derivatives equal `-16*pi*T_ab`**.
+6. With scalar-curvature tracelessness and the Einstein tensor definition,
+   the first jet is `-2*Ric_ab`. The `G=Ric-Rg/2` relation is
+   still explicit wherever Ric is independently supplied.
+7. Crucially, `actionBulkStationarity_nonnull_forces_unique_rest`
+   now proves `s=0` for **every non-null six-component field**.
+   Its nonzero stress witness is proved from the parent's Maxwell
+   energy positivity theorem. There is no arbitrary electric-component
+   choice and no independent `T != 0` assumption.
+
+The only on-shell premise here is the vanishing of the Euler–Lagrange
+coefficients defined by the displayed action; it is not another
+normalization of the clock or an assumed fixed-point law. It is still
+important to distinguish an on-shell theorem from one about all
+off-shell fields.
+
+`RelativeRest_StrictVerification.lean` imports these theorems and
+contains `#print axioms` commands, with a composite theorem combining
+the action-forced unique rest point and the all-orders even/odd jet
+for the same field.
+
 ## B. Frame, isotropy, and the meaning of intrinsic
 
 `IntrinsicBoostScope` proves a nontrivial Lorentz boost fixes no nonzero
