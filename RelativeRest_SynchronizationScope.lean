@@ -133,5 +133,46 @@ theorem two_distinct_admissible_corrections :
   have hc := correctionFamily_injective h
   norm_num at hc
 
+/-! ### Positive uniqueness theorem once the actual optical gradient is supplied -/
+
+/-- Once the eikonal/endpoint construction fixes an exact optical gradient,
+    the synchronization correction is algebraically its difference from T_O.
+    This is the logically sufficient additional datum absent from the
+    curl-only cancellation equation. -/
+def correctionFromOpticalGradient
+    (dTheta T : ℝ → ℝ → ℝ × ℝ) : ℝ → ℝ → ℝ × ℝ :=
+  fun t x =>
+    ((dTheta t x).1 - (T t x).1,
+     (dTheta t x).2 - (T t x).2)
+
+/-- The optical gradient provides a correction satisfying T+beta=dTheta. -/
+theorem correctionFromOpticalGradient_identity
+    (dTheta T : ℝ → ℝ → ℝ × ℝ) (t x : ℝ) :
+    ((T t x).1 + (correctionFromOpticalGradient dTheta T t x).1,
+     (T t x).2 + (correctionFromOpticalGradient dTheta T t x).2) =
+      dTheta t x := by
+  apply Prod.ext
+  · simp [correctionFromOpticalGradient]
+  · simp [correctionFromOpticalGradient]
+
+/-- If the full optical gradient is fixed, no second correction can satisfy
+    the same synchronized first-order equation. No separate uniqueness axiom. -/
+theorem optical_gradient_forces_unique_correction
+    (dTheta T beta : ℝ → ℝ → ℝ × ℝ)
+    (h : ∀ t x : ℝ,
+      ((T t x).1 + (beta t x).1,
+       (T t x).2 + (beta t x).2) = dTheta t x) :
+    beta = correctionFromOpticalGradient dTheta T := by
+  funext t x
+  have ht := congrArg Prod.fst (h t x)
+  have hx := congrArg Prod.snd (h t x)
+  apply Prod.ext
+  · change (beta t x).1 =
+      (dTheta t x).1 - (T t x).1
+    linarith
+  · change (beta t x).2 =
+      (dTheta t x).2 - (T t x).2
+    linarith
+
 end SynchronizationScope
 end RelativeRest
