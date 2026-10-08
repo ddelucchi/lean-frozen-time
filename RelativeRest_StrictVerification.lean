@@ -27,6 +27,9 @@ A text scan for the string "sorry" is NOT a substitute for these checks.
 #print axioms RelativeRest.MaxwellAction.actionBulkStationarity_forces_covariantEinsteinEquation
 #print axioms RelativeRest.MaxwellAction.actionBulkStationarity_forces_all_oddTensorJets
 #print axioms RelativeRest.MaxwellAction.actionBulkStationarity_nonzeroElectric_forces_rest
+#print axioms RelativeRest.MaxwellAction.generalNonNullField_forces_physicalEnergy_positive
+#print axioms RelativeRest.MaxwellAction.actionBulkStationarity_nonnull_forces_unique_rest
+#print axioms RelativeRest.IntrinsicBoostScope.principalPlaneStress_commutes_with_lorentz_boost
 #print axioms RelativeRest.generalMaxwellPotentialJet_fieldStrength
 #print axioms RelativeRest.generalMaxwellStress_matches_action_variation_tensor
 #print axioms RelativeRest.generalMaxwellMetricVariation_from_potentialJet
