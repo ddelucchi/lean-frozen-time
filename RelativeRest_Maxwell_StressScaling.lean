@@ -117,6 +117,11 @@ def etaCovariant : Tensor44 :=
 def flatMaxwellStress (F : Tensor44) : Tensor44 :=
   maxwellStress etaCovariant lorentzSign F
 
+/-- Gaussian-unit physical Maxwell stress tensor, with the 1/(4*pi)
+    restored; the preceding algebra used the unnormalized tensor. -/
+def physicalMaxwellStress (F : Tensor44) : Tensor44 :=
+  fun a b => (1 / (4 * Real.pi)) * flatMaxwellStress F a b
+
 /-- The physically scaled metric and two-form in an orthonormal chart:
     g -> rho^2 g, F -> lam F, with inverse-metric weight (rho^2)^{-1}. -/
 def homotheticMaxwellStress
