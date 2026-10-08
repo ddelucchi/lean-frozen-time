@@ -15,3 +15,5 @@ lean_lib RelativeRest_Maxwell_Action
 lean_lib RelativeRest_Maxwell_StressScaling
 
 lean_lib RelativeRest_SynchronizationScope
+
+lean_lib RelativeRest_FieldDerivedJet
