@@ -37902,3 +37902,223 @@ end RelativeRest
 #print axioms RelativeRest.kerrCarterEinsteinMixed_is_metricRicciEinstein
 #print axioms RelativeRest.kerrCarter_metricRicci_actionStationary
 #print axioms RelativeRest.kerrNewman_sameField_relative_normal_jet_eq_minusTwoRicci
+
+/-!
+# General Einstein--Maxwell action to geometric clock and paper-branch theorem
+
+This proof composes the *arbitrary six-component* Einstein--Maxwell action
+Euler equations, the metric-derived Ricci tensor, Rainich, the same-field
+fixed-point normal jet, the Ricci fourth-root clock, and the complete
+first-jet regular/degenerate branch distinction. There are no Kerr--Newman
+parameters and no independent Einstein or Ricci equations supplied.
+
+The branch split is mathematically necessary: a non-null Maxwell field
+can have a zero projected first derivative. In that case the field's
+actual higher derivatives (or its full-jet stabilizer), not a chosen
+observer or an invented clock, decide whether a further resolution exists.
+
+The canonical two-dimensional Synge model in the resolved branch is an
+explicit algebraic/IFT model, not an assertion that its endpoints exist
+automatically for every physical Lorentzian spacetime.
+-/
+
+namespace RelativeRest
+namespace MaxwellAction
+
+/-- The Ricci-norm scalar calculated by contracting the *actual covariant
+    Ricci supplied to the Einstein-Hilbert action* in the orthonormal metric.
+    No Maxwell-stress surrogate is used in the definition. -/
+def ricciNormFromActionMetric (RicCov : Tensor44) : ℝ :=
+  ∑ i : Fin 4, ∑ j : Fin 4,
+    (principalMetricSign i * RicCov i j) *
+      (principalMetricSign j * RicCov j i)
+
+/-- The displayed Einstein-Maxwell metric Euler equations, four-dimensional
+    Maxwell tracelessness, and the Einstein metric identity jointly force
+    the mixed Ricci tensor to equal the source derived from the SAME F=dA. -/
+theorem onShellAction_forces_metricRicci_components
+    (RicCov : Tensor44) (Ex Ey Ez Bx By Bz : ℝ)
+    (hmetric : ∀ i j : Fin 4,
+      generalEinsteinMaxwellMetricVariationCoeff
+        (principalEinsteinMixedFromRicci RicCov)
+        Ex Ey Ez Bx By Bz i j = 0)
+    (i j : Fin 4) :
+    principalMetricSign i * RicCov i j =
+      generalRicciFromEinsteinF Ex Ey Ez Bx By Bz i j := by
+  have hR :
+      principalScalarCurvatureFromRicci RicCov = 0 :=
+    actionBulkStationarity_forces_scalarCurvature_zero
+      RicCov Ex Ey Ez Bx By Bz hmetric
+  have hEin :
+      principalEinsteinMixedFromRicci RicCov i j =
+        8 * Real.pi *
+          generalMaxwellStressFromF Ex Ey Ez Bx By Bz i j :=
+    (generalEinsteinMaxwellMetricVariationCoeff_eq_zero_iff
+      (principalEinsteinMixedFromRicci RicCov)
+      Ex Ey Ez Bx By Bz i j).mp (hmetric i j)
+  simpa [principalEinsteinMixedFromRicci,
+    principalEinsteinCovFromRicci, hR,
+    generalRicciFromEinsteinF] using hEin
+
+/-- The actual metric Ricci contraction equals the previously proved
+    six-component Maxwell scalar, derived without a new curvature identity. -/
+theorem onShellAction_forces_actual_RicciNorm
+    (RicCov : Tensor44) (Ex Ey Ez Bx By Bz : ℝ)
+    (hmetric : ∀ i j : Fin 4,
+      generalEinsteinMaxwellMetricVariationCoeff
+        (principalEinsteinMixedFromRicci RicCov)
+        Ex Ey Ez Bx By Bz i j = 0) :
+    ricciNormFromActionMetric RicCov =
+      generalRicciNormFromEinstein Ex Ey Ez Bx By Bz := by
+  unfold ricciNormFromActionMetric generalRicciNormFromEinstein
+  apply Finset.sum_congr rfl
+  intro i hi
+  apply Finset.sum_congr rfl
+  intro j hj
+  rw [onShellAction_forces_metricRicci_components
+        RicCov Ex Ey Ez Bx By Bz hmetric i j,
+      onShellAction_forces_metricRicci_components
+        RicCov Ex Ey Ez Bx By Bz hmetric j i]
+
+/-- The chronometric fourth-root formula refers to the genuine metric
+    Ricci contraction, not merely a formal Maxwell-defined Ricci target.
+    The expression is a consequence of the Einstein-Hilbert Euler equation. -/
+theorem onShellAction_forces_actual_RicciClockRate
+    (RicCov : Tensor44) (Ex Ey Ez Bx By Bz : ℝ)
+    (hmetric : ∀ i j : Fin 4,
+      generalEinsteinMaxwellMetricVariationCoeff
+        (principalEinsteinMixedFromRicci RicCov)
+        Ex Ey Ez Bx By Bz i j = 0) :
+    generalMaxwellClockRate Ex Ey Ez Bx By Bz =
+      Real.sqrt (Real.sqrt (ricciNormFromActionMetric RicCov)) := by
+  rw [onShellAction_forces_actual_RicciNorm
+    RicCov Ex Ey Ez Bx By Bz hmetric]
+  exact generalMaxwellClockRate_eq_ricci_fourth_root
+    Ex Ey Ez Bx By Bz
+
+/-- The complete general on-shell Einstein-Maxwell syllogism, without a
+    prescribed normal jet, Ricci tensor response, nonzero first-jet resolver,
+    fixed rest parameter, or separate canonical-optical map input.
+
+    Its only dynamical premise is stationarity of the metric and gauge
+    Euler coefficients of the displayed 4D Einstein-Maxwell action. Its
+    non-null premise is precisely the domain where Rainich is semisimple
+    and the curvature clock rate is positive.
+
+    On the resolved branch the existing explicit IFT optical certificate
+    and characteristic-clock construction are returned as full proofs.
+    On the other branch the exact first-jet degeneracy is returned instead,
+    without pretending it entails a preferred frame. -/
+theorem generalEinsteinMaxwell_fullAction_to_intrinsicClockStrata
+    (RicCov : Tensor44)
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (nablaF : Fin 4 → Fin 4 → ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hbulk :
+      ((∀ i j : Fin 4,
+        generalEinsteinMaxwellMetricVariationCoeff
+          (principalEinsteinMixedFromRicci RicCov)
+          Ex Ey Ez Bx By Bz i j = 0) ∧
+       (∀ deltaA : Fin 4 → ℝ,
+          principalMaxwellPotentialEulerDensity
+            nablaF deltaA = 0)))
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
+    (principalScalarCurvatureFromRicci RicCov = 0) ∧
+    (∀ b : Fin 4, principalMaxwellPotentialEulerCoeff nablaF b = 0) ∧
+    (generalMaxwellClockRate Ex Ey Ez Bx By Bz =
+      Real.sqrt (Real.sqrt (ricciNormFromActionMetric RicCov))) ∧
+    (0 < generalMaxwellClockRate Ex Ey Ez Bx By Bz) ∧
+    (∀ a b : Fin 4,
+      (∑ k : Fin 4,
+        generalMaxwellCarrier Ex Ey Ez Bx By Bz a k *
+          generalMaxwellCarrier Ex Ey Ez Bx By Bz k b) =
+        ((generalMaxwellI Ex Ey Ez Bx By Bz)^2 +
+         (generalMaxwellJ Ex Ey Ez Bx By Bz)^2) *
+          (if a = b then 1 else 0)) ∧
+    ((oddRelativeResidual
+      (covariantEinsteinFromActionMixed
+        (principalEinsteinMixedFromRicci RicCov))
+      (fieldStrength (generalMaxwellPotentialJet
+        Ex Ey Ez Bx By Bz)) 0 0 s = 0) ↔ s = 0) ∧
+    (∀ a b : Fin 4, ∀ n : ℕ,
+      iteratedDeriv (2*n)
+        (oddRelativeResidual
+          (covariantEinsteinFromActionMixed
+            (principalEinsteinMixedFromRicci RicCov))
+          (fieldStrength (generalMaxwellPotentialJet
+            Ex Ey Ez Bx By Bz)) a b) 0 = 0 ∧
+      iteratedDeriv (2*n+1)
+        (oddRelativeResidual
+          (covariantEinsteinFromActionMixed
+            (principalEinsteinMixedFromRicci RicCov))
+          (fieldStrength (generalMaxwellPotentialJet
+            Ex Ey Ez Bx By Bz)) a b) 0 =
+          -16 * Real.pi *
+            physicalMaxwellStress
+              (fieldStrength
+                (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) a b ∧
+      deriv (oddRelativeResidual
+        (covariantEinsteinFromActionMixed
+          (principalEinsteinMixedFromRicci RicCov))
+        (fieldStrength
+          (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) a b) 0 =
+          -2 * RicCov a b) ∧
+    ((∃ hp :
+        generalMaxwellResolvingNormSq Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz ≠ 0,
+      PaperResolvedRegularBranchForcedCertificate
+        opticalDualBilinear
+        canonicalOpticalRegularSyngePair
+        opticalDualCoordinates
+        Ex Ey Ez Bx By Bz u s
+        dEx dEy dEz dBx dBy dBz
+        (generalMaxwellResolvingCovector Ex Ey Ez Bx By Bz
+          dEx dEy dEz dBx dBy dBz)
+        hnonnull
+        (generalMaxwellResolvingCovector_raised_mem_plusRange
+          Ex Ey Ez Bx By Bz dEx dEy dEz dBx dBy dBz hnonnull)
+        hp
+        canonicalOpticalRegularSyngePair_realizesCanonicalOpticalJet
+        opticalDualBilinear_symmetric) ∨
+      generalMaxwellResolvingNormSq Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz = 0) := by
+  have hmetric := hbulk.1
+  have hfield :=
+    (generalEinsteinMaxwell_bulk_stationarity_iff_field_equations
+       RicCov Ex Ey Ez Bx By Bz nablaF).mp hbulk
+  have hrestAndJets (a b : Fin 4) (n : ℕ) :=
+    actionBulkStationarity_nonnull_forces_rest_allJets_and_Ricci
+      RicCov Ex Ey Ez Bx By Bz hmetric hnonnull s a b n
+  refine ⟨
+    actionBulkStationarity_forces_scalarCurvature_zero
+      RicCov Ex Ey Ez Bx By Bz hmetric,
+    hfield.2,
+    onShellAction_forces_actual_RicciClockRate
+      RicCov Ex Ey Ez Bx By Bz hmetric,
+    generalMaxwellClockRate_pos
+      Ex Ey Ez Bx By Bz hnonnull,
+    ?_, (hrestAndJets 0 0 0).1, ?_, ?_⟩
+  · intro a b
+    exact generalMaxwellCarrier_rainich
+      Ex Ey Ez Bx By Bz a b
+  · intro a b n
+    exact (hrestAndJets a b n).2
+  · by_cases hp :
+      generalMaxwellResolvingNormSq Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz ≠ 0
+    · left
+      exact ⟨hp,
+        paper_firstJetCanonicalRegularBranch_forced_certificate
+          Ex Ey Ez Bx By Bz u s
+          dEx dEy dEz dBx dBy dBz
+          hnonnull hp⟩
+    · right
+      exact not_ne_iff.mp hp
+
+end MaxwellAction
+end RelativeRest
+
+#print axioms RelativeRest.MaxwellAction.onShellAction_forces_metricRicci_components
+#print axioms RelativeRest.MaxwellAction.onShellAction_forces_actual_RicciNorm
+#print axioms RelativeRest.MaxwellAction.onShellAction_forces_actual_RicciClockRate
+#print axioms RelativeRest.MaxwellAction.generalEinsteinMaxwell_fullAction_to_intrinsicClockStrata
