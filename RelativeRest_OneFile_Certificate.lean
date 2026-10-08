@@ -37642,3 +37642,161 @@ end RelativeRest
 
 #print axioms RelativeRest.fieldStressDefinedEinsteinMixed_isMetricEulerStationary
 #print axioms RelativeRest.explicit_nonnull_actionStationary_fixedPoint_allJets_without_firstResolver
+
+/-!
+# Kerr–Newman is the SAME Einstein–Maxwell field in the one-file action chain
+
+Earlier global paper-closure theorems conjoined an arbitrary generic six-component
+field and a separately parameterized Kerr–Newman model. The bridge below instead
+feeds the Maxwell field actually obtained by differentiating the Kerr–Newman
+potential into the very SAME action Euler formula, using the metric-derived
+Carter-frame Einstein coefficients already proved in this file.
+
+Thus the Kerr–Newman specialization no longer requires a second, independently
+assumed six-component Einstein tensor for the local action and normal-jet step.
+It does NOT claim physical null-Synge endpoint existence for a generic manifold;
+that is a separate geometric existence question.
+-/
+
+namespace RelativeRest
+
+/-- The completely general six-component action stress restricts EXACTLY
+    to the original principal electric/magnetic Maxwell stress. -/
+theorem generalMaxwellStressFromF_principal_eq
+    (E B : ℝ) (i j : Fin 4) :
+    generalMaxwellStressFromF E 0 0 B 0 0 i j =
+      principalStressFromF E B i j := by
+  have hF := generalMaxwellF_principal_specialization E B
+  have hsq :
+      generalMaxwellFsq E 0 0 B 0 0 = maxwellI E B := by
+    rw [generalMaxwellFsq_eq_I]
+    simp [generalMaxwellI, maxwellI]
+    ring
+  unfold generalMaxwellStressFromF principalStressFromF
+  rw [hF, hsq]
+
+/-- The actual Kerr–Newman metric-derived Einstein tensor in the
+    Carter orthonormal frame, including its off-diagonal entries. -/
+def kerrCarterEinsteinMixedFromMetric
+    (Q r a theta : ℝ) : MaxwellAction.Tensor44 :=
+  fun i j =>
+    if i = j then kerrRicciFrameMixedCoeff Q r a theta i else 0
+
+/-- Exact, same-field identification: the Carter-frame metric-derived
+    Einstein tensor equals 8 pi times the stress of the electromagnetic
+    field calculated from the Kerr–Newman potential. -/
+theorem kerrCarterEinsteinMixedFromMetric_eq_fieldStress
+    (Q r a theta : ℝ)
+    (hsig : Sigma r a theta ≠ 0) :
+    kerrCarterEinsteinMixedFromMetric Q r a theta =
+      fieldStressDefinedEinsteinMixed
+        (kerrPrincipalE Q r a theta) 0 0
+        (kerrPrincipalB Q r a theta) 0 0 := by
+  funext i j
+  calc
+    kerrCarterEinsteinMixedFromMetric Q r a theta i j =
+        8 * Real.pi *
+          principalStress
+            (principalFieldEnergyDensity
+              (kerrPrincipalE Q r a theta)
+              (kerrPrincipalB Q r a theta)) i j :=
+      kerrEinsteinTarget_frame_equation Q r a theta hsig i j
+    _ = 8 * Real.pi *
+          principalStressFromF
+            (kerrPrincipalE Q r a theta)
+            (kerrPrincipalB Q r a theta) i j := by
+      rw [principalStressFromF_eq_principalStress]
+    _ = fieldStressDefinedEinsteinMixed
+          (kerrPrincipalE Q r a theta) 0 0
+          (kerrPrincipalB Q r a theta) 0 0 i j := by
+      simp only [fieldStressDefinedEinsteinMixed,
+        generalMaxwellStressFromF_principal_eq]
+
+/-- Kerr–Newman metric and potential satisfy the exact pointwise
+    Euler equation of the same Einstein–Maxwell action whose jet generates
+    the fixed-point normal carrier; the Einstein equation is not supplied
+    as a separate hypothesis. -/
+theorem kerrCarterActionMetricEuler_forced_from_metric_and_potential
+    (Q r a theta : ℝ)
+    (hsig : Sigma r a theta ≠ 0) :
+    ∀ i j : Fin 4,
+      generalEinsteinMaxwellMetricVariationCoeff
+        (kerrCarterEinsteinMixedFromMetric Q r a theta)
+        (kerrPrincipalE Q r a theta) 0 0
+        (kerrPrincipalB Q r a theta) 0 0 i j = 0 := by
+  rw [kerrCarterEinsteinMixedFromMetric_eq_fieldStress
+    Q r a theta hsig]
+  exact fieldStressDefinedEinsteinMixed_isMetricEulerStationary
+    (kerrPrincipalE Q r a theta) 0 0
+    (kerrPrincipalB Q r a theta) 0 0
+
+/-- Non-nullness of the exact potential-derived Kerr–Newman electromagnetic
+    field is forced by Q != 0 and Sigma > 0, not assigned as a separate
+    field regularity assumption. -/
+theorem kerrPrincipalSixComponent_nonnull_from_potential
+    (Q r a theta : ℝ) (hQ : Q ≠ 0)
+    (hsig : 0 < Sigma r a theta) :
+    generalMaxwellNonNull
+      (kerrPrincipalE Q r a theta) 0 0
+      (kerrPrincipalB Q r a theta) 0 0 := by
+  exact generalMaxwellNonNull_principal_of_nonzero
+    (kerrPrincipalE Q r a theta)
+    (kerrPrincipalB Q r a theta)
+    (kerrPrincipalField_nonzero Q r a theta hQ hsig)
+
+/-- The relative normal residual built from precisely that Kerr–Newman
+    metric tensor and the Maxwell *potential-derived* principal field. -/
+def kerrCarterActionOddResidual
+    (Q r a theta : ℝ) (i j : Fin 4) : ℝ → ℝ :=
+  MaxwellAction.oddRelativeResidual
+    (MaxwellAction.covariantEinsteinFromActionMixed
+      (kerrCarterEinsteinMixedFromMetric Q r a theta))
+    (MaxwellAction.fieldStrength
+      (generalMaxwellPotentialJet
+        (kerrPrincipalE Q r a theta) 0 0
+        (kerrPrincipalB Q r a theta) 0 0)) i j
+
+/-- Genuine Kerr–Newman specialization: action stationarity forces
+    unique relative rest on its regular charged chart and EVERY even/odd
+    normal jet. There is no generic Maxwell field independent of the
+    actual Kerr–Newman potential in this theorem. -/
+theorem kerrNewman_sameField_action_forces_rest_and_all_normal_jets
+    (Q r a theta s : ℝ)
+    (hQ : Q ≠ 0) (hsig : 0 < Sigma r a theta)
+    (i j : Fin 4) (n : ℕ) :
+    (kerrCarterActionOddResidual Q r a theta 0 0 s = 0 ↔
+       s = 0) ∧
+    (iteratedDeriv (2*n)
+       (kerrCarterActionOddResidual Q r a theta i j) 0 = 0) ∧
+    (iteratedDeriv (2*n+1)
+       (kerrCarterActionOddResidual Q r a theta i j) 0 =
+      -16 * Real.pi *
+        MaxwellAction.physicalMaxwellStress
+          (MaxwellAction.fieldStrength
+            (generalMaxwellPotentialJet
+              (kerrPrincipalE Q r a theta) 0 0
+              (kerrPrincipalB Q r a theta) 0 0)) i j) := by
+  have hstat :=
+    kerrCarterActionMetricEuler_forced_from_metric_and_potential
+      Q r a theta (ne_of_gt hsig)
+  have hnonnull :=
+    kerrPrincipalSixComponent_nonnull_from_potential Q r a theta hQ hsig
+  have hrest :=
+    MaxwellAction.actionBulkStationarity_nonnull_forces_unique_rest
+      (kerrCarterEinsteinMixedFromMetric Q r a theta)
+      (kerrPrincipalE Q r a theta) 0 0
+      (kerrPrincipalB Q r a theta) 0 0 hstat hnonnull s
+  have hall :=
+    MaxwellAction.actionBulkStationarity_forces_all_oddTensorJets
+      (kerrCarterEinsteinMixedFromMetric Q r a theta)
+      (kerrPrincipalE Q r a theta) 0 0
+      (kerrPrincipalB Q r a theta) 0 0 hstat i j n
+  exact ⟨hrest, hall.1, hall.2⟩
+
+end RelativeRest
+
+#print axioms RelativeRest.generalMaxwellStressFromF_principal_eq
+#print axioms RelativeRest.kerrCarterEinsteinMixedFromMetric_eq_fieldStress
+#print axioms RelativeRest.kerrCarterActionMetricEuler_forced_from_metric_and_potential
+#print axioms RelativeRest.kerrPrincipalSixComponent_nonnull_from_potential
+#print axioms RelativeRest.kerrNewman_sameField_action_forces_rest_and_all_normal_jets
