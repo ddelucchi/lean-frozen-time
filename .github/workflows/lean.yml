@@ -50,6 +50,14 @@ jobs:
           set -o pipefail
           lake --no-ansi build RelativeRest_Maxwell_StressScaling 2>&1 | tee maxwell-build.log
 
+      - name: Build synchronization uniqueness audit
+        id: optical
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          lake --no-ansi build RelativeRest_SynchronizationScope 2>&1 | tee optical-build.log
+
       - name: Build certificate
         id: build
         continue-on-error: true
@@ -66,9 +74,10 @@ jobs:
           path: |
             build.log
             maxwell-build.log
+            optical-build.log
           if-no-files-found: warn
 
       - name: Fail if Lean build failed
-        if: steps.build.outcome != 'success' || steps.maxwell.outcome != 'success'
+        if: steps.build.outcome != 'success' || steps.maxwell.outcome != 'success' || steps.optical.outcome != 'success'
         shell: bash
         run: exit 1
