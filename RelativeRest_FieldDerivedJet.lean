@@ -223,5 +223,30 @@ theorem ricciEqualsMaxwellSource_onShell
   rw [hEinstein a b] at hg
   linarith
 
+/-! ### Exact degenerate boundary: the vacuum does not fix relative scale -/
+
+/-- In the vanishing Maxwell-field sector the relative Einstein defect is zero
+    for every rapidity when the Einstein tensor also vanishes. Thus a unique
+    relative fixed point requires a nonzero matter carrier. -/
+theorem vacuumRelativeResidual_identically_zero
+    (s : ℝ) (a b : Fin 4) :
+    einsteinMaxwellRelativeResidual
+        (fun _ _ => (0 : ℝ))
+        (fun _ _ => (0 : ℝ)) s a b = 0 := by
+  simp [einsteinMaxwellRelativeResidual, physicalMaxwellStress,
+    flatMaxwellStress, maxwellStress, maxwellQuadratic,
+    maxwellContraction]
+
+/-- An explicit non-rest fixed point exists in the vacuum sector. -/
+theorem vacuumRelativeResidual_has_nonrest_zero :
+    ∃ s : ℝ, s ≠ 0 ∧
+      ∀ a b : Fin 4,
+        einsteinMaxwellRelativeResidual
+          (fun _ _ => (0 : ℝ))
+          (fun _ _ => (0 : ℝ)) s a b = 0 := by
+  refine ⟨1, by norm_num, ?_⟩
+  intro a b
+  exact vacuumRelativeResidual_identically_zero 1 a b
+
 end MaxwellAction
 end RelativeRest
