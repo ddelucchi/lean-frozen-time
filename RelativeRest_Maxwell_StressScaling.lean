@@ -189,8 +189,9 @@ theorem positive_scales_coincide
       rho lam (ne_of_gt hrho) F a b hT hpreserve
   have hrho2 : rho^2 ≠ 0 := pow_ne_zero 2 (ne_of_gt hrho)
   have hsq : lam^2 = rho^2 := by
-    apply (div_eq_iff hrho2).mp at hratio
-    nlinarith [hratio]
+    have hmul : lam^2 = 1 * rho^2 :=
+      (div_eq_iff hrho2).mp hratio
+    nlinarith [hmul]
   nlinarith
 
 end MaxwellAction
