@@ -82,6 +82,14 @@ jobs:
           set -o pipefail
           lake --no-ansi build RelativeRest_ActionToJetBridge 2>&1 | tee bridge-build.log
 
+      - name: Build full odd normal jet and Ricci identification
+        id: oddjet
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          lake --no-ansi build RelativeRest_ActionOddTensorJet 2>&1 | tee odd-jet-build.log
+
       - name: Upload build log
         if: always()
         uses: actions/upload-artifact@v4
@@ -93,9 +101,10 @@ jobs:
             optical-build.log
             jet-build.log
             bridge-build.log
+            odd-jet-build.log
           if-no-files-found: warn
 
       - name: Fail if Lean build failed
-        if: steps.build.outcome != 'success' || steps.maxwell.outcome != 'success' || steps.optical.outcome != 'success' || steps.jet.outcome != 'success' || steps.bridge.outcome != 'success'
+        if: steps.build.outcome != 'success' || steps.maxwell.outcome != 'success' || steps.optical.outcome != 'success' || steps.jet.outcome != 'success' || steps.bridge.outcome != 'success' || steps.oddjet.outcome != 'success'
         shell: bash
         run: exit 1
