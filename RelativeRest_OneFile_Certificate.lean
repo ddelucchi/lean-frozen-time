@@ -37448,3 +37448,107 @@ end RelativeRest
 #print axioms RelativeRest.MaxwellAction.actionBulkStationarity_forces_scalarCurvature_zero
 #print axioms RelativeRest.MaxwellAction.actionRicciEinstein_tensor_matches_covariant_normalization
 #print axioms RelativeRest.MaxwellAction.actionBulkStationarity_nonnull_forces_rest_allJets_and_Ricci
+
+
+/-!
+# Intrinsic resolver boundary: the regular Maxwell field versus its spacetime jets
+
+The original theorem requires a resolving covector with nonzero Lorentz norm.
+That is not entailed by non-null algebraic invariants alone. The lemmas below
+do not assume the failure of resolution: they derive its exact degenerate
+case by feeding the actual field-jet formulas into the Rainich projector.
+
+This is an internal consistency obligation for any purported universal
+on-shell clock theorem: the higher-jet construction must derive a nonzero
+resolving derivative from real spacetime geometry, rather than inferring it
+solely from electromagnetic energy positivity.
+
+A locally constant non-null electromagnetic invariant is consistent with
+non-null algebraic stress. Thus the local clock cannot be identified
+universally with P_L d log chi unless an independent argument excludes
+or resolves the homogeneous/boost-isotropic branch.
+-/
+
+namespace RelativeRest
+
+/-- Every first derivative of the six Maxwell components vanishes implies
+    the exact six-component derivative of log chi vanishes, by the already
+    proven field-invariant differentiation identities. -/
+theorem generalMaxwellDLogChi_zero_of_constantFirstJet
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    generalMaxwellDLogChiCovector
+      Ex Ey Ez Bx By Bz
+      (fun _ => 0) (fun _ => 0) (fun _ => 0)
+      (fun _ => 0) (fun _ => 0) (fun _ => 0) = 0 := by
+  funext a
+  simp [generalMaxwellDLogChiCovector,
+    generalMaxwellLogChiJet, generalMaxwellIJet, generalMaxwellJJet]
+
+/-- The *actual* principal Rainich projection annihilates that zero
+    logarithmic-gradient covector: there is no free resolver choice. -/
+theorem generalMaxwellResolvingCovector_zero_of_constantFirstJet
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    generalMaxwellResolvingCovector
+      Ex Ey Ez Bx By Bz
+      (fun _ => 0) (fun _ => 0) (fun _ => 0)
+      (fun _ => 0) (fun _ => 0) (fun _ => 0) = 0 := by
+  unfold generalMaxwellResolvingCovector
+  rw [generalMaxwellDLogChi_zero_of_constantFirstJet]
+  simp [generalMaxwellCovectorProjectorPlus, generalMaxwellProjectorPlus,
+    involutionProjPlus]
+
+/-- Hence the field-defined first-jet norm is *exactly zero*.
+    In particular an h_p != 0 hypothesis does not follow merely
+    from a non-null zeroth-order Maxwell field. -/
+theorem generalMaxwellResolvingNormSq_zero_of_constantFirstJet
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    generalMaxwellResolvingNormSq
+      Ex Ey Ez Bx By Bz
+      (fun _ => 0) (fun _ => 0) (fun _ => 0)
+      (fun _ => 0) (fun _ => 0) (fun _ => 0) = 0 := by
+  unfold generalMaxwellResolvingNormSq
+  rw [generalMaxwellResolvingCovector_zero_of_constantFirstJet]
+  simp [principalMinkowskiCovectorSq, principalRaiseCovector,
+    principalMinkowskiSq]
+
+/-- This field has both nonzero electric and magnetic components,
+    and its Rainich non-null invariant J is nonzero. -/
+theorem explicitConstantJetMaxwellField_isNonNull :
+    generalMaxwellNonNull 1 0 0 1 0 0 := by
+  right
+  norm_num [generalMaxwellJ]
+
+/-- Concrete, fully component-defined regular non-null Maxwell data
+    with a vanishing intrinsic first-jet resolver. -/
+theorem nonnull_field_with_zero_intrinsic_firstJet_exists :
+    ∃ Ex Ey Ez Bx By Bz : ℝ,
+      generalMaxwellNonNull Ex Ey Ez Bx By Bz ∧
+      generalMaxwellResolvingNormSq Ex Ey Ez Bx By Bz
+        (fun _ => 0) (fun _ => 0) (fun _ => 0)
+        (fun _ => 0) (fun _ => 0) (fun _ => 0) = 0 := by
+  refine ⟨1, 0, 0, 1, 0, 0, explicitConstantJetMaxwellField_isNonNull, ?_⟩
+  exact generalMaxwellResolvingNormSq_zero_of_constantFirstJet 1 0 0 1 0 0
+
+/-- A universal no-additional-hypothesis first-jet frame theorem
+    cannot be justified using non-nullness alone. This negative statement
+    is proved constructively, not asserted as an axiom. -/
+theorem nonnull_alone_does_not_force_resolvingNormSq_nonzero :
+    ¬ (∀ Ex Ey Ez Bx By Bz : ℝ,
+        generalMaxwellNonNull Ex Ey Ez Bx By Bz →
+        generalMaxwellResolvingNormSq Ex Ey Ez Bx By Bz
+          (fun _ => 0) (fun _ => 0) (fun _ => 0)
+          (fun _ => 0) (fun _ => 0) (fun _ => 0) ≠ 0) := by
+  intro h
+  have hnonnull := explicitConstantJetMaxwellField_isNonNull
+  have hnonzero := h 1 0 0 1 0 0 hnonnull
+  exact hnonzero
+    (generalMaxwellResolvingNormSq_zero_of_constantFirstJet 1 0 0 1 0 0)
+
+end RelativeRest
+
+#print axioms RelativeRest.generalMaxwellDLogChi_zero_of_constantFirstJet
+#print axioms RelativeRest.generalMaxwellResolvingCovector_zero_of_constantFirstJet
+#print axioms RelativeRest.generalMaxwellResolvingNormSq_zero_of_constantFirstJet
+#print axioms RelativeRest.explicitConstantJetMaxwellField_isNonNull
+#print axioms RelativeRest.nonnull_field_with_zero_intrinsic_firstJet_exists
+#print axioms RelativeRest.nonnull_alone_does_not_force_resolvingNormSq_nonzero
