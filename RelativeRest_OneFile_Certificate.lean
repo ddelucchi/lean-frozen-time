@@ -400,13 +400,12 @@ theorem character_exchange (u s : ℝ) :
   · rw [XiGUS_factorization, XiMUS_factorization]
     simp
   · rw [XiMUS_factorization, XiGUS_factorization]
-    simp
 
 
 /-- Lower-index Maxwell stress scales by `(λ/ρ)²` under constant
 `(g,A) ↦ (ρ²g, λA)`.  This definition records only that forced scalar weight. -/
-def maxwellStressScaleFactor (ρ λ : ℝ) : ℝ :=
-  (λ / ρ)^2
+def maxwellStressScaleFactor (ρ lam : ℝ) : ℝ :=
+  (lam / ρ)^2
 
 /-- The relative parametrization gives `λ/ρ=e^s` exactly. -/
 theorem lambdaUS_div_rhoUS (u s : ℝ) :
@@ -627,8 +626,10 @@ theorem defect_from_on_shell_equation
     rw [← Real.exp_add]
     congr 1
     ring
-  rw [he]
-  ring
+  calc
+    _ = 8 * Real.pi * T * (Real.exp (-s) - Real.exp (-s) * Real.exp (2 * s)) := by ring
+    _ = 8 * Real.pi * T * (Real.exp (-s) - Real.exp s) := by rw [he]
+    _ = _ := by ring
 
 /-- Conversely, the factorized residual and the hyperbolic odd carrier are exactly the same
 on-shell object for every relative coordinate. -/
@@ -900,13 +901,16 @@ theorem relativeActionValue_hasDerivAt
         (fun x : ℝ => Real.exp (-x) * SG)
         (-Real.exp (-s) * SG) s := by
     have he := (Real.hasDerivAt_exp (-s)).comp s hneg
-    convert he.mul_const SG using 1 <;> ring
+    simpa [Function.comp_def, mul_comm, mul_left_comm, mul_assoc] using he.mul_const SG
   have hM :
       HasDerivAt
         (fun x : ℝ => Real.exp x * SM)
         (Real.exp s * SM) s :=
     (Real.hasDerivAt_exp s).mul_const SM
-  simpa [relativeActionValue] using hG.add hM
+  change HasDerivAt
+    (fun t : ℝ => Real.exp (-t) * SG + Real.exp t * SM)
+    (-Real.exp (-s) * SG + Real.exp s * SM) s
+  exact hG.add hM
 
 /-- At the relative fixed point the action normal is exactly `SM-SG`. -/
 theorem relativeActionValue_deriv_zero
@@ -1023,7 +1027,10 @@ theorem einsteinMaxwellLagrangianDensity_hasDerivAt_line_zero
       HasDerivAt (fun s : ℝ => volumeCoeff + s * dVolume)
         dVolume 0 := by
     convert (hasDerivAt_const 0 volumeCoeff).add
-      ((hasDerivAt_id 0).mul_const dVolume) using 1 <;> ring
+      ((hasDerivAt_id 0).mul_const dVolume) using 1
+    funext t
+    simp [Pi.add_apply]
+    ring
   have hRF :
       HasDerivAt
         (fun s : ℝ => (scalarR + s * dR) - (Fsq + s * dFsq))
@@ -1031,10 +1038,13 @@ theorem einsteinMaxwellLagrangianDensity_hasDerivAt_line_zero
     convert ((hasDerivAt_const 0 scalarR).add
       ((hasDerivAt_id 0).mul_const dR)).sub
       ((hasDerivAt_const 0 Fsq).add
-        ((hasDerivAt_id 0).mul_const dFsq)) using 1 <;> ring
+        ((hasDerivAt_id 0).mul_const dFsq)) using 1
+    funext t
+    simp [Pi.add_apply, Pi.sub_apply]
+    ring
   have h := (hV.mul hRF).const_mul (1 / (16 * Real.pi))
   unfold einsteinMaxwellLagrangianDensity
-  convert h using 1 <;> ring
+  convert h using 1 <;> (first | (funext t; dsimp; ring) | ring)
 
 /-- The derivative of the displayed density is therefore fixed uniquely by its three
 primitive scalar variations; no extra density-level normalization survives. -/
@@ -1113,7 +1123,7 @@ theorem linearDescendant_reciprocal_hasDerivAt_zero
   have hneg : HasDerivAt (fun s : ℝ => -s) (-1) 0 :=
     (hasDerivAt_id 0).neg
   have hGexp : HasDerivAt (fun s : ℝ => Real.exp (-s)) (-1) 0 := by
-    simpa using (Real.hasDerivAt_exp 0).comp 0 hneg
+    simpa [Function.comp_def] using (Real.hasDerivAt_exp (-0)).comp 0 hneg
   have hG := hGexp.mul_const (D LG)
   have hM := (Real.hasDerivAt_exp 0).mul_const (D LM)
   convert hG.add hM using 1 <;> simp <;> ring
@@ -1194,6 +1204,12 @@ def actionConstraintResponseLinear
     actionConstraintResponseLinear ell actionMaxwellSector = -ell := by
   simp [actionConstraintResponseLinear, actionMaxwellSector]
 
+/-- Exchange-even action direction. -/
+def CA : R2 := (1, 1)
+
+/-- Exchange-odd action direction. -/
+def DA : R2 := (-1, 1)
+
 @[simp] theorem actionConstraintResponseLinear_CA
     {C : Type*} [AddCommGroup C] [Module ℝ C] (ell : C) :
     actionConstraintResponseLinear ell CA = 0 := by
@@ -1213,7 +1229,8 @@ theorem actionConstraintResponseLinear_unique_from_CA_DA
     (hCA : F CA = 0)
     (hDA : F DA = (-2 : ℝ) • ell) :
     F = actionConstraintResponseLinear ell := by
-  ext x
+  apply LinearMap.ext
+  intro x
   rcases x with ⟨xG,xM⟩
   have hx :
       (xG,xM) =
@@ -1232,7 +1249,8 @@ theorem actionConstraintOperator_unique_from_fixed_point_jet
     (hCA : F CA = G CA)
     (hDA : F DA = G DA) :
     F = G := by
-  ext x
+  apply LinearMap.ext
+  intro x
   rcases x with ⟨xG,xM⟩
   have hx :
       (xG,xM) =
@@ -1254,12 +1272,6 @@ theorem actionConstraintResponseLinear_apply_eq_residualLinear
 
 /-- Action-space boost generator in the `(E_G,E_M)` basis. -/
 def YA (v : R2) : R2 := (-v.1, v.2)
-
-/-- Exchange-even action direction. -/
-def CA : R2 := (1, 1)
-
-/-- Exchange-odd action direction. -/
-def DA : R2 := (-1, 1)
 
 /-- The common/even action direction is exactly the sum of the two sector basis vectors. -/
 @[simp] theorem CA_eq_actionSectors :
@@ -1291,7 +1303,6 @@ def JA (v : R2) : R2 := (v.2, v.1)
 @[simp] theorem residualLinear_DA (Ric : ℝ) :
     residualLinear Ric DA = -2 * Ric := by
   norm_num [residualLinear, DA]
-  ring
 
 /-- The odd action direction maps exactly to the fixed-point carrier `J=-2R=-16πT`. -/
 theorem residualLinear_DA_eq_jet
@@ -1344,7 +1355,7 @@ theorem actionBoost_fst_hasDerivAt (v : R2) (s : ℝ) :
     (hasDerivAt_id s).neg
   have hexpneg :
       HasDerivAt (fun t : ℝ => Real.exp (-t)) (-Real.exp (-s)) s := by
-    simpa using (Real.hasDerivAt_exp (-s)).comp s hneg
+    simpa [Function.comp_def] using (Real.hasDerivAt_exp (-s)).comp s hneg
   simpa [actionBoost, YA, mul_comm, mul_left_comm, mul_assoc] using
     hexpneg.mul_const x
 
@@ -1485,7 +1496,7 @@ def principalMaxwellFStarF (E B : ℝ) : ℝ :=
 theorem principalMaxwellFStarF_eq_maxwellJ (E B : ℝ) :
     principalMaxwellFStarF E B = maxwellJ E B := by
   simp [principalMaxwellFStarF, principalMetricSign,
-    principalMaxwellF, principalMaxwellStarF, maxwellJ]
+    principalMaxwellF, principalMaxwellStarF, maxwellJ, Fin.sum_univ_four]
   ring
 
 /-- Direct contraction `F_ab F^ab` in the principal orthonormal frame. -/
@@ -1497,7 +1508,7 @@ def principalMaxwellFsq (E B : ℝ) : ℝ :=
 /-- The explicit contraction reproduces the invariant `2(B²-E²)`. -/
 theorem principalMaxwellFsq_eq_maxwellI (E B : ℝ) :
     principalMaxwellFsq E B = maxwellI E B := by
-  simp [principalMaxwellFsq, principalMetricSign, principalMaxwellF, maxwellI]
+  simp [principalMaxwellFsq, principalMetricSign, principalMaxwellF, maxwellI, Fin.sum_univ_four]
   ring
 
 
@@ -1591,7 +1602,7 @@ theorem generalMaxwellFsq_eq_I
     generalMaxwellFsq Ex Ey Ez Bx By Bz =
       generalMaxwellI Ex Ey Ez Bx By Bz := by
   simp [generalMaxwellFsq, principalMetricSign,
-    generalMaxwellF, generalMaxwellI]
+    generalMaxwellF, generalMaxwellI, Fin.sum_univ_four]
   ring
 
 theorem generalMaxwellFStarF_eq_J
@@ -1599,7 +1610,7 @@ theorem generalMaxwellFStarF_eq_J
     generalMaxwellFStarF Ex Ey Ez Bx By Bz =
       generalMaxwellJ Ex Ey Ez Bx By Bz := by
   simp [generalMaxwellFStarF, principalMetricSign,
-    generalMaxwellF, generalMaxwellStarF, generalMaxwellJ]
+    generalMaxwellF, generalMaxwellStarF, generalMaxwellJ, Fin.sum_univ_four]
   ring
 
 /-- Mixed Maxwell stress of the completely general field. -/
@@ -1620,6 +1631,7 @@ def generalMaxwellCarrier
   -16 * Real.pi *
     generalMaxwellStressFromF Ex Ey Ez Bx By Bz i j
 
+set_option maxHeartbeats 1000000 in
 /-- Four-dimensional Rainich identity for an arbitrary electromagnetic two-form.
 No principal-frame alignment is used: the full six-component carrier squares to
 the invariant scalar `I²+J²` times the identity. -/
@@ -1635,7 +1647,7 @@ theorem generalMaxwellCarrier_rainich
     simp [generalMaxwellCarrier, generalMaxwellStressFromF,
       generalMaxwellFsq_eq_I, generalMaxwellI,
       generalMaxwellJ, generalMaxwellF,
-      principalMetricSign] <;>
+      principalMetricSign, Fin.sum_univ_four] <;>
     field_simp [ne_of_gt Real.pi_pos] <;>
     ring
 
@@ -1773,9 +1785,10 @@ theorem principalMaxwellPotentialLagrangianLine_hasDerivAt_zero
     1 0 Fsq 0 0
     (principalMaxwellPotentialFsqDerivative Fup nablaDeltaA)
   unfold principalMaxwellPotentialLagrangianLine
-    principalMaxwellPotentialFsqDerivative
-  convert h using 1 <;>
-    field_simp [ne_of_gt Real.pi_pos] <;>
+  convert h using 1
+  · funext s
+    simp
+  · simp only [principalMaxwellPotentialFsqDerivative]
     ring
 
 /-- Pointwise Maxwell Euler contribution paired with `δA`, before rewriting it
@@ -1810,6 +1823,10 @@ theorem principalMaxwellPotentialEulerDensity_eq_divergence_contraction
   intro b hb
   rw [Finset.sum_mul]
 
+
+/-- Standard coordinate basis in the four-dimensional principal frame. -/
+def principalBasis (i : Fin 4) : Fin 4 → ℝ :=
+  fun j => if j = i then 1 else 0
 
 /-- Vanishing of the Maxwell bulk Euler pairing for every potential variation is
 equivalent to the source-free Maxwell equation component by component.  Thus the
@@ -1872,6 +1889,7 @@ theorem principalMaxwellPotential_first_variation
     Fsq Fup nablaDeltaA).deriv]
   unfold principalMaxwellPotentialEulerDensity
     principalMaxwellSymplecticPotentialDivergence
+  simp only [Finset.sum_add_distrib]
   ring
 
 /-- In particular a pure Gauss variation `δA=dλ` has identically zero
@@ -1939,6 +1957,7 @@ def principalMaxwellFsqMetricDifferential
       principalMaxwellF E B a b *
       principalMaxwellF E B c d
 
+set_option maxHeartbeats 1000000 in
 /-- Inserting a single inverse-metric matrix unit forces the two identical
 contributions and therefore the universal factor two.  This derives, rather than
 declares, the coefficient used in the Maxwell metric variation. -/
@@ -1952,7 +1971,7 @@ theorem principalMaxwellFsqMetricDifferential_matrixUnit
       principalInverseMetricMatrixUnit,
       principalMaxwellCovariantContraction,
       principalMetricCov, principalMetricSign,
-      principalMaxwellF] <;>
+      principalMaxwellF, Fin.sum_univ_four] <;>
     ring
 
 /-- Literal inverse-metric matrix line through the principal Lorentzian
@@ -1987,7 +2006,7 @@ theorem principalInverseMetricMatrixLine_det
     fin_cases i <;> fin_cases j <;>
       simp [principalInverseMetricMatrixLine,
         principalMetricCov, principalMetricSign,
-        principalInverseMetricMatrixUnit] <;> ring
+        principalInverseMetricMatrixUnit, Fin.prod_univ_four] <;> ring
   · have hji : j < i := lt_of_not_ge hle
     have hlow :
         (principalInverseMetricMatrixLine i j s).IsLowerTriangular := by
@@ -2003,7 +2022,7 @@ theorem principalInverseMetricMatrixLine_det
     fin_cases i <;> fin_cases j <;>
       simp [principalInverseMetricMatrixLine,
         principalMetricCov, principalMetricSign,
-        principalInverseMetricMatrixUnit] <;> ring
+        principalInverseMetricMatrixUnit, Fin.prod_univ_four] <;> ring
 
 /-- Normalized Lorentzian volume density along the actual inverse-metric matrix
 line.  Near the background point the determinant is negative, so
@@ -2133,12 +2152,16 @@ theorem principalMaxwellLagrangianMetricLine_hasDerivAt_zero
     0
     (principalMaxwellFsqInverseMetricDerivative E B i j)
   unfold principalMaxwellLagrangianMetricLine
-    principalInverseMetricVolumeDerivative
-    principalMaxwellFsqInverseMetricDerivative
-    principalMaxwellInverseMetricVariationCoeff
-    principalMaxwellVolumeVariationCoeff
-  convert h using 1 <;>
-    field_simp [ne_of_gt Real.pi_pos] <;> ring
+  convert h using 1
+  · funext s
+    simp [principalMaxwellFsqInverseMetricDerivative,
+      principalInverseMetricVolumeDerivative]
+  · simp only [principalMaxwellInverseMetricVariationCoeff,
+      principalMaxwellVolumeVariationCoeff,
+      principalMaxwellFsqInverseMetricDerivative,
+      principalInverseMetricVolumeDerivative]
+    field_simp [ne_of_gt Real.pi_pos]
+    ring
 
 /-- Total algebraic coefficient of `δg^{ij}` in the Maxwell Lagrangian density,
 after factoring out the background volume density. -/
@@ -2225,6 +2248,7 @@ def generalMaxwellFsqMetricDifferential
       generalMaxwellF Ex Ey Ez Bx By Bz a b *
       generalMaxwellF Ex Ey Ez Bx By Bz c d
 
+set_option maxHeartbeats 1000000 in
 /-- Varying either inverse metric produces the same contraction, forcing the
 universal factor two for a completely arbitrary electromagnetic two-form. -/
 theorem generalMaxwellFsqMetricDifferential_matrixUnit
@@ -2238,7 +2262,7 @@ theorem generalMaxwellFsqMetricDifferential_matrixUnit
       principalInverseMetricMatrixUnit,
       generalMaxwellCovariantContraction,
       principalMetricCov, principalMetricSign,
-      generalMaxwellF] <;>
+      generalMaxwellF, Fin.sum_univ_four] <;>
     ring
 
 def generalMaxwellFsqInverseMetricDerivative
@@ -2295,12 +2319,16 @@ theorem generalMaxwellLagrangianMetricLine_hasDerivAt_zero
     (generalMaxwellFsqInverseMetricDerivative
       Ex Ey Ez Bx By Bz i j)
   unfold generalMaxwellLagrangianMetricLine
-    principalInverseMetricVolumeDerivative
-    generalMaxwellFsqInverseMetricDerivative
-    generalMaxwellInverseMetricVariationCoeff
-    generalMaxwellVolumeVariationCoeff
-  convert h using 1 <;>
-    field_simp [ne_of_gt Real.pi_pos] <;> ring
+  convert h using 1
+  · funext s
+    simp [generalMaxwellFsqInverseMetricDerivative,
+      principalInverseMetricVolumeDerivative]
+  · simp only [generalMaxwellInverseMetricVariationCoeff,
+      generalMaxwellVolumeVariationCoeff,
+      generalMaxwellFsqInverseMetricDerivative,
+      principalInverseMetricVolumeDerivative]
+    field_simp [ne_of_gt Real.pi_pos]
+    ring
 
 def generalMaxwellMetricVariationCoeff
     (Ex Ey Ez Bx By Bz : ℝ) (i j : Fin 4) : ℝ :=
@@ -2316,6 +2344,7 @@ def generalMaxwellStressCovFromF
   principalMetricSign i *
     generalMaxwellStressFromF Ex Ey Ez Bx By Bz i j
 
+set_option maxHeartbeats 1000000 in
 /-- For an arbitrary Maxwell two-form, the two metric-variation pieces combine
 to exactly `-1/2 T_ij[F]`.  Principal-frame alignment is nowhere assumed. -/
 theorem generalMaxwellMetricVariationCoeff_eq_neg_half_stress
@@ -2334,7 +2363,7 @@ theorem generalMaxwellMetricVariationCoeff_eq_neg_half_stress
       generalMaxwellStressFromF,
       principalMetricCov, principalMetricSign,
       generalMaxwellF, generalMaxwellFsq,
-      generalMaxwellI] <;>
+      generalMaxwellI, Fin.sum_univ_four] <;>
     field_simp [ne_of_gt Real.pi_pos] <;>
     ring
 
@@ -2369,16 +2398,22 @@ theorem generalMaxwellLagrangianMetricLine_principal_specialization
     (E B : ℝ) (i j : Fin 4) :
     generalMaxwellLagrangianMetricLine E 0 0 B 0 0 i j =
       principalMaxwellLagrangianMetricLine E B i j := by
+  have hFsq :
+      generalMaxwellFsq E 0 0 B 0 0 = principalMaxwellFsq E B := by
+    rw [generalMaxwellFsq_eq_I, principalMaxwellFsq_eq_maxwellI]
+    simp [generalMaxwellI, maxwellI]
+  have hContraction (a b : Fin 4) :
+      generalMaxwellCovariantContraction E 0 0 B 0 0 a b =
+        principalMaxwellCovariantContraction E B a b := by
+    simp only [generalMaxwellCovariantContraction,
+      principalMaxwellCovariantContraction,
+      generalMaxwellF_principal_specialization]
   funext s
-  simp [generalMaxwellLagrangianMetricLine,
+  simp only [generalMaxwellLagrangianMetricLine,
     principalMaxwellLagrangianMetricLine,
     generalMaxwellFsqInverseMetricDerivative,
     principalMaxwellFsqInverseMetricDerivative,
-    generalMaxwellCovariantContraction,
-    principalMaxwellCovariantContraction,
-    generalMaxwellFsq,
-    principalMaxwellFsq,
-    generalMaxwellF, principalMaxwellF]
+    hFsq, hContraction]
 
 /-- Einstein-Hilbert metric-variation coefficient in mixed-index form after
 lowering the first index with the principal metric. -/
@@ -2455,7 +2490,6 @@ theorem principalPalatini_scalar_boundary_eq_divergence
   rw [Finset.sum_sub_distrib, Finset.sum_sub_distrib]
   congr 1
   · rw [Finset.sum_comm]
-  · rfl
 
 /-! #### Linearized Levi-Civita connection and Einstein-Hilbert potential -/
 
@@ -3341,8 +3375,7 @@ theorem principalStressFromF_trace_zero (E B : ℝ) :
     principalStressFromFTrace E B = 0 := by
   unfold principalStressFromFTrace
   simp_rw [principalStressFromF_eq_principalStress]
-  simp [principalStress]
-  ring
+  simp [principalStress, Fin.sum_univ_four]
 
 /-- Squared trace of the explicit Maxwell stress endomorphism. -/
 def principalStressFromFTraceSq (E B : ℝ) : ℝ :=
@@ -3384,9 +3417,11 @@ theorem principalScaledResidualFromF_hasDerivAt_zero
       (principalJetFromF E B i j) 0 := by
   have hexp :
       HasDerivAt (fun s : ℝ => Real.exp (2 * s)) 2 0 := by
-    have hlin : HasDerivAt (fun s : ℝ => 2 * s) 2 0 :=
-      (hasDerivAt_id 0).const_mul 2
-    simpa using (Real.hasDerivAt_exp 0).comp 0 hlin
+    have hlin : HasDerivAt (fun s : ℝ => 2 * s) 2 0 := by
+      simpa only [id_eq, mul_one] using
+        (hasDerivAt_id (0 : ℝ)).const_mul (2 : ℝ)
+    simpa [Function.comp_def] using
+      (Real.hasDerivAt_exp ((2 : ℝ) * 0)).comp 0 hlin
   have hscaled :=
     hexp.const_mul
       (8 * Real.pi * principalStressFromF E B i j)
@@ -3397,7 +3432,11 @@ theorem principalScaledResidualFromF_hasDerivAt_zero
         0 0 :=
     hasDerivAt_const 0 _
   unfold principalScaledResidualFromF principalJetFromF
-  convert hconst.sub hscaled using 1 <;> ring
+  convert hconst.sub hscaled using 1
+  · funext s
+    dsimp
+    ring
+  · ring
 
 /-- Derivative form of the explicit fixed-point jet identity. -/
 theorem principalScaledResidualFromF_deriv_zero
@@ -3483,8 +3522,7 @@ theorem principalScaledMetricEulerCoeffFromAction_hasDerivAt_zero
             principalScaledResidualFromF E B i j s := by
     funext s
     exact principalScaledMetricEulerCoeffFromAction_eq_residual E B i j s
-  rw [heq]
-  simpa [mul_comm, mul_left_comm, mul_assoc] using hmul
+  simpa only [heq] using hmul
 
 /-- The carrier jet is therefore uniquely recoverable from the metric Euler jet;
 the conversion factor is fixed entirely by the Einstein-Hilbert normalization. -/
@@ -3720,10 +3758,6 @@ theorem principalJetFromF_rainich
 
 
 /-! ### Explicit principal Einstein-Maxwell jet and Lorentzian plane -/
-
-/-- Standard coordinate basis in the four-dimensional principal frame. -/
-def principalBasis (i : Fin 4) : Fin 4 → ℝ :=
-  fun j => if j = i then 1 else 0
 
 
 /-- Chronometric unit timelike vector `û_*`, declared here because the canonical
@@ -7476,7 +7510,7 @@ theorem generalMaxwellNormalizedCarrier_eq_projector_difference
     involutionProjPlus involutionProjMinus
   module
 
-/-- Any putative pair of complementary +1/-1 eigencomponents agreeing with the
+/-- Any putative pair of complementary +1 and -1 eigencomponents agreeing with the
 arbitrary Maxwell carrier must therefore coincide pointwise with the canonical
 Rainich projectors. -/
 theorem generalMaxwell_principal_projectors_pointwise_unique
@@ -10638,7 +10672,7 @@ theorem relativeSymplecticPlus_hasDerivAt_zero
     (hasDerivAt_id 0).neg
   have hGexp :
       HasDerivAt (fun s : ℝ => Real.exp (-s)) (-1) 0 := by
-    simpa using (Real.hasDerivAt_exp 0).comp 0 hneg
+    simpa [Function.comp_def] using (Real.hasDerivAt_exp (-0)).comp 0 hneg
   have hG :=
     hGexp.mul_const (ΩG x y)
   have hM :=
@@ -31015,7 +31049,8 @@ theorem PrincipalActionEulerSectorVariationCharacteristicInput.constraint_unique
     (hM : C' actionMaxwellSector = -D.carrier.actionEulerResponse) :
     C' = D.variation.constraint := by
   rw [D.constraintFromActionEuler]
-  ext x
+  apply LinearMap.ext
+  intro x
   rcases x with ⟨xG,xM⟩
   have hx : (xG,xM) =
       xG • actionGravitySector + xM • actionMaxwellSector := by
@@ -31351,7 +31386,8 @@ theorem PrincipalActionEulerBasisVariationCharacteristicInput.constraint_operato
     (D : PrincipalActionEulerBasisVariationCharacteristicInput (P:=P)) :
     D.variation.constraint =
       actionConstraintResponseLinear D.carrier.actionEulerResponse := by
-  ext x
+  apply LinearMap.ext
+  intro x
   rcases x with ⟨xG,xM⟩
   have hx : (xG,xM) =
       xG • actionGravitySector + xM • actionMaxwellSector := by
