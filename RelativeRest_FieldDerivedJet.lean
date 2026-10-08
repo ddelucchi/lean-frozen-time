@@ -29,13 +29,13 @@ namespace MaxwellAction
 def einsteinMaxwellRelativeResidual
     (G F : Tensor44) (s : ℝ) : Tensor44 :=
   fun a b =>
-    G a b - Real.exp (2*s) * (8 * Real.pi * flatMaxwellStress F a b)
+    G a b - Real.exp (2*s) * (8 * Real.pi * physicalMaxwellStress F a b)
 
 /-- If G=8*pi*S, the relative defect vanishes at the rest point s=0. -/
 theorem fieldDerivedResidual_zero_at_rest
     (G F : Tensor44)
     (hEinstein : ∀ a b : Fin 4,
-      G a b = 8 * Real.pi * flatMaxwellStress F a b)
+      G a b = 8 * Real.pi * physicalMaxwellStress F a b)
     (a b : Fin 4) :
     einsteinMaxwellRelativeResidual G F 0 a b = 0 := by
   simp [einsteinMaxwellRelativeResidual, hEinstein a b]
@@ -45,20 +45,20 @@ theorem fieldDerivedResidual_zero_at_rest
 theorem fieldDerivedResidual_zero_iff_rest
     (G F : Tensor44)
     (hEinstein : ∀ a b : Fin 4,
-      G a b = 8 * Real.pi * flatMaxwellStress F a b)
+      G a b = 8 * Real.pi * physicalMaxwellStress F a b)
     (a b : Fin 4)
-    (hT : flatMaxwellStress F a b ≠ 0)
+    (hT : physicalMaxwellStress F a b ≠ 0)
     (s : ℝ) :
     einsteinMaxwellRelativeResidual G F s a b = 0 ↔ s = 0 := by
   constructor
   · intro h
     have hscaled :
-        (8 * Real.pi * flatMaxwellStress F a b) *
+        (8 * Real.pi * physicalMaxwellStress F a b) *
           (1 - Real.exp (2*s)) = 0 := by
       simpa [einsteinMaxwellRelativeResidual,
         hEinstein a b] using h
     have hnormal :
-        8 * Real.pi * flatMaxwellStress F a b ≠ 0 := by
+        8 * Real.pi * physicalMaxwellStress F a b ≠ 0 := by
       exact mul_ne_zero (by positivity) hT
     have he : Real.exp (2*s) = 1 := by
       rcases mul_eq_zero.mp hscaled with hbad | hrest
@@ -76,7 +76,7 @@ theorem fieldDerivedResidual_hasDerivAt_zero
     (G F : Tensor44) (a b : Fin 4) :
     HasDerivAt
       (fun s : ℝ => einsteinMaxwellRelativeResidual G F s a b)
-      (-16 * Real.pi * flatMaxwellStress F a b) 0 := by
+      (-16 * Real.pi * physicalMaxwellStress F a b) 0 := by
   have hexp :
       HasDerivAt (fun s : ℝ => Real.exp (2*s)) 2 0 := by
     convert ((hasDerivAt_id (0 : ℝ)).const_mul 2).exp using 1 <;>
@@ -87,7 +87,7 @@ theorem fieldDerivedResidual_hasDerivAt_zero
   have h :=
     hconst.sub
       (hexp.mul_const
-        (8 * Real.pi * flatMaxwellStress F a b))
+        (8 * Real.pi * physicalMaxwellStress F a b))
   convert h using 1 <;>
     simp [einsteinMaxwellRelativeResidual] <;> ring
 
@@ -99,6 +99,23 @@ theorem flatMaxwellStress_tracefree (F : Tensor44) :
     maxwellContraction, etaCovariant, lorentzSign, Fin.sum_univ_four]
   ring
 
+/-- Restoring 1/(4*pi) does not change Maxwell tracelessness. -/
+theorem physicalMaxwellStress_tracefree (F : Tensor44) :
+    (∑ a : Fin 4,
+      lorentzSign a * physicalMaxwellStress F a a) = 0 := by
+  calc
+    (∑ a : Fin 4,
+      lorentzSign a * physicalMaxwellStress F a a) =
+        (1 / (4 * Real.pi)) *
+          (∑ a : Fin 4,
+            lorentzSign a * flatMaxwellStress F a a) := by
+      rw [Finset.mul_sum]
+      apply Finset.sum_congr rfl
+      intro a ha
+      unfold physicalMaxwellStress
+      ring
+    _ = 0 := by rw [flatMaxwellStress_tracefree F]; ring
+
 /-- Contracting the 4D Einstein equation with the inverse metric yields
     -R=8*pi*tr(T). Trace-free Maxwell stress therefore forces R=0.
     The Einstein trace relation itself is explicitly an upstream hypothesis. -/
@@ -107,9 +124,9 @@ theorem onShellEinsteinMaxwell_scalarCurvature_zero
     (htrace : -R =
       8 * Real.pi *
         (∑ a : Fin 4,
-          lorentzSign a * flatMaxwellStress F a a)) :
+          lorentzSign a * physicalMaxwellStress F a a)) :
     R = 0 := by
-  rw [flatMaxwellStress_tracefree F] at htrace
+  rw [physicalMaxwellStress_tracefree F] at htrace
   linarith
 
 /-- Under the on-shell equality G=8*pi*S and R=0, the Ricci tensor
@@ -117,12 +134,12 @@ theorem onShellEinsteinMaxwell_scalarCurvature_zero
 theorem ricciEqualsMaxwellSource_onShell
     (G Ric F : Tensor44) (R : ℝ)
     (hEinstein : ∀ a b : Fin 4,
-      G a b = 8 * Real.pi * flatMaxwellStress F a b)
+      G a b = 8 * Real.pi * physicalMaxwellStress F a b)
     (hRelation : ∀ a b : Fin 4,
       G a b = Ric a b - (1 / 2 : ℝ) * etaCovariant a b * R)
     (hScalar : R = 0)
     (a b : Fin 4) :
-    Ric a b = 8 * Real.pi * flatMaxwellStress F a b := by
+    Ric a b = 8 * Real.pi * physicalMaxwellStress F a b := by
   have hg := hRelation a b
   rw [hScalar] at hg
   simp at hg
