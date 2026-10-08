@@ -90,6 +90,15 @@ jobs:
           set -o pipefail
           lake --no-ansi build RelativeRest_ActionOddTensorJet 2>&1 | tee odd-jet-build.log
 
+      - name: Strict complete imported proof and axiom audit
+        id: strict
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          lake --no-ansi build RelativeRest_StrictVerification 2>&1 | tee strict-build.log
+          lake env lean RelativeRest_StrictVerification.lean 2>&1 | tee strict-axioms.log
+
       - name: Upload build log
         if: always()
         uses: actions/upload-artifact@v4
@@ -102,9 +111,11 @@ jobs:
             jet-build.log
             bridge-build.log
             odd-jet-build.log
+            strict-build.log
+            strict-axioms.log
           if-no-files-found: warn
 
       - name: Fail if Lean build failed
-        if: steps.build.outcome != 'success' || steps.maxwell.outcome != 'success' || steps.optical.outcome != 'success' || steps.jet.outcome != 'success' || steps.bridge.outcome != 'success' || steps.oddjet.outcome != 'success'
+        if: steps.build.outcome != 'success' || steps.maxwell.outcome != 'success' || steps.optical.outcome != 'success' || steps.jet.outcome != 'success' || steps.bridge.outcome != 'success' || steps.oddjet.outcome != 'success' || steps.strict.outcome != 'success'
         shell: bash
         run: exit 1
