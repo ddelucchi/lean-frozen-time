@@ -38122,3 +38122,178 @@ end RelativeRest
 #print axioms RelativeRest.MaxwellAction.onShellAction_forces_actual_RicciNorm
 #print axioms RelativeRest.MaxwellAction.onShellAction_forces_actual_RicciClockRate
 #print axioms RelativeRest.MaxwellAction.generalEinsteinMaxwell_fullAction_to_intrinsicClockStrata
+
+/-!
+# GENERAL Einstein--Maxwell characteristic descent and relational evolution
+
+This is the downstream continuation of the previous all-field theorem.
+No spacetime specialization or prescribed observer is present. The current
+is the same action-derived Maxwell carrier contracted against the
+field-derived future principal plane. The quotient line is proved by
+nonvanishing current, and all possible future dyad presentations agree
+provided the field's own projected first jet is nondegenerate.
+
+The clock-cover and relational-evolution facets are extracted from the
+already-proved general-field certificate. They do not require a material
+dust clock, a coordinate clock, or any independently chosen lapse.
+The ADM and Noether packages are explicitly the previously formalized
+finite-dimensional characteristic model, not a hidden claim that the
+entire infinite-dimensional presymplectic manifold has been constructed.
+-/
+
+namespace RelativeRest
+namespace MaxwellAction
+
+/-- The field-derived characteristic and frozen-constraint witnesses
+    share the same six Maxwell components and the same differentiable
+    field first jet. None of the fields in this Prop is independently
+    normalized or assigned a freely chosen current. -/
+def generalFieldForcedCharacteristicFacet
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hp : generalMaxwellResolvingNormSq
+      Ex Ey Ez Bx By Bz dEx dEy dEz dBx dBy dBz ≠ 0) : Prop :=
+  ∃ D :
+      NormalizedPrincipalNullDyad
+        (LinearMap.range
+          (generalMaxwellProjectorPlusLinear
+            Ex Ey Ez Bx By Bz)),
+    D.FutureTo
+      (generalMaxwellProjectorPlus
+        Ex Ey Ez Bx By Bz (principalBasis 0)) ∧
+    (let C := generalMaxwellBalancedADMCharacteristicData
+        Ex Ey Ez Bx By Bz dEx dEy dEz dBx dBy dBz
+        hnonnull D
+     C.Lambda ≠ 0 ∧
+     Module.finrank ℝ
+       (C.K ⧸ LinearMap.ker C.Lambda) = 1 ∧
+     C.current =
+       (generalMaxwellChi Ex Ey Ez Bx By Bz /
+         (16 * Real.pi)) •
+         generalMaxwellBalancedClockCovector
+           Ex Ey Ez Bx By Bz
+           dEx dEy dEz dBx dBy dBz D ∧
+     generalMaxwellBalancedADMActionConstraint
+       Ex Ey Ez Bx By Bz
+       dEx dEy dEz dBx dBy dBz hnonnull D CA = 0 ∧
+     generalMaxwellBalancedADMActionConstraint
+       Ex Ey Ez Bx By Bz
+       dEx dEy dEz dBx dBy dBz hnonnull D DA =
+       (-2 : ℝ) • C.current ∧
+     ∀ E :
+       NormalizedPrincipalNullDyad
+         (LinearMap.range
+           (generalMaxwellProjectorPlusLinear
+             Ex Ey Ez Bx By Bz)),
+       E.FutureTo
+         (generalMaxwellProjectorPlus
+           Ex Ey Ez Bx By Bz (principalBasis 0)) →
+       (generalMaxwellBalancedCharacteristicData
+         Ex Ey Ez Bx By Bz
+         dEx dEy dEz dBx dBy dBz hnonnull D).current =
+       (generalMaxwellBalancedCharacteristicData
+         Ex Ey Ez Bx By Bz
+         dEx dEy dEz dBx dBy dBz hnonnull E).current)
+
+/-- The characteristic quotient, positive stress current, frozen common
+    action direction, surviving exchange-odd direction, and independence
+    of future null-dyad presentation are all derived from the single field.
+    The frame regularity witness is used, not inserted by construction. -/
+theorem generalField_forces_characteristicFacet
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hp : generalMaxwellResolvingNormSq
+      Ex Ey Ez Bx By Bz dEx dEy dEz dBx dBy dBz ≠ 0) :
+    generalFieldForcedCharacteristicFacet
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz hnonnull hp := by
+  rcases generalMaxwellProjectorPlus_futureNormalizedNullDyad_exists
+    Ex Ey Ez Bx By Bz hnonnull with ⟨D,hfuture⟩
+  refine ⟨D,hfuture, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · exact generalMaxwellBalancedADMCharacteristic_Lambda_nonzero
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz hnonnull D
+  · exact generalMaxwellBalancedADMCharacteristic_quotient_finrank_one
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz hnonnull D
+  · exact generalMaxwellBalancedADMCharacteristic_current_factor
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz hnonnull D
+  · exact generalMaxwellBalancedADMActionConstraint_CA
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz hnonnull D
+  · exact generalMaxwellBalancedADMActionConstraint_DA
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz hnonnull D
+  · intro E hE
+    exact generalMaxwellBalancedCharacteristic_current_independent
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz
+      hnonnull hp D E
+      (generalMaxwellProjectorPlus
+        Ex Ey Ez Bx By Bz (principalBasis 0))
+      hfuture hE
+
+/-- In the regular general-field branch the very same E–M Euler equations
+    force both the fourth root of the ACTUAL Ricci norm and the nonzero,
+    uniquely descended characteristic clock line, plus the complete
+    clock cover, Frobenius, synchronization, relational gauge invariance,
+    relational flow equation, and causal endpoint comparison encoded in
+    the existing resolved-stratum proof.
+
+    There is no independently supplied current, quotient dimension,
+    scalar-clock rate, stress-normalization constant or frame dyad. -/
+theorem generalEinsteinMaxwell_fullAction_to_characteristicAndTimeFacets
+    (RicCov : Tensor44)
+    (Ex Ey Ez Bx By Bz u s : ℝ)
+    (nablaF : Fin 4 → Fin 4 → ℝ)
+    (dEx dEy dEz dBx dBy dBz : Fin 4 → ℝ)
+    (hbulk :
+      (∀ i j : Fin 4,
+        generalEinsteinMaxwellMetricVariationCoeff
+          (principalEinsteinMixedFromRicci RicCov)
+          Ex Ey Ez Bx By Bz i j = 0) ∧
+      (∀ deltaA : Fin 4 → ℝ,
+        principalMaxwellPotentialEulerDensity nablaF deltaA = 0))
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (hp : generalMaxwellResolvingNormSq
+      Ex Ey Ez Bx By Bz dEx dEy dEz dBx dBy dBz ≠ 0) :
+    (generalMaxwellClockRate Ex Ey Ez Bx By Bz =
+      Real.sqrt (Real.sqrt (ricciNormFromActionMetric RicCov))) ∧
+    generalFieldForcedCharacteristicFacet
+      Ex Ey Ez Bx By Bz
+      dEx dEy dEz dBx dBy dBz hnonnull hp ∧
+    ArbitraryMaxwellResolvedRegularStratumCertificate
+      Ex Ey Ez Bx By Bz u s
+      dEx dEy dEz dBx dBy dBz
+      (generalMaxwellResolvingCovector Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz)
+      hnonnull
+      (generalMaxwellResolvingCovector_raised_mem_plusRange
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz hnonnull)
+      hp := by
+  exact ⟨
+    onShellAction_forces_actual_RicciClockRate
+      RicCov Ex Ey Ez Bx By Bz hbulk.1,
+    generalField_forces_characteristicFacet
+      Ex Ey Ez Bx By Bz dEx dEy dEz dBx dBy dBz
+      hnonnull hp,
+    arbitraryMaxwell_resolvedRegularStratum_certificate
+      Ex Ey Ez Bx By Bz u s
+      dEx dEy dEz dBx dBy dBz
+      (generalMaxwellResolvingCovector Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz)
+      hnonnull
+      (generalMaxwellResolvingCovector_raised_mem_plusRange
+        Ex Ey Ez Bx By Bz
+        dEx dEy dEz dBx dBy dBz hnonnull)
+      hp⟩
+
+end MaxwellAction
+end RelativeRest
+
+#print axioms RelativeRest.MaxwellAction.generalField_forces_characteristicFacet
+#print axioms RelativeRest.MaxwellAction.generalEinsteinMaxwell_fullAction_to_characteristicAndTimeFacets
