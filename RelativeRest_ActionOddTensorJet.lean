@@ -131,5 +131,79 @@ theorem oddRelativeResidual_firstJet_eq_minusTwoRicci
   rw [hRic]
   ring
 
+/-! ### Remove the intermediate Einstein equation hypothesis from the final jet theorem -/
+
+/-- Convert the action's mixed Einstein tensor into its covariant components
+    using the same orthonormal-frame metric used in the displayed action. -/
+def covariantEinsteinFromActionMixed
+    (Gmixed : Tensor44) : Tensor44 :=
+  fun i j => principalMetricSign i * Gmixed i j
+
+/-- The parent certificate's *explicit Einstein--Maxwell action metric Euler
+    derivative* vanishing implies the physical covariant on-shell equation
+    for the SAME potential jet. No Einstein-equation hypothesis is inserted. -/
+theorem actionBulkStationarity_forces_covariantEinsteinEquation
+    (Gmixed : Tensor44)
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hstationary : ∀ i j : Fin 4,
+      generalEinsteinMaxwellMetricVariationCoeff
+        Gmixed Ex Ey Ez Bx By Bz i j = 0)
+    (i j : Fin 4) :
+    covariantEinsteinFromActionMixed Gmixed i j =
+      8 * Real.pi *
+        physicalMaxwellStress
+          (fieldStrength
+            (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) i j := by
+  have hEinsteinMixed :
+      Gmixed i j =
+        8 * Real.pi *
+          generalMaxwellStressFromF Ex Ey Ez Bx By Bz i j :=
+    (generalEinsteinMaxwellMetricVariationCoeff_eq_zero_iff
+      Gmixed Ex Ey Ez Bx By Bz i j).mp (hstationary i j)
+  rw [generalMaxwellPotentialJet_fieldStrength]
+  rw [generalMaxwellStress_matches_action_variation_tensor]
+  unfold covariantEinsteinFromActionMixed generalMaxwellStressCovFromF
+  rw [hEinsteinMixed]
+  ring
+
+/-- Action-stationarity-to-normal-jet: one actual input, namely the
+    vanishing metric Euler coefficients from the displayed Einstein--Maxwell
+    action, is enough to derive the entire even/odd normal-jet tower. -/
+theorem actionBulkStationarity_forces_all_oddTensorJets
+    (Gmixed : Tensor44)
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hstationary : ∀ i j : Fin 4,
+      generalEinsteinMaxwellMetricVariationCoeff
+        Gmixed Ex Ey Ez Bx By Bz i j = 0)
+    (a b : Fin 4) (n : ℕ) :
+    iteratedDeriv (2*n)
+        (oddRelativeResidual
+          (covariantEinsteinFromActionMixed Gmixed)
+          (fieldStrength
+            (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) a b) 0 = 0 ∧
+    iteratedDeriv (2*n+1)
+        (oddRelativeResidual
+          (covariantEinsteinFromActionMixed Gmixed)
+          (fieldStrength
+            (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) a b) 0 =
+      -16 * Real.pi *
+        physicalMaxwellStress
+          (fieldStrength
+            (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) a b := by
+  have hEinstein : ∀ i j : Fin 4,
+      covariantEinsteinFromActionMixed Gmixed i j =
+        8 * Real.pi *
+          physicalMaxwellStress
+            (fieldStrength
+              (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) i j := by
+    intro i j
+    exact actionBulkStationarity_forces_covariantEinsteinEquation
+      Gmixed Ex Ey Ez Bx By Bz hstationary i j
+  exact oddRelativeResidual_all_normal_jets
+    (covariantEinsteinFromActionMixed Gmixed)
+    (fieldStrength
+      (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz))
+    hEinstein a b n
+
 end MaxwellAction
 end RelativeRest
