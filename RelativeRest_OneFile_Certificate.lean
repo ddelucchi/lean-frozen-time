@@ -228,10 +228,10 @@ def volumeHomothetyExponent (D : ℝ) : ℝ := D
 /-- Scalar-curvature weight under a constant homothety. -/
 def scalarCurvatureHomothetyExponent : ℝ := -2
 
-/-- Each inverse metric contributes `ρ⁻²`; Maxwell `F²` contains two inverse metrics. -/
+/-- Each inverse metric contributes `(ρ^2)⁻¹`; Maxwell `F²` contains two inverse metrics. -/
 def maxwellInverseMetricExponent : ℝ := -4
 
-/-- The quadratic Maxwell density carries two powers of the potential/field scaling `λ`. -/
+/-- The quadratic Maxwell density carries two powers of the potential/field scaling `lam`. -/
 def maxwellFieldAmplitudeExponent : ℝ := 2
 
 /-- The Einstein-Hilbert density weight `D-2` is exactly volume plus scalar-curvature weight. -/
@@ -258,7 +258,7 @@ theorem gravity_relative_weight_from_primitive_counts (D : ℝ) :
   simp [volumeHomothetyExponent, scalarCurvatureHomothetyExponent, wG]
   ring
 
-/-- After `ρ=e^{(u-s)/2}`, `λ=e^{(u+s)/2}`, the Maxwell relative exponent is
+/-- After `ρ=e^{(u-s)/2}`, `lam=e^{(u+s)/2}`, the Maxwell relative exponent is
 forced by metric and field-amplitude counts. -/
 theorem maxwell_relative_weight_from_primitive_counts (D : ℝ) :
     (volumeHomothetyExponent D + maxwellInverseMetricExponent) *
@@ -303,7 +303,7 @@ theorem maxwell_hodge_exponents_agree (D : ℝ) :
   unfold maxwellMetricScaleExponent hodgeConformalExponent
   ring
 
-/-- Substitution `ρ=e^((u-s)/2)`, `λ=e^((u+s)/2)` gives the advertised relative exponents. -/
+/-- Substitution `ρ=e^((u-s)/2)`, `lam=e^((u+s)/2)` gives the advertised relative exponents. -/
 theorem relative_exponent_algebra (D : ℝ) :
     (-(D - 2) / 2 = wG D) ∧ ((D - 4) * (-1 / 2) + 2 * (1 / 2) = wM D) := by
   constructor
@@ -346,7 +346,7 @@ theorem XiMUS_factorization (u s : ℝ) :
   congr 1
   ring
 
-/-- The common positive character is literally `ρ λ=e^u`. -/
+/-- The common positive character is literally `ρ lam=e^u`. -/
 theorem rho_mul_lambda_eq_kappa (u s : ℝ) :
     rhoUS u s * lambdaUS u s = kappaUS u := by
   unfold rhoUS lambdaUS kappaUS
@@ -362,7 +362,7 @@ theorem Xi_product_eq_kappa_sq (u s : ℝ) :
   rw [← mul_pow, rho_mul_lambda_eq_kappa]
 
 /-- Therefore the positive projective common scale is literally
-`sqrt(Xi_G Xi_M)=κ=ρλ`. -/
+`sqrt(Xi_G Xi_M)=κ=ρlam`. -/
 theorem character_common_scale_sqrt (u s : ℝ) :
     Real.sqrt (XiGUS u s * XiMUS u s) = kappaUS u := by
   rw [Xi_product_eq_kappa_sq, Real.sqrt_sq_eq_abs]
@@ -402,12 +402,12 @@ theorem character_exchange (u s : ℝ) :
   · rw [XiMUS_factorization, XiGUS_factorization]
 
 
-/-- Lower-index Maxwell stress scales by `(λ/ρ)²` under constant
-`(g,A) ↦ (ρ²g, λA)`.  This definition records only that forced scalar weight. -/
+/-- Lower-index Maxwell stress scales by `(lam/ρ)²` under constant
+`(g,A) ↦ (ρ²g, lamA)`.  This definition records only that forced scalar weight. -/
 def maxwellStressScaleFactor (ρ lam : ℝ) : ℝ :=
   (lam / ρ)^2
 
-/-- The relative parametrization gives `λ/ρ=e^s` exactly. -/
+/-- The relative parametrization gives `lam/ρ=e^s` exactly. -/
 theorem lambdaUS_div_rhoUS (u s : ℝ) :
     lambdaUS u s / rhoUS u s = Real.exp s := by
   unfold lambdaUS rhoUS
@@ -1892,7 +1892,7 @@ theorem principalMaxwellPotential_first_variation
   simp only [Finset.sum_add_distrib]
   ring
 
-/-- In particular a pure Gauss variation `δA=dλ` has identically zero
+/-- In particular a pure Gauss variation `δA=dlam` has identically zero
 bulk response on the source-free Maxwell shell.  This is the explicit local form
 of the manuscript statement that the pure Gauss response vanishes. -/
 theorem principalMaxwell_pureGauss_bulk_response_zero
@@ -4662,7 +4662,7 @@ theorem generalActionDerivedCarrierLinear_rainich
     (E B : ℝ) :
     generalMaxwellI E 0 0 B 0 0 = maxwellI E B := by
   simp [generalMaxwellI, maxwellI]
-  ring
+  all_goals ring
 
 @[simp] theorem generalMaxwellJ_principal_specialization
     (E B : ℝ) :
@@ -5957,11 +5957,11 @@ theorem principalNullPair_normalized :
   constructor
   · simp [principalNullK, principalMinkowskiBilinear,
       principalBasis]
-    ring
+    all_goals ring
   · constructor
     · simp [principalNullL, principalMinkowskiBilinear,
         principalBasis]
-      ring
+      all_goals ring
     · simp [principalNullK, principalNullL,
         principalMinkowskiBilinear, principalBasis]
       nlinarith
@@ -6021,7 +6021,7 @@ theorem principalBoostedNullPair_normalized (σ : ℝ) :
         principalMinkowskiBilinear_smul, hkl]
       rw [← Real.exp_add]
       simp
-      ring
+      all_goals ring
 
 /-- Conversely, every positive rescaling of the normalized null pair that preserves
 `g(k,l)=-1` is exactly one residual boost. -/
@@ -6256,7 +6256,7 @@ theorem principalPhysicalU_background_unit
       principalMinkowskiSq (principalPhysicalU ω) = -ω^2 := by
     simp [principalPhysicalU, principalMinkowskiSq,
       principalUhat, principalBasis]
-    ring
+    all_goals ring
   have hω2 : ω^2 ≠ 0 := by
     rw [← hχrate]
     exact hχ
@@ -6326,11 +6326,11 @@ theorem principalRestrictedResponse_factor
 /-- On the positive-rate sector, the ratio coefficient in the local Iyer-Wald response
 is uniquely the chronometric covector value `T_O(v)`. -/
 theorem principalLocalClockRatio_forced
-    (ω λ : ℝ) (v : Fin 4 → ℝ) (hω : ω ≠ 0)
+    (ω lam : ℝ) (v : Fin 4 → ℝ) (hω : ω ≠ 0)
     (hresponse :
       principalRestrictedResponse ω v =
-        λ * principalRestrictedResponse ω principalUhat) :
-    λ = principalTO v := by
+        lam * principalRestrictedResponse ω principalUhat) :
+    lam = principalTO v := by
   rw [principalRestrictedResponse_unit] at hresponse
   unfold principalRestrictedResponse at hresponse
   apply mul_right_cancel₀ hω
@@ -6391,12 +6391,12 @@ theorem principalPointResponse_unit_ne_zero
 
 /-- Therefore the unique response ratio is literally the local chronometric covector. -/
 theorem principalPointResponse_ratio_forced
-    (ω λ : ℝ) (εH : HForm) (v : Fin 4 → ℝ)
+    (ω lam : ℝ) (εH : HForm) (v : Fin 4 → ℝ)
     (hω : ω ≠ 0) (hε : εH ≠ 0)
     (hresponse :
       principalPointResponse ω εH v =
-        λ • principalPointResponse ω εH principalUhat) :
-    λ = principalTO v := by
+        lam • principalPointResponse ω εH principalUhat) :
+    lam = principalTO v := by
   rw [principalPointResponse_factor] at hresponse
   have hunit :=
     principalPointResponse_unit_ne_zero ω εH hω hε
@@ -6466,12 +6466,12 @@ theorem principalBridgeSpatialCoeff_unit_ne_zero
 /-- Therefore the pointwise coefficient ratio derived from the actual jet is uniquely
 the chronometric covector `T_O`. -/
 theorem principalBridgeSpatialCoeff_ratio_forced
-    (ω λ : ℝ) (v : Fin 4 → ℝ)
+    (ω lam : ℝ) (v : Fin 4 → ℝ)
     (hω : ω ≠ 0)
     (hresponse :
       principalBridgeSpatialCoeff ω v =
-        λ * principalBridgeSpatialCoeff ω principalUhat) :
-    λ = principalTO v := by
+        lam * principalBridgeSpatialCoeff ω principalUhat) :
+    lam = principalTO v := by
   rw [principalBridgeSpatialCoeff_factor] at hresponse
   exact (mul_right_cancel₀
     (principalBridgeSpatialCoeff_unit_ne_zero ω hω))
@@ -6567,7 +6567,7 @@ theorem normalizedCarrierEndomorphism_scale_invariant
   simp [normalizedCarrierEndomorphism, smul_smul]
   field_simp [hχ, hc]
 
-/-- In particular the common Einstein-Maxwell weight `ρ⁻²` cancels identically
+/-- In particular the common Einstein-Maxwell weight `(ρ^2)⁻¹` cancels identically
 between the mixed carrier and `χ`. -/
 theorem normalizedCarrierEndomorphism_common_scale
     {V : Type*} [AddCommGroup V] [Module ℝ V]
@@ -6827,7 +6827,7 @@ theorem generalMaxwellNormalizedCarrier_basis0_pairing
     generalMaxwellNormalizedCarrier,
     generalMaxwellCarrier_00, div_eq_mul_inv]
   field_simp [hchi0]
-  ring
+  all_goals ring
 
 
 /-! ### Canonical principal projectors of the arbitrary Maxwell carrier -/
@@ -7323,7 +7323,7 @@ def generalMaxwellProjectorMinusLinear
       generalMaxwellProjectorMinus Ex Ey Ez Bx By Bz v := by
   simp [generalMaxwellProjectorMinusLinear,
     generalMaxwellProjectorMinus, involutionProjMinus]
-  module
+  all_goals module
 
 /-- Both linear Rainich projectors are genuine idempotents on the non-null sector. -/
 theorem generalMaxwellProjectorPlusLinear_idempotent
@@ -8274,7 +8274,7 @@ theorem boostDefect_exchange (qm qp σ : ℝ) :
     boostDefect qp qm (-σ) = - boostDefect qm qp σ := by
   unfold boostDefect
   ring_nf
-  ring
+  all_goals ring
 
 /-- Squared null components transform with opposite exponential weights. -/
 theorem boosted_component_squares
@@ -9986,7 +9986,7 @@ theorem common_scale_invariance_implies_homogeneous
   have h := hinv (1 / c) χ hr2 hχ
   have harg : χ / (1 / c) = c * χ := by
     field_simp [hc0]
-    ring
+    all_goals ring
   rw [harg] at h
   calc
     f (c * χ)
@@ -10031,7 +10031,7 @@ def carrierMagnitudeFromContraction (Jsq : ℝ) : ℝ :=
   (1 / 2 : ℝ) * Real.sqrt Jsq
 
 /-- Positive square-root homogeneity converts the forced contraction scaling
-`ρ⁻⁴` into the carrier scaling `ρ⁻²`. -/
+`ρ⁻⁴` into the carrier scaling `(ρ^2)⁻¹`. -/
 theorem carrierMagnitude_common_scale
     (ρ Jsq : ℝ)
     (hρ : 0 < ρ)
@@ -10045,7 +10045,7 @@ theorem carrierMagnitude_common_scale
   have hscale :
       (ρ⁻¹)^4 = ((ρ⁻¹)^2)^2 := by
     field_simp [hρ0]
-    ring
+    all_goals ring
   have hscaled :
       0 ≤ carrierContractionUnderScale ρ Jsq := by
     unfold carrierContractionUnderScale
@@ -10061,7 +10061,7 @@ theorem carrierMagnitude_common_scale
     rw [mul_pow, Real.sq_sqrt hJ]
     unfold carrierContractionUnderScale
     rw [hscale]
-    ring
+    all_goals ring
   have hleftnonneg :
       0 ≤ Real.sqrt
         (carrierContractionUnderScale ρ Jsq) :=
@@ -10077,7 +10077,7 @@ theorem carrierMagnitude_common_scale
   rw [hsqrt]
   ring
 
-/-- Thus the manuscript's common-scale law `χ ↦ ρ⁻²χ` is a consequence of the
+/-- Thus the manuscript's common-scale law `χ ↦ (ρ^2)⁻¹χ` is a consequence of the
 two inverse-metric weights in the invariant contraction, not an independent postulate. -/
 theorem carrier_chi_common_scale
     (ρ Jsq χ : ℝ)
@@ -10104,13 +10104,13 @@ theorem logarithmic_differential_scale_invariant
     (c χ dχ : ℝ) (hc : c ≠ 0) (hχ : χ ≠ 0) :
     (c * dχ) / (c * χ) = dχ / χ := by
   field_simp [hc, hχ]
-  ring
+  all_goals ring
 
 /-- In particular, the carrier gradient used to balance the residual boost is independent
 of the common Einstein-Maxwell representative. -/
 theorem logarithmic_differential_homothety_invariant
     (ρ χ dχ : ℝ) (hρ : ρ ≠ 0) (hχ : χ ≠ 0) :
-    ((ρ⁻²) * dχ) / ((ρ⁻²) * χ) = dχ / χ := by
+    (((ρ^2)⁻¹) * dχ) / (((ρ^2)⁻¹) * χ) = dχ / χ := by
   apply logarithmic_differential_scale_invariant
   · exact inv_ne_zero (pow_ne_zero 2 hρ)
   · exact hχ
@@ -11275,7 +11275,7 @@ theorem LagrangianFirstVariationCartanData.toNoetherOperators_constraint
   ext X
   simp [LagrangianFirstVariationCartanData.toNoetherOperators,
     LagrangianVariationNoetherOperators.constraint]
-  module
+  all_goals module
 
 /-- Conversely, in any genuine Noether package, fixing the bulk constraint fixes
 the varied constraint descendant uniquely. -/
@@ -12156,7 +12156,7 @@ def relativeConstraintVariation
     (ell : V →ₗ[ℝ] ℝ) (v : V) :
     relativeConstraintVariation ell v = -2 * ell v := by
   simp [relativeConstraintVariation]
-  ring
+  all_goals ring
 
 /-- Pointwise, this covector is exactly the normal derivative of the reciprocal
 constraint residual already proved above. -/
@@ -12441,23 +12441,23 @@ theorem range_eq_top_of_nonzero
 /-- Once `Λ` is quotiented by its kernel, its descended clock covector is unique. -/
 theorem quotient_clock_covector_unique
     (Λ : K →ₗ[ℝ] ℝ)
-    (λ₁ λ₂ : (K ⧸ LinearMap.ker Λ) →ₗ[ℝ] ℝ)
-    (h₁ : λ₁.comp (LinearMap.ker Λ).mkQ = Λ)
-    (h₂ : λ₂.comp (LinearMap.ker Λ).mkQ = Λ) :
-    λ₁ = λ₂ := by
+    (lam₁ lam₂ : (K ⧸ LinearMap.ker Λ) →ₗ[ℝ] ℝ)
+    (h₁ : lam₁.comp (LinearMap.ker Λ).mkQ = Λ)
+    (h₂ : lam₂.comp (LinearMap.ker Λ).mkQ = Λ) :
+    lam₁ = lam₂ := by
   exact descended_covector_unique
     (LinearMap.ker Λ).mkQ
     (Submodule.mkQ_surjective (LinearMap.ker Λ))
-    Λ λ₁ λ₂ h₁ h₂
+    Λ lam₁ lam₂ h₁ h₂
 
 /-- In particular, every clock one-form with the required pullback is the canonical quotient lift. -/
 theorem quotient_clock_covector_forced
     (Λ : K →ₗ[ℝ] ℝ)
-    (λ : (K ⧸ LinearMap.ker Λ) →ₗ[ℝ] ℝ)
-    (hλ : λ.comp (LinearMap.ker Λ).mkQ = Λ) :
-    λ = quotientClockCovector Λ := by
-  exact quotient_clock_covector_unique Λ λ (quotientClockCovector Λ)
-    hλ (quotientClockCovector_pullback Λ)
+    (lam : (K ⧸ LinearMap.ker Λ) →ₗ[ℝ] ℝ)
+    (hlam : lam.comp (LinearMap.ker Λ).mkQ = Λ) :
+    lam = quotientClockCovector Λ := by
+  exact quotient_clock_covector_unique Λ lam (quotientClockCovector Λ)
+    hlam (quotientClockCovector_pullback Λ)
 
 end LinearDescent
 
@@ -12513,60 +12513,60 @@ characteristic foliation: it annihilates every characteristic direction.  For
 translation-invariant linear data, leafwise invariance is automatic, so this is
 the full descent condition. -/
 def IsBasicCovectorFor
-    (p : Submodule ℝ V) (λ : V →ₗ[ℝ] ℝ) : Prop :=
-  p ≤ LinearMap.ker λ
+    (p : Submodule ℝ V) (lam : V →ₗ[ℝ] ℝ) : Prop :=
+  p ≤ LinearMap.ker lam
 
 /-- A basic covector has a canonical descendant on the characteristic quotient. -/
 noncomputable def basicCovectorDescendant
-    (p : Submodule ℝ V) (λ : V →ₗ[ℝ] ℝ)
-    (hbasic : IsBasicCovectorFor p λ) :
+    (p : Submodule ℝ V) (lam : V →ₗ[ℝ] ℝ)
+    (hbasic : IsBasicCovectorFor p lam) :
     (V ⧸ p) →ₗ[ℝ] ℝ :=
-  p.liftQ λ hbasic
+  p.liftQ lam hbasic
 
 /-- Pullback of the descended covector is exactly the original covector. -/
 theorem basicCovectorDescendant_pullback
-    (p : Submodule ℝ V) (λ : V →ₗ[ℝ] ℝ)
-    (hbasic : IsBasicCovectorFor p λ) :
-    (basicCovectorDescendant p λ hbasic).comp p.mkQ = λ := by
+    (p : Submodule ℝ V) (lam : V →ₗ[ℝ] ℝ)
+    (hbasic : IsBasicCovectorFor p lam) :
+    (basicCovectorDescendant p lam hbasic).comp p.mkQ = lam := by
   simpa [basicCovectorDescendant] using
-    (Submodule.liftQ_mkQ p λ hbasic)
+    (Submodule.liftQ_mkQ p lam hbasic)
 
 /-- Descent is unique.  Thus the paper's phrase “basic on the characteristic
 leaves, therefore descends uniquely” is literal in the linear characteristic
 model, with no quotient one-form left to choose. -/
 theorem basicCovector_descends_existsUnique
-    (p : Submodule ℝ V) (λ : V →ₗ[ℝ] ℝ)
-    (hbasic : IsBasicCovectorFor p λ) :
-    ∃! λbar : (V ⧸ p) →ₗ[ℝ] ℝ,
-      λbar.comp p.mkQ = λ := by
-  refine ⟨basicCovectorDescendant p λ hbasic,
-    basicCovectorDescendant_pullback p λ hbasic, ?_⟩
+    (p : Submodule ℝ V) (lam : V →ₗ[ℝ] ℝ)
+    (hbasic : IsBasicCovectorFor p lam) :
+    ∃! lambar : (V ⧸ p) →ₗ[ℝ] ℝ,
+      lambar.comp p.mkQ = lam := by
+  refine ⟨basicCovectorDescendant p lam hbasic,
+    basicCovectorDescendant_pullback p lam hbasic, ?_⟩
   intro μ hμ
   exact descended_covector_unique
-    p.mkQ (Submodule.mkQ_surjective p) λ μ
-    (basicCovectorDescendant p λ hbasic)
-    hμ (basicCovectorDescendant_pullback p λ hbasic)
+    p.mkQ (Submodule.mkQ_surjective p) lam μ
+    (basicCovectorDescendant p lam hbasic)
+    hμ (basicCovectorDescendant_pullback p lam hbasic)
 
 /-- Conversely, every quotient covector pulls back to a basic covector. -/
 theorem basicCovector_of_quotient_pullback
     (p : Submodule ℝ V)
-    (λbar : (V ⧸ p) →ₗ[ℝ] ℝ) :
-    IsBasicCovectorFor p (λbar.comp p.mkQ) := by
+    (lambar : (V ⧸ p) →ₗ[ℝ] ℝ) :
+    IsBasicCovectorFor p (lambar.comp p.mkQ) := by
   intro v hv
-  change λbar (p.mkQ v) = 0
+  change lambar (p.mkQ v) = 0
   rw [Submodule.Quotient.mk_eq_zero.mpr hv]
   simp
 
 /-- Quotienting a nonzero covector by its entire kernel therefore realizes the
 paper's exact characteristic descent canonically and uniquely. -/
 theorem kernelClockCovector_basic_and_unique
-    (λ : V →ₗ[ℝ] ℝ) :
-    IsBasicCovectorFor (LinearMap.ker λ) λ ∧
-    ∃! λbar : (V ⧸ LinearMap.ker λ) →ₗ[ℝ] ℝ,
-      λbar.comp (LinearMap.ker λ).mkQ = λ := by
+    (lam : V →ₗ[ℝ] ℝ) :
+    IsBasicCovectorFor (LinearMap.ker lam) lam ∧
+    ∃! lambar : (V ⧸ LinearMap.ker lam) →ₗ[ℝ] ℝ,
+      lambar.comp (LinearMap.ker lam).mkQ = lam := by
   refine ⟨le_rfl, ?_⟩
   exact basicCovector_descends_existsUnique
-    (LinearMap.ker λ) λ le_rfl
+    (LinearMap.ker lam) lam le_rfl
 
 end BasicCovectorDescent
 
@@ -13226,29 +13226,29 @@ section AffineClockPrimitive
 variable {L : Type*} [AddCommGroup L] [Module ℝ L]
 
 /-- A descended linear clock covector has an explicit affine primitive. -/
-def clockPotential (λ : L →ₗ[ℝ] ℝ) (C : ℝ) (x : L) : ℝ :=
-  λ x + C
+def clockPotential (lam : L →ₗ[ℝ] ℝ) (C : ℝ) (x : L) : ℝ :=
+  lam x + C
 
 /-- Its increment is exactly the clock covector, globally on the quotient vector space. -/
 theorem clockPotential_increment
-    (λ : L →ₗ[ℝ] ℝ) (C : ℝ) (x v : L) :
-    clockPotential λ C (x + v) - clockPotential λ C x = λ v := by
+    (lam : L →ₗ[ℝ] ℝ) (C : ℝ) (x v : L) :
+    clockPotential lam C (x + v) - clockPotential lam C x = lam v := by
   simp [clockPotential]
-  ring
+  all_goals ring
 
 /-- Changing the integration constant changes only the clock origin. -/
 theorem clockPotential_origin_shift
-    (λ : L →ₗ[ℝ] ℝ) (C₁ C₂ : ℝ) (x : L) :
-    clockPotential λ C₂ x - clockPotential λ C₁ x = C₂ - C₁ := by
+    (lam : L →ₗ[ℝ] ℝ) (C₁ C₂ : ℝ) (x : L) :
+    clockPotential lam C₂ x - clockPotential lam C₁ x = C₂ - C₁ := by
   simp [clockPotential]
-  ring
+  all_goals ring
 
 /-- Any two functions with the same translation differential differ by one global constant.
 This is the precise affine version of `[Θ] ∈ C∞(L)/ℝ` on the linear clock quotient. -/
 theorem clockPotential_unique_up_to_constant
-    (λ : L →ₗ[ℝ] ℝ) (Θ₁ Θ₂ : L → ℝ)
-    (h₁ : ∀ x v : L, Θ₁ (x + v) - Θ₁ x = λ v)
-    (h₂ : ∀ x v : L, Θ₂ (x + v) - Θ₂ x = λ v) :
+    (lam : L →ₗ[ℝ] ℝ) (Θ₁ Θ₂ : L → ℝ)
+    (h₁ : ∀ x v : L, Θ₁ (x + v) - Θ₁ x = lam v)
+    (h₂ : ∀ x v : L, Θ₂ (x + v) - Θ₂ x = lam v) :
     ∀ x : L, Θ₁ x - Θ₂ x = Θ₁ 0 - Θ₂ 0 := by
   intro x
   have h1 := h₁ 0 x
@@ -13258,9 +13258,9 @@ theorem clockPotential_unique_up_to_constant
 
 /-- Along a normalized unit direction, the affine clock advances by exactly the parameter. -/
 theorem clockPotential_normalized_flow
-    (λ : L →ₗ[ℝ] ℝ) (u : L) (hu : λ u = 1)
+    (lam : L →ₗ[ℝ] ℝ) (u : L) (hu : lam u = 1)
     (C t : ℝ) (x : L) :
-    clockPotential λ C (x + t • u) = clockPotential λ C x + t := by
+    clockPotential lam C (x + t • u) = clockPotential lam C x + t := by
   simp [clockPotential, hu]
   ring
 
@@ -13295,9 +13295,9 @@ theorem carrier_decomposition_coefficient
 /-- A nonzero pointwise response scale makes the local ratio coefficient unique and equal
 to the chronometric covector value. -/
 theorem local_response_ratio_forces_clock
-    (c TOv λ : ℝ) (hc : c ≠ 0)
-    (hresponse : c * TOv = λ * c) :
-    λ = TOv := by
+    (c TOv lam : ℝ) (hc : c ≠ 0)
+    (hresponse : c * TOv = lam * c) :
+    lam = TOv := by
   apply mul_right_cancel₀ hc
   simpa [mul_comm] using hresponse.symm
 
@@ -13668,13 +13668,13 @@ theorem clockAccumulation_deriv_pos
 
 /-! ## 13. Transport/integrability algebra -/
 
-/-- Scalar coefficient identity behind `D_b ω = (ω/4) D_b log K` when `K=ω⁴`. -/
+/- Scalar coefficient identity behind `D_b ω = (ω/4) D_b log K` when `K=ω⁴`. -/
 /-- The logarithmic differential of `K=ω⁴` is forced algebraically. -/
 theorem quartic_logarithmic_derivative
     (ω dω : ℝ) (hω : ω ≠ 0) :
     (4 * ω^3 * dω) / ω^4 = 4 * dω / ω := by
   field_simp [hω]
-  ring
+  all_goals ring
 
 theorem logarithmic_rate_coefficient (ω dlogK dω : ℝ)
     (hω : ω ≠ 0)
@@ -15553,7 +15553,7 @@ def canonicalOpticalRegularSyngePlus :
       canonicalOpticalSigmaPlusDeriv,
       opticalDualBilinear, opticalDualCoordinates,
       opticalThetaPlusCLM, opticalBilinear, bil, TO, RO]
-    ring
+    all_goals ring
 
 /-- A genuine regular IFT source realizing the past canonical null endpoint. -/
 def canonicalOpticalRegularSyngeMinus :
@@ -15578,7 +15578,7 @@ def canonicalOpticalRegularSyngeMinus :
       canonicalOpticalSigmaMinusDeriv,
       opticalDualBilinear, opticalDualCoordinates,
       opticalThetaMinusCLM, opticalBilinear, bil, TO, RO]
-    ring
+    all_goals ring
 
 /-- Actual regular future/past IFT pair in the canonical optical normal form. -/
 def canonicalOpticalRegularSyngePair :
@@ -15800,7 +15800,7 @@ def RegularSyngeEndpointPairSource.endpointCombination
   map_smul' a x := by
     rcases x with ⟨x₁,x₂⟩
     simp [mul_smul]
-    module
+    all_goals module
 
 /-- Nondegeneracy of a regular optical branch means precisely that its two
 endpoint eikonals are linearly independent.  This is geometric branch
@@ -15880,7 +15880,7 @@ def principalEndpointCombination : R2 →ₗ[ℝ] R2 where
   map_smul' a x := by
     rcases x with ⟨x₁,x₂⟩
     simp [mul_smul]
-    module
+    all_goals module
 
 /-- Canonical optical identification defined only where the paper needs it:
 the endpoint-generated plane.  No ambient linear extension is chosen. -/
@@ -16083,7 +16083,7 @@ theorem opticalInverseMetric2_basis_norms (q : ℝ) :
 theorem opticalMetric2_lapse_form
     (N q : ℝ)
     (hN : N ≠ 0)
-    (hq : q = N⁻²) :
+    (hq : q = (N^2)⁻¹) :
     ∀ x y : R2,
       opticalMetric2 q x y =
         N^2 * (-x.1 * y.1 + x.2 * y.2) := by
@@ -16091,7 +16091,7 @@ theorem opticalMetric2_lapse_form
   rw [hq]
   unfold opticalMetric2
   have hN2 : N^2 ≠ 0 := pow_ne_zero 2 hN
-  have hinv : (N⁻²)⁻¹ = N^2 := by
+  have hinv : ((N^2)⁻¹)⁻¹ = N^2 := by
     simp [inv_pow, hN]
   rw [hinv]
 
@@ -16099,10 +16099,10 @@ theorem opticalMetric2_lapse_form
 `N_opt⁻²(-dT²+dR²)`. -/
 theorem opticalInverseMetric2_lapse_form
     (N q : ℝ)
-    (hq : q = N⁻²) :
+    (hq : q = (N^2)⁻¹) :
     ∀ x y : R2,
       opticalInverseMetric2 q x y =
-        N⁻² * (-x.1 * y.1 + x.2 * y.2) := by
+        (N^2)⁻¹ * (-x.1 * y.1 + x.2 * y.2) := by
   intro x y
   rw [hq]
   rfl
@@ -17751,7 +17751,7 @@ theorem kerrGrr_hasDerivAt_r
   unfold kerrGrr
   convert hraw using 1
   field_simp [hdel]
-  ring
+  all_goals ring
 
 /-- Polar derivative of `g_rr`. -/
 theorem kerrGrr_hasDerivAt_theta
@@ -17904,7 +17904,7 @@ theorem kerr_metric_det
   rw [kerr_stationary_block_det r M a Q θ hsig]
   unfold kerrGrr kerrGthetaTheta
   field_simp [hdel]
-  ring
+  all_goals ring
 
 /-- The displayed contravariant stationary coefficients invert the covariant block. -/
 theorem kerr_stationary_inverse_block
@@ -18442,7 +18442,7 @@ theorem kerrStationaryA_hasDerivAt_r
   unfold kerrStationaryA kerrH
   convert ((((hasDerivAt_id r).pow 2).const_mul M).sub
     (hasDerivAt_const r (M * a^2 * (Real.cos θ)^2))).sub
-    ((hasDerivAt_id r).const_mul (Q^2))) using 1 <;> ring
+    ((hasDerivAt_id r).const_mul (Q^2)) using 1 <;> ring
 
 /-! ### Stationary t-phi connection identities -/
 
@@ -19060,7 +19060,7 @@ theorem kerrChristoffel_theta_tphi_hasDerivAt_theta
       (a * (r^2 + a^2) * kerrH r M Q *
         (((Real.cos θ)^2 - (Real.sin θ)^2) * Sigma r a θ +
           6 * a^2 * (Real.cos θ)^2 * (Real.sin θ)^2) /
-            (Sigma r a θ)^4)) θ := by
+            (Sigma r a θ)^4) θ := by
   have hcs := (Real.hasDerivAt_cos θ).mul (Real.hasDerivAt_sin θ)
   have hnum := hcs.const_mul (a * (r^2 + a^2) * kerrH r M Q)
   have hden := (Sigma_hasDerivAt_theta r a θ).pow 3
@@ -19072,7 +19072,7 @@ theorem kerrChristoffel_theta_tphi_hasDerivAt_theta
         (a * (r^2 + a^2) * kerrH r M Q *
           (((Real.cos θ)^2 - (Real.sin θ)^2) * Sigma r a θ +
             6 * a^2 * (Real.cos θ)^2 * (Real.sin θ)^2) /
-              (Sigma r a θ)^4)) θ := by
+              (Sigma r a θ)^4) θ := by
     convert hreg using 1 <;> field_simp [hsig] <;> ring
   have hS := (Sigma_hasDerivAt_theta r a θ).continuousAt.eventually_ne hsig
   have heq :
@@ -19103,7 +19103,7 @@ theorem kerrChristoffelPartial_theta_tphi
       a * (r^2 + a^2) * kerrH r M Q *
         (((Real.cos θ)^2 - (Real.sin θ)^2) * Sigma r a θ +
           6 * a^2 * (Real.cos θ)^2 * (Real.sin θ)^2) /
-            (Sigma r a θ)^4) := by
+            (Sigma r a θ)^4 := by
   unfold kerrChristoffelPartial kerrCoordPartial
   simpa using
     (kerrChristoffel_theta_tphi_hasDerivAt_theta
@@ -20707,7 +20707,7 @@ theorem kerrEinsteinTargetRicci_trace_zero
     r M a Q θ hsig hdel hsin]
   simp [Fin.sum_univ_four,
     kerrRicciFrameCovCoeff, principalMetricSign]
-  ring
+  all_goals ring
 
 /-! ### Exact finite closure criterion for the remaining Kerr curvature calculation -/
 
@@ -21132,7 +21132,7 @@ theorem kerrPrincipalEnergyDensity_formula
       kerrRicciScale Q r a θ / (8 * Real.pi) := by
   unfold principalFieldEnergyDensity kerrRicciScale
   rw [kerrPrincipal_field_magnitude Q r a θ hsig]
-  rfl
+  all_goals rfl
 
 /-- Every mixed Carter-frame Ricci target eigenvalue is exactly the
 Einstein-Maxwell source 8π T^A_A of the explicit field. -/
@@ -21299,7 +21299,7 @@ theorem kerrEinsteinTargetRicci_frame_norm
       4 * (kerrRicciScale Q r a θ)^2 := by
   unfold kerrEinsteinTargetRicciFrameNormSq
   simp [kerrRicciFrameCovCoeff]
-  ring
+  all_goals ring
 
 /-- Hence the field-forced target carries exactly the manuscript invariant
 4 Q^4 / Sigma^4. -/
@@ -21311,7 +21311,7 @@ theorem kerrEinsteinTargetRicci_frame_norm_formula
   rw [kerrEinsteinTargetRicci_frame_norm]
   unfold kerrRicciScale
   field_simp [hsig]
-  ring
+  all_goals ring
 
 /-- Coordinate Maxwell two-form reconstructed from the four derivatives of the
 Boyer-Lindquist potential. -/
@@ -21467,21 +21467,21 @@ theorem kerrDensitizedField_from_metric
   · rw [hrt]
     unfold kerrVolumeDensity kerrDensitizedFrt
     field_simp [hsig]
-    ring
+    all_goals ring
   · constructor
     · rw [hrp]
       unfold kerrVolumeDensity kerrDensitizedFrPhi
       field_simp [hsig]
-      ring
+      all_goals ring
     · constructor
       · rw [hθt]
         unfold kerrVolumeDensity kerrDensitizedFthetaT
         field_simp [hsig]
-        ring
+        all_goals ring
       · rw [hθp]
         unfold kerrVolumeDensity kerrDensitizedFthetaPhi
         field_simp [hsig, hsin]
-        ring
+        all_goals ring
 
 /-- The two previously proved divergence identities are therefore literally the
 source-free Maxwell equations for the metric-raised field in the regular
@@ -21834,7 +21834,7 @@ theorem kerrNewman_mino_clock_forced
   have hw := kerrNewman_clock_rate Q sig χ ω hsig hχform hω
   rw [hw, hmino]
   field_simp [ne_of_gt hsig]
-  ring
+  all_goals ring
 
 
 /-- Mino-clock identity derived directly from the Kerr-Newman principal Maxwell field
@@ -21856,7 +21856,7 @@ theorem kerrNewman_mino_clock_from_principal_EM
       Q r a θ K ω hQ hsigpos hKcarrier hω
   rw [hw, hmino]
   field_simp [ne_of_gt hsigpos]
-  ring
+  all_goals ring
 
 
 /-- Fully constructed principal-field version of the Kerr-Newman Mino-clock identity. -/
@@ -21869,7 +21869,7 @@ theorem kerrMinoClockFromPrincipalEM
       Real.sqrt 2 * |Q| * dlam := by
   rw [kerrClockRateFromPrincipalEM_formula Q r a θ hQ hsigpos, hmino]
   field_simp [ne_of_gt hsigpos]
-  ring
+  all_goals ring
 
 
 /-- Canonical Mino form with no independently supplied d-lambda datum:
@@ -22062,7 +22062,7 @@ theorem carterNumerator_norm
     carterNumerator_axial_leg r a]
   simp
   field_simp [hsig]
-  ring
+  all_goals ring
 
 /-- Metric-normalized Carter observer in the stationary plane. -/
 def carterObserver
@@ -22832,7 +22832,7 @@ theorem generalMaxwellClockRate_eq_balancedRestEnergyDensity
     (generalMaxwellClockRate_nonneg Ex Ey Ez Bx By Bz)
   rw [generalMaxwellClockRate_sq, heps]
   field_simp [ne_of_gt Real.pi_pos]
-  ring
+  all_goals ring
 
 /-- Unit future hypersurface contraction selected by the balanced observer itself.
 No pre-principalized time coordinate is used. -/
@@ -23604,13 +23604,13 @@ theorem generalMaxwellBalancedCharacteristic_ratio_forced
         (LinearMap.range
           (generalMaxwellProjectorPlusLinear
             Ex Ey Ez Bx By Bz)))
-    (v : Fin 4 → ℝ) (λ : ℝ)
+    (v : Fin 4 → ℝ) (lam : ℝ)
     (hresponse :
       (generalMaxwellBalancedCharacteristicData
         Ex Ey Ez Bx By Bz
         dEx dEy dEz dBx dBy dBz
         hnonnull D).current v =
-      λ *
+      lam *
         (generalMaxwellBalancedCharacteristicData
           Ex Ey Ez Bx By Bz
           dEx dEy dEz dBx dBy dBz
@@ -23618,7 +23618,7 @@ theorem generalMaxwellBalancedCharacteristic_ratio_forced
           (generalMaxwellBalancedU
             Ex Ey Ez Bx By Bz
             dEx dEy dEz dBx dBy dBz D)) :
-    λ =
+    lam =
       generalMaxwellBalancedClockCovector
         Ex Ey Ez Bx By Bz
         dEx dEy dEz dBx dBy dBz D v := by
@@ -23643,7 +23643,7 @@ theorem generalMaxwellBalancedCharacteristic_ratio_forced
           Ex Ey Ez Bx By Bz
           dEx dEy dEz dBx dBy dBz D v =
       (generalMaxwellChi Ex Ey Ez Bx By Bz /
-          (16 * Real.pi)) * λ := by
+          (16 * Real.pi)) * lam := by
     simpa [mul_comm] using hresponse
   exact (mul_left_cancel₀ hc hcancel).symm
 
@@ -25760,7 +25760,7 @@ theorem generalMaxwellClockRate_eq_finiteResolvingRestEnergyDensity
     (generalMaxwellClockRate_nonneg Ex Ey Ez Bx By Bz)
   rw [generalMaxwellClockRate_sq, heps]
   field_simp [ne_of_gt Real.pi_pos]
-  ring
+  all_goals ring
 
 /-- Future hypersurface contraction selected by an arbitrary finite resolver. -/
 def generalMaxwellFiniteResolvingFutureFluxUnit
@@ -29959,7 +29959,7 @@ theorem canonicalPrincipalADM_forces_action_bulk
     D.toCarrier.toCharacteristicCurrentData.Lambda ≠ 0 ∧
     Module.finrank ℝ
       (D.toCarrier.toCharacteristicCurrentData.K ⧸
-        LinearMap.ker D.toCarrier.toCharacteristicCurrentData.Lambda) = 1) := by
+        LinearMap.ker D.toCarrier.toCharacteristicCurrentData.Lambda) = 1 := by
   let D := canonicalPrincipalADMReachabilityInput E B hfield
   exact D.forces_action_bulk u s
 
@@ -30007,7 +30007,7 @@ theorem canonicalPrincipalField_forces_action_bulk
     D.toCharacteristicCurrentData.Lambda ≠ 0 ∧
     Module.finrank ℝ
       (D.toCharacteristicCurrentData.K ⧸
-        LinearMap.ker D.toCharacteristicCurrentData.Lambda) = 1) := by
+        LinearMap.ker D.toCharacteristicCurrentData.Lambda) = 1 := by
   let D := canonicalPrincipalCarrierCharacteristicInput E B hfield
   have h := principalActionBulk_forced_core_chain D u s
   rcases h with
@@ -30197,10 +30197,10 @@ structure CanonicalPrincipalFieldForcedCertificate
     IsBasicCovectorFor
         (LinearMap.ker D.toCharacteristicCurrentData.Lambda)
         D.toCharacteristicCurrentData.Lambda ∧
-      ∃! λbar :
+      ∃! lambar :
           (D.toCharacteristicCurrentData.K ⧸
             LinearMap.ker D.toCharacteristicCurrentData.Lambda) →ₗ[ℝ] ℝ,
-        λbar.comp
+        lambar.comp
             (LinearMap.ker D.toCharacteristicCurrentData.Lambda).mkQ =
           D.toCharacteristicCurrentData.Lambda
   clockPotentialOnlyOrigin :
@@ -30208,14 +30208,14 @@ structure CanonicalPrincipalFieldForcedCertificate
     let Q :=
       D.toCharacteristicCurrentData.K ⧸
         LinearMap.ker D.toCharacteristicCurrentData.Lambda
-    let λ := quotientClockCovector D.toCharacteristicCurrentData.Lambda
+    let lam := quotientClockCovector D.toCharacteristicCurrentData.Lambda
     ∀ (Theta1 Theta2 : Q → ℝ),
-      (∀ x v : Q, Theta1 (x + v) - Theta1 x = λ v) →
-      (∀ x v : Q, Theta2 (x + v) - Theta2 x = λ v) →
+      (∀ x v : Q, Theta1 (x + v) - Theta1 x = lam v) →
+      (∀ x v : Q, Theta2 (x + v) - Theta2 x = lam v) →
       ∀ x : Q, Theta1 x - Theta2 x = Theta1 0 - Theta2 0
   normalizedClockPotentialFlow :
     let D := canonicalPrincipalLapseCarrierCharacteristicInput E B hfield
-    let λ := quotientClockCovector D.toCharacteristicCurrentData.Lambda
+    let lam := quotientClockCovector D.toCharacteristicCurrentData.Lambda
     let clockUnit :=
       globalClockQuotientUnit
         D.toCharacteristicCurrentData.Lambda
@@ -30224,8 +30224,8 @@ structure CanonicalPrincipalFieldForcedCertificate
       (x :
         D.toCharacteristicCurrentData.K ⧸
           LinearMap.ker D.toCharacteristicCurrentData.Lambda),
-      clockPotential λ C (x + t • clockUnit) =
-        clockPotential λ C x + t
+      clockPotential lam C (x + t • clockUnit) =
+        clockPotential lam C x + t
   contactTransverseDuality :
     let D := canonicalPrincipalLapseCarrierCharacteristicInput E B hfield
     Nonempty
@@ -30242,11 +30242,11 @@ structure CanonicalPrincipalFieldForcedCertificate
           (principalCarrierCharacteristic_Lambda_nonzero D))) =
       principalUhat
   localPointResponseRatio :
-    ∀ (v : Fin 4 → ℝ) (λ : ℝ),
+    ∀ (v : Fin 4 → ℝ) (lam : ℝ),
       principalBridgeSpatialCoeff (principalClockRate E B) v =
-        λ * principalBridgeSpatialCoeff
+        lam * principalBridgeSpatialCoeff
           (principalClockRate E B) principalUhat →
-      λ = principalTO v
+      lam = principalTO v
   localClockKernel :
     LinearMap.ker principalTOLinear = principalSpatialSubmodule
   localClockUnit :
@@ -30526,9 +30526,9 @@ theorem canonicalPrincipalField_forced_certificate
         D.toCharacteristicCurrentData.Lambda
         (principalCarrierCharacteristic_Lambda_nonzero D)⟩
   · exact principalCarrierCharacteristic_normalizationBridge D
-  · intro v λ hresponse
+  · intro v lam hresponse
     exact principalBridgeSpatialCoeff_ratio_forced
-      (principalClockRate E B) λ v
+      (principalClockRate E B) lam v
       (ne_of_gt (Real.sqrt_pos.2 (principalChi_pos E B hfield)))
       hresponse
   · exact principal_clock_proper_time_bridge
@@ -33318,7 +33318,7 @@ theorem principalFieldCurrent_quotient_finrank_one
   characteristicCurrent_quotient_finrank_one
     D.toCharacteristicCurrentData
 
-/-- Minimal remaining algebraic interface to the still-unformalized Iyer-Wald layer.
+/- Minimal remaining algebraic interface to the still-unformalized Iyer-Wald layer.
 The response covector is not supplied, its factorization is not supplied, and kernel invisibility
 is not supplied.  The only structural premise is the physical statement that the integrated
 stress response depends only on the characteristic variation; positivity supplies nonvanishing.
@@ -33732,10 +33732,10 @@ structure PaperActionLocalIFTArchitectureCertificate
     IsBasicCovectorFor
         (LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda)
         D.carrier.toCharacteristicCurrentData.Lambda ∧
-      ∃! λbar :
+      ∃! lambar :
           (D.carrier.toCharacteristicCurrentData.K ⧸
             LinearMap.ker D.carrier.toCharacteristicCurrentData.Lambda) →ₗ[ℝ] ℝ,
-        λbar.comp
+        lambar.comp
             (LinearMap.ker
               D.carrier.toCharacteristicCurrentData.Lambda).mkQ =
           D.carrier.toCharacteristicCurrentData.Lambda
@@ -33935,10 +33935,10 @@ structure PaperActionBulkIFTArchitectureCertificate
     IsBasicCovectorFor
         (LinearMap.ker D.toCharacteristicCurrentData.Lambda)
         D.toCharacteristicCurrentData.Lambda ∧
-      ∃! λbar :
+      ∃! lambar :
           (D.toCharacteristicCurrentData.K ⧸
             LinearMap.ker D.toCharacteristicCurrentData.Lambda) →ₗ[ℝ] ℝ,
-        λbar.comp
+        lambar.comp
             (LinearMap.ker D.toCharacteristicCurrentData.Lambda).mkQ =
           D.toCharacteristicCurrentData.Lambda
   clockCoverReebUnique :
@@ -37723,7 +37723,7 @@ theorem generalMaxwellStressFromF_principal_eq
       generalMaxwellFsq E 0 0 B 0 0 = maxwellI E B := by
     rw [generalMaxwellFsq_eq_I]
     simp [generalMaxwellI, maxwellI]
-    ring
+    all_goals ring
   unfold generalMaxwellStressFromF principalStressFromF
   rw [hF, hsq]
 
@@ -37886,7 +37886,7 @@ theorem kerrCarterRicciCov_scalarCurvature_zero
     kerrCarterRicciCovFromMetric,
     kerrRicciFrameCovCoeff, principalMetricSign,
     Fin.sum_univ_four]
-  ring
+  all_goals ring
 
 /-- Raising an index of the actual Kerr–Newman metric-derived Ricci
     reconstructs exactly the metric-derived Carter Einstein tensor,
