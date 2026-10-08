@@ -205,5 +205,44 @@ theorem actionBulkStationarity_forces_all_oddTensorJets
       (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz))
     hEinstein a b n
 
+/-- The metric Euler equations of the displayed action AND a field-derived
+    nonzero electric component force the unique relative fixed point without
+    supplying either an Einstein-field-equation or a stress-nonzero premise. -/
+theorem actionBulkStationarity_nonzeroElectric_forces_rest
+    (Gmixed : Tensor44)
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hstationary : ∀ i j : Fin 4,
+      generalEinsteinMaxwellMetricVariationCoeff
+        Gmixed Ex Ey Ez Bx By Bz i j = 0)
+    (hEx : Ex ≠ 0) (s : ℝ) :
+    oddRelativeResidual
+        (covariantEinsteinFromActionMixed Gmixed)
+        (fieldStrength
+          (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz))
+        0 0 s = 0 ↔ s = 0 := by
+  have hEinstein : ∀ i j : Fin 4,
+      covariantEinsteinFromActionMixed Gmixed i j =
+        8 * Real.pi *
+          physicalMaxwellStress
+            (fieldStrength
+              (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) i j := by
+    intro i j
+    exact actionBulkStationarity_forces_covariantEinsteinEquation
+      Gmixed Ex Ey Ez Bx By Bz hstationary i j
+  have hE : fieldStrength
+      (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz) 0 1 ≠ 0 := by
+    rw [generalMaxwellPotentialJet_fieldStrength]
+    simpa [generalMaxwellF] using hEx
+  have hT : physicalMaxwellStress
+      (fieldStrength
+        (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) 0 0 ≠ 0 :=
+    nonzero_electric_potential_jet_forces_stress_witness
+      (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz) hE
+  exact oddRelativeResidual_zero_iff_rest
+    (covariantEinsteinFromActionMixed Gmixed)
+    (fieldStrength
+      (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz))
+    hEinstein 0 0 hT s
+
 end MaxwellAction
 end RelativeRest
