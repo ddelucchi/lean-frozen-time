@@ -245,5 +245,38 @@ theorem no_nonzero_vector_fixed_by_nonzero_lorentz_boost
   exact hv (nontrivial_null_boost_has_only_zero_fixed_vector
     (Real.exp s) (Real.exp (-s)) hp hq v hfix)
 
+/-! ### The Maxwell/Rainich principal plane alone cannot break boost isotropy -/
+
+/-- The non-null Maxwell stress restricted to the principal Lorentzian
+    two-plane is a scalar endomorphism, with the same eigenvalue on its two
+    null eigenlines. This is the algebraic core of Rainich degeneracy. -/
+def principalPlaneStress (energy : ℝ) (v : ℝ × ℝ) : ℝ × ℝ :=
+  (-energy * v.1, -energy * v.2)
+
+/-- An exact identity: all residual Lorentz boosts commute with this
+    principal-plane stress. Hence the value of Maxwell stress itself does
+    not distinguish any one future-directed timelike unit vector in this
+    two-plane. A derivative or other geometric resolver is indispensable. -/
+theorem principalPlaneStress_commutes_with_lorentz_boost
+    (energy s : ℝ) (v : ℝ × ℝ) :
+    principalPlaneStress energy (lorentzNullBoost s v) =
+      lorentzNullBoost s (principalPlaneStress energy v) := by
+  rcases v with ⟨x, y⟩
+  simp [principalPlaneStress, lorentzNullBoost,
+    weightedNullBoost]
+  constructor <;> ring
+
+/-- The boost-invariance/no-fixed-vector obstruction holds for every
+    value of the electromagnetic energy, including strictly positive ones.
+    Nonvacuum positivity does not itself select a principal observer. -/
+theorem positivePrincipalStress_does_not_fix_nonzero_observer
+    (energy s : ℝ) (henergy : 0 < energy) (hs : s ≠ 0)
+    (v : ℝ × ℝ) (hv : v ≠ (0, 0)) :
+    principalPlaneStress energy (lorentzNullBoost s v) =
+        lorentzNullBoost s (principalPlaneStress energy v) ∧
+      lorentzNullBoost s v ≠ v := by
+  exact ⟨principalPlaneStress_commutes_with_lorentz_boost energy s v,
+    no_nonzero_vector_fixed_by_nonzero_lorentz_boost s hs v hv⟩
+
 end IntrinsicBoostScope
 end RelativeRest
