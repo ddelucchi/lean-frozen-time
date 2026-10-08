@@ -96,9 +96,15 @@ theorem oddRelativeResidual_all_normal_jets
     simp only [defect, carrierOdd]
     ring
   rw [hfun]
-  simpa only [mul_assoc] using
-    (carrierOdd_full_jet_parity
-      (8 * Real.pi * physicalMaxwellStress F a b) n)
+  rcases carrierOdd_full_jet_parity
+      (8 * Real.pi * physicalMaxwellStress F a b) n with
+    ⟨heven, hodd⟩
+  refine ⟨heven, ?_⟩
+  calc
+    iteratedDeriv (2*n+1)
+        (carrierOdd (8 * Real.pi * physicalMaxwellStress F a b)) 0 =
+        -2 * (8 * Real.pi * physicalMaxwellStress F a b) := hodd
+    _ = -16 * Real.pi * physicalMaxwellStress F a b := by ring
 
 /-- The geometric identification J=-2 Ric becomes a consequence of the
     on-shell Einstein equation, the traceless Maxwell source, and the
