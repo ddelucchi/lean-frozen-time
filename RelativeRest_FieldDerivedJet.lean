@@ -131,6 +131,81 @@ theorem onShellEinsteinMaxwell_scalarCurvature_zero
   rw [physicalMaxwellStress_tracefree F] at htrace
   linarith
 
+/-! ### Eliminate the nonzero-stress witness using the Maxwell potential -/
+
+/-- Six independent components of F=dA contribute positive squares to the
+    electromagnetic energy density measured by the orthonormal time observer. -/
+def potentialJetEnergySquare (D : PotentialJet) : ℝ :=
+    (fieldStrength D 0 1)^2 +
+    (fieldStrength D 0 2)^2 +
+    (fieldStrength D 0 3)^2 +
+    (fieldStrength D 1 2)^2 +
+    (fieldStrength D 1 3)^2 +
+    (fieldStrength D 2 3)^2
+
+/-- All six squares are nonnegative for any real potential first jet. -/
+theorem potentialJetEnergySquare_nonneg (D : PotentialJet) :
+    0 ≤ potentialJetEnergySquare D := by
+  unfold potentialJetEnergySquare
+  positivity
+
+/-- Exact Maxwell T_00 positivity formula, derived from the field-strength
+    tensor and the Gaussian-normalized stress contraction. -/
+theorem potentialJet_energy_density_formula (D : PotentialJet) :
+    physicalMaxwellStress (fieldStrength D) 0 0 =
+      potentialJetEnergySquare D / (8 * Real.pi) := by
+  simp [physicalMaxwellStress, flatMaxwellStress, maxwellStress,
+    maxwellQuadratic, maxwellContraction, etaCovariant,
+    lorentzSign, potentialJetEnergySquare, fieldStrength,
+    Fin.sum_univ_four]
+  field_simp [ne_of_gt Real.pi_pos]
+  ring
+
+/-- A nonzero electric component already provides a constructive nonzero
+    stress witness; the higher-energy/magnetic cases are analogous. -/
+theorem nonzero_electric_potential_jet_forces_stress_witness
+    (D : PotentialJet)
+    (hE : fieldStrength D 0 1 ≠ 0) :
+    physicalMaxwellStress (fieldStrength D) 0 0 ≠ 0 := by
+  have hE2 : 0 < (fieldStrength D 0 1)^2 :=
+    sq_pos_of_ne_zero hE
+  have hS : 0 < potentialJetEnergySquare D := by
+    unfold potentialJetEnergySquare
+    nlinarith [sq_nonneg (fieldStrength D 0 2),
+      sq_nonneg (fieldStrength D 0 3),
+      sq_nonneg (fieldStrength D 1 2),
+      sq_nonneg (fieldStrength D 1 3),
+      sq_nonneg (fieldStrength D 2 3)]
+  rw [potentialJet_energy_density_formula]
+  exact ne_of_gt (div_pos hS (by positivity))
+
+/-- The relative fixed point is forced directly by a nonzero potential jet,
+    without supplying Maxwell stress nonvanishing as a separate hypothesis. -/
+theorem potentialJet_forces_relative_rest
+    (G : Tensor44) (D : PotentialJet)
+    (hEinstein : ∀ a b : Fin 4,
+      G a b =
+        8 * Real.pi *
+          physicalMaxwellStress (fieldStrength D) a b)
+    (hE : fieldStrength D 0 1 ≠ 0)
+    (s : ℝ) :
+    einsteinMaxwellRelativeResidual G (fieldStrength D) s 0 0 = 0 ↔
+      s = 0 := by
+  exact fieldDerivedResidual_zero_iff_rest
+    G (fieldStrength D) hEinstein 0 0
+      (nonzero_electric_potential_jet_forces_stress_witness D hE) s
+
+/-- Maxwell gauge shifts of the potential leave the full on-shell relative
+    Einstein defect unchanged for every rapidity. -/
+theorem relativeResidual_gauge_invariant
+    (G : Tensor44) (D H : PotentialJet)
+    (hH : ∀ a b : Fin 4, H a b = H b a)
+    (s : ℝ) :
+    einsteinMaxwellRelativeResidual
+        G (fieldStrength (fun a b => D a b + H a b)) s =
+      einsteinMaxwellRelativeResidual G (fieldStrength D) s := by
+  rw [fieldStrength_gauge_invariant D H hH]
+
 /-- Under the on-shell equality G=8*pi*S and R=0, the Ricci tensor
     equals the field-derived source in the orthonormal frame. -/
 theorem ricciEqualsMaxwellSource_onShell
