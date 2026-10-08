@@ -37552,3 +37552,93 @@ end RelativeRest
 #print axioms RelativeRest.explicitConstantJetMaxwellField_isNonNull
 #print axioms RelativeRest.nonnull_field_with_zero_intrinsic_firstJet_exists
 #print axioms RelativeRest.nonnull_alone_does_not_force_resolvingNormSq_nonzero
+
+/-!
+# Constructive local on-shell contrast: fixed relative rest versus observer selection
+
+This exact algebraic test uses the same six-component electromagnetic field in
+both halves. The mixed Einstein tensor is *defined* by the Maxwell action
+stress; the parent Euler-equation iff theorem proves local metric stationarity.
+The relative scale and the full normal-jet tower are then forced on this sector,
+while the projected spacetime gradient can still vanish.
+
+This is pointwise Einstein–Maxwell Euler algebra. It is NOT a construction of
+a curved 4-manifold with all differential Einstein/Maxwell equations solved;
+the full spacetime existence problem is strictly stronger.
+-/
+
+namespace RelativeRest
+
+/-- The Einstein tensor prescribed componentwise by the action-derived
+    mixed Maxwell stress, not by an independent timelike-frame choice. -/
+def fieldStressDefinedEinsteinMixed
+    (Ex Ey Ez Bx By Bz : ℝ) : MaxwellAction.Tensor44 :=
+  fun i j =>
+    8 * Real.pi * generalMaxwellStressFromF
+      Ex Ey Ez Bx By Bz i j
+
+/-- This stress-defined Einstein tensor is an explicit stationary point
+    of the exact *local metric Euler coefficients* obtained from the
+    displayed Einstein–Maxwell action. -/
+theorem fieldStressDefinedEinsteinMixed_isMetricEulerStationary
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    ∀ i j : Fin 4,
+      generalEinsteinMaxwellMetricVariationCoeff
+        (fieldStressDefinedEinsteinMixed Ex Ey Ez Bx By Bz)
+        Ex Ey Ez Bx By Bz i j = 0 := by
+  intro i j
+  apply (generalEinsteinMaxwellMetricVariationCoeff_eq_zero_iff
+    (fieldStressDefinedEinsteinMixed Ex Ey Ez Bx By Bz)
+    Ex Ey Ez Bx By Bz i j).2
+  rfl
+
+/-- Both are simultaneously true in a concrete non-null, action-stationary
+    Maxwell configuration: (1) the relative fixed point is unique;
+    (2) the complete even/odd action normal jets are determined; yet
+    (3) the specific field-invariant first-jet observer resolver vanishes.
+    The fields in every clause are identical. -/
+theorem explicit_nonnull_actionStationary_fixedPoint_allJets_without_firstResolver
+    (s : ℝ) (a b : Fin 4) (n : ℕ) :
+    (MaxwellAction.oddRelativeResidual
+        (MaxwellAction.covariantEinsteinFromActionMixed
+          (fieldStressDefinedEinsteinMixed 1 0 0 1 0 0))
+        (MaxwellAction.fieldStrength
+          (generalMaxwellPotentialJet 1 0 0 1 0 0))
+        0 0 s = 0 ↔ s = 0) ∧
+    (iteratedDeriv (2*n)
+        (MaxwellAction.oddRelativeResidual
+          (MaxwellAction.covariantEinsteinFromActionMixed
+            (fieldStressDefinedEinsteinMixed 1 0 0 1 0 0))
+          (MaxwellAction.fieldStrength
+            (generalMaxwellPotentialJet 1 0 0 1 0 0)) a b) 0 = 0) ∧
+    (iteratedDeriv (2*n+1)
+        (MaxwellAction.oddRelativeResidual
+          (MaxwellAction.covariantEinsteinFromActionMixed
+            (fieldStressDefinedEinsteinMixed 1 0 0 1 0 0))
+          (MaxwellAction.fieldStrength
+            (generalMaxwellPotentialJet 1 0 0 1 0 0)) a b) 0 =
+       -16 * Real.pi *
+          MaxwellAction.physicalMaxwellStress
+            (MaxwellAction.fieldStrength
+              (generalMaxwellPotentialJet 1 0 0 1 0 0)) a b) ∧
+    (generalMaxwellResolvingNormSq 1 0 0 1 0 0
+        (fun _ => 0) (fun _ => 0) (fun _ => 0)
+        (fun _ => 0) (fun _ => 0) (fun _ => 0) = 0) := by
+  have hstationary :=
+    fieldStressDefinedEinsteinMixed_isMetricEulerStationary 1 0 0 1 0 0
+  have hfixed :=
+    MaxwellAction.actionBulkStationarity_nonnull_forces_unique_rest
+      (fieldStressDefinedEinsteinMixed 1 0 0 1 0 0)
+      1 0 0 1 0 0 hstationary
+      explicitConstantJetMaxwellField_isNonNull s
+  have hall :=
+    MaxwellAction.actionBulkStationarity_forces_all_oddTensorJets
+      (fieldStressDefinedEinsteinMixed 1 0 0 1 0 0)
+      1 0 0 1 0 0 hstationary a b n
+  exact ⟨hfixed, hall.1, hall.2,
+    generalMaxwellResolvingNormSq_zero_of_constantFirstJet 1 0 0 1 0 0⟩
+
+end RelativeRest
+
+#print axioms RelativeRest.fieldStressDefinedEinsteinMixed_isMetricEulerStationary
+#print axioms RelativeRest.explicit_nonnull_actionStationary_fixedPoint_allJets_without_firstResolver
