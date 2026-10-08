@@ -37281,3 +37281,170 @@ theorem actionStationary_relativeRest_and_jet_audit
       Gmixed Ex Ey Ez Bx By Bz hstationary a b n).1⟩
 
 #print axioms actionStationary_relativeRest_and_jet_audit
+
+
+/-!
+# One-file closing bridge: bulk Euler stationarity to relative rest,
+  the entire normal-jet tower, and metric-defined Ricci curvature
+
+This closing theorem takes RicCov as the actual curvature tensor used in the
+Einstein–Hilbert Euler expression, not as an independent Ricci response field.
+There is no separately supplied Maxwell stress, Einstein equation, relative
+normal jet, Ricci trace equation, or zero-scalar-curvature hypothesis.
+Everything in the conclusions follows from the displayed action's local
+bulk stationarity, non-null Maxwell condition, and the existing tensor
+constructions. This is a local on-shell result, not a claim of universal
+symmetry breaking or global optical endpoint regularity.
+-/
+
+namespace RelativeRest
+namespace MaxwellAction
+
+/-- Trace of the metric-derived Einstein tensor is -R in dimension four.
+    We calculate this by expanding the orthonormal Einstein tensor definition. -/
+theorem fourDimensionalEinsteinMixedTrace_fromRicci
+    (RicCov : Tensor44) :
+    (∑ i : Fin 4, principalEinsteinMixedFromRicci RicCov i i) =
+      -principalScalarCurvatureFromRicci RicCov := by
+  simp [principalEinsteinMixedFromRicci,
+    principalEinsteinCovFromRicci, principalScalarCurvatureFromRicci,
+    principalMetricCov, principalMetricSign, Fin.sum_univ_four]
+  ring
+
+/-- The vanishing of the full action's metric Euler coefficient forces
+    scalar curvature to vanish, since the six-component Maxwell stress is
+    trace-free in four dimensions. Neither trace relation is assumed. -/
+theorem actionBulkStationarity_forces_scalarCurvature_zero
+    (RicCov : Tensor44) (Ex Ey Ez Bx By Bz : ℝ)
+    (hstationary : ∀ i j : Fin 4,
+      generalEinsteinMaxwellMetricVariationCoeff
+        (principalEinsteinMixedFromRicci RicCov)
+        Ex Ey Ez Bx By Bz i j = 0) :
+    principalScalarCurvatureFromRicci RicCov = 0 := by
+  have hEinMixed : ∀ i j : Fin 4,
+      principalEinsteinMixedFromRicci RicCov i j =
+        8 * Real.pi *
+          generalMaxwellStressFromF Ex Ey Ez Bx By Bz i j := by
+    intro i j
+    exact (generalEinsteinMaxwellMetricVariationCoeff_eq_zero_iff
+      (principalEinsteinMixedFromRicci RicCov)
+      Ex Ey Ez Bx By Bz i j).mp (hstationary i j)
+  have hsum :
+      (∑ i : Fin 4, principalEinsteinMixedFromRicci RicCov i i) =
+        8 * Real.pi *
+          generalMaxwellStressTrace Ex Ey Ez Bx By Bz := by
+    calc
+      (∑ i : Fin 4,
+          principalEinsteinMixedFromRicci RicCov i i) =
+        ∑ i : Fin 4,
+          8 * Real.pi *
+            generalMaxwellStressFromF Ex Ey Ez Bx By Bz i i := by
+              apply Finset.sum_congr rfl
+              intro i hi
+              exact hEinMixed i i
+      _ = 8 * Real.pi *
+          generalMaxwellStressTrace Ex Ey Ez Bx By Bz := by
+            simp only [generalMaxwellStressTrace, Finset.mul_sum]
+  rw [fourDimensionalEinsteinMixedTrace_fromRicci] at hsum
+  rw [generalMaxwellStress_trace_zero] at hsum
+  linarith
+
+/-- The covariant Einstein tensor built from RicCov is the tensor used
+    in the independent Maxwell-potential first-jet chain. This is a
+    component identity derived from the metric sign, not an extra law. -/
+theorem actionRicciEinstein_tensor_matches_covariant_normalization
+    (RicCov : Tensor44) (a b : Fin 4) :
+    covariantEinsteinFromActionMixed
+        (principalEinsteinMixedFromRicci RicCov) a b =
+      RicCov a b -
+        (1 / 2 : ℝ) * etaCovariant a b *
+          principalScalarCurvatureFromRicci RicCov := by
+  fin_cases a <;>
+    simp [covariantEinsteinFromActionMixed,
+      principalEinsteinMixedFromRicci, principalEinsteinCovFromRicci,
+      principalMetricCov, etaCovariant, lorentzSign, principalMetricSign] <;>
+    ring
+
+/-- Action-stationary full bridge from one physical field to the unique
+    non-null relative rest point, its entire odd normal-jet tower, and the
+    genuine Ricci tensor computed from the same Einstein–Hilbert curvature. -/
+theorem actionBulkStationarity_nonnull_forces_rest_allJets_and_Ricci
+    (RicCov : Tensor44) (Ex Ey Ez Bx By Bz : ℝ)
+    (hstationary : ∀ i j : Fin 4,
+      generalEinsteinMaxwellMetricVariationCoeff
+        (principalEinsteinMixedFromRicci RicCov)
+        Ex Ey Ez Bx By Bz i j = 0)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (s : ℝ) (a b : Fin 4) (n : ℕ) :
+    (oddRelativeResidual
+        (covariantEinsteinFromActionMixed
+          (principalEinsteinMixedFromRicci RicCov))
+        (fieldStrength
+          (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz))
+        0 0 s = 0 ↔ s = 0) ∧
+    (iteratedDeriv (2*n)
+        (oddRelativeResidual
+          (covariantEinsteinFromActionMixed
+            (principalEinsteinMixedFromRicci RicCov))
+          (fieldStrength
+            (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) a b) 0 = 0) ∧
+    (iteratedDeriv (2*n+1)
+        (oddRelativeResidual
+          (covariantEinsteinFromActionMixed
+            (principalEinsteinMixedFromRicci RicCov))
+          (fieldStrength
+            (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) a b) 0 =
+       -16 * Real.pi *
+         physicalMaxwellStress
+           (fieldStrength
+             (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) a b) ∧
+    deriv
+      (oddRelativeResidual
+        (covariantEinsteinFromActionMixed
+          (principalEinsteinMixedFromRicci RicCov))
+        (fieldStrength
+          (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) a b) 0 =
+        -2 * RicCov a b := by
+  let F : Tensor44 :=
+    fieldStrength (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)
+  let G : Tensor44 :=
+    covariantEinsteinFromActionMixed
+      (principalEinsteinMixedFromRicci RicCov)
+  let R : ℝ := principalScalarCurvatureFromRicci RicCov
+  have hEinstein : ∀ i j : Fin 4,
+      G i j = 8 * Real.pi * physicalMaxwellStress F i j := by
+    intro i j
+    exact actionBulkStationarity_forces_covariantEinsteinEquation
+      (principalEinsteinMixedFromRicci RicCov)
+      Ex Ey Ez Bx By Bz hstationary i j
+  have hR : R = 0 :=
+    actionBulkStationarity_forces_scalarCurvature_zero
+      RicCov Ex Ey Ez Bx By Bz hstationary
+  have hRelation : ∀ i j : Fin 4,
+      G i j = RicCov i j - (1 / 2 : ℝ) * etaCovariant i j * R := by
+    intro i j
+    exact actionRicciEinstein_tensor_matches_covariant_normalization
+      RicCov i j
+  have htrace : -R =
+      8 * Real.pi *
+        (∑ i : Fin 4, lorentzSign i * physicalMaxwellStress F i i) := by
+    rw [hR, physicalMaxwellStress_tracefree]
+    ring
+  have hfixed :=
+    actionBulkStationarity_nonnull_forces_unique_rest
+      (principalEinsteinMixedFromRicci RicCov)
+      Ex Ey Ez Bx By Bz hstationary hnonnull s
+  have hjets :=
+    oddRelativeResidual_all_normal_jets G F hEinstein a b n
+  have hric :=
+    oddRelativeResidual_firstJet_eq_minusTwoRicci
+      G RicCov F R hEinstein hRelation htrace a b
+  exact ⟨hfixed, hjets.1, hjets.2, hric⟩
+
+end MaxwellAction
+end RelativeRest
+
+#print axioms RelativeRest.MaxwellAction.fourDimensionalEinsteinMixedTrace_fromRicci
+#print axioms RelativeRest.MaxwellAction.actionBulkStationarity_forces_scalarCurvature_zero
+#print axioms RelativeRest.MaxwellAction.actionRicciEinstein_tensor_matches_covariant_normalization
+#print axioms RelativeRest.MaxwellAction.actionBulkStationarity_nonnull_forces_rest_allJets_and_Ricci
