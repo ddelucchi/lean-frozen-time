@@ -3535,7 +3535,6 @@ theorem principalJetFromF_forced_from_actionEulerJet
     E B i j).deriv]
   have hi := principalMetricSign_ne_zero i
   field_simp [hi, ne_of_gt Real.pi_pos]
-  ring
 
 
 
@@ -3658,8 +3657,7 @@ theorem principalRicciFromEinstein_trace_zero
     principalRicciFromEinsteinTrace E B = 0 := by
   unfold principalRicciFromEinsteinTrace principalRicciFromEinsteinF
   simp_rw [principalStressFromF_eq_principalStress]
-  simp [principalStress, principalFieldEnergyDensity]
-  ring
+  simp [principalStress, principalFieldEnergyDensity, Fin.sum_univ_four]
 
 /-- Mixed Einstein tensor reconstructed from the Einstein-derived Ricci tensor. -/
 def principalEinsteinTensorFromF
@@ -3837,9 +3835,8 @@ theorem principalGeneralizedBianchiResidual_pairing
       -2 * (∑ b : Fin 4,
         principalMetricEulerDivergence nablaE b * xi b) +
       principalMaxwellDiffeomorphismEulerPairing EA F xi := by
-  unfold principalGeneralizedBianchiResidual
-    principalMaxwellDiffeomorphismEulerPairing
-  simp_rw [add_mul, Finset.sum_add_distrib]
+  simp [principalGeneralizedBianchiResidual,
+    principalMaxwellDiffeomorphismEulerPairing, Fin.sum_univ_four]
   ring
 
 /-- Exact finite-index Noether decomposition.  The total Euler pairing under a
@@ -3891,8 +3888,8 @@ theorem principalNoetherBulkCoeff_eq_twoEuler_of_derivative_pairing
   have h := hder (principalMatrixUnit a b)
   unfold principalMetricDiffeomorphismEulerPairing
     principalMatrixUnit at h
-  simp at h
-  linarith
+  fin_cases a <;> fin_cases b <;>
+    simp [Fin.sum_univ_four] at h ⊢ <;> linarith
 
 /-- The coefficient of a local bulk Noether current is not a choice.  If its
 divergence reproduces the Einstein-Maxwell Euler pairing for every local value of
@@ -3915,8 +3912,8 @@ theorem principalNoetherBulkCoeff_eq_twoEuler_of_local_identity
     principalMetricDiffeomorphismEulerPairing
     principalMaxwellDiffeomorphismEulerPairing
     principalMatrixUnit at h
-  simp at h
-  linarith
+  fin_cases a <;> fin_cases b <;>
+    simp [Fin.sum_univ_four] at h ⊢ <;> linarith
 
 /-- Once the bulk coefficient is forced to `2E_g`, the value-only part of the same
 local identity forces the generalized Einstein-Maxwell Bianchi relation. -/
@@ -3992,7 +3989,9 @@ theorem principalLinearMap_ext_on_basis
     (A B : (Fin 4 → ℝ) →ₗ[ℝ] (Fin 4 → ℝ))
     (h : ∀ j : Fin 4, A (principalBasis j) = B (principalBasis j)) :
     A = B := by
-  ext v i
+  apply LinearMap.ext
+  intro v
+  funext i
   rw [principalBasis_decomposition v]
   simp only [map_sum, map_smul, Finset.sum_apply, Pi.smul_apply]
   apply Finset.sum_congr rfl
@@ -4016,7 +4015,11 @@ def generalMaxwellCarrierLinear
     simp [mul_add, Finset.sum_add_distrib]
   map_smul' a x := by
     funext i
-    simp [mul_assoc]
+    simp only [RingHom.id_apply, Pi.smul_apply, smul_eq_mul]
+    rw [Finset.mul_sum]
+    apply Finset.sum_congr rfl
+    intro j hj
+    ring
 
 
 /-- Mixed Maxwell stress as a linear endomorphism for a completely arbitrary
@@ -4032,7 +4035,11 @@ def generalMaxwellStressLinear
     simp [mul_add, Finset.sum_add_distrib]
   map_smul' a x := by
     funext i
-    simp [mul_assoc]
+    simp only [RingHom.id_apply, Pi.smul_apply, smul_eq_mul]
+    rw [Finset.mul_sum]
+    apply Finset.sum_congr rfl
+    intro j hj
+    ring
 
 /-- The fixed-point carrier is exactly minus sixteen pi times the physical
 Maxwell stress endomorphism, with no frame specialization. -/
@@ -4068,6 +4075,14 @@ theorem generalMaxwellCarrierLinear_sq
   apply principalLinearMap_ext_on_basis
   intro j
   funext i
+  have hinner :
+      generalMaxwellCarrierLinear Ex Ey Ez Bx By Bz (principalBasis j) =
+        fun k => generalMaxwellCarrier Ex Ey Ez Bx By Bz k j := by
+    funext k
+    exact generalMaxwellCarrierLinear_basis Ex Ey Ez Bx By Bz j k
+  rw [LinearMap.comp_apply, hinner]
+  simp only [LinearMap.smul_apply, LinearMap.id_apply,
+    Pi.smul_apply, smul_eq_mul]
   change
     (∑ k : Fin 4,
       generalMaxwellCarrier Ex Ey Ez Bx By Bz i k *
@@ -4092,8 +4107,7 @@ theorem generalMaxwellChi_sq
       (generalMaxwellI Ex Ey Ez Bx By Bz)^2 +
         (generalMaxwellJ Ex Ey Ez Bx By Bz)^2 := by
   unfold generalMaxwellChi
-  rw [sq_sqrt]
-  positivity
+  exact Real.sq_sqrt (add_nonneg (sq_nonneg _) (sq_nonneg _))
 
 /-! ### Arbitrary-field Einstein-Maxwell trace and Ricci carrier -/
 
@@ -4108,9 +4122,9 @@ theorem generalMaxwellStress_trace_zero
     (Ex Ey Ez Bx By Bz : ℝ) :
     generalMaxwellStressTrace Ex Ey Ez Bx By Bz = 0 := by
   simp [generalMaxwellStressTrace,
-    generalMaxwellStressFromF,
-    generalMaxwellFsq, generalMaxwellF,
-    principalMetricSign]
+    generalMaxwellStressFromF, generalMaxwellFsq_eq_I,
+    generalMaxwellI, generalMaxwellF,
+    principalMetricSign, Fin.sum_univ_four]
   field_simp [ne_of_gt Real.pi_pos]
   ring
 
@@ -4130,9 +4144,11 @@ def generalRicciFromEinsteinTrace
 theorem generalRicciFromEinstein_trace_zero
     (Ex Ey Ez Bx By Bz : ℝ) :
     generalRicciFromEinsteinTrace Ex Ey Ez Bx By Bz = 0 := by
+  have h := generalMaxwellStress_trace_zero Ex Ey Ez Bx By Bz
   unfold generalRicciFromEinsteinTrace generalRicciFromEinsteinF
   rw [← Finset.mul_sum]
-  rw [generalMaxwellStress_trace_zero]
+  change 8 * Real.pi * generalMaxwellStressTrace Ex Ey Ez Bx By Bz = 0
+  rw [h]
   ring
 
 /-- The fixed-point carrier is exactly minus twice the Ricci endomorphism for an
