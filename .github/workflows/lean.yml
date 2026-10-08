@@ -48,7 +48,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          lake env lean RelativeRest_Maxwell_Action.lean 2>&1 | tee maxwell-build.log
+          lake --no-ansi build RelativeRest_Maxwell_StressScaling 2>&1 | tee maxwell-build.log
 
       - name: Build certificate
         id: build
