@@ -1,4 +1,4 @@
-name: Lean verification
+name: One-file Lean certificate verification
 
 on:
   push:
@@ -9,11 +9,22 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  one-file-certificate:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     steps:
-      - name: Checkout
+      - name: Checkout proof
         uses: actions/checkout@v4
+
+      - name: Enforce exactly one repository Lean source
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t sources < <(find . -path './.git' -prune -o -path './.lake' -prune -o -name '*.lean' -type f -print)
+          printf 'Lean source paths:\n%s\n' "${sources[@]}"
+          test "${#sources[@]}" -eq 1
+          test "${sources[0]}" = './RelativeRest_OneFile_Certificate.lean'
+          test ! -e lakefile.lean
 
       - name: Install elan
         shell: bash
@@ -22,7 +33,7 @@ jobs:
           curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
 
-      - name: Select pinned Lean
+      - name: Select pinned Lean toolchain
         shell: bash
         run: |
           set -euo pipefail
@@ -30,92 +41,23 @@ jobs:
           lean --version
           lake --version
 
-      - name: Resolve dependencies
+      - name: Fetch mathlib
         shell: bash
         run: |
           set -euo pipefail
           lake update
-
-      - name: Get mathlib cache
-        shell: bash
-        run: |
-          set -euo pipefail
           lake exe cache get
 
-      - name: Check Maxwell action proof
-        id: maxwell
-        continue-on-error: true
+      - name: Lean kernel verification of ONE complete certificate
         shell: bash
         run: |
           set -o pipefail
-          lake --no-ansi build RelativeRest_Maxwell_StressScaling 2>&1 | tee maxwell-build.log
+          lake --no-ansi build RelativeRest_OneFile_Certificate 2>&1 | tee certificate-build.log
 
-      - name: Build field-derived Einstein-Maxwell jet
-        id: jet
-        continue-on-error: true
-        shell: bash
-        run: |
-          set -o pipefail
-          lake --no-ansi build RelativeRest_FieldDerivedJet 2>&1 | tee jet-build.log
-
-      - name: Build synchronization uniqueness audit
-        id: optical
-        continue-on-error: true
-        shell: bash
-        run: |
-          set -o pipefail
-          lake --no-ansi build RelativeRest_SynchronizationScope 2>&1 | tee optical-build.log
-
-      - name: Build certificate
-        id: build
-        continue-on-error: true
-        shell: bash
-        run: |
-          set -o pipefail
-          lake --no-ansi build 2>&1 | tee build.log
-
-      - name: Build original-action to Maxwell-jet bridge
-        id: bridge
-        continue-on-error: true
-        shell: bash
-        run: |
-          set -o pipefail
-          lake --no-ansi build RelativeRest_ActionToJetBridge 2>&1 | tee bridge-build.log
-
-      - name: Build full odd normal jet and Ricci identification
-        id: oddjet
-        continue-on-error: true
-        shell: bash
-        run: |
-          set -o pipefail
-          lake --no-ansi build RelativeRest_ActionOddTensorJet 2>&1 | tee odd-jet-build.log
-
-      - name: Strict complete imported proof and axiom audit
-        id: strict
-        continue-on-error: true
-        shell: bash
-        run: |
-          set -o pipefail
-          lake --no-ansi build RelativeRest_StrictVerification 2>&1 | tee strict-build.log
-          lake env lean RelativeRest_StrictVerification.lean 2>&1 | tee strict-axioms.log
-
-      - name: Upload build log
+      - name: Archive single-certificate build diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: lean-build-log
-          path: |
-            build.log
-            maxwell-build.log
-            optical-build.log
-            jet-build.log
-            bridge-build.log
-            odd-jet-build.log
-            strict-build.log
-            strict-axioms.log
+          name: one-file-lean-proof-build
+          path: certificate-build.log
           if-no-files-found: warn
-
-      - name: Fail if Lean build failed
-        if: steps.build.outcome != 'success' || steps.maxwell.outcome != 'success' || steps.optical.outcome != 'success' || steps.jet.outcome != 'success' || steps.bridge.outcome != 'success' || steps.oddjet.outcome != 'success' || steps.strict.outcome != 'success'
-        shell: bash
-        run: exit 1

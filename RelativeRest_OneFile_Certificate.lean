@@ -35858,3 +35858,1426 @@ transcript: they expose every axiom used by representative end-to-end theorems. 
 #print axioms RelativeRest.kerrNewman_forced_specialization_certificate
 #print axioms RelativeRest.kerrNewman_full_field_metric_clock_certificate
 #print axioms RelativeRest.kerr_regular_first_or_second_radial_jet_resolves
+
+/-!
+# One-file continuation: Maxwell action, stress, full odd jet, and clock scope
+
+Everything below lives inside the SAME Lean source. These proof blocks extend the
+35,861-line original certificate without replacing, weakening, or shortening it.
+The Maxwell-action Euler derivation is linked to a literal field-strength jet,
+physical stress, the relative fixed-point equation, and the entire odd-jet hierarchy.
+Statements about local optical corrections explicitly distinguish curl-cancellation
+from uniqueness based on the actual eikonal gradient. Non-nullness and genuine
+boost-rigidity requirements are kept visible; Einstein–Maxwell does not
+choose a canonical timelike vector on vacuum or fully boost-isotropic strata.
+A Lean print-axioms audit is included at the bottom of this SAME file.
+-/
+
+
+/-!
+## Single-file integrated proof block: RelativeRest_Maxwell_Action.lean
+All declarations remain inside this one Lean certificate, not a second Lean module.
+-/
+
+/-!
+# Maxwell action: a first-principles finite-jet variational layer
+
+This file works directly with the local four-dimensional Maxwell potential first jet
+  D_mu A_nu
+in a fixed orthonormal Lorentz frame. It constructs the antisymmetric field strength,
+proves invariance under addition of a symmetric gauge Hessian, and checks the local
+quadratic action. A separate general theorem gives the **exact**, rather than merely
+infinitesimal, first- and second-order increments of a quadratic Lagrangian.
+
+This is a genuine step backward toward the Einstein--Maxwell action. It is NOT a
+formalization of the metric variation, the Levi-Civita connection, the spacetime
+integration-by-parts formula, the Einstein equations, or the Iyer--Wald identity.
+Those cannot be inferred from the finite-jet results below.
+-/
+
+open scoped BigOperators
+
+namespace RelativeRest
+namespace MaxwellAction
+
+/-- At one spacetime point in an orthonormal frame, D_mu A_nu is a first jet. -/
+abbrev PotentialJet := Fin 4 → Fin 4 → ℝ
+
+/-- The Maxwell two-form from a potential first jet, F_mu_nu = D_mu A_nu - D_nu A_mu. -/
+def fieldStrength (D : PotentialJet) : PotentialJet :=
+  fun mu nu => D mu nu - D nu mu
+
+theorem fieldStrength_antisymmetric
+    (D : PotentialJet) (mu nu : Fin 4) :
+    fieldStrength D mu nu = -fieldStrength D nu mu := by
+  dsimp [fieldStrength]
+  ring
+
+theorem fieldStrength_diagonal_zero
+    (D : PotentialJet) (mu : Fin 4) :
+    fieldStrength D mu mu = 0 := by
+  simp [fieldStrength]
+
+/-- The exterior derivative is linear already at the first-jet level. -/
+theorem fieldStrength_add_scaled
+    (D H : PotentialJet) (t : ℝ) :
+    fieldStrength (fun mu nu => D mu nu + t * H mu nu) =
+      fun mu nu => fieldStrength D mu nu + t * fieldStrength H mu nu := by
+  funext mu nu
+  dsimp [fieldStrength]
+  ring
+
+/-- A gauge-potential shift changes the first jet by a symmetric Hessian.
+    Therefore F=dA is unchanged, without assuming Maxwell's field equations. -/
+theorem fieldStrength_gauge_invariant
+    (D H : PotentialJet)
+    (hH : ∀ mu nu : Fin 4, H mu nu = H nu mu) :
+    fieldStrength (fun mu nu => D mu nu + H mu nu) =
+      fieldStrength D := by
+  funext mu nu
+  dsimp [fieldStrength]
+  rw [hH nu mu]
+  ring
+
+/-- Signature (-,+,+,+), in the same orthonormal-frame convention as the
+    fixed-point Maxwell stress calculation. -/
+def lorentzSign (mu : Fin 4) : ℝ :=
+  if mu = 0 then -1 else 1
+
+/-- F_mu_nu G^mu_nu, with the metric factors written explicitly. -/
+def contraction (F G : PotentialJet) : ℝ :=
+  ∑ mu : Fin 4, ∑ nu : Fin 4,
+    lorentzSign mu * lorentzSign nu * F mu nu * G mu nu
+
+theorem contraction_symmetric (F G : PotentialJet) :
+    contraction F G = contraction G F := by
+  unfold contraction
+  apply Finset.sum_congr rfl
+  intro mu hmu
+  apply Finset.sum_congr rfl
+  intro nu hnu
+  ring
+
+/-- The conventional flat-frame Maxwell kinetic density, -1/4 F_ab F^ab. -/
+def density (D : PotentialJet) : ℝ :=
+  -(1 / 4 : ℝ) *
+    contraction (fieldStrength D) (fieldStrength D)
+
+/-- Local U(1) gauge invariance of the kinetic density, proved from d^2 lambda=0
+    (symmetry of the Hessian). No gauge-invariance axiom is postulated. -/
+theorem density_gauge_invariant
+    (D H : PotentialJet)
+    (hH : ∀ mu nu : Fin 4, H mu nu = H nu mu) :
+    density (fun mu nu => D mu nu + H mu nu) = density D := by
+  unfold density
+  rw [fieldStrength_gauge_invariant D H hH]
+
+/-- Gauge invariance holds along an entire affine gauge orbit. -/
+theorem density_gauge_orbit_constant
+    (D H : PotentialJet)
+    (hH : ∀ mu nu : Fin 4, H mu nu = H nu mu)
+    (t : ℝ) :
+    density (fun mu nu => D mu nu + t * H mu nu) = density D := by
+  apply density_gauge_invariant
+  intro mu nu
+  exact congrArg (fun x : ℝ => t * x) (hH mu nu)
+
+section QuadraticVariation
+
+variable {V : Type*} [AddCommGroup V] [Module ℝ V]
+
+/-- The quadratic kinetic Lagrangian with a bilinear constitutive contraction.
+    For the electromagnetic field this contraction is metric-dependent; here it
+    is treated as an explicitly supplied bilinear map. -/
+def quadraticDensity
+    (C : V →ₗ[ℝ] V →ₗ[ℝ] ℝ) (F : V) : ℝ :=
+  -(1 / 4 : ℝ) * C F F
+
+/-- Exact finite variation, including the second-order remainder. This uses only
+    bilinearity and does NOT assume symmetry of the contraction. -/
+theorem quadraticDensity_exact_increment
+    (C : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (F H : V) (t : ℝ) :
+    quadraticDensity C (F + t • H) - quadraticDensity C F =
+      -(t / 4) * (C F H + C H F) -
+        (t ^ 2 / 4) * C H H := by
+  simp only [quadraticDensity, map_add, map_smul, smul_eq_mul]
+  ring
+
+/-- With the symmetric Maxwell contraction, the linear response is forced to be
+    -1/2 C(F,H), and the quadratic remainder is explicit. This is the local
+    algebraic precursor of the Maxwell Euler--Lagrange variation. -/
+theorem quadraticDensity_symmetric_increment
+    (C : V →ₗ[ℝ] V →ₗ[ℝ] ℝ)
+    (hC : ∀ X Y : V, C X Y = C Y X)
+    (F H : V) (t : ℝ) :
+    quadraticDensity C (F + t • H) - quadraticDensity C F =
+      -(t / 2) * C F H -
+        (t ^ 2 / 4) * C H H := by
+  calc
+    quadraticDensity C (F + t • H) - quadraticDensity C F =
+        -(t / 4) * (C F H + C H F) -
+          (t ^ 2 / 4) * C H H :=
+      quadraticDensity_exact_increment C F H t
+    _ = -(t / 2) * C F H -
+          (t ^ 2 / 4) * C H H := by
+      rw [hC H F]
+      ring
+
+end QuadraticVariation
+end MaxwellAction
+end RelativeRest
+
+
+/-!
+## Single-file integrated proof block: RelativeRest_Maxwell_StressScaling.lean
+All declarations remain inside this one Lean certificate, not a second Lean module.
+-/
+
+/-!
+# Field-strength-level Maxwell stress and homothetic covariance
+
+This file closes a specific upstream gap in the manuscript's action/field chain.
+It defines the covariant Maxwell stress from a field two-form and a diagonal
+inverse metric, and proves its exact scaling under a constant four-dimensional
+metric homothety and potential rescaling.
+
+The result is valid for arbitrary field components, without choosing an E/B
+principal frame or postulating the stress rescaling. The Einstein-tensor
+invariance under a constant homothety is a separate differential-geometric
+obligation, NOT proved here.
+
+The second section proves an important *logical scope condition*: without
+the destruction of residual Lorentz boost isotropy, no nonzero vector can be
+selected intrinsically as a fixed point of all the surviving boost symmetries.
+This identifies a necessary rigidity condition rather than hiding it.
+-/
+
+open scoped BigOperators
+
+namespace RelativeRest
+namespace MaxwellAction
+
+abbrev Tensor44 := Fin 4 → Fin 4 → ℝ
+abbrev DiagonalInverseMetric := Fin 4 → ℝ
+
+/-- The field-linear term F_a^c F_bc in a diagonal inverse metric. -/
+def maxwellQuadratic
+    (w : DiagonalInverseMetric) (F : Tensor44)
+    (a b : Fin 4) : ℝ :=
+  ∑ c : Fin 4, w c * F a c * F b c
+
+/-- The electromagnetic scalar F_cd F^cd, with both inverse metrics explicit. -/
+def maxwellContraction
+    (w : DiagonalInverseMetric) (F : Tensor44) : ℝ :=
+  ∑ c : Fin 4, ∑ d : Fin 4,
+    w c * w d * F c d * F c d
+
+/-- Covariant Maxwell stress, with the overall conventional 1/(4*pi) suppressed.
+    g is the covariant metric; w contains diagonal contravariant metric entries. -/
+def maxwellStress
+    (g : Tensor44) (w : DiagonalInverseMetric)
+    (F : Tensor44) (a b : Fin 4) : ℝ :=
+  maxwellQuadratic w F a b -
+    (1 / 4 : ℝ) * g a b * maxwellContraction w F
+
+/-- The Maxwell quadratic term carries one inverse metric and two F factors. -/
+theorem maxwellQuadratic_scale
+    (w : DiagonalInverseMetric) (F : Tensor44)
+    (q lam : ℝ) (a b : Fin 4) :
+    maxwellQuadratic (fun c => q * w c)
+        (fun i j => lam * F i j) a b =
+      (q * lam^2) * maxwellQuadratic w F a b := by
+  unfold maxwellQuadratic
+  rw [Finset.mul_sum]
+  apply Finset.sum_congr rfl
+  intro c hc
+  ring
+
+/-- F_cd F^cd carries two inverse metrics and two F factors. -/
+theorem maxwellContraction_scale
+    (w : DiagonalInverseMetric) (F : Tensor44)
+    (q lam : ℝ) :
+    maxwellContraction (fun c => q * w c)
+        (fun i j => lam * F i j) =
+      (q^2 * lam^2) * maxwellContraction w F := by
+  unfold maxwellContraction
+  rw [Finset.mul_sum]
+  apply Finset.sum_congr rfl
+  intro c hc
+  rw [Finset.mul_sum]
+  apply Finset.sum_congr rfl
+  intro d hd
+  ring
+
+/-- For mutually inverse constant metric scales h*q=1, the full covariant
+    Maxwell tensor scales by the single forced character q*lam^2. -/
+theorem maxwellStress_scale
+    (g : Tensor44) (w : DiagonalInverseMetric)
+    (F : Tensor44) (h q lam : ℝ)
+    (hunit : h * q = 1) (a b : Fin 4) :
+    maxwellStress
+        (fun i j => h * g i j)
+        (fun c => q * w c)
+        (fun i j => lam * F i j) a b =
+      (q * lam^2) * maxwellStress g w F a b := by
+  have hq : h * q^2 = q := by
+    calc
+      h * q^2 = (h * q) * q := by ring
+      _ = q := by rw [hunit]; ring
+  unfold maxwellStress
+  rw [maxwellQuadratic_scale, maxwellContraction_scale]
+  calc
+    (q * lam^2) * maxwellQuadratic w F a b -
+        (1 / 4 : ℝ) * (h * g a b) *
+          ((q^2 * lam^2) * maxwellContraction w F) =
+      (q * lam^2) * maxwellQuadratic w F a b -
+        (1 / 4 : ℝ) * ((h * q^2) * lam^2) *
+          (g a b * maxwellContraction w F) := by ring
+    _ = (q * lam^2) *
+        (maxwellQuadratic w F a b -
+          (1 / 4 : ℝ) * g a b * maxwellContraction w F) := by
+      rw [hq]
+      ring
+
+/-- The fixed Minkowski orthonormal-frame metric. -/
+def etaCovariant : Tensor44 :=
+  fun a b => if a = b then lorentzSign a else 0
+
+/-- Canonically normalized local covariant Maxwell tensor without the
+    conventional factor 1/(4*pi). -/
+def flatMaxwellStress (F : Tensor44) : Tensor44 :=
+  maxwellStress etaCovariant lorentzSign F
+
+/-- Gaussian-unit physical Maxwell stress tensor, with the 1/(4*pi)
+    restored; the preceding algebra used the unnormalized tensor. -/
+def physicalMaxwellStress (F : Tensor44) : Tensor44 :=
+  fun a b => (1 / (4 * Real.pi)) * flatMaxwellStress F a b
+
+/-- The physically scaled metric and two-form in an orthonormal chart:
+    g -> rho^2 g, F -> lam F, with inverse-metric weight (rho^2)^{-1}. -/
+def homotheticMaxwellStress
+    (rho lam : ℝ) (F : Tensor44) : Tensor44 :=
+  maxwellStress
+    (fun a b => rho^2 * etaCovariant a b)
+    (fun c => (rho^2)⁻¹ * lorentzSign c)
+    (fun a b => lam * F a b)
+
+/-- Direct component-level derivation of the four-dimensional Maxwell stress
+    character: T_ab[rho^2 g,lam F] = (lam^2/rho^2) T_ab[g,F].
+    No transformation law for T_ab is separately assumed. -/
+theorem homotheticMaxwellStress_eq
+    (rho lam : ℝ) (hrho : rho ≠ 0) (F : Tensor44)
+    (a b : Fin 4) :
+    homotheticMaxwellStress rho lam F a b =
+      (lam^2 / rho^2) * flatMaxwellStress F a b := by
+  have h2 : rho^2 ≠ 0 := pow_ne_zero 2 hrho
+  have hunit : rho^2 * (rho^2)⁻¹ = 1 :=
+    mul_inv_cancel₀ h2
+  unfold homotheticMaxwellStress flatMaxwellStress
+  rw [maxwellStress_scale etaCovariant lorentzSign F
+    (rho^2) ((rho^2)⁻¹) lam hunit a b]
+  rw [div_eq_mul_inv]
+  ring
+
+/-- Gauge invariance of the covariant Maxwell tensor now follows from its
+    explicitly derived dependence on the antisymmetric field strength. -/
+theorem flatMaxwellStress_gauge_invariant
+    (D H : PotentialJet)
+    (hH : ∀ a b : Fin 4, H a b = H b a) :
+    flatMaxwellStress
+        (fieldStrength (fun a b => D a b + H a b)) =
+      flatMaxwellStress (fieldStrength D) := by
+  rw [fieldStrength_gauge_invariant D H hH]
+
+/-- If the Maxwell tensor is nonzero in at least one component, preservation
+    under the two independent action-sector scales forces their relative
+    stress character to equal one. This is a genuinely non-vacuum condition. -/
+theorem relative_scale_forced_of_nonzero_stress
+    (rho lam : ℝ) (hrho : rho ≠ 0)
+    (F : Tensor44) (a b : Fin 4)
+    (hT : flatMaxwellStress F a b ≠ 0)
+    (hpreserve : homotheticMaxwellStress rho lam F a b =
+        flatMaxwellStress F a b) :
+    lam^2 / rho^2 = 1 := by
+  rw [homotheticMaxwellStress_eq rho lam hrho F a b] at hpreserve
+  have hzero :
+      ((lam^2 / rho^2) - 1) * flatMaxwellStress F a b = 0 := by
+    nlinarith [hpreserve]
+  rcases mul_eq_zero.mp hzero with hratio | hbad
+  · exact sub_eq_zero.mp hratio
+  · exact False.elim (hT hbad)
+
+/-- The unique-positive-scale version of the previous fixed-point theorem. -/
+theorem positive_scales_coincide
+    (rho lam : ℝ) (hrho : 0 < rho) (hlam : 0 < lam)
+    (F : Tensor44) (a b : Fin 4)
+    (hT : flatMaxwellStress F a b ≠ 0)
+    (hpreserve : homotheticMaxwellStress rho lam F a b =
+        flatMaxwellStress F a b) :
+    lam = rho := by
+  have hratio :=
+    relative_scale_forced_of_nonzero_stress
+      rho lam (ne_of_gt hrho) F a b hT hpreserve
+  have hrho2 : rho^2 ≠ 0 := pow_ne_zero 2 (ne_of_gt hrho)
+  have hsq : lam^2 = rho^2 := by
+    have hmul : lam^2 = 1 * rho^2 :=
+      (div_eq_iff hrho2).mp hratio
+    nlinarith [hmul]
+  nlinarith
+
+end MaxwellAction
+
+namespace IntrinsicBoostScope
+
+/-- A residual null-frame boost with independent nontrivial real weights. -/
+def weightedNullBoost (p q : ℝ) (v : ℝ × ℝ) : ℝ × ℝ :=
+  (p * v.1, q * v.2)
+
+/-- If neither boost eigenvalue is one, the unique invariant vector is zero.
+    Consequently, an invariant unit timelike vector cannot be constructed
+    from geometric data retaining such a boost symmetry. -/
+theorem nontrivial_null_boost_has_only_zero_fixed_vector
+    (p q : ℝ) (hp : p ≠ 1) (hq : q ≠ 1)
+    (v : ℝ × ℝ) (hfixed : weightedNullBoost p q v = v) :
+    v = (0, 0) := by
+  have hfst := congrArg Prod.fst hfixed
+  have hsnd := congrArg Prod.snd hfixed
+  change p * v.1 = v.1 at hfst
+  change q * v.2 = v.2 at hsnd
+  have h1 : (p - 1) * v.1 = 0 := by nlinarith [hfst]
+  have h2 : (q - 1) * v.2 = 0 := by nlinarith [hsnd]
+  have hv1 : v.1 = 0 := by
+    rcases mul_eq_zero.mp h1 with hh | hh
+    · exact False.elim (hp (sub_eq_zero.mp hh))
+    · exact hh
+  have hv2 : v.2 = 0 := by
+    rcases mul_eq_zero.mp h2 with hh | hh
+    · exact False.elim (hq (sub_eq_zero.mp hh))
+    · exact hh
+  exact Prod.ext hv1 hv2
+
+/-- Actual Lorentz boosts have exp(s), exp(-s) as the null eigenvalues. -/
+def lorentzNullBoost (s : ℝ) (v : ℝ × ℝ) : ℝ × ℝ :=
+  weightedNullBoost (Real.exp s) (Real.exp (-s)) v
+
+/-- At any nonzero rapidity, no nonzero vector is invariant under a boost. -/
+theorem no_nonzero_vector_fixed_by_nonzero_lorentz_boost
+    (s : ℝ) (hs : s ≠ 0)
+    (v : ℝ × ℝ) (hv : v ≠ (0, 0)) :
+    lorentzNullBoost s v ≠ v := by
+  have hp : Real.exp s ≠ 1 := by
+    intro h
+    exact hs (Real.exp_eq_one_iff.mp h)
+  have hq : Real.exp (-s) ≠ 1 := by
+    intro h
+    have hz : -s = 0 := Real.exp_eq_one_iff.mp h
+    exact hs (neg_eq_zero.mp hz)
+  intro hfix
+  exact hv (nontrivial_null_boost_has_only_zero_fixed_vector
+    (Real.exp s) (Real.exp (-s)) hp hq v hfix)
+
+/-! ### The Maxwell/Rainich principal plane alone cannot break boost isotropy -/
+
+/-- The non-null Maxwell stress restricted to the principal Lorentzian
+    two-plane is a scalar endomorphism, with the same eigenvalue on its two
+    null eigenlines. This is the algebraic core of Rainich degeneracy. -/
+def principalPlaneStress (energy : ℝ) (v : ℝ × ℝ) : ℝ × ℝ :=
+  (-energy * v.1, -energy * v.2)
+
+/-- An exact identity: all residual Lorentz boosts commute with this
+    principal-plane stress. Hence the value of Maxwell stress itself does
+    not distinguish any one future-directed timelike unit vector in this
+    two-plane. A derivative or other geometric resolver is indispensable. -/
+theorem principalPlaneStress_commutes_with_lorentz_boost
+    (energy s : ℝ) (v : ℝ × ℝ) :
+    principalPlaneStress energy (lorentzNullBoost s v) =
+      lorentzNullBoost s (principalPlaneStress energy v) := by
+  rcases v with ⟨x, y⟩
+  apply Prod.ext
+  · simp [principalPlaneStress, lorentzNullBoost,
+      weightedNullBoost]
+    ring
+  · simp [principalPlaneStress, lorentzNullBoost,
+      weightedNullBoost]
+    ring
+
+/-- The boost-invariance/no-fixed-vector obstruction holds for every
+    value of the electromagnetic energy, including strictly positive ones.
+    Nonvacuum positivity does not itself select a principal observer. -/
+theorem positivePrincipalStress_does_not_fix_nonzero_observer
+    (energy s : ℝ) (henergy : 0 < energy) (hs : s ≠ 0)
+    (v : ℝ × ℝ) (hv : v ≠ (0, 0)) :
+    principalPlaneStress energy (lorentzNullBoost s v) =
+        lorentzNullBoost s (principalPlaneStress energy v) ∧
+      lorentzNullBoost s v ≠ v := by
+  exact ⟨principalPlaneStress_commutes_with_lorentz_boost energy s v,
+    no_nonzero_vector_fixed_by_nonzero_lorentz_boost s hs v hv⟩
+
+end IntrinsicBoostScope
+end RelativeRest
+
+
+/-!
+## Single-file integrated proof block: RelativeRest_FieldDerivedJet.lean
+All declarations remain inside this one Lean certificate, not a second Lean module.
+-/
+
+/-!
+# Relative Einstein--Maxwell residual from a field-defined stress
+
+This layer joins a genuinely tensor-defined Maxwell stress to the relative
+Einstein-equation defect and its first surviving rapidity derivative.
+
+The Einstein tensor G_ab is EXPLICITLY an input: its identity with the
+field-defined Maxwell stress is the on-shell Einstein equation. The constant
+homothety invariance of G_ab is differential-geometric, not inferred from
+pointwise tensor algebra. Under those exact hypotheses, however, no fixed-
+point or normal derivative identity is assumed separately.
+
+The target formula is J_ab = -16*pi T_ab, with T_ab carrying the ordinary
+1/(4*pi) normalization when necessary.
+-/
+
+open scoped BigOperators
+
+namespace RelativeRest
+namespace MaxwellAction
+
+/-- With matter stress S_ab normalized so that G_ab=8*pi*S_ab,
+    the relative scaled Einstein equation has the tensor-valued defect
+    G_ab - exp(2s)*8*pi*S_ab. -/
+def einsteinMaxwellRelativeResidual
+    (G F : Tensor44) (s : ℝ) : Tensor44 :=
+  fun a b =>
+    G a b - Real.exp (2*s) * (8 * Real.pi * physicalMaxwellStress F a b)
+
+/-- If G=8*pi*S, the relative defect vanishes at the rest point s=0. -/
+theorem fieldDerivedResidual_zero_at_rest
+    (G F : Tensor44)
+    (hEinstein : ∀ a b : Fin 4,
+      G a b = 8 * Real.pi * physicalMaxwellStress F a b)
+    (a b : Fin 4) :
+    einsteinMaxwellRelativeResidual G F 0 a b = 0 := by
+  simp [einsteinMaxwellRelativeResidual, hEinstein a b]
+
+/-- More strongly, a single nonzero Maxwell stress component forces the
+    scaled Einstein residual to have its only zero at s=0. -/
+theorem fieldDerivedResidual_zero_iff_rest
+    (G F : Tensor44)
+    (hEinstein : ∀ a b : Fin 4,
+      G a b = 8 * Real.pi * physicalMaxwellStress F a b)
+    (a b : Fin 4)
+    (hT : physicalMaxwellStress F a b ≠ 0)
+    (s : ℝ) :
+    einsteinMaxwellRelativeResidual G F s a b = 0 ↔ s = 0 := by
+  constructor
+  · intro h
+    have hscaled :
+        (8 * Real.pi * physicalMaxwellStress F a b) *
+          (1 - Real.exp (2*s)) = 0 := by
+      have hh := h
+      dsimp [einsteinMaxwellRelativeResidual] at hh
+      rw [hEinstein a b] at hh
+      nlinarith [hh]
+    have hnormal :
+        8 * Real.pi * physicalMaxwellStress F a b ≠ 0 := by
+      exact mul_ne_zero (by positivity) hT
+    have he : Real.exp (2*s) = 1 := by
+      rcases mul_eq_zero.mp hscaled with hbad | hrest
+      · exact False.elim (hnormal hbad)
+      · linarith
+    have hs : 2*s = 0 := Real.exp_eq_one_iff.mp he
+    linarith
+  · intro hs
+    subst s
+    exact fieldDerivedResidual_zero_at_rest G F hEinstein a b
+
+/-- No separate J=-16*pi*S postulate: it is the derivative of the
+    field-defined Einstein equation defect under the relative action orbit. -/
+theorem fieldDerivedResidual_hasDerivAt_zero
+    (G F : Tensor44) (a b : Fin 4) :
+    HasDerivAt
+      (fun s : ℝ => einsteinMaxwellRelativeResidual G F s a b)
+      (-16 * Real.pi * physicalMaxwellStress F a b) 0 := by
+  have hexp :
+      HasDerivAt (fun s : ℝ => Real.exp (2*s)) 2 0 := by
+    convert ((hasDerivAt_id (0 : ℝ)).const_mul 2).exp using 1 <;>
+      norm_num
+  have hconst :
+      HasDerivAt (fun _ : ℝ => G a b) 0 0 := by
+    exact hasDerivAt_const 0 (G a b)
+  have h :=
+    hconst.sub
+      (hexp.mul_const
+        (8 * Real.pi * physicalMaxwellStress F a b))
+  convert h using 1 <;>
+    simp [einsteinMaxwellRelativeResidual] <;> ring
+
+/-- The affine frame-defined Maxwell stress has zero mixed trace in D=4. -/
+theorem flatMaxwellStress_tracefree (F : Tensor44) :
+    (∑ a : Fin 4,
+      lorentzSign a * flatMaxwellStress F a a) = 0 := by
+  simp [flatMaxwellStress, maxwellStress, maxwellQuadratic,
+    maxwellContraction, etaCovariant, lorentzSign, Fin.sum_univ_four]
+  ring
+
+/-- Restoring 1/(4*pi) does not change Maxwell tracelessness. -/
+theorem physicalMaxwellStress_tracefree (F : Tensor44) :
+    (∑ a : Fin 4,
+      lorentzSign a * physicalMaxwellStress F a a) = 0 := by
+  calc
+    (∑ a : Fin 4,
+      lorentzSign a * physicalMaxwellStress F a a) =
+        (1 / (4 * Real.pi)) *
+          (∑ a : Fin 4,
+            lorentzSign a * flatMaxwellStress F a a) := by
+      rw [Finset.mul_sum]
+      apply Finset.sum_congr rfl
+      intro a ha
+      unfold physicalMaxwellStress
+      ring
+    _ = 0 := by rw [flatMaxwellStress_tracefree F]; ring
+
+/-- Contracting the 4D Einstein equation with the inverse metric yields
+    -R=8*pi*tr(T). Trace-free Maxwell stress therefore forces R=0.
+    The Einstein trace relation itself is explicitly an upstream hypothesis. -/
+theorem onShellEinsteinMaxwell_scalarCurvature_zero
+    (F : Tensor44) (R : ℝ)
+    (htrace : -R =
+      8 * Real.pi *
+        (∑ a : Fin 4,
+          lorentzSign a * physicalMaxwellStress F a a)) :
+    R = 0 := by
+  rw [physicalMaxwellStress_tracefree F] at htrace
+  linarith
+
+/-! ### Eliminate the nonzero-stress witness using the Maxwell potential -/
+
+/-- Six independent components of F=dA contribute positive squares to the
+    electromagnetic energy density measured by the orthonormal time observer. -/
+def potentialJetEnergySquare (D : PotentialJet) : ℝ :=
+    (fieldStrength D 0 1)^2 +
+    (fieldStrength D 0 2)^2 +
+    (fieldStrength D 0 3)^2 +
+    (fieldStrength D 1 2)^2 +
+    (fieldStrength D 1 3)^2 +
+    (fieldStrength D 2 3)^2
+
+/-- All six squares are nonnegative for any real potential first jet. -/
+theorem potentialJetEnergySquare_nonneg (D : PotentialJet) :
+    0 ≤ potentialJetEnergySquare D := by
+  unfold potentialJetEnergySquare
+  positivity
+
+/-- Exact Maxwell T_00 positivity formula, derived from the field-strength
+    tensor and the Gaussian-normalized stress contraction. -/
+theorem potentialJet_energy_density_formula (D : PotentialJet) :
+    physicalMaxwellStress (fieldStrength D) 0 0 =
+      potentialJetEnergySquare D / (8 * Real.pi) := by
+  simp [physicalMaxwellStress, flatMaxwellStress, maxwellStress,
+    maxwellQuadratic, maxwellContraction, etaCovariant,
+    lorentzSign, potentialJetEnergySquare, fieldStrength,
+    Fin.sum_univ_four]
+  field_simp [ne_of_gt Real.pi_pos]
+  ring
+
+/-- A nonzero electric component already provides a constructive nonzero
+    stress witness; the higher-energy/magnetic cases are analogous. -/
+theorem nonzero_electric_potential_jet_forces_stress_witness
+    (D : PotentialJet)
+    (hE : fieldStrength D 0 1 ≠ 0) :
+    physicalMaxwellStress (fieldStrength D) 0 0 ≠ 0 := by
+  have hE2 : 0 < (fieldStrength D 0 1)^2 :=
+    sq_pos_of_ne_zero hE
+  have hS : 0 < potentialJetEnergySquare D := by
+    unfold potentialJetEnergySquare
+    nlinarith [sq_nonneg (fieldStrength D 0 2),
+      sq_nonneg (fieldStrength D 0 3),
+      sq_nonneg (fieldStrength D 1 2),
+      sq_nonneg (fieldStrength D 1 3),
+      sq_nonneg (fieldStrength D 2 3)]
+  rw [potentialJet_energy_density_formula]
+  exact ne_of_gt (div_pos hS (by positivity))
+
+/-- The relative fixed point is forced directly by a nonzero potential jet,
+    without supplying Maxwell stress nonvanishing as a separate hypothesis. -/
+theorem potentialJet_forces_relative_rest
+    (G : Tensor44) (D : PotentialJet)
+    (hEinstein : ∀ a b : Fin 4,
+      G a b =
+        8 * Real.pi *
+          physicalMaxwellStress (fieldStrength D) a b)
+    (hE : fieldStrength D 0 1 ≠ 0)
+    (s : ℝ) :
+    einsteinMaxwellRelativeResidual G (fieldStrength D) s 0 0 = 0 ↔
+      s = 0 := by
+  exact fieldDerivedResidual_zero_iff_rest
+    G (fieldStrength D) hEinstein 0 0
+      (nonzero_electric_potential_jet_forces_stress_witness D hE) s
+
+/-- Maxwell gauge shifts of the potential leave the full on-shell relative
+    Einstein defect unchanged for every rapidity. -/
+theorem relativeResidual_gauge_invariant
+    (G : Tensor44) (D H : PotentialJet)
+    (hH : ∀ a b : Fin 4, H a b = H b a)
+    (s : ℝ) :
+    einsteinMaxwellRelativeResidual
+        G (fieldStrength (fun a b => D a b + H a b)) s =
+      einsteinMaxwellRelativeResidual G (fieldStrength D) s := by
+  rw [fieldStrength_gauge_invariant D H hH]
+
+/-- Under the on-shell equality G=8*pi*S and R=0, the Ricci tensor
+    equals the field-derived source in the orthonormal frame. -/
+theorem ricciEqualsMaxwellSource_onShell
+    (G Ric F : Tensor44) (R : ℝ)
+    (hEinstein : ∀ a b : Fin 4,
+      G a b = 8 * Real.pi * physicalMaxwellStress F a b)
+    (hRelation : ∀ a b : Fin 4,
+      G a b = Ric a b - (1 / 2 : ℝ) * etaCovariant a b * R)
+    (hScalar : R = 0)
+    (a b : Fin 4) :
+    Ric a b = 8 * Real.pi * physicalMaxwellStress F a b := by
+  have hg := hRelation a b
+  rw [hScalar] at hg
+  simp at hg
+  rw [hEinstein a b] at hg
+  linarith
+
+/-! ### Exact degenerate boundary: the vacuum does not fix relative scale -/
+
+/-- In the vanishing Maxwell-field sector the relative Einstein defect is zero
+    for every rapidity when the Einstein tensor also vanishes. Thus a unique
+    relative fixed point requires a nonzero matter carrier. -/
+theorem vacuumRelativeResidual_identically_zero
+    (s : ℝ) (a b : Fin 4) :
+    einsteinMaxwellRelativeResidual
+        (fun _ _ => (0 : ℝ))
+        (fun _ _ => (0 : ℝ)) s a b = 0 := by
+  simp [einsteinMaxwellRelativeResidual, physicalMaxwellStress,
+    flatMaxwellStress, maxwellStress, maxwellQuadratic,
+    maxwellContraction]
+
+/-- An explicit non-rest fixed point exists in the vacuum sector. -/
+theorem vacuumRelativeResidual_has_nonrest_zero :
+    ∃ s : ℝ, s ≠ 0 ∧
+      ∀ a b : Fin 4,
+        einsteinMaxwellRelativeResidual
+          (fun _ _ => (0 : ℝ))
+          (fun _ _ => (0 : ℝ)) s a b = 0 := by
+  refine ⟨1, by norm_num, ?_⟩
+  intro a b
+  exact vacuumRelativeResidual_identically_zero 1 a b
+
+end MaxwellAction
+end RelativeRest
+
+
+/-!
+## Single-file integrated proof block: RelativeRest_ActionToJetBridge.lean
+All declarations remain inside this one Lean certificate, not a second Lean module.
+-/
+
+/-!
+# Bridge the giant certificate to the independent Maxwell action-jet chain
+
+A frequent logical gap in "action forces geometry" proofs is that the stress
+appearing in the action derivative is not definitionally the same tensor as
+the stress in the field equations or relative defect.
+
+This file prevents that mismatch by using the EXISTING arbitrary-six-component
+Maxwell field and EXISTING Maxwell metric-variation theorem in the parent
+certificate. It constructs an actual potential first jet that realizes the
+same F, then checks equality with the independently defined Gaussian-normalized
+stress tensor, component by component.
+
+Scope:
+ * The potential construction is at ONE tangent-space jet; global potential
+   existence still requires the Bianchi/closedness data.
+ * The parent metric-variation theorem is local frame algebra, not a global
+   integrated variational calculus.
+ * The relative defect still requires the Einstein equation on shell.
+ * No spacetime clock or Iyer-Wald current is inserted here.
+-/
+
+open scoped BigOperators
+
+namespace RelativeRest
+
+/-- Local potential 1-jet realizing any given six-component Maxwell two-form:
+    D_i A_j=F_ij/2 in the chosen orthonormal frame. -/
+def generalMaxwellPotentialJet
+    (Ex Ey Ez Bx By Bz : ℝ) : MaxwellAction.PotentialJet :=
+  fun i j => (1 / 2 : ℝ) *
+    generalMaxwellF Ex Ey Ez Bx By Bz i j
+
+/-- No field strength need be independently supplied: differentiating the
+    potential first jet gives exactly the six-component F in the existing file. -/
+theorem generalMaxwellPotentialJet_fieldStrength
+    (Ex Ey Ez Bx By Bz : ℝ) :
+    MaxwellAction.fieldStrength
+        (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz) =
+      generalMaxwellF Ex Ey Ez Bx By Bz := by
+  funext i j
+  unfold MaxwellAction.fieldStrength generalMaxwellPotentialJet
+  rw [generalMaxwellF_skew Ex Ey Ez Bx By Bz j i]
+  ring
+
+/-- The stress used by the parent action variation is the same covariant
+    1/(4*pi)-normalized tensor obtained by explicit metric contractions
+    from our F=dA, in every orthonormal-frame component. -/
+theorem generalMaxwellStress_matches_action_variation_tensor
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (i j : Fin 4) :
+    MaxwellAction.physicalMaxwellStress
+        (generalMaxwellF Ex Ey Ez Bx By Bz) i j =
+      generalMaxwellStressCovFromF Ex Ey Ez Bx By Bz i j := by
+  fin_cases i <;> fin_cases j <;>
+    simp [MaxwellAction.physicalMaxwellStress,
+      MaxwellAction.flatMaxwellStress,
+      MaxwellAction.maxwellStress,
+      MaxwellAction.maxwellQuadratic,
+      MaxwellAction.maxwellContraction,
+      MaxwellAction.etaCovariant,
+      MaxwellAction.lorentzSign,
+      generalMaxwellStressCovFromF,
+      generalMaxwellStressFromF,
+      generalMaxwellFsq,
+      generalMaxwellF,
+      principalMetricSign,
+      Fin.sum_univ_four] <;>
+    field_simp [ne_of_gt Real.pi_pos] <;>
+    ring
+
+/-- The original action's inverse-metric variation coefficient is exactly
+    minus one half of the physical stress from this potential first jet.
+    This bridges definitions rather than merely matching abstract symbols. -/
+theorem generalMaxwellMetricVariation_from_potentialJet
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (i j : Fin 4) :
+    generalMaxwellMetricVariationCoeff Ex Ey Ez Bx By Bz i j =
+      (-1 / 2 : ℝ) *
+        MaxwellAction.physicalMaxwellStress
+          (MaxwellAction.fieldStrength
+            (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) i j := by
+  rw [generalMaxwellPotentialJet_fieldStrength]
+  rw [generalMaxwellMetricVariationCoeff_eq_neg_half_stress]
+  rw [generalMaxwellStress_matches_action_variation_tensor]
+
+/-- In the same normalization, the existing action-derived metric variation,
+    the field stress, and the first surviving relative Einstein jet coincide. -/
+theorem generalMaxwell_action_to_relativeJet
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (G : MaxwellAction.Tensor44)
+    (a b : Fin 4) :
+    generalMaxwellMetricVariationCoeff Ex Ey Ez Bx By Bz a b =
+        (-1 / 2 : ℝ) *
+          MaxwellAction.physicalMaxwellStress
+            (MaxwellAction.fieldStrength
+              (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) a b ∧
+    HasDerivAt
+      (fun s : ℝ =>
+        MaxwellAction.einsteinMaxwellRelativeResidual G
+          (MaxwellAction.fieldStrength
+            (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) s a b)
+      (-16 * Real.pi *
+        MaxwellAction.physicalMaxwellStress
+          (MaxwellAction.fieldStrength
+            (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) a b) 0 := by
+  exact ⟨generalMaxwellMetricVariation_from_potentialJet
+    Ex Ey Ez Bx By Bz a b,
+    MaxwellAction.fieldDerivedResidual_hasDerivAt_zero
+      G (MaxwellAction.fieldStrength
+        (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) a b⟩
+
+/-- An arbitrary nonzero electric component of F yields a physical positive
+    energy witness and, ON SHELL, the unique relative action fixed point.
+    The stress nonvanishing premise is no longer imported separately. -/
+theorem generalMaxwell_potential_onShell_rest_unique
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (G : MaxwellAction.Tensor44)
+    (hEinstein : ∀ a b : Fin 4,
+      G a b = 8 * Real.pi *
+        MaxwellAction.physicalMaxwellStress
+          (MaxwellAction.fieldStrength
+            (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) a b)
+    (hEx : Ex ≠ 0) (s : ℝ) :
+    MaxwellAction.einsteinMaxwellRelativeResidual G
+        (MaxwellAction.fieldStrength
+          (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) s 0 0 = 0 ↔
+      s = 0 := by
+  apply MaxwellAction.potentialJet_forces_relative_rest
+    G (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz) hEinstein
+  rw [generalMaxwellPotentialJet_fieldStrength]
+  simpa [generalMaxwellF] using hEx
+
+end RelativeRest
+
+
+/-!
+## Single-file integrated proof block: RelativeRest_ActionOddTensorJet.lean
+All declarations remain inside this one Lean certificate, not a second Lean module.
+-/
+
+/-!
+# All-order relative Einstein--Maxwell jet from the action-defined Maxwell stress
+
+The Einstein equation on shell, constant metric homothety and the two independent
+action-sector characters lead to a projectively normalized residual.
+This module proves its oddness, fixed-point uniqueness, all even/odd iterated
+normal derivatives and Ricci identification by REUSING THE FULL PARENT
+CERTIFICATE's proven scalar/functional derivative identities.
+
+No independent normal-jet formula or parity condition is assumed.
+The Einstein equation is explicitly supplied as a premise of the on-shell
+theorems: the regular fields must be actual solutions, not arbitrary 4x4 data.
+-/
+
+open scoped BigOperators
+
+namespace RelativeRest
+namespace MaxwellAction
+
+/-- The common-character-removed field equation residual.  The factor
+    exp(-s) is fixed by the reciprocal gravity/Maxwell characters, not by
+    a freely chosen clock normalization. -/
+def oddRelativeResidual
+    (G F : Tensor44) (a b : Fin 4) : ℝ → ℝ :=
+  fun s => Real.exp (-s) * einsteinMaxwellRelativeResidual G F s a b
+
+/-- Exact on-shell identification with the *existing action-derived scalar
+    defect* in the 35k-line certificate. -/
+theorem oddRelativeResidual_eq_actionDefect
+    (G F : Tensor44)
+    (hEinstein : ∀ a b : Fin 4,
+      G a b = 8 * Real.pi * physicalMaxwellStress F a b)
+    (a b : Fin 4) :
+    oddRelativeResidual G F =
+      defect (physicalMaxwellStress F a b) := by
+  funext s
+  exact defect_from_on_shell_equation
+    (G a b) (physicalMaxwellStress F a b) s (hEinstein a b)
+
+/-- Antisymmetry under exchange of gravitational and electromagnetic
+    characters is now a theorem for the field-derived on-shell tensor. -/
+theorem oddRelativeResidual_exchange
+    (G F : Tensor44)
+    (hEinstein : ∀ a b : Fin 4,
+      G a b = 8 * Real.pi * physicalMaxwellStress F a b)
+    (a b : Fin 4) (s : ℝ) :
+    oddRelativeResidual G F a b (-s) =
+      -oddRelativeResidual G F a b s := by
+  rw [oddRelativeResidual_eq_actionDefect G F hEinstein,
+    oddRelativeResidual_eq_actionDefect G F hEinstein]
+  simp [defect, Real.sinh_neg]
+
+/-- The unique fixed point for every nonzero stress component follows
+    without a separate exchange-rest axiom. -/
+theorem oddRelativeResidual_zero_iff_rest
+    (G F : Tensor44)
+    (hEinstein : ∀ a b : Fin 4,
+      G a b = 8 * Real.pi * physicalMaxwellStress F a b)
+    (a b : Fin 4)
+    (hT : physicalMaxwellStress F a b ≠ 0) (s : ℝ) :
+    oddRelativeResidual G F a b s = 0 ↔ s = 0 := by
+  rw [oddRelativeResidual_eq_actionDefect G F hEinstein]
+  exact defect_eq_zero_iff (physicalMaxwellStress F a b) s hT
+
+/-- The action-normal derivative at relative rest equals -16*pi*T.
+    This does not require declaring the normal jet as an input. -/
+theorem oddRelativeResidual_firstJet_from_action
+    (G F : Tensor44)
+    (hEinstein : ∀ a b : Fin 4,
+      G a b = 8 * Real.pi * physicalMaxwellStress F a b)
+    (a b : Fin 4) :
+    HasDerivAt (oddRelativeResidual G F a b)
+      (-16 * Real.pi * physicalMaxwellStress F a b) 0 := by
+  rw [oddRelativeResidual_eq_actionDefect G F hEinstein]
+  exact defect_hasDerivAt_zero (physicalMaxwellStress F a b)
+
+/-- All even normal derivatives vanish, while all odd ones equal the
+    *same field-defined first jet*. This is derived using the parent's
+    actual iterated derivative theorem for sinh, not a parity assertion. -/
+theorem oddRelativeResidual_all_normal_jets
+    (G F : Tensor44)
+    (hEinstein : ∀ a b : Fin 4,
+      G a b = 8 * Real.pi * physicalMaxwellStress F a b)
+    (a b : Fin 4) (n : ℕ) :
+    iteratedDeriv (2*n) (oddRelativeResidual G F a b) 0 = 0 ∧
+    iteratedDeriv (2*n+1) (oddRelativeResidual G F a b) 0 =
+      -16 * Real.pi * physicalMaxwellStress F a b := by
+  have hfun :
+      oddRelativeResidual G F a b =
+        carrierOdd (8 * Real.pi * physicalMaxwellStress F a b) := by
+    rw [oddRelativeResidual_eq_actionDefect G F hEinstein]
+    funext s
+    simp only [defect, carrierOdd]
+    ring
+  rw [hfun]
+  rcases carrierOdd_full_jet_parity
+      (8 * Real.pi * physicalMaxwellStress F a b) n with
+    ⟨heven, hodd⟩
+  refine ⟨heven, ?_⟩
+  calc
+    iteratedDeriv (2*n+1)
+        (carrierOdd (8 * Real.pi * physicalMaxwellStress F a b)) 0 =
+        -2 * (8 * Real.pi * physicalMaxwellStress F a b) := hodd
+    _ = -16 * Real.pi * physicalMaxwellStress F a b := by ring
+
+/-- The geometric identification J=-2 Ric becomes a consequence of the
+    on-shell Einstein equation, the traceless Maxwell source, and the
+    *definition* of the Einstein tensor. The scalar-curvature identity
+    itself is still a geometric input, not hidden in a field named Ric. -/
+theorem oddRelativeResidual_firstJet_eq_minusTwoRicci
+    (G Ric F : Tensor44) (R : ℝ)
+    (hEinstein : ∀ a b : Fin 4,
+      G a b = 8 * Real.pi * physicalMaxwellStress F a b)
+    (hRelation : ∀ a b : Fin 4,
+      G a b = Ric a b - (1 / 2 : ℝ) * etaCovariant a b * R)
+    (hTrace : -R =
+      8 * Real.pi *
+        (∑ a : Fin 4, lorentzSign a * physicalMaxwellStress F a a))
+    (a b : Fin 4) :
+    deriv (oddRelativeResidual G F a b) 0 = -2 * Ric a b := by
+  have hzero : R = 0 :=
+    onShellEinsteinMaxwell_scalarCurvature_zero F R hTrace
+  have hRic :=
+    ricciEqualsMaxwellSource_onShell
+      G Ric F R hEinstein hRelation hzero a b
+  rw [(oddRelativeResidual_firstJet_from_action
+    G F hEinstein a b).deriv]
+  rw [hRic]
+  ring
+
+/-! ### Remove the intermediate Einstein equation hypothesis from the final jet theorem -/
+
+/-- Convert the action's mixed Einstein tensor into its covariant components
+    using the same orthonormal-frame metric used in the displayed action. -/
+def covariantEinsteinFromActionMixed
+    (Gmixed : Tensor44) : Tensor44 :=
+  fun i j => principalMetricSign i * Gmixed i j
+
+/-- The parent certificate's *explicit Einstein--Maxwell action metric Euler
+    derivative* vanishing implies the physical covariant on-shell equation
+    for the SAME potential jet. No Einstein-equation hypothesis is inserted. -/
+theorem actionBulkStationarity_forces_covariantEinsteinEquation
+    (Gmixed : Tensor44)
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hstationary : ∀ i j : Fin 4,
+      generalEinsteinMaxwellMetricVariationCoeff
+        Gmixed Ex Ey Ez Bx By Bz i j = 0)
+    (i j : Fin 4) :
+    covariantEinsteinFromActionMixed Gmixed i j =
+      8 * Real.pi *
+        physicalMaxwellStress
+          (fieldStrength
+            (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) i j := by
+  have hEinsteinMixed :
+      Gmixed i j =
+        8 * Real.pi *
+          generalMaxwellStressFromF Ex Ey Ez Bx By Bz i j :=
+    (generalEinsteinMaxwellMetricVariationCoeff_eq_zero_iff
+      Gmixed Ex Ey Ez Bx By Bz i j).mp (hstationary i j)
+  rw [generalMaxwellPotentialJet_fieldStrength]
+  rw [generalMaxwellStress_matches_action_variation_tensor]
+  unfold covariantEinsteinFromActionMixed generalMaxwellStressCovFromF
+  rw [hEinsteinMixed]
+  ring
+
+/-- Action-stationarity-to-normal-jet: one actual input, namely the
+    vanishing metric Euler coefficients from the displayed Einstein--Maxwell
+    action, is enough to derive the entire even/odd normal-jet tower. -/
+theorem actionBulkStationarity_forces_all_oddTensorJets
+    (Gmixed : Tensor44)
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hstationary : ∀ i j : Fin 4,
+      generalEinsteinMaxwellMetricVariationCoeff
+        Gmixed Ex Ey Ez Bx By Bz i j = 0)
+    (a b : Fin 4) (n : ℕ) :
+    iteratedDeriv (2*n)
+        (oddRelativeResidual
+          (covariantEinsteinFromActionMixed Gmixed)
+          (fieldStrength
+            (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) a b) 0 = 0 ∧
+    iteratedDeriv (2*n+1)
+        (oddRelativeResidual
+          (covariantEinsteinFromActionMixed Gmixed)
+          (fieldStrength
+            (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) a b) 0 =
+      -16 * Real.pi *
+        physicalMaxwellStress
+          (fieldStrength
+            (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) a b := by
+  have hEinstein : ∀ i j : Fin 4,
+      covariantEinsteinFromActionMixed Gmixed i j =
+        8 * Real.pi *
+          physicalMaxwellStress
+            (fieldStrength
+              (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) i j := by
+    intro i j
+    exact actionBulkStationarity_forces_covariantEinsteinEquation
+      Gmixed Ex Ey Ez Bx By Bz hstationary i j
+  exact oddRelativeResidual_all_normal_jets
+    (covariantEinsteinFromActionMixed Gmixed)
+    (fieldStrength
+      (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz))
+    hEinstein a b n
+
+/-- The metric Euler equations of the displayed action AND a field-derived
+    nonzero electric component force the unique relative fixed point without
+    supplying either an Einstein-field-equation or a stress-nonzero premise. -/
+theorem actionBulkStationarity_nonzeroElectric_forces_rest
+    (Gmixed : Tensor44)
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hstationary : ∀ i j : Fin 4,
+      generalEinsteinMaxwellMetricVariationCoeff
+        Gmixed Ex Ey Ez Bx By Bz i j = 0)
+    (hEx : Ex ≠ 0) (s : ℝ) :
+    oddRelativeResidual
+        (covariantEinsteinFromActionMixed Gmixed)
+        (fieldStrength
+          (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz))
+        0 0 s = 0 ↔ s = 0 := by
+  have hEinstein : ∀ i j : Fin 4,
+      covariantEinsteinFromActionMixed Gmixed i j =
+        8 * Real.pi *
+          physicalMaxwellStress
+            (fieldStrength
+              (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) i j := by
+    intro i j
+    exact actionBulkStationarity_forces_covariantEinsteinEquation
+      Gmixed Ex Ey Ez Bx By Bz hstationary i j
+  have hE : fieldStrength
+      (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz) 0 1 ≠ 0 := by
+    rw [generalMaxwellPotentialJet_fieldStrength]
+    simpa [generalMaxwellF] using hEx
+  have hT : physicalMaxwellStress
+      (fieldStrength
+        (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) 0 0 ≠ 0 :=
+    nonzero_electric_potential_jet_forces_stress_witness
+      (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz) hE
+  exact oddRelativeResidual_zero_iff_rest
+    (covariantEinsteinFromActionMixed Gmixed)
+    (fieldStrength
+      (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz))
+    hEinstein 0 0 hT s
+
+/-- For *every* regular non-null Maxwell field, the on-shell stress
+    positivity needed for fixed-point uniqueness is automatically supplied
+    by the parent certificate's six-component energy theorem. No choice of
+    a nonzero electric or magnetic component is necessary. -/
+theorem generalNonNullField_forces_physicalEnergy_positive
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
+    0 < physicalMaxwellStress
+      (fieldStrength
+        (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) 0 0 := by
+  have hbase :=
+    generalMaxwellEnergyDensity_pos Ex Ey Ez Bx By Bz hnonnull
+  have hmatch :
+      physicalMaxwellStress
+        (fieldStrength
+          (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) 0 0 =
+        generalMaxwellEnergyDensity Ex Ey Ez Bx By Bz := by
+    rw [generalMaxwellPotentialJet_fieldStrength]
+    rw [generalMaxwellStress_matches_action_variation_tensor]
+    simp [generalMaxwellStressCovFromF,
+      generalMaxwellStressFromF_00, principalMetricSign]
+  rw [hmatch]
+  exact hbase
+
+/-- Main action-level fixed-point theorem on the paper's regular non-null
+    sector, with no separately supplied Einstein equation, special electric
+    component, or independently postulated nonzero current/stress witness. -/
+theorem actionBulkStationarity_nonnull_forces_unique_rest
+    (Gmixed : Tensor44)
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hstationary : ∀ i j : Fin 4,
+      generalEinsteinMaxwellMetricVariationCoeff
+        Gmixed Ex Ey Ez Bx By Bz i j = 0)
+    (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz)
+    (s : ℝ) :
+    oddRelativeResidual
+        (covariantEinsteinFromActionMixed Gmixed)
+        (fieldStrength
+          (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz))
+        0 0 s = 0 ↔ s = 0 := by
+  have hEinstein : ∀ i j : Fin 4,
+      covariantEinsteinFromActionMixed Gmixed i j =
+        8 * Real.pi *
+          physicalMaxwellStress
+            (fieldStrength
+              (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) i j := by
+    intro i j
+    exact actionBulkStationarity_forces_covariantEinsteinEquation
+      Gmixed Ex Ey Ez Bx By Bz hstationary i j
+  have hT : physicalMaxwellStress
+      (fieldStrength
+        (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz)) 0 0 ≠ 0 :=
+    ne_of_gt
+      (generalNonNullField_forces_physicalEnergy_positive
+        Ex Ey Ez Bx By Bz hnonnull)
+  exact oddRelativeResidual_zero_iff_rest
+    (covariantEinsteinFromActionMixed Gmixed)
+    (fieldStrength
+      (generalMaxwellPotentialJet Ex Ey Ez Bx By Bz))
+    hEinstein 0 0 hT s
+
+end MaxwellAction
+end RelativeRest
+
+
+/-!
+## Single-file integrated proof block: RelativeRest_SynchronizationScope.lean
+All declarations remain inside this one Lean certificate, not a second Lean module.
+-/
+
+/-!
+# Exactness versus uniqueness of a synchronization correction
+
+The manuscript states that an optical correction beta cancels the anholonomy
+  d beta = -d T_O
+and vanishes (in the specified principal representative) on a reference
+curve.  Those two conditions do not themselves imply uniqueness.
+
+This file gives an explicit, fully finite-dimensional countermodel among
+affine one-forms on R^2.  Every affine one-form is represented by its six
+coefficients, so exterior differentiation is exactly a constant curl.
+An entire one-parameter family beta_c has the SAME curl, vanishes on the SAME
+reference line, and renders T_O+beta_c closed, but the beta_c are distinct.
+
+This does not refute uniqueness of beta defined by a fully specified Synge
+null-endpoint function. It proves that such an optical existence/uniqueness
+theorem is a *necessary upstream premise*, not a consequence of curvature
+cancellation and line normalization alone.
+-/
+
+namespace RelativeRest
+namespace SynchronizationScope
+
+/-- A_t dt + A_x dx, with each coefficient affine in (t,x). -/
+structure AffineOneForm where
+  at0 : ℝ
+  atT : ℝ
+  atX : ℝ
+  ax0 : ℝ
+  axT : ℝ
+  axX : ℝ
+
+
+/-- The coefficient pair (A_t(t,x), A_x(t,x)). -/
+def evaluate (α : AffineOneForm) (t x : ℝ) : ℝ × ℝ :=
+  (α.at0 + α.atT * t + α.atX * x,
+   α.ax0 + α.axT * t + α.axX * x)
+
+/-- Since α is affine, dα = (∂_t A_x - ∂_x A_t) dt∧dx. -/
+def exteriorCurl (α : AffineOneForm) : ℝ :=
+  α.axT - α.atX
+
+/-- Non-closed clock covector T_O = -dt + t dx. -/
+def localClock : AffineOneForm :=
+  ⟨-1, 0, 0, 0, 1, 0⟩
+
+theorem localClock_not_closed :
+    exteriorCurl localClock = 1 := by
+  norm_num [exteriorCurl, localClock]
+
+/-- beta_c = x dt + c*x dx.
+    This entire family obeys d beta_c = -dt∧dx. -/
+def correctionFamily (c : ℝ) : AffineOneForm :=
+  ⟨0, 0, 1, 0, 0, c⟩
+
+theorem correctionFamily_cancels_curl (c : ℝ) :
+    exteriorCurl (correctionFamily c) =
+      -exteriorCurl localClock := by
+  norm_num [exteriorCurl, correctionFamily, localClock]
+
+/-- Every beta_c vanishes identically along gamma(t)=(t,0). -/
+theorem correctionFamily_vanishes_on_reference
+    (c t : ℝ) :
+    evaluate (correctionFamily c) t 0 = (0, 0) := by
+  simp [evaluate, correctionFamily]
+
+/-- Even the full local clock plus beta_c is closed: the cancellation is
+    exact for all c, not merely infinitesimal at gamma. -/
+def correctedClock (c : ℝ) : AffineOneForm :=
+  ⟨-1, 0, 1, 0, 1, c⟩
+
+theorem correctedClock_is_closed (c : ℝ) :
+    exteriorCurl (correctedClock c) = 0 := by
+  simp [exteriorCurl, correctedClock]
+
+theorem correctedClock_is_local_plus_correction
+    (c t x : ℝ) :
+    evaluate (correctedClock c) t x =
+      ((evaluate localClock t x).1 +
+          (evaluate (correctionFamily c) t x).1,
+       (evaluate localClock t x).2 +
+          (evaluate (correctionFamily c) t x).2) := by
+  apply Prod.ext
+  · simp [evaluate, correctedClock, localClock, correctionFamily]
+    <;> ring
+  · simp [evaluate, correctedClock, localClock, correctionFamily]
+    <;> ring
+
+/-- The corrections remain distinguishable away from the reference curve. -/
+theorem correctionFamily_injective : Function.Injective correctionFamily := by
+  intro c d h
+  have hX := congrArg AffineOneForm.axX h
+  simpa [correctionFamily] using hX
+
+/-- Necessary conditions stated only in terms of exterior derivative and
+    reference-curve normalization. -/
+def admissibleByCurlAndReference (β : AffineOneForm) : Prop :=
+  exteriorCurl β = -exteriorCurl localClock ∧
+    ∀ t : ℝ, evaluate β t 0 = (0, 0)
+
+theorem all_corrections_admissible (c : ℝ) :
+    admissibleByCurlAndReference (correctionFamily c) := by
+  refine ⟨correctionFamily_cancels_curl c, ?_⟩
+  exact correctionFamily_vanishes_on_reference c
+
+/-- A genuine counterexample to uniqueness inferred only from curl
+    cancellation and vanishing on one reference curve. -/
+theorem curl_and_reference_do_not_force_unique_correction :
+    ¬ ∃! β : AffineOneForm, admissibleByCurlAndReference β := by
+  rintro ⟨β, hβ, hunique⟩
+  have h0 : correctionFamily 0 = β :=
+    hunique (correctionFamily 0) (all_corrections_admissible 0)
+  have h1 : correctionFamily 1 = β :=
+    hunique (correctionFamily 1) (all_corrections_admissible 1)
+  have h01 : correctionFamily 0 = correctionFamily 1 :=
+    h0.trans h1.symm
+  have hc := correctionFamily_injective h01
+  norm_num at hc
+
+/-- In particular, the family can carry arbitrary exact gradients that
+    vanish as one-forms on the reference curve. Hence the optical endpoint
+    data must supply more information than these two normalization equations. -/
+theorem two_distinct_admissible_corrections :
+    ∃ β₀ β₁ : AffineOneForm,
+      admissibleByCurlAndReference β₀ ∧
+      admissibleByCurlAndReference β₁ ∧
+      β₀ ≠ β₁ := by
+  refine ⟨correctionFamily 0, correctionFamily 1,
+    all_corrections_admissible 0, all_corrections_admissible 1, ?_⟩
+  intro h
+  have hc := correctionFamily_injective h
+  norm_num at hc
+
+/-! ### Positive uniqueness theorem once the actual optical gradient is supplied -/
+
+/-- Once the eikonal/endpoint construction fixes an exact optical gradient,
+    the synchronization correction is algebraically its difference from T_O.
+    This is the logically sufficient additional datum absent from the
+    curl-only cancellation equation. -/
+def correctionFromOpticalGradient
+    (dTheta T : ℝ → ℝ → ℝ × ℝ) : ℝ → ℝ → ℝ × ℝ :=
+  fun t x =>
+    ((dTheta t x).1 - (T t x).1,
+     (dTheta t x).2 - (T t x).2)
+
+/-- The optical gradient provides a correction satisfying T+beta=dTheta. -/
+theorem correctionFromOpticalGradient_identity
+    (dTheta T : ℝ → ℝ → ℝ × ℝ) (t x : ℝ) :
+    ((T t x).1 + (correctionFromOpticalGradient dTheta T t x).1,
+     (T t x).2 + (correctionFromOpticalGradient dTheta T t x).2) =
+      dTheta t x := by
+  apply Prod.ext
+  · simp [correctionFromOpticalGradient]
+  · simp [correctionFromOpticalGradient]
+
+/-- If the full optical gradient is fixed, no second correction can satisfy
+    the same synchronized first-order equation. No separate uniqueness axiom. -/
+theorem optical_gradient_forces_unique_correction
+    (dTheta T beta : ℝ → ℝ → ℝ × ℝ)
+    (h : ∀ t x : ℝ,
+      ((T t x).1 + (beta t x).1,
+       (T t x).2 + (beta t x).2) = dTheta t x) :
+    beta = correctionFromOpticalGradient dTheta T := by
+  funext t x
+  have ht := congrArg Prod.fst (h t x)
+  have hx := congrArg Prod.snd (h t x)
+  apply Prod.ext
+  · change (beta t x).1 =
+      (dTheta t x).1 - (T t x).1
+    linarith
+  · change (beta t x).2 =
+      (dTheta t x).2 - (T t x).2
+    linarith
+
+end SynchronizationScope
+end RelativeRest
+
+
+/-!
+## Single-file integrated proof block: RelativeRest_StrictVerification.lean
+All declarations remain inside this one Lean certificate, not a second Lean module.
+-/
+
+/-!
+# Strict Lean kernel dependency audit
+
+This module imports the entire 35,861-line certificate through the new bridge,
+then interrogates each new logical link with #print axioms.
+
+Passing this file in Lean verifies that every referenced declaration is compiled.
+The #print axioms output must be inspected: Mathlib may use classical/quotient
+principles, but no project-local theorem is to be accepted as an assumed axiom.
+A text scan for the string "sorry" is NOT a substitute for these checks.
+-/
+
+#print axioms RelativeRest.MaxwellAction.fieldStrength_gauge_invariant
+#print axioms RelativeRest.MaxwellAction.density_gauge_invariant
+#print axioms RelativeRest.MaxwellAction.quadraticDensity_exact_increment
+#print axioms RelativeRest.MaxwellAction.maxwellStress_scale
+#print axioms RelativeRest.MaxwellAction.homotheticMaxwellStress_eq
+#print axioms RelativeRest.MaxwellAction.flatMaxwellStress_tracefree
+#print axioms RelativeRest.MaxwellAction.physicalMaxwellStress_tracefree
+#print axioms RelativeRest.MaxwellAction.potentialJet_energy_density_formula
+#print axioms RelativeRest.MaxwellAction.fieldDerivedResidual_hasDerivAt_zero
+#print axioms RelativeRest.MaxwellAction.oddRelativeResidual_all_normal_jets
+#print axioms RelativeRest.MaxwellAction.oddRelativeResidual_firstJet_eq_minusTwoRicci
+#print axioms RelativeRest.MaxwellAction.actionBulkStationarity_forces_covariantEinsteinEquation
+#print axioms RelativeRest.MaxwellAction.actionBulkStationarity_forces_all_oddTensorJets
+#print axioms RelativeRest.MaxwellAction.actionBulkStationarity_nonzeroElectric_forces_rest
+#print axioms RelativeRest.MaxwellAction.generalNonNullField_forces_physicalEnergy_positive
+#print axioms RelativeRest.MaxwellAction.actionBulkStationarity_nonnull_forces_unique_rest
+#print axioms RelativeRest.IntrinsicBoostScope.principalPlaneStress_commutes_with_lorentz_boost
+#print axioms RelativeRest.generalMaxwellPotentialJet_fieldStrength
+#print axioms RelativeRest.generalMaxwellStress_matches_action_variation_tensor
+#print axioms RelativeRest.generalMaxwellMetricVariation_from_potentialJet
+#print axioms RelativeRest.generalMaxwell_action_to_relativeJet
+#print axioms RelativeRest.IntrinsicBoostScope.no_nonzero_vector_fixed_by_nonzero_lorentz_boost
+#print axioms RelativeRest.SynchronizationScope.curl_and_reference_do_not_force_unique_correction
+#print axioms RelativeRest.SynchronizationScope.optical_gradient_forces_unique_correction
+
+/-- Direct cross-check: the action-stationary field produces both a unique
+    rest-point and an all-orders fixed-point jet without a standalone
+    on-shell Einstein-tensor input. -/
+theorem actionStationary_relativeRest_and_jet_audit
+    (Gmixed : RelativeRest.MaxwellAction.Tensor44)
+    (Ex Ey Ez Bx By Bz : ℝ)
+    (hstationary : ∀ i j : Fin 4,
+      RelativeRest.generalEinsteinMaxwellMetricVariationCoeff
+        Gmixed Ex Ey Ez Bx By Bz i j = 0)
+    (hEx : Ex ≠ 0)
+    (s : ℝ) (a b : Fin 4) (n : ℕ) :
+    (RelativeRest.MaxwellAction.oddRelativeResidual
+        (RelativeRest.MaxwellAction.covariantEinsteinFromActionMixed Gmixed)
+        (RelativeRest.MaxwellAction.fieldStrength
+          (RelativeRest.generalMaxwellPotentialJet Ex Ey Ez Bx By Bz))
+        0 0 s = 0 ↔ s = 0) ∧
+    (iteratedDeriv (2*n)
+        (RelativeRest.MaxwellAction.oddRelativeResidual
+          (RelativeRest.MaxwellAction.covariantEinsteinFromActionMixed Gmixed)
+          (RelativeRest.MaxwellAction.fieldStrength
+            (RelativeRest.generalMaxwellPotentialJet Ex Ey Ez Bx By Bz))
+          a b) 0 = 0) := by
+  exact ⟨
+    RelativeRest.MaxwellAction.actionBulkStationarity_nonzeroElectric_forces_rest
+      Gmixed Ex Ey Ez Bx By Bz hstationary hEx s,
+    (RelativeRest.MaxwellAction.actionBulkStationarity_forces_all_oddTensorJets
+      Gmixed Ex Ey Ez Bx By Bz hstationary a b n).1⟩
+
+#print axioms actionStationary_relativeRest_and_jet_audit
