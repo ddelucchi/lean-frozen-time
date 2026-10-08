@@ -4207,16 +4207,19 @@ theorem generalRicciNormFromEinstein_eq_chi_sq
     generalRicciNormFromEinstein Ex Ey Ez Bx By Bz =
       (generalMaxwellChi Ex Ey Ez Bx By Bz)^2 := by
   unfold generalRicciNormFromEinstein
-  have h0 := generalRicciFromEinstein_sq
-    Ex Ey Ez Bx By Bz (0 : Fin 4) 0
-  have h1 := generalRicciFromEinstein_sq
-    Ex Ey Ez Bx By Bz (1 : Fin 4) 1
-  have h2 := generalRicciFromEinstein_sq
-    Ex Ey Ez Bx By Bz (2 : Fin 4) 2
-  have h3 := generalRicciFromEinstein_sq
-    Ex Ey Ez Bx By Bz (3 : Fin 4) 3
-  simp at h0 h1 h2 h3 ⊢
-  nlinarith
+  calc
+    (∑ i : Fin 4, ∑ k : Fin 4,
+      generalRicciFromEinsteinF Ex Ey Ez Bx By Bz i k *
+        generalRicciFromEinsteinF Ex Ey Ez Bx By Bz k i) =
+      ∑ i : Fin 4, (1 / 4 : ℝ) *
+        (generalMaxwellChi Ex Ey Ez Bx By Bz)^2 *
+          (if i = i then 1 else 0) := by
+        apply Finset.sum_congr rfl
+        intro i hi
+        exact generalRicciFromEinstein_sq Ex Ey Ez Bx By Bz i i
+    _ = (generalMaxwellChi Ex Ey Ez Bx By Bz)^2 := by
+      simp [Fin.sum_univ_four]
+      ring
 
 
 /-- Regular non-null Maxwell condition in invariant form. -/
@@ -4229,7 +4232,9 @@ theorem generalMaxwellChi_pos
     (Ex Ey Ez Bx By Bz : ℝ)
     (hnonnull : generalMaxwellNonNull Ex Ey Ez Bx By Bz) :
     0 < generalMaxwellChi Ex Ey Ez Bx By Bz := by
-  unfold generalMaxwellChi generalMaxwellNonNull at *
+  change generalMaxwellI Ex Ey Ez Bx By Bz ≠ 0 ∨
+    generalMaxwellJ Ex Ey Ez Bx By Bz ≠ 0 at hnonnull
+  unfold generalMaxwellChi
   rw [Real.sqrt_pos_iff]
   rcases hnonnull with hI | hJ
   · have hI2 : 0 < (generalMaxwellI Ex Ey Ez Bx By Bz)^2 :=
@@ -4251,7 +4256,10 @@ theorem affineJetLine_hasDerivAt_zero
     HasDerivAt (affineJetLine x dx) dx 0 := by
   unfold affineJetLine
   convert (hasDerivAt_const 0 x).add
-    ((hasDerivAt_id 0).mul_const dx) using 1 <;> ring
+    ((hasDerivAt_id 0).mul_const dx) using 1
+  funext t
+  simp [Pi.add_apply]
+  ring
 
 /-- Directional first jet of the electromagnetic invariant I. -/
 def generalMaxwellIJet
