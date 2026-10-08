@@ -9,3 +9,5 @@ require mathlib from git
 
 @[default_target]
 lean_lib RelativeRest_OneFile_Certificate
+
+lean_lib RelativeRest_Maxwell_Action
