@@ -21,3 +21,5 @@ lean_lib RelativeRest_FieldDerivedJet
 lean_lib RelativeRest_ActionToJetBridge
 
 lean_lib RelativeRest_ActionOddTensorJet
+
+lean_lib RelativeRest_StrictVerification
