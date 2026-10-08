@@ -55,8 +55,10 @@ theorem fieldDerivedResidual_zero_iff_rest
     have hscaled :
         (8 * Real.pi * physicalMaxwellStress F a b) *
           (1 - Real.exp (2*s)) = 0 := by
-      simpa [einsteinMaxwellRelativeResidual,
-        hEinstein a b] using h
+      have hh := h
+      dsimp [einsteinMaxwellRelativeResidual] at hh
+      rw [hEinstein a b] at hh
+      nlinarith [hh]
     have hnormal :
         8 * Real.pi * physicalMaxwellStress F a b ≠ 0 := by
       exact mul_ne_zero (by positivity) hT
