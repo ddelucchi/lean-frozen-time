@@ -31,7 +31,7 @@ structure AffineOneForm where
   ax0 : ℝ
   axT : ℝ
   axX : ℝ
-deriving DecidableEq
+
 
 /-- The coefficient pair (A_t(t,x), A_x(t,x)). -/
 def evaluate (α : AffineOneForm) (t x : ℝ) : ℝ × ℝ :=
@@ -78,10 +78,15 @@ theorem correctedClock_is_closed (c : ℝ) :
 theorem correctedClock_is_local_plus_correction
     (c t x : ℝ) :
     evaluate (correctedClock c) t x =
-      (evaluate localClock t x).1 + (evaluate (correctionFamily c) t x).1,
-        (evaluate localClock t x).2 + (evaluate (correctionFamily c) t x).2 := by
-  simp [evaluate, correctedClock, localClock, correctionFamily]
-  ring
+      ((evaluate localClock t x).1 +
+          (evaluate (correctionFamily c) t x).1,
+       (evaluate localClock t x).2 +
+          (evaluate (correctionFamily c) t x).2) := by
+  apply Prod.ext
+  · simp [evaluate, correctedClock, localClock, correctionFamily]
+    <;> ring
+  · simp [evaluate, correctedClock, localClock, correctionFamily]
+    <;> ring
 
 /-- The corrections remain distinguishable away from the reference curve. -/
 theorem correctionFamily_injective : Function.Injective correctionFamily := by
